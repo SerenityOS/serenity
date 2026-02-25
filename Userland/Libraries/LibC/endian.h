@@ -8,6 +8,8 @@
 
 #include <sys/cdefs.h>
 
+// https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/endian.h.html
+
 __BEGIN_DECLS
 
 #define __LITTLE_ENDIAN 1234
@@ -19,10 +21,19 @@ __BEGIN_DECLS
 #    include <bits/endian.h>
 #endif
 
+// "Inclusion of the <endian.h> header may also make visible all symbols from <stdint.h>."
 #include <stdint.h>
 
+// "LITTLE_ENDIAN
+//      If BYTE_ORDER == LITTLE_ENDIAN, the host byte order is from least significant to most significant."
 #define LITTLE_ENDIAN __LITTLE_ENDIAN
+
+// "BIG_ENDIAN
+//      If BYTE_ORDER == BIG_ENDIAN, the host byte order is from most significant to least significant."
 #define BIG_ENDIAN __BIG_ENDIAN
+
+// "BYTE_ORDER
+//      This macro shall have a value equal to one of the *_ENDIAN macros in this header."
 #define BYTE_ORDER __BYTE_ORDER
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
