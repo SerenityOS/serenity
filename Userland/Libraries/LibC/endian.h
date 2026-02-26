@@ -10,33 +10,29 @@
 
 // https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/endian.h.html
 
-__BEGIN_DECLS
-
-#define __LITTLE_ENDIAN 1234
-#define __BIG_ENDIAN 4321
-
-#if defined(__GNUC__) && defined(__BYTE_ORDER__)
-#    define __BYTE_ORDER __BYTE_ORDER__
-#else
-#    include <bits/endian.h>
-#endif
-
 // "Inclusion of the <endian.h> header may also make visible all symbols from <stdint.h>."
 #include <stdint.h>
 
+__BEGIN_DECLS
+
 // "LITTLE_ENDIAN
 //      If BYTE_ORDER == LITTLE_ENDIAN, the host byte order is from least significant to most significant."
-#define LITTLE_ENDIAN __LITTLE_ENDIAN
+#define LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
 
 // "BIG_ENDIAN
 //      If BYTE_ORDER == BIG_ENDIAN, the host byte order is from most significant to least significant."
-#define BIG_ENDIAN __BIG_ENDIAN
+#define BIG_ENDIAN __ORDER_BIG_ENDIAN__
 
 // "BYTE_ORDER
 //      This macro shall have a value equal to one of the *_ENDIAN macros in this header."
-#define BYTE_ORDER __BYTE_ORDER
+#define BYTE_ORDER __BYTE_ORDER__
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+// These definitions are not required by POSIX, but are assumed to be present by some ports.
+#define __BYTE_ORDER BYTE_ORDER
+#define __LITTLE_ENDIAN LITTLE_ENDIAN
+#define __BIG_ENDIAN BIG_ENDIAN
+
+#if BYTE_ORDER == LITTLE_ENDIAN
 #    define htole16(x) ((uint16_t)(x))
 #    define le16toh(x) ((uint16_t)(x))
 #    define htole32(x) ((uint32_t)(x))
