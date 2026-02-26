@@ -8,7 +8,7 @@ Subject: [PATCH] Disable toilet fonts
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 5a51d51..5044b4c 100644
+index 5a51d5100eb242129fefd563a0e6f3f5a8942ef8..5044b4cba41b1059b0674147b10bc93b9e795a04 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -26,7 +26,7 @@ LDFLAGS =

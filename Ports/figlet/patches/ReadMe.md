@@ -5,3 +5,8 @@
 Disable toilet fonts
 
 
+## `0002-Add-missing-alloca.h-include.patch`
+
+Add missing <alloca.h> include
+
+
