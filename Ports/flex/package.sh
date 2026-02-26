@@ -7,5 +7,8 @@ files=(
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=('build-aux/config.sub')
-configopts=('--disable-bootstrap')
+configopts=(
+    '--disable-bootstrap'
+    'CFLAGS=-std=c17'
+)
 depends=('m4' 'pcre2')
