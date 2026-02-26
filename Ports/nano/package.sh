@@ -6,7 +6,7 @@ files=(
 )
 useconfigure='true'
 use_fresh_config_sub='true'
-configopts=("--target=${SERENITY_ARCH}-pc-serenity" "--disable-utf8")
+configopts=("--disable-utf8")
 depends=("ncurses")
 
 export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"

@@ -4,7 +4,6 @@ version='4.2.1'
 useconfigure='true'
 use_fresh_config_sub='true'
 configopts=(
-    "--target=${SERENITY_ARCH}-pc-serenity"
     '--with-sysroot=/'
 )
 files=(
