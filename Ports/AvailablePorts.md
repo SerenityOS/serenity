@@ -281,7 +281,6 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`python3`](python3/)                         | Python                                                        | 3.14.3                    | https://www.python.org/                                              |
 | [`qemu`](qemu/)                               | QEMU                                                          | 8.1.3                     | https://qemu.org                                                     |
 | [`qoi`](qoi/)                                 | Quite OK Image Format for fast, lossless image compression    | 351450e                   | https://github.com/phoboslab/qoi                                     |
-| [`qop`](qop/)                                 | The Quite OK Package Format for bare bones file packages      | 8dbec2d                   | https://github.com/phoboslab/qop                                     |
 | [`qt6-qt5compat`](qt6-qt5compat/)             | Qt6 Qt5Compat                                                 | 6.4.0                     | https://doc.qt.io/qt-6/qtcore5-index.html                            |
 | [`qt6-qtbase`](qt6-qtbase/)                   | Qt6 QtBase                                                    | 6.4.0                     | https://qt.io                                                        |
 | [`qt6-qtsvg`](qt6-qtsvg/)                     | Qt6 QtSVG                                                     | 6.4.0                     | https://qt.io                                                        |
