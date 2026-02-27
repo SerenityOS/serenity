@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Stephen Gregoratto <dev@sgregoratto.me>
+Date: Tue, 9 Jun 2020 00:21:11 +1000
+Subject: [PATCH] include <sys/select.h> in excallback
+
+Fixes an build issue when cross-compiling for SerenityOS[1]
+
+[1] https://github.com/SerenityOS/serenity
+---
+ examples/excallback.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/examples/excallback.c b/examples/excallback.c
+index 015132a992da46ba23c66649e7f12a0041133cf9..5a5efb327b64243ad85486392841c338fe498633 100644
+--- a/examples/excallback.c
++++ b/examples/excallback.c
+@@ -39,6 +39,7 @@ Jeff
+ 
+ #include <stdio.h>
+ #include <sys/types.h>
++#include <sys/select.h>
+ 
+ #ifdef HAVE_STDLIB_H
+ #include <stdlib.h>
