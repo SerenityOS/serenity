@@ -9,7 +9,7 @@ files=(
 )
 configopts=(
     '-Dosname=serenity'
-    "--target=${SERENITY_ARCH}-pc-serenity"
+    "--target=${SERENITY_ARCH}-serenity"
     "--targetarch=${SERENITY_ARCH}"
     "--build=$(cc -dumpmachine)"
     "--buildarch=$(uname -m)"

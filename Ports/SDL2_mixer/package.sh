@@ -16,7 +16,7 @@ depends=(
 configure() {
     export LIBS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
     run ./configure \
-        --host="${SERENITY_ARCH}-pc-serenity" \
+        --host="${SERENITY_ARCH}-serenity" \
         --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --enable-music-opus='false' \
         --enable-music-opus-shared='false' \

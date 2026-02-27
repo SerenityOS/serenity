@@ -154,7 +154,7 @@ The following variables have special functionality:
 Options passed to the port's [`configscript`](#configscript) in the default
 `configure` function.
 
-`--host=x86_64-pc-serenity` is always passed, override the `configure` function
+`--host=x86_64-serenity` is always passed, override the `configure` function
 if that's undesirable.
 
 #### `use_fresh_config_sub`
