@@ -715,8 +715,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
         add_compile_options(-fzero-call-used-regs=used-gpr)
     endif()
-    link_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/lib)
-    link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
 
     set(TARGET_STRING "")
 
