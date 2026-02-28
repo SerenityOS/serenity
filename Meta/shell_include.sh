@@ -14,8 +14,8 @@ die() {
 if [ "$(uname -s)" = "SerenityOS" ]; then
     SUDO="pls -E"
 elif command -v sudo >/dev/null; then
-    # Preserve all environment variables starting with SERENITY_.
-    SERENITY_VARS=$(env | cut -d= -f1 | grep '^SERENITY' | tr '\n' ',' | sed 's/,$//')
+    # Preserve all environment variables starting with SERENITY.
+    SERENITY_VARS=$(env | cut -d= -f1 | (grep '^SERENITY' || [[ $? -eq 1 ]]) | tr '\n' ',' | sed 's/,$//')
     SUDO="sudo --preserve-env=$SERENITY_VARS"
 elif command -v doas >/dev/null; then
     if [ "$SUDO_UID" = '' ]; then
