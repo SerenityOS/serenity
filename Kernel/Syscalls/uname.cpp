@@ -14,7 +14,7 @@ namespace Kernel {
 #if ARCH(X86_64)
 #    define UNAME_MACHINE "x86_64"
 #elif ARCH(AARCH64)
-#    define UNAME_MACHINE "AArch64"
+#    define UNAME_MACHINE "aarch64"
 #elif ARCH(RISCV64)
 #    define UNAME_MACHINE "riscv64"
 #else
