@@ -2,7 +2,11 @@
 
 SCRIPT="$(realpath $(dirname "${BASH_SOURCE[0]}"))"
 
-export SERENITY_ARCH="${SERENITY_ARCH:-x86_64}"
+export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
+
+. "${SERENITY_SOURCE_DIR}/Meta/shell_include.sh"
+
+export SERENITY_ARCH="${SERENITY_ARCH:-${HOST_ARCH}}"
 export SERENITY_TOOLCHAIN="${SERENITY_TOOLCHAIN:-GNU}"
 
 if [ -z "${HOST_CC:=}" ]; then
@@ -21,8 +25,6 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
     export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
 fi
-
-export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
 
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}clang"
