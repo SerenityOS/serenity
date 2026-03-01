@@ -83,23 +83,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 exit_if_running_as_root "Do not run serenity.sh as root, your Build directory will become root-owned"
 
-host_arch=$(uname -m)
-if [ "$host_arch" = "x86_64" ] || [ "$host_arch" = "amd64" ] || [ "$host_arch" = "x64" ]; then
-    host_arch="x86_64"
-elif [ "$host_arch" = "aarch64" ] || [ "$host_arch" = "arm64" ]; then
-    host_arch="aarch64"
-elif [ "$host_arch" = "riscv64" ]; then
-    host_arch="riscv64"
-else
-    die "Unknown host architecture: $host_arch"
-fi
-
 . "${DIR}/find_compiler.sh"
 
 if [ -n "$1" ]; then
     TARGET="$1"; shift
 else
-    TARGET="${SERENITY_ARCH:-${host_arch}}"
+    TARGET="${SERENITY_ARCH:-${HOST_ARCH}}"
 fi
 
 CMAKE_ARGS=()
