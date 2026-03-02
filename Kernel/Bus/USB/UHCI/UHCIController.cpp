@@ -305,7 +305,11 @@ ErrorOr<void> UHCIController::initialize_device(USB::Device& device)
     }
 
     // Ensure that this is actually a valid device descriptor...
-    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+    if (dev_descriptor.descriptor_header.descriptor_type != DESCRIPTOR_TYPE_DEVICE) {
+        dmesgln("USB Device returned incorrect descriptor type for GetDescriptor(Device) request - Expected {:#x} but got {:#x}", DESCRIPTOR_TYPE_DEVICE, dev_descriptor.descriptor_header.descriptor_type);
+        return EIO;
+    }
+
     device.set_max_packet_size<UHCIController>({}, dev_descriptor.max_packet_size);
 
     transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
@@ -317,7 +321,10 @@ ErrorOr<void> UHCIController::initialize_device(USB::Device& device)
     }
 
     // Ensure that this is actually a valid device descriptor...
-    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+    if (dev_descriptor.descriptor_header.descriptor_type != DESCRIPTOR_TYPE_DEVICE) {
+        dmesgln("USB Device returned incorrect descriptor type for GetDescriptor(Device) request - Expected {:#x} but got {:#x}", DESCRIPTOR_TYPE_DEVICE, dev_descriptor.descriptor_header.descriptor_type);
+        return EIO;
+    }
 
     if constexpr (UHCI_DEBUG) {
         dbgln("USB Device Descriptor for {:04x}:{:04x}", dev_descriptor.vendor_id, dev_descriptor.product_id);
