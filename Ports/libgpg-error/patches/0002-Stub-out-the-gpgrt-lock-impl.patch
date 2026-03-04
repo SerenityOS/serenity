@@ -4,17 +4,17 @@ Date: Wed, 14 Apr 2021 04:32:34 +0200
 Subject: [PATCH] Stub out the gpgrt lock impl
 
 ---
- src/syscfg/lock-obj-pub.x86_64-pc-serenity.h | 17 +++++++++++++++++
+ .../lock-obj-pub.x86_64-unknown-serenity.h      | 17 +++++++++++++++++
  1 file changed, 17 insertions(+)
- create mode 100644 src/syscfg/lock-obj-pub.x86_64-pc-serenity.h
+ create mode 100644 src/syscfg/lock-obj-pub.x86_64-unknown-serenity.h
 
-diff --git a/src/syscfg/lock-obj-pub.x86_64-pc-serenity.h b/src/syscfg/lock-obj-pub.x86_64-pc-serenity.h
+diff --git a/src/syscfg/lock-obj-pub.x86_64-unknown-serenity.h b/src/syscfg/lock-obj-pub.x86_64-unknown-serenity.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..f681e010c88c27bd36b78a1ccf39168e897a22ff
+index 0000000000000000000000000000000000000000..390b9dd12afc823e35f940085e43218393d9955b
 --- /dev/null
-+++ b/src/syscfg/lock-obj-pub.x86_64-pc-serenity.h
++++ b/src/syscfg/lock-obj-pub.x86_64-unknown-serenity.h
 @@ -0,0 +1,17 @@
-+## lock-obj-pub.x86_64-pc-serenity.h - NO LOCK SUPPORT
++## lock-obj-pub.x86_64-unknown-serenity.h - NO LOCK SUPPORT
 +## File created by gen-posix-lock-obj - DO NOT EDIT
 +## To be included by mkheader into gpg-error.h
 +

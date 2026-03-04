@@ -170,8 +170,8 @@ config("Kernel_config") {
       "-Wno-dangling-reference",
     ]
     lib_dirs = [
-      "$toolchain_root/$serenity_arch-pc-serenity/lib",
-      "$toolchain_root/lib/gcc/$serenity_arch-pc-serenity/$serenity_compiler_version",
+      "$toolchain_root/$serenity_arch-serenity/lib",
+      "$toolchain_root/lib/gcc/$serenity_arch-serenity/$serenity_compiler_version",
     ]
     ldflags += [ "-Wl,-z,pack-relative-relocs" ]
     libs = [ "gcc" ]
@@ -187,7 +187,7 @@ config("Kernel_config") {
     ]
 
     # FIXME: Why doesn't the cmake need this path anymore?
-    lib_dirs = [ "$toolchain_root/lib/clang/$serenity_compiler_version/lib/$serenity_arch-pc-serenity/" ]
+    lib_dirs = [ "$toolchain_root/lib/clang/$serenity_compiler_version/lib/$serenity_arch-serenity/" ]
     libs = [ "clang_rt.builtins" ]
   }
 

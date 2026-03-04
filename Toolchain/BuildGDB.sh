@@ -14,7 +14,7 @@ GDB_PKG="${GDB_NAME}.tar.xz"
 GDB_BASE_URL="https://ftpmirror.gnu.org/gnu/gdb"
 
 ARCH=${1:-"x86_64"}
-TARGET="$ARCH-pc-serenity"
+TARGET="$ARCH-serenity"
 PREFIX="$DIR/Local/$ARCH-gdb"
 
 echo "Building GDB $GDB_VERSION for $TARGET"

@@ -8,7 +8,7 @@ Subject: [PATCH] build: Adjust build process for SerenityOS
  1 file changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/build b/build
-index f5ec57529f689fe4848592c7a5b35b221a83cf6a..965ce0265515d0c50ec32746962a87f5198c41b2 100755
+index f5ec57529f689fe4848592c7a5b35b221a83cf6a..b472795f3f21c3da866822185c1b5a26f878284a 100755
 --- a/build
 +++ b/build
 @@ -19,6 +19,7 @@ case $TARGET_OS_CMAKE in
@@ -32,7 +32,7 @@ index f5ec57529f689fe4848592c7a5b35b221a83cf6a..965ce0265515d0c50ec32746962a87f5
 +crt_dir=$SERENITY_INSTALL_ROOT/usr/lib
 +msvc_lib_dir=
 +kernel32_lib_dir=
-+gcc_dir=$SERENITY_INSTALL_ROOT/usr/local/lib/gcc/$SERENITY_ARCH-pc-serenity/$SERENITY_GCC_VERSION
++gcc_dir=$SERENITY_INSTALL_ROOT/usr/local/lib/gcc/$SERENITY_ARCH-serenity/$SERENITY_GCC_VERSION
 +EOF
 +
 +export ZIG_LIBC="$ROOTDIR/out/libc_installation.txt"

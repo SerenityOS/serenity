@@ -8,7 +8,7 @@ Subject: [PATCH] Include sys/select.h
  1 file changed, 1 insertion(+)
 
 diff --git a/mrbgems/mruby-io/src/io.c b/mrbgems/mruby-io/src/io.c
-index 0469c05..0dae6ca 100644
+index 0469c05454a7401501d2faea63c05118120162df..0dae6ca32e73aa8234dc9c9ce0d00abc5befe84c 100644
 --- a/mrbgems/mruby-io/src/io.c
 +++ b/mrbgems/mruby-io/src/io.c
 @@ -49,6 +49,7 @@

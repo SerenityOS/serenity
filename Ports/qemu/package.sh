@@ -7,7 +7,7 @@ version="${QEMU_VERSION}"
 useconfigure='true'
 configopts=(
     '--target-list=aarch64-softmmu,i386-softmmu,riscv64-softmmu,x86_64-softmmu'
-    "--cross-prefix=${SERENITY_ARCH}-pc-serenity-"
+    "--cross-prefix=${SERENITY_ARCH}-serenity-"
     '--extra-ldflags=-lm'
     '--without-default-features'
     '--disable-strip'
@@ -41,5 +41,5 @@ post_install() {
     done
 }
 
-# We don't have '<arch>-pc-serenity-pkg-config', so just use the "normal" one.
+# We don't have '<arch>-serenity-pkg-config', so just use the "normal" one.
 export PKG_CONFIG="pkg-config"

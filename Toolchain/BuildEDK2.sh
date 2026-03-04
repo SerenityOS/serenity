@@ -104,9 +104,9 @@ export PATH="${_DIR}/Local/${SERENITY_ARCH}/bin:${PATH}"
 # These environment variables will be used by the EDK II build scripts.
 export WORKSPACE="$_DIR/Build/edk2"
 export PACKAGES_PATH="$_DIR/Tarballs/edk2:$_DIR/Tarballs/edk2-platforms:$_DIR/Tarballs/edk2-non-osi"
-export GCC5_AARCH64_PREFIX=aarch64-pc-serenity-
-export GCC5_RISCV64_PREFIX=riscv64-pc-serenity-
-export GCC5_X64_PREFIX=x86_64-pc-serenity-
+export GCC5_AARCH64_PREFIX=aarch64-serenity-
+export GCC5_RISCV64_PREFIX=riscv64-serenity-
+export GCC5_X64_PREFIX=x86_64-serenity-
 
 mkdir -p "$WORKSPACE"
 

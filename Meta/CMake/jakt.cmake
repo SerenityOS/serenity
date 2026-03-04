@@ -6,7 +6,7 @@ endif()
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(vendor "apple")
 else()
-    set(vendor "pc")
+    set(vendor "unknown")
 endif()
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
