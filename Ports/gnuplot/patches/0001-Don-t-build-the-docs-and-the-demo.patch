@@ -4,7 +4,7 @@ Date: Wed, 15 Apr 2020 14:23:25 +0100
 Subject: [PATCH] Don't build the docs and the demo
 
 - docs - segfault during make :/
-- demo - x86_64-pc-serenity-gcc: error: unrecognized command line option '-rdynamic'
+- demo - x86_64-serenity-gcc: error: unrecognized command line option '-rdynamic'
 ---
  Makefile.am | 5 ++++-
  1 file changed, 4 insertions(+), 1 deletion(-)
@@ -20,7 +20,7 @@ index 7e2c4008cda62e8b8e2959e4d2953722f6d350db..a8df6c0617210c7d7344052e3a34c569
 -SUBDIRS = config m4 term src docs man demo share
 +# Note: For the SerenityOS port of gnuplot, the following have been removed:
 +# docs - segfault during make :/
-+# demo - x86_64-pc-serenity-gcc: error: unrecognized command line option '-rdynamic'
++# demo - x86_64-serenity-gcc: error: unrecognized command line option '-rdynamic'
 +SUBDIRS = config m4 term src man share
  
  EXTRA_DIST = BUGS Copyright FAQ.pdf INSTALL INSTALL.gnu \

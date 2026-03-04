@@ -66,8 +66,8 @@ static void check_disassembly(ReadonlySpan<NonnullOwnPtr<InstructionImpl>> expec
 // Re-generate the machine code with the following commands:
 //
 // cd Tests/LibDisassembly
-// ../../Toolchain/Local/riscv64/bin/riscv64-pc-serenity-gcc -march=rv64imafd_zicsr_zifencei -fpic -mno-relax -ffreestanding -nostdlib -nostartfiles -mno-csr-check all_riscv_instructions.s -o all_riscv_instructions.elf
-// ../../Toolchain/Local/riscv64/bin/riscv64-pc-serenity-objcopy -O binary -j .text all_riscv_instructions.elf all_riscv_instructions.bin
+// ../../Toolchain/Local/riscv64/bin/riscv64-serenity-gcc -march=rv64imafd_zicsr_zifencei -fpic -mno-relax -ffreestanding -nostdlib -nostartfiles -mno-csr-check all_riscv_instructions.s -o all_riscv_instructions.elf
+// ../../Toolchain/Local/riscv64/bin/riscv64-serenity-objcopy -O binary -j .text all_riscv_instructions.elf all_riscv_instructions.bin
 // xxd -i all_riscv_instructions.bin
 TEST_CASE(check_all_instructions)
 {

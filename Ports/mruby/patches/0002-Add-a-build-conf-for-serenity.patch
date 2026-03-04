@@ -10,20 +10,20 @@ Subject: [PATCH] Add a build conf for serenity
 
 diff --git a/build_config/serenity.rb b/build_config/serenity.rb
 new file mode 100644
-index 0000000..b38f5ee
+index 0000000000000000000000000000000000000000..e00103089ca9a887a512abff8c729478844a6055
 --- /dev/null
 +++ b/build_config/serenity.rb
 @@ -0,0 +1,16 @@
 +MRuby::CrossBuild.new('serenity') do |conf|
 +  conf.toolchain :gcc
 +
-+  conf.archiver.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-ar"
-+  conf.linker.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-g++"
++  conf.archiver.command = "#{ENV['SERENITY_ARCH']}-serenity-ar"
++  conf.linker.command = "#{ENV['SERENITY_ARCH']}-serenity-g++"
 +
-+  conf.cxx.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-g++"
++  conf.cxx.command = "#{ENV['SERENITY_ARCH']}-serenity-g++"
 +  conf.cxx.defines << (ENV['SERENITY_ARCH'].include?('64') ? 'MRB_64BIT' : 'MRB_32BIT')
 +
-+  conf.cc.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-gcc"
++  conf.cc.command = "#{ENV['SERENITY_ARCH']}-serenity-gcc"
 +  conf.cc.defines << (ENV['SERENITY_ARCH'].include?('64') ? 'MRB_64BIT' : 'MRB_32BIT')
 +
 +  conf.gembox 'full-core'

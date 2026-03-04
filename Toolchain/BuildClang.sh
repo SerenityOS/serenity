@@ -221,12 +221,12 @@ pushd "$DIR/Build/clang"
     pushd llvm
         buildstep "llvm/configure" cmake "$DIR/Tarballs/$LLVM_NAME/llvm" \
             -G Ninja \
-            -DSERENITY_x86_64-pc-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
-            -DSERENITY_aarch64-pc-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
-            -DSERENITY_riscv64-pc-serenity_SYSROOT="$BUILD/riscv64clang/Root" \
-            -DSERENITY_x86_64-pc-serenity_STUBS="$DIR/Stubs/x86_64" \
-            -DSERENITY_aarch64-pc-serenity_STUBS="$DIR/Stubs/aarch64" \
-            -DSERENITY_riscv64-pc-serenity_STUBS="$DIR/Stubs/riscv64" \
+            -DSERENITY_x86_64-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
+            -DSERENITY_aarch64-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
+            -DSERENITY_riscv64-serenity_SYSROOT="$BUILD/riscv64clang/Root" \
+            -DSERENITY_x86_64-serenity_STUBS="$DIR/Stubs/x86_64" \
+            -DSERENITY_aarch64-serenity_STUBS="$DIR/Stubs/aarch64" \
+            -DSERENITY_riscv64-serenity_STUBS="$DIR/Stubs/riscv64" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -C "$DIR/CMake/LLVMConfig.cmake" \
             ${link_lld:+"-DLLVM_ENABLE_LLD=ON"} \
@@ -243,9 +243,9 @@ pushd "$DIR/Local/clang/bin/"
     ln -s ../../mold/bin/mold ld.mold
 
     for arch in $ARCHS; do
-        ln -s clang "$arch"-pc-serenity-clang
-        ln -s clang++ "$arch"-pc-serenity-clang++
-        ln -s llvm-nm "$arch"-pc-serenity-nm
-        echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-pc-serenity.cfg
+        ln -s clang "$arch"-serenity-clang
+        ln -s clang++ "$arch"-serenity-clang++
+        ln -s llvm-nm "$arch"-serenity-nm
+        echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-unknown-serenity.cfg
     done
 popd

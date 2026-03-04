@@ -9,7 +9,7 @@ Subject: [PATCH] Don't use dynamic SDL
  2 files changed, 5 insertions(+)
 
 diff --git a/build/platform.simulator.mak b/build/platform.simulator.mak
-index 07f1edd..9c349f8 100644
+index 07f1edd9ed7da8985e01b6a792d88e5212bbc7af..9c349f81e04d622540e8344d1edbc6864431b579 100644
 --- a/build/platform.simulator.mak
 +++ b/build/platform.simulator.mak
 @@ -1,6 +1,7 @@
@@ -21,7 +21,7 @@ index 07f1edd..9c349f8 100644
  SFLAGS += -fPIE
  
 diff --git a/ion/src/simulator/external/Makefile b/ion/src/simulator/external/Makefile
-index cf7744b..5157f3c 100644
+index cf7744bf47bbf5f4232ab80ae4eb01a92e7b56ba..5157f3cee51c7579f7d6f118d674deefc63e29c0 100644
 --- a/ion/src/simulator/external/Makefile
 +++ b/ion/src/simulator/external/Makefile
 @@ -99,8 +99,12 @@ endif

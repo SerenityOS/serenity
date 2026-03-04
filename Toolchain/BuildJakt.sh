@@ -19,7 +19,7 @@ PREFIX="$DIR/Local/jakt"
 VALID_TOOLCHAINS=()
 
 for ARCH in "${ARCHES[@]}"; do
-  TARGET="$ARCH-pc-serenity"
+  TARGET="$ARCH-serenity"
 
   eval "BUILD_GNU_${ARCH}=\"$DIR/../Build/$ARCH\""
   eval "BUILD_CLANG_${ARCH}=\"$DIR/../Build/${ARCH}clang\""
@@ -188,8 +188,8 @@ build_for() {
     TOOLCHAIN="$1"
     ARCH="$2"
 
-    TARGET="$ARCH-pc-serenity"
-    JAKT_TARGET="$TARGET-unknown"
+    TARGET="$ARCH-serenity"
+    JAKT_TARGET="$ARCH-unknown-serenity-unknown"
 
     current_build="BUILD_${TOOLCHAIN}_${ARCH}"
     current_cxx="CXX_${TOOLCHAIN}_${ARCH}"

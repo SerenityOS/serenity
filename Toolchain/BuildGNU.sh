@@ -13,7 +13,7 @@ exit_if_running_as_root "Do not run BuildGNU.sh as root, your Build directory wi
 echo "$DIR"
 
 ARCH=${ARCH:-"x86_64"}
-TARGET="$ARCH-pc-serenity"
+TARGET="$ARCH-serenity"
 PREFIX="$DIR/Local/$ARCH"
 BUILD="$DIR/../Build/$ARCH"
 SYSROOT="$BUILD/Root"
@@ -288,6 +288,6 @@ pushd "$DIR/Build/$ARCH"
 
 popd
 
-pushd "$DIR/Local/$ARCH/$ARCH-pc-serenity/bin"
+pushd "$DIR/Local/$ARCH/$ARCH-serenity/bin"
     buildstep "mold_symlink" ln -s ../../../mold/bin/mold ld.mold
 popd
