@@ -10,7 +10,7 @@ Subject: [PATCH] Stub out the gpgrt lock impl
 
 diff --git a/src/syscfg/lock-obj-pub.x86_64-pc-serenity.h b/src/syscfg/lock-obj-pub.x86_64-pc-serenity.h
 new file mode 100644
-index 0000000..016f396
+index 0000000000000000000000000000000000000000..f681e010c88c27bd36b78a1ccf39168e897a22ff
 --- /dev/null
 +++ b/src/syscfg/lock-obj-pub.x86_64-pc-serenity.h
 @@ -0,0 +1,17 @@
