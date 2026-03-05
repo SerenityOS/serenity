@@ -28,7 +28,7 @@ protected:
 private:
     PCISDHostController(PCI::DeviceIdentifier const& device_identifier, Memory::TypedMapping<SD::HostControlRegisterMap volatile>);
 
-    struct [[gnu::packed]] SlotInformationRegister {
+    struct SlotInformationRegister {
         u8 first_bar_number : 3;
         u8 : 1;
         u8 number_of_slots : 3;
