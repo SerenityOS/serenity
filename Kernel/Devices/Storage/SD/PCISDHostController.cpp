@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Devices/Storage/SD/PCISDHostController.h>
 
 namespace Kernel {
@@ -32,10 +33,8 @@ PCISDHostController::PCISDHostController(PCI::DeviceIdentifier const& device_ide
         dmesgln("SD Host Controller has {} slots, but we currently only support using only one", slot_information_register.slots_available());
     }
 
-    auto physical_address_of_sdhc_registers = PhysicalAddress {
-        PCI::get_BAR(device_identifier, static_cast<PCI::HeaderType0BaseRegister>(slot_information_register.first_bar_number))
-    };
-    m_registers = Memory::map_typed_writable<SD::HostControlRegisterMap volatile>(physical_address_of_sdhc_registers).release_value_but_fixme_should_propagate_errors();
+    auto bar = static_cast<PCI::HeaderType0BaseRegister>(slot_information_register.first_bar_number);
+    m_registers = PCI::map_bar<SD::HostControlRegisterMap volatile>(device_identifier, bar).release_value_but_fixme_should_propagate_errors();
 }
 
 }
