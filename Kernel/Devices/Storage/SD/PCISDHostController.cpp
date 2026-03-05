@@ -24,7 +24,6 @@ ErrorOr<NonnullRefPtr<PCISDHostController>> PCISDHostController::try_initialize(
 
 PCISDHostController::PCISDHostController(PCI::DeviceIdentifier const& device_identifier)
     : PCI::Device(device_identifier)
-    , SDHostController()
 {
     auto slot_information_register = read_slot_information();
 
