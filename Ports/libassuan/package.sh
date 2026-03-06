@@ -24,5 +24,6 @@ configure() {
         --disable-static \
         --enable-shared \
         --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
-        --with-sysroot="${SERENITY_INSTALL_ROOT}"
+        --with-sysroot="${SERENITY_INSTALL_ROOT}" \
+        LDFLAGS="-lintl"
 }
