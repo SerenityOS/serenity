@@ -22,5 +22,6 @@ configure() {
         --host="${SERENITY_ARCH}-serenity" \
         --build="$("${workdir}/build-aux/config.guess")" \
         --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
-        --with-sysroot="${SERENITY_INSTALL_ROOT}"
+        --with-sysroot="${SERENITY_INSTALL_ROOT}" \
+        LDFLAGS="-lintl"
 }
