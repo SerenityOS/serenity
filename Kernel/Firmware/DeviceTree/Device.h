@@ -19,7 +19,7 @@ class Management;
 
 class Device {
     AK_MAKE_NONCOPYABLE(Device);
-    AK_MAKE_DEFAULT_MOVABLE(Device);
+    AK_MAKE_NONMOVABLE(Device);
 
 public:
     Device(::DeviceTree::Node const& node, StringView node_name)
