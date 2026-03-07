@@ -23,12 +23,12 @@ class Device {
 
 public:
     Device(::DeviceTree::Node const& node, StringView node_name)
-        : m_node(&node)
+        : m_node(node)
         , m_node_name(node_name)
     {
     }
 
-    ::DeviceTree::Node const& node() const { return *m_node; }
+    ::DeviceTree::Node const& node() const { return m_node; }
     StringView node_name() const { return m_node_name; }
 
     Driver const* driver() const { return m_driver; }
@@ -48,8 +48,7 @@ public:
     ErrorOr<size_t> get_interrupt_number(size_t index) const;
 
 private:
-    // This needs to be a pointer for the class to be movable.
-    ::DeviceTree::Node const* m_node;
+    ::DeviceTree::Node const& m_node;
     StringView m_node_name;
     Driver const* m_driver { nullptr };
 
