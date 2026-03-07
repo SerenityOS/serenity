@@ -496,6 +496,7 @@ if (BUILD_LAGOM)
         SoftGPU
         Shell
         SQL
+        SSH
         Syntax
         TextCodec
         Threading
@@ -700,6 +701,7 @@ if (BUILD_LAGOM)
             LibMedia
             LibPDF
             LibSQL
+            LibSSH
             LibTTF
             LibTest
             LibTextCodec
