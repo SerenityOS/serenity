@@ -10,10 +10,9 @@
 
 static void ed25519_test(ReadonlyBytes public_key, ReadonlyBytes private_key, ReadonlyBytes message, ReadonlyBytes expected_signature)
 {
-    Crypto::Curves::Ed25519 curve;
-    auto generated_signature = MUST(curve.sign(public_key, private_key, message));
+    auto generated_signature = MUST(Crypto::Curves::Ed25519::sign(public_key, private_key, message));
     EXPECT_EQ(generated_signature, expected_signature);
-    EXPECT_EQ(true, curve.verify(public_key, expected_signature, message));
+    EXPECT_EQ(true, Crypto::Curves::Ed25519::verify(public_key, expected_signature, message));
 }
 
 // https://datatracker.ietf.org/doc/html/rfc8032#section-7.1
