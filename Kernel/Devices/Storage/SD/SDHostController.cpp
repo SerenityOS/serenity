@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/SD/Commands.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
@@ -118,8 +119,7 @@ ErrorOr<void> SDHostController::initialize()
 void SDHostController::try_enable_dma()
 {
     if (m_registers->capabilities.adma2) {
-        // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
-        auto maybe_dma_buffer = MM.allocate_dma_buffer_pages(dma_region_size, "SDHC DMA Buffer"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO);
+        auto maybe_dma_buffer = MM.allocate_dma_buffer_pages(dma_region_size, "SDHC DMA Buffer"sv, Memory::Region::Access::ReadWrite);
         if (maybe_dma_buffer.is_error()) {
             dmesgln("Could not allocate DMA pages for SDHC: {}", maybe_dma_buffer.error());
         } else {
@@ -869,6 +869,10 @@ ErrorOr<void> SDHostController::transfer_blocks_adma2(u32 block_address, u32 blo
             .reserved3 = 0
         };
 
+        // Ensure that all data written to the DMA buffer is visible before the command register write.
+        // This fence is even needed for card to host transfers since we always write a descriptor table to the buffer.
+        store_memory_fence();
+
         // (7) Set the value to the Command register.
         //     Note: When writing to the upper byte [3] of the Command register, the SD command is issued
         //     and DMA is started.
@@ -915,8 +919,12 @@ ErrorOr<void> SDHostController::transfer_blocks_adma2(u32 block_address, u32 blo
 
         // Copy the read data to the correct memory location
         // FIXME: As described above, we may be able to target the destination buffer directly
-        if (direction == SD::DataTransferDirection::CardToHost)
+        if (direction == SD::DataTransferDirection::CardToHost) {
+            // Ensure that we only start reading from the DMA buffer after the transfer is finished,
+            // i.e. after we read the transfer complete bit.
+            load_memory_fence();
             TRY(out.write(bit_cast<void const*>(adma_dma_region_virtual), host_offset, blocks_transferred * block_len));
+        }
 
         blocks_transferred_total += blocks_transferred;
         host_offset = card_offset;
