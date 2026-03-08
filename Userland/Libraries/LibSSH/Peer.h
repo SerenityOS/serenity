@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibCore/Socket.h>
+#include <LibSSH/Cipher.h>
 #include <LibSSH/KeyExchangeData.h>
 
 namespace SSH {
@@ -17,6 +18,7 @@ class Peer {
 public:
     Peer(Core::TCPSocket& tcp_socket)
         : m_tcp_socket(tcp_socket)
+        , m_cipher(make<IdentityCipher>())
     {
     }
     virtual ~Peer() = default;
@@ -30,6 +32,7 @@ protected:
 
 private:
     Core::TCPSocket& m_tcp_socket;
+    NonnullOwnPtr<Cipher> m_cipher;
 };
 
 // 4.1.2.  Initial Assignments

@@ -16,6 +16,8 @@ namespace SSH {
 // https://datatracker.ietf.org/doc/html/rfc4253#section-6
 ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
 {
+    TRY(m_cipher->decrypt(data.bytes()));
+
     auto stream = FixedMemoryStream { data.bytes() };
     u32 packet_length = TRY(stream.read_value<NetworkOrdered<u32>>());
 
