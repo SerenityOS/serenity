@@ -1,4 +1,5 @@
 set(SOURCES
+    Cipher.cpp
     DataTypes.cpp
     IdentificationString.cpp
     KeyExchangeData.cpp
