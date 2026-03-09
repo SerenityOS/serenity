@@ -111,7 +111,7 @@ void ChaCha20::do_quarter_round(u32& a, u32& b, u32& c, u32& d)
     rotl(b, 7);
 }
 
-void ChaCha20::run_cipher(ReadonlyBytes input, Bytes& output)
+void ChaCha20::run_cipher(ReadonlyBytes input, Bytes output)
 {
     size_t offset = 0;
     size_t block_offset = 0;
@@ -145,13 +145,13 @@ void ChaCha20::run_cipher(ReadonlyBytes input, Bytes& output)
     }
 }
 
-void ChaCha20::encrypt(ReadonlyBytes input, Bytes& output)
+void ChaCha20::encrypt(ReadonlyBytes input, Bytes output)
 {
     VERIFY(input.size() <= output.size());
     this->run_cipher(input, output);
 }
 
-void ChaCha20::decrypt(ReadonlyBytes input, Bytes& output)
+void ChaCha20::decrypt(ReadonlyBytes input, Bytes output)
 {
     VERIFY(input.size() <= output.size());
     this->run_cipher(input, output);
