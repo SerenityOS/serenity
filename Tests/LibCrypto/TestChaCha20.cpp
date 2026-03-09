@@ -12,9 +12,8 @@ static void test_chacha20(ReadonlyBytes key, ReadonlyBytes nonce, u32 initial_bl
 {
     VERIFY(plaintext.size() == ciphertext.size());
     auto result = MUST(ByteBuffer::create_uninitialized(plaintext.size()));
-    auto output = result.bytes();
     Crypto::Cipher::ChaCha20 cipher(key, nonce, initial_block_counter);
-    cipher.encrypt(plaintext, output);
+    cipher.encrypt(plaintext, result);
     EXPECT_EQ(result.bytes(), ciphertext);
 }
 
