@@ -133,11 +133,11 @@ void ChaCha20::run_cipher(ReadonlyBytes input, Bytes output)
         u32 n = min(input.size() - offset, 64 - block_offset);
         u8* key_block = (u8*)m_block + block_offset;
         for (u32 i = 0; i < n; i++) {
-            u8 input_byte = input.offset_pointer(offset)[i];
+            u8 input_byte = input[offset + i];
             u8 key_byte = key_block[i];
             u8 output_byte = input_byte ^ key_byte;
 
-            ByteReader::store(output.offset_pointer(offset + i), output_byte);
+            output[offset + i] = output_byte;
         }
 
         offset += n;
