@@ -12,9 +12,14 @@ static void test_chacha20(ReadonlyBytes key, ReadonlyBytes nonce, u32 initial_bl
 {
     VERIFY(plaintext.size() == ciphertext.size());
     auto result = MUST(ByteBuffer::create_uninitialized(plaintext.size()));
+
     Crypto::Cipher::ChaCha20 cipher(key, nonce, initial_block_counter);
     cipher.encrypt(plaintext, result);
     EXPECT_EQ(result.bytes(), ciphertext);
+
+    Crypto::Cipher::ChaCha20 cipher2(key, nonce, initial_block_counter);
+    cipher2.decrypt(result, result);
+    EXPECT_EQ(result.bytes(), plaintext);
 }
 
 // https://datatracker.ietf.org/doc/html/rfc7539#appendix-A.2
