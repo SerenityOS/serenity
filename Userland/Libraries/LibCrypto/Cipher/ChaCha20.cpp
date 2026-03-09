@@ -48,7 +48,7 @@ ChaCha20::ChaCha20(ReadonlyBytes key, ReadonlyBytes nonce, u32 initial_counter)
 
     // NOTE: In the case of an 8-byte nonce, we skip the 13th word
     u32 nonce_offset = nonce.size() == 8 ? 1 : 0;
-    for (u32 i = 0; i < 12; i += 4) {
+    for (u32 i = 0; i < nonce.size(); i += 4) {
         m_state[(i / 4) + 13 + nonce_offset] = AK::convert_between_host_and_little_endian(ByteReader::load32(nonce.offset(i)));
     }
 }
