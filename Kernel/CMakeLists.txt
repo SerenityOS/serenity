@@ -709,15 +709,11 @@ add_compile_options(-nostdlib)
 # information disclosures coming from the kernel stack.
 add_compile_options(-ftrivial-auto-var-init=pattern)
 
+# Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
+add_compile_options(-fzero-call-used-regs=used-gpr)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # Apply any flags that are only available on >= GCC 11.1
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.1")
-        # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
-        add_compile_options(-fzero-call-used-regs=used-gpr)
-    endif()
-
     set(TARGET_STRING "")
-
 
     # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
     set_source_files_properties(Library/MiniStdLib.cpp
