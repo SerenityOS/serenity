@@ -37,3 +37,9 @@ set(SOURCES
 
 serenity_lib(LibCrypto crypto)
 target_link_libraries(LibCrypto PRIVATE LibCore)
+
+# FIXME: Remove the check once we require Clang 24+ for Lagom.
+if(NOT EMSCRIPTEN AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv64" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 24))
+    # This should prevent sensitive data from leaking through registers.
+    target_compile_options(LibCrypto PRIVATE -fzero-call-used-regs=used)
+endif ()
