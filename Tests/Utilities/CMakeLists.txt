@@ -1,6 +1,6 @@
 set(TEST_SOURCES
-    TestSed.cpp
     TestPatch.cpp
+    TestSed.cpp
     TestUniq.cpp
 )
 
