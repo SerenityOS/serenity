@@ -25,8 +25,11 @@ boot_pd0:
 .skip (4096 * 4)
 .global boot_pd0_pts
 boot_pd0_pts:
-.skip 4096 * (MAX_KERNEL_SIZE >> 21)
+.skip (8 * 512 * (MAX_KERNEL_SIZE >> 21))
 .global boot_pd_kernel
+.global boot_pdpt_kernel
+boot_pdpt_kernel:
+.skip 4096
 boot_pd_kernel:
 .skip 4096
 .global boot_pd_kernel_pt0
@@ -34,7 +37,7 @@ boot_pd_kernel_pt0:
 .skip 4096
 .global boot_pd_kernel_image_pts
 boot_pd_kernel_image_pts:
-.skip 4096 * (MAX_KERNEL_SIZE >> 21)
+.skip (8 * 512 * (MAX_KERNEL_SIZE >> 21))
 .global boot_pd_kernel_pt1023
 boot_pd_kernel_pt1023:
 .skip 4096
@@ -406,8 +409,8 @@ long_mode_supported:
 
     /* set up pdpt[0]..pdpt[3] */
     movl $boot_pdpt, %edi
-    movl $(boot_pd0 + 3), 0(%edi)
-    movl $(boot_pd0 + 4096 + 3), 8(%edi)
+    movl $(boot_pd0 + 4096 * 0 + 3),  0(%edi)
+    movl $(boot_pd0 + 4096 * 1 + 3),  8(%edi)
     movl $(boot_pd0 + 4096 * 2 + 3), 16(%edi)
     movl $(boot_pd0 + 4096 * 3 + 3), 24(%edi)
 

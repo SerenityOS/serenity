@@ -8,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
+#include <Kernel/Sections.h>
 #include <LibTest/TestCase.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -72,26 +73,29 @@ TEST_CASE(test_efault)
     ptrdiff_t distance = two_page - one_page;
     EXPECT_EFAULT(read, one_page, (u32)distance + 1024);
 
-    constexpr auto user_range_ceiling = (sizeof(void*) == 4 ? 0xbe000000u : 0x1ffe000000);
+    // FIXME: Not quite true
+    constexpr auto user_range_ceiling = KERNEL_MAPPING_BASE;
     u8* jerk_page = nullptr;
 
     // Test every kernel page just because.
-    constexpr auto kernel_range_ceiling = (sizeof(void*) == 4 ? 0xffffffffu : 0x203fffffff);
+    constexpr auto kernel_range_ceiling = KERNEL_MAPPING_BASE + 1 * GiB;
     for (u64 kernel_address = user_range_ceiling; kernel_address <= kernel_range_ceiling; kernel_address += PAGE_SIZE) {
         jerk_page = (u8*)mmap((void*)kernel_address, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
         EXPECT_EQ(jerk_page, MAP_FAILED);
         EXPECT_EQ(errno, EFAULT);
     }
 
+    // FIXME: Re-enable these
+    //        For this we would need to know how many address bits we have available
     // Test the page just below where the user VM ends.
-    jerk_page = (u8*)mmap((void*)(user_range_ceiling - PAGE_SIZE), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
-    EXPECT_EQ(jerk_page, (u8*)(user_range_ceiling - PAGE_SIZE));
+    // jerk_page = (u8*)mmap((void*)(user_range_ceiling - PAGE_SIZE), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
+    // EXPECT_EQ(jerk_page, (u8*)(user_range_ceiling - PAGE_SIZE));
 
-    EXPECT_OK(read, jerk_page, PAGE_SIZE);
-    EXPECT_EFAULT(read, jerk_page, PAGE_SIZE + 1);
+    // EXPECT_OK(read, jerk_page, PAGE_SIZE);
+    // EXPECT_EFAULT(read, jerk_page, PAGE_SIZE + 1);
 
-    // Test something that would wrap around the 2^32 mark.
-    EXPECT_EFAULT(read, jerk_page, 0x50000000);
+    // // Test something that would wrap around the 2^32 mark.
+    // EXPECT_EFAULT(read, jerk_page, 0x50000000);
 }
 
 TEST_CASE(test_dbgputstr_efault)

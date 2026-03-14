@@ -73,18 +73,18 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
     directory->m_root_table = TRY(MM.allocate_physical_page());
 
     directory->m_directory_table = TRY(MM.allocate_physical_page());
-    auto kernel_pd_index = (g_boot_info.kernel_mapping_base >> 30) & 0x1ffu;
-    for (size_t i = 0; i < kernel_pd_index; i++) {
+    for (size_t i = 0; i < 128; i++) {
         directory->m_directory_pages[i] = TRY(MM.allocate_physical_page());
     }
 
-    // Share the top 1 GiB of kernel-only mappings (>=kernel_mapping_base)
-    directory->m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
-
+    auto kernel_root_table_index = (g_boot_info.kernel_mapping_base >> 39) & 0x1ffu;
     {
         InterruptDisabler disabler;
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_root_table);
-        table.raw[0] = (FlatPtr)directory->m_directory_table->paddr().as_ptr() | TABLE_DESCRIPTOR;
+        table.raw[0] = directory->m_directory_table->paddr().get() | TABLE_DESCRIPTOR;
+
+        // Also map the kernel into the process
+        table.raw[kernel_root_table_index] = MM.kernel_page_directory().m_directory_table->paddr().get() | TABLE_DESCRIPTOR;
         MM.unquickmap_page();
     }
 

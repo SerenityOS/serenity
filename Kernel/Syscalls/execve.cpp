@@ -355,7 +355,7 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
         if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
             region->set_syscall_region(true);
         if (program_header.offset() == 0)
-            load_base_address = (FlatPtr)region->vaddr().as_ptr();
+            load_base_address = region->vaddr().get();
         return {};
     };
 

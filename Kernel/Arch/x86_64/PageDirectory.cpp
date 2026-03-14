@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/PageDirectory.h>
+#include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Prekernel/Prekernel.h>
@@ -70,18 +71,20 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
     directory->m_pml4t = TRY(MM.allocate_physical_page());
 
     directory->m_directory_table = TRY(MM.allocate_physical_page());
-    auto kernel_pd_index = (g_boot_info.kernel_mapping_base >> 30) & 0x1ffu;
-    for (size_t i = 0; i < kernel_pd_index; i++) {
+    // FIXME: Old limit from old kernel mapping base, see fixme at USER_RANGE_CEILING
+    for (size_t i = 0; i < 128; i++) {
         directory->m_directory_pages[i] = TRY(MM.allocate_physical_page());
     }
 
-    // Share the top 1 GiB of kernel-only mappings (>=g_boot_info.kernel_mapping_base)
-    directory->m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
+    auto kernel_pml4_index = (g_boot_info.kernel_mapping_base >> 39) & 0x1ffu;
 
     {
         InterruptDisabler disabler;
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_pml4t);
         table.raw[0] = (FlatPtr)directory->m_directory_table->paddr().as_ptr() | 7;
+
+        // Also map the kernel into the process
+        table.raw[kernel_pml4_index] = MM.kernel_page_directory().m_directory_table->paddr().get() | 7;
         MM.unquickmap_page();
     }
 
