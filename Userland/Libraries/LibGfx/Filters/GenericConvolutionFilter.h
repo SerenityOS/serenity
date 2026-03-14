@@ -114,7 +114,7 @@ public:
                         if (parameters.should_wrap())
                             ki = (ki + source.size().width()) % source.size().width(); // TODO: fix up using source_rect
                         else
-                            continue;
+                            ki = clamp(ki, static_cast<ssize_t>(source_rect.x()), static_cast<ssize_t>(source_rect.right() - 1));
                     }
 
                     for (auto l = 0l; l < (ssize_t)N; ++l) {
@@ -123,7 +123,7 @@ public:
                             if (parameters.should_wrap())
                                 lj = (lj + source.size().height()) % source.size().height(); // TODO: fix up using source_rect
                             else
-                                continue;
+                                lj = clamp(lj, static_cast<ssize_t>(source_rect.y()), static_cast<ssize_t>(source_rect.bottom() - 1));
                         }
 
                         auto pixel = source.get_pixel(ki, lj);
