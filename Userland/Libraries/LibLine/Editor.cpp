@@ -2156,18 +2156,36 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
     Vector<char, 4> coordinate_buffer;
     size_t row { 1 }, col { 1 };
 
+    constexpr int max_retries = 10;
+    auto empty_reads = 0;
+
     do {
         char c;
         auto nread = read(0, &c, 1);
         if (nread < 0) {
             if (errno == 0 || errno == EINTR) {
-                // ????
                 continue;
             }
             dbgln("Error while reading DSR: {}", strerror(errno));
             return Error::ReadFailure;
         }
         if (nread == 0) {
+            if (++empty_reads < max_retries)
+                continue;
+            // Drain any pending DSR response so it doesn't corrupt
+            // later input reads.
+            timeval drain_timeout { 0, 100000 }; // 100ms
+            fd_set drain_fds;
+            FD_ZERO(&drain_fds);
+            FD_SET(0, &drain_fds);
+            while (select(1, &drain_fds, nullptr, nullptr, &drain_timeout) > 0 && FD_ISSET(0, &drain_fds)) {
+                char drain_buf[16];
+                if (read(0, drain_buf, sizeof(drain_buf)) <= 0)
+                    break;
+                FD_ZERO(&drain_fds);
+                FD_SET(0, &drain_fds);
+                drain_timeout = { 0, 10000 };
+            }
             dbgln("Terminal DSR issue; received no response");
             return Error::Empty;
         }
