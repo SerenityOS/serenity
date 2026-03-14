@@ -131,3 +131,6 @@ target_link_libraries(DynamicLoader_LibC
     PUBLIC DynamicLoader_CompileOptions
     PRIVATE DynamicLoader_LibSystem
 )
+
+serenity_static_lib(LibCStatic)
+target_link_libraries(LibCStatic PRIVATE LibSystem)

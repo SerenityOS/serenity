@@ -126,7 +126,7 @@ static ErrorOr<int> buggiebox_main(Main::Arguments arguments)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     LexicalPath runbase { arguments.strings[0] };
-    if (runbase.basename() == "BuggieBox"sv) {
+    if (runbase.basename() == "BuggieBox"sv || runbase.basename() == "BuggieBoxStatic"sv) {
         Main::Arguments utility_arguments = arguments;
         utility_arguments.argc--;
         utility_arguments.argv++;

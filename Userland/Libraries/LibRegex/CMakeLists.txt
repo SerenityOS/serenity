@@ -12,3 +12,6 @@ endif()
 
 serenity_lib(LibRegex regex)
 target_link_libraries(LibRegex PRIVATE LibUnicode)
+
+serenity_static_lib(LibRegexStatic)
+target_link_libraries(LibRegexStatic PRIVATE LibUnicodeStatic)

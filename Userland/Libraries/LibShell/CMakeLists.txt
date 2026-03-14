@@ -15,6 +15,10 @@ serenity_lib(LibShellMinimal shellminimal)
 target_link_libraries(LibShellMinimal PRIVATE LibCoreMinimal LibCoreBasic LibRegex LibLine LibFileSystem)
 target_sources(LibShellMinimal PRIVATE MinimalHighlight.cpp)
 
+serenity_static_lib(LibShellMinimalStatic)
+target_link_libraries(LibShellMinimalStatic PRIVATE LibCoreMinimalStatic LibCoreStatic LibRegexStatic LibLineStatic LibFileSystemStatic)
+target_sources(LibShellMinimalStatic PRIVATE MinimalHighlight.cpp)
+
 serenity_lib(LibShell shell)
 target_link_libraries(LibShell PRIVATE LibCore LibRegex LibLine LibFileSystem LibSyntax LibURL)
 target_sources(LibShell PRIVATE URLHighlight.cpp)

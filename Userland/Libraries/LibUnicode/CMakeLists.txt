@@ -16,4 +16,8 @@ set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
 
 serenity_lib(LibUnicode unicode)
 
+serenity_static_lib(LibUnicodeStatic)
+target_link_libraries(LibUnicodeStatic PRIVATE LibCoreStatic)
+
 target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
+target_compile_definitions(LibUnicodeStatic PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)

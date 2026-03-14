@@ -4,3 +4,5 @@ set(SOURCES
 )
 
 serenity_lib(LibRIFF riff)
+
+serenity_static_lib(LibRIFFStatic)

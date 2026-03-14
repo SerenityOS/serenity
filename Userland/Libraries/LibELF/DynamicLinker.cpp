@@ -44,6 +44,7 @@
 namespace ELF {
 
 static ByteString s_main_program_path;
+static bool s_libc_initialized { false };
 
 // The order of objects here corresponds to the "load order" from POSIX specification.
 static OrderedHashMap<ByteString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
@@ -345,12 +346,14 @@ int DynamicLinker::iterate_over_loaded_shared_objects(int (*callback)(struct dl_
     return __dl_iterate_phdr(callback, data);
 }
 
-static void initialize_libc(DynamicObject& libc)
+static bool try_initialize_libc(DynamicObject& libc)
 {
     auto res = libc.lookup_symbol("__libc_init"sv);
-    VERIFY(res.has_value());
+    if (!res.has_value())
+        return false;
     using libc_init_func = decltype(__libc_init);
     ((libc_init_func*)res.value().address.as_ptr())();
+    return true;
 }
 
 static void drop_loader_promise(StringView promise_to_drop)
@@ -393,8 +396,15 @@ static ErrorOr<void, DlErrorMessage> link_main_library(int flags, DependencyOrde
         VERIFY(!result.is_error());
         auto& object = result.value();
 
-        if (loader->filepath().ends_with("/libc.so"sv)) {
-            initialize_libc(*object);
+        // Only initialize libc once.
+        // We avoid looking up for __libc_init in every object by trying
+        // to find it in libc, and then never look for it again.
+        if (!s_libc_initialized) {
+            if (loader->filepath().ends_with("/libc.so"sv)) {
+                s_libc_initialized = try_initialize_libc(*object);
+            } else {
+                s_libc_initialized = try_initialize_libc(*object);
+            }
         }
 
         if (loader->filepath().ends_with("/libsystem.so"sv)) {
@@ -414,6 +424,11 @@ static ErrorOr<void, DlErrorMessage> link_main_library(int flags, DependencyOrde
             }
         }
     }
+
+    // Our system rely on libc being initialized, so a binary that doesn't
+    // expose __libc_init was probably not linked against libc and doesn't need
+    // a dynamic loader anyway.
+    VERIFY(s_libc_initialized);
 
     drop_loader_promise("prot_exec"sv);
 

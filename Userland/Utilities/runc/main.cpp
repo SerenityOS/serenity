@@ -34,7 +34,7 @@ static ErrorOr<void> create_custom_vfs_root_context_layout(JsonArray const& layo
 
     TRY(Core::System::unshare_enter(Kernel::UnshareType::VFSRootContext,
         vfs_root_context_layout->id(),
-        to_underlying(Kernel::UnshareEnterFlags::AfterExec)));
+        to_underlying(Kernel::UnshareEnterFlags::CurrentProgram)));
 
     return {};
 }

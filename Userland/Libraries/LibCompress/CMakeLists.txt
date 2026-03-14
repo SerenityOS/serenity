@@ -12,3 +12,7 @@ set(SOURCES
 
 serenity_lib(LibCompress compress)
 target_link_libraries(LibCompress PRIVATE LibCore LibCrypto)
+
+# ===== LibCompress for BuggieBox =====
+serenity_static_lib(LibCompressStatic)
+target_link_libraries(LibCompressStatic PRIVATE LibCoreStatic LibCryptoStatic)
