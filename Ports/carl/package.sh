@@ -7,7 +7,7 @@ files=(
 )
 
 build() {
-    run $CC -O3 carl.c -o carl
+    run $CC -O3 carl.c -o carl -std=c17
 }
 
 install() {
