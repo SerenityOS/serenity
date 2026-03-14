@@ -65,7 +65,7 @@ void KString::operator delete(void* string)
 {
     if (!string)
         return;
-    size_t allocation_size = sizeof(KString) + (sizeof(char) * static_cast<KString*>(string)->m_length) + sizeof(char);
+    size_t allocation_size = sizeof(KString) + (sizeof(char) * static_cast<KString*>(string)->m_allocated_length) + sizeof(char);
     kfree_sized(string, allocation_size);
 }
 

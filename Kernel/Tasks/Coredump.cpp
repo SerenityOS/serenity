@@ -97,24 +97,25 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Pro
 {
     auto output_directory = KLexicalPath::dirname(output_path);
     auto process_vfs_root_context = process.vfs_root_context();
-    auto vfs_root_context_root_custody = process_vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
-        return custody;
+    auto vfs_root_context_root_custody = process_vfs_root_context->root_path().with([](auto& root_path) -> NonnullRefPtr<Custody> {
+        return root_path.custody();
     });
-    auto dump_directory = TRY(VirtualFileSystem::open_directory(process_vfs_root_context, Process::current().credentials(), output_directory, *vfs_root_context_root_custody));
-    auto dump_directory_metadata = dump_directory->inode().metadata();
+    UnresolvedPath unresolved_output_directory_path(vfs_root_context_root_custody, output_directory);
+    auto dump_directory = TRY(VirtualFileSystem::open_directory(process_vfs_root_context, Process::current().credentials(), unresolved_output_directory_path));
+    auto dump_directory_metadata = dump_directory->custody().inode().metadata();
     if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040777) {
         dbgln("Refusing to put coredump in sketchy directory '{}'", output_directory);
         return EINVAL;
     }
 
     auto process_credentials = process.credentials();
+    UnresolvedPath unresolved_path(dump_directory->custody(), KLexicalPath::basename(output_path));
     return TRY(VirtualFileSystem::open(
         process_vfs_root_context,
         Process::current().credentials(),
-        KLexicalPath::basename(output_path),
+        unresolved_path,
         O_CREAT | O_WRONLY | O_EXCL,
         S_IFREG, // We will enable reading from userspace when we finish generating the coredump file
-        dump_directory,
         UidAndGid { process_credentials->uid(), process_credentials->gid() }));
 }
 

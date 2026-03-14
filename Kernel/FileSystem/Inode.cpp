@@ -53,7 +53,7 @@ void Inode::sync()
     }
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(VFSRootContext const& vfs_root_context, Credentials const& credentials, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+ErrorOr<Inode::TargetLinkPath> Inode::read_as_link() const
 {
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
@@ -61,11 +61,11 @@ ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(VFSRootContext const& vfs
 
     // Make sure that our assumptions about the path length hold up.
     // Note that this doesn't mean that the reported size can be trusted, some inodes just report zero.
-    VERIFY(size() <= MAXPATHLEN);
-
-    Array<u8, MAXPATHLEN> contents;
-    auto read_bytes = TRY(read_until_filled_or_end(0, contents.size(), UserOrKernelBuffer::for_kernel_buffer(contents.data()), nullptr));
-    return VirtualFileSystem::resolve_path(vfs_root_context, credentials, StringView { contents.span().trim(read_bytes) }, base, out_parent, options, symlink_recursion_level);
+    VERIFY(size() <= TargetLinkPath::max_length());
+    TargetLinkPath contents;
+    auto read_bytes = TRY(read_until_filled_or_end(0, contents.max_length(), UserOrKernelBuffer::for_kernel_buffer(contents.storage().data()), nullptr));
+    contents.set_stored_length(read_bytes);
+    return contents;
 }
 
 Inode::Inode(FileSystem& fs, InodeIndex index)

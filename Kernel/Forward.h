@@ -17,7 +17,7 @@ class BlockDevice;
 class CharacterDevice;
 class Coredump;
 class Credentials;
-class CustodyBase;
+class UnresolvedPath;
 class Custody;
 class DeprecatedWaitQueue;
 class Device;

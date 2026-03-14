@@ -44,7 +44,6 @@ void Mount::delete_mount_from_list(Mount& mount)
     dbgln("VirtualFileSystem: Unmounting file system {}...", mount.guest_fs().fsid());
     VERIFY(mount.m_vfs_list_node.is_in_list());
     mount.m_vfs_list_node.remove();
-    delete &mount;
 }
 
 ErrorOr<NonnullOwnPtr<KString>> Mount::absolute_path() const

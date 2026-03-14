@@ -25,12 +25,12 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(Custody& custody)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(NonnullOwnPtr<Path> path)
 {
-    auto inode_file = TRY(InodeFile::create(custody.inode()));
+    auto inode_file = TRY(InodeFile::create(path->custody().inode()));
     auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OpenFileDescription(move(inode_file))));
 
-    description->m_state.with([&](auto& state) { state.custody = custody; });
+    description->m_state.with([&](auto& state) { state.path = move(path); });
     TRY(description->attach());
     return description;
 }
@@ -70,9 +70,9 @@ ErrorOr<void> OpenFileDescription::attach()
     return m_file->attach(*this);
 }
 
-void OpenFileDescription::set_original_custody(Custody& custody)
+void OpenFileDescription::set_original_path(NonnullOwnPtr<Path> path)
 {
-    m_state.with([&](auto& state) { state.custody = custody; });
+    m_state.with([&](auto& state) { state.path = move(path); });
 }
 
 Thread::FileBlocker::BlockFlags OpenFileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
@@ -565,12 +565,20 @@ off_t OpenFileDescription::offset() const
 
 RefPtr<Custody const> OpenFileDescription::custody() const
 {
-    return m_state.with([](auto& state) { return state.custody; });
+    return m_state.with([](auto& state) -> RefPtr<Custody> {
+        if (!state.path)
+            return nullptr;
+        return state.path->custody();
+    });
 }
 
 RefPtr<Custody> OpenFileDescription::custody()
 {
-    return m_state.with([](auto& state) { return state.custody; });
+    return m_state.with([](auto& state) -> RefPtr<Custody> {
+        if (!state.path)
+            return nullptr;
+        return state.path->custody();
+    });
 }
 
 }

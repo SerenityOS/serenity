@@ -35,7 +35,7 @@ ErrorOr<FlatPtr> Process::sys$unshare_open(Userspace<Syscall::SC_unshare_open_pa
     case UnshareType::VFSRootContext:
     case UnshareType::HostnameContext:
         auto new_unshared_resource_file = TRY(UnsharedResourceFile::create(static_cast<UnshareType>(params.type)));
-        auto description = TRY(OpenFileDescription::try_create(move(new_unshared_resource_file)));
+        auto description = TRY(OpenFileDescription::try_create(*new_unshared_resource_file));
         return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
             auto new_fd = TRY(fds.allocate());
             fds[new_fd.fd].set(move(description), FD_CLOEXEC);

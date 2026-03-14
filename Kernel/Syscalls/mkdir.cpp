@@ -16,8 +16,8 @@ ErrorOr<FlatPtr> Process::sys$mkdir(int dirfd, Userspace<char const*> user_path,
     TRY(require_promise(Pledge::cpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
 
-    CustodyBase base(dirfd, path->view());
-    TRY(VirtualFileSystem::mkdir(vfs_root_context(), credentials(), path->view(), mode & ~umask(), base));
+    UnresolvedPath target(dirfd, path->view());
+    TRY(VirtualFileSystem::mkdir(vfs_root_context(), credentials(), target, mode & ~umask()));
     return 0;
 }
 }

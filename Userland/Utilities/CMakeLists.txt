@@ -1,5 +1,6 @@
 set(CMD_SOURCES_CPP
     abench.cpp
+    access.cpp
     aconv.cpp
     adjtime.cpp
     allocate.cpp
@@ -241,7 +242,7 @@ list(APPEND REQUIRED_TARGETS
 )
 list(APPEND RECOMMENDED_TARGETS
     aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip install keymap lsdev lsirq lsof lspci lzcat man mkfs.fat mknod mktemp
-    nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
+    nc netstat notify ntpquery open access passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
 )
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)

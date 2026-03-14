@@ -14,6 +14,7 @@
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Mount.h>
+#include <Kernel/FileSystem/Path.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
@@ -28,6 +29,7 @@ public:
 
     static VFSRootContext const& empty_context_for_kernel_processes();
     static Custody const& empty_context_custody_for_kernel_processes();
+    static Mount const& empty_context_mount_for_kernel_processes();
     static void initialize_empty_ramfs_root_context_for_kernel_processes();
 
     enum class AddToGlobalContextList {
@@ -38,8 +40,8 @@ public:
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_filesystem(AddToGlobalContextList, FileSystem&);
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_empty();
 
-    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None>& root_custody() { return m_root_custody; }
-    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> const& root_custody() const { return m_root_custody; }
+    SpinlockProtected<Path, LockRank::None>& root_path() { return m_root_path; }
+    SpinlockProtected<Path, LockRank::None> const& root_path() const { return m_root_path; }
 
     enum class DoBindMount {
         Yes,
@@ -53,13 +55,7 @@ public:
 
     ErrorOr<void> apply_to_mount_for_host_custody(Custody const& current_custody, Function<void(Mount&)>);
 
-    ErrorOr<NonnullRefPtr<FileSystem>> mount_point_to_guest_filesystem(Custody const& custody);
-
-    struct CurrentMountState {
-        Mount::Details details;
-        int flags { 0 };
-    };
-    ErrorOr<CurrentMountState> current_mount_state_for_host_custody(Custody const& current_custody) const;
+    ErrorOr<NonnullRefPtr<Mount>> find_custody_as_mountpoint(Custody const& custody) const;
 
     IndexID id() const { return m_id; }
 
@@ -69,7 +65,7 @@ public:
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
 
 private:
-    VFSRootContext(NonnullRefPtr<Custody> custody);
+    VFSRootContext(NonnullRefPtr<Custody> custody, NonnullRefPtr<Mount> mount, NonnullRefPtr<CanonicalizedPath> root_path);
 
     enum class ValidateImmutableFlag {
         Yes,
@@ -77,7 +73,7 @@ private:
     };
     ErrorOr<void> do_on_mount_for_host_custody(ValidateImmutableFlag validate_immutable_flag, Custody const& current_custody, Function<void(Mount&)> callback) const;
 
-    static void add_to_mounts_list_and_increment_fs_mounted_count(DoBindMount do_bind_mount, IntrusiveList<&Mount::m_vfs_list_node>&, NonnullOwnPtr<Mount>);
+    static void add_to_mounts_list_and_increment_fs_mounted_count(DoBindMount do_bind_mount, IntrusiveList<&Mount::m_vfs_list_node>&, NonnullRefPtr<Mount>);
 
     struct Details {
         SetOnce attached_by_process;
@@ -94,9 +90,10 @@ private:
         return {};
     }
 
-    mutable SpinlockProtected<Details, LockRank::None> m_details {};
+    static ErrorOr<void> remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list);
 
-    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> m_root_custody;
+    mutable SpinlockProtected<Details, LockRank::None> m_details {};
+    mutable SpinlockProtected<Path, LockRank::None> m_root_path;
 
     IntrusiveListNode<VFSRootContext, NonnullRefPtr<VFSRootContext>> m_list_node;
 

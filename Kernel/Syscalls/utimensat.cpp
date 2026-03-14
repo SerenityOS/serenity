@@ -73,8 +73,8 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     auto& atime = times[0];
     auto& mtime = times[1];
 
-    CustodyBase base(params.dirfd, path->view());
-    TRY(VirtualFileSystem::utimensat(vfs_root_context(), credentials(), path->view(), base, atime, mtime, follow_symlink));
+    UnresolvedPath target(params.dirfd, path->view());
+    TRY(VirtualFileSystem::utimensat(vfs_root_context(), credentials(), target, atime, mtime, follow_symlink));
     return 0;
 }
 

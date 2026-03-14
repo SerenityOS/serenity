@@ -20,7 +20,7 @@ ErrorOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     TRY(require_promise(Pledge::rpath));
 
     auto watcher = TRY(InodeWatcher::try_create());
-    auto description = TRY(OpenFileDescription::try_create(move(watcher)));
+    auto description = TRY(OpenFileDescription::try_create(*watcher));
 
     description->set_readable(true);
     if (flags & static_cast<unsigned>(InodeWatcherFlags::Nonblock))
@@ -48,11 +48,12 @@ ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<Syscall::SC_inod
         return EBADF;
     auto* inode_watcher = description->inode_watcher();
     auto path = TRY(get_syscall_path_argument(params.user_path));
-    auto custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context(), credentials(), path->view(), current_directory()));
-    if (!custody->inode().fs().supports_watchers())
+    UnresolvedPath unresolved_path(current_directory().custody(), path->view());
+    auto resolved_path = TRY(VirtualFileSystem::resolve_path(vfs_root_context(), credentials(), unresolved_path));
+    if (!resolved_path->custody().inode().fs().supports_watchers())
         return ENOTSUP;
 
-    return TRY(inode_watcher->register_inode(custody->inode(), params.event_mask));
+    return TRY(inode_watcher->register_inode(resolved_path->custody().inode(), params.event_mask));
 }
 
 ErrorOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)

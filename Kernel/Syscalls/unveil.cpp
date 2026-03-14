@@ -139,18 +139,21 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
     // If this case is encountered, the parent node of the path is returned and the custody of that inode is used instead.
     RefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
     OwnPtr<KString> new_unveiled_path;
-    auto vfs_root_context_root_custody = Process::current().vfs_root_context()->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
-        return custody;
+    auto vfs_root_context_root_custody = Process::current().vfs_root_context()->root_path().with([](auto& root_path) -> NonnullRefPtr<Custody> {
+        return root_path.custody();
     });
-    auto custody_or_error = VirtualFileSystem::resolve_path_without_veil(vfs_root_context(), credentials(), path->view(), vfs_root_context_root_custody, &parent_custody);
-    if (!custody_or_error.is_error()) {
-        new_unveiled_path = TRY(custody_or_error.value()->try_serialize_absolute_path());
-    } else if (custody_or_error.error().code() == ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
+    UnresolvedPath unresolved_path(vfs_root_context_root_custody, path->view());
+    auto canonicalized_path = TRY(VirtualFileSystem::canonicalize_path(unresolved_path));
+    auto path_or_error = VirtualFileSystem::resolve_path_without_veil(vfs_root_context(), credentials(), *canonicalized_path, nullptr, &parent_custody);
+    if (!path_or_error.is_error()) {
+        auto resolved_path = path_or_error.release_value();
+        new_unveiled_path = TRY(resolved_path->custody().try_serialize_absolute_path());
+    } else if (path_or_error.error().code() == ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
         auto parent_custody_path = TRY(parent_custody->try_serialize_absolute_path());
         new_unveiled_path = TRY(KLexicalPath::try_join(parent_custody_path->view(), KLexicalPath::basename(path->view())));
     } else {
         // FIXME Should this be EINVAL?
-        return custody_or_error.release_error();
+        return path_or_error.release_error();
     }
 
     if (params.flags & static_cast<unsigned>(UnveilFlags::CurrentProgram)) {

@@ -142,7 +142,7 @@ set(KERNEL_SOURCES
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
-    FileSystem/CustodyBase.cpp
+    FileSystem/CanonicalizedPath.cpp
     FileSystem/DevLoopFS/FileSystem.cpp
     FileSystem/DevLoopFS/Inode.cpp
     FileSystem/DevPtsFS/FileSystem.cpp
@@ -171,6 +171,7 @@ set(KERNEL_SOURCES
     FileSystem/MountFile.cpp
     FileSystem/OpenFileDescription.cpp
     FileSystem/UnsharedResourceFile.cpp
+    FileSystem/UnresolvedPath.cpp
     FileSystem/Plan9FS/FileSystem.cpp
     FileSystem/Plan9FS/Inode.cpp
     FileSystem/Plan9FS/Message.cpp

@@ -221,10 +221,15 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(St
 
     auto path_string = TRY(KString::try_create(path));
 
-    auto vfs_root_context_root_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
-        return custody;
-    });
-    auto [process, first_thread] = TRY(Process::create_spawned(UserID(0), GroupID(0), ProcessID(0), vfs_root_context, hostname_context, vfs_root_context_root_custody, tty));
+    // NOTE: We must create a new Path, because the path in the VFSRootContext has a fake CanonicalizedPath
+    auto current_directory_path = TRY(vfs_root_context->root_path().with([path](auto& root_path) -> ErrorOr<Path> {
+        // FIXME: Is the / directory should be assigned or the specific directory of the init process?
+        auto canonicalized_current_directory_path = TRY(CanonicalizedPath::create(root_path.custody(), path));
+        return Path(root_path.custody(),
+            root_path.mount(),
+            *canonicalized_current_directory_path);
+    }));
+    auto [process, first_thread] = TRY(Process::create_spawned(UserID(0), GroupID(0), ProcessID(0), vfs_root_context, hostname_context, current_directory_path, tty));
 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
@@ -261,7 +266,10 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(St
 ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(StringView name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
     VERIFY(s_empty_kernel_hostname_context);
-    auto process_and_first_thread = TRY(Process::create_impl(name, UserID(0), GroupID(0), ProcessID(0), true, VFSRootContext::empty_context_for_kernel_processes(), *s_empty_kernel_hostname_context));
+
+    auto& empty_canonicalized_path = CanonicalizedPath::fake_root_path();
+    Path empty_path(VFSRootContext::empty_context_custody_for_kernel_processes(), VFSRootContext::empty_context_mount_for_kernel_processes(), empty_canonicalized_path);
+    auto process_and_first_thread = TRY(Process::create_impl(name, UserID(0), GroupID(0), ProcessID(0), true, VFSRootContext::empty_context_for_kernel_processes(), *s_empty_kernel_hostname_context, move(empty_path)));
     auto& process = *process_and_first_thread.process;
     auto& thread = *process_and_first_thread.first_thread;
 
@@ -307,7 +315,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_from_fork(Process& paren
         parent.executable(), parent.tty(), &parent);
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_spawned(UserID uid, GroupID gid, ProcessID ppid, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, NonnullRefPtr<Custody> current_directory, RefPtr<TTY> tty)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_spawned(UserID uid, GroupID gid, ProcessID ppid, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, Path current_directory, RefPtr<TTY> tty)
 {
     // This name shouldn't be visible as we will `exec` on this process before
     // commiting it.
@@ -318,7 +326,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_spawned(UserID uid, Grou
         nullptr, tty, nullptr);
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_impl(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_impl(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, Path current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
@@ -355,10 +363,10 @@ void Process::commit_creation(NonnullRefPtr<Process>& process)
         PerformanceManager::add_process_created_event(*process);
 }
 
-Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
+Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, Path current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
     : m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
-    , m_current_directory(move(current_directory))
+    , m_current_directory(current_directory)
     , m_creation_time(creation_time)
     , m_attached_vfs_root_context(move(vfs_root_context))
     , m_attached_hostname_context(move(hostname_context))
@@ -788,17 +796,25 @@ siginfo_t Process::wait_info() const
     return siginfo;
 }
 
-NonnullRefPtr<Custody> Process::current_directory()
+Path Process::current_directory()
 {
-    return m_current_directory.with([&](auto& current_directory) -> NonnullRefPtr<Custody> {
-        return m_attached_vfs_root_context.with([&](auto& context) -> NonnullRefPtr<Custody> {
-            return context->root_custody().with([&](auto& custody) -> NonnullRefPtr<Custody> {
-                if (!current_directory)
-                    current_directory = custody;
-                return *current_directory;
-            });
-        });
+    Path path(VFSRootContext::empty_context_custody_for_kernel_processes(),
+        VFSRootContext::empty_context_mount_for_kernel_processes(),
+        CanonicalizedPath::fake_root_path());
+    if (is_kernel_process())
+        return path;
+
+    m_current_directory.with([&](auto& current_directory) {
+        path = current_directory;
     });
+
+    // NOTE: Only kernel processes and VFSRootContexts should have these properties in
+    // their current (or root, for VFSRootContext, during tear-down) directory, real
+    // processes should never have these.
+    VERIFY(&path.custody() != &VFSRootContext::empty_context_custody_for_kernel_processes());
+    VERIFY(&path.mount() != &VFSRootContext::empty_context_mount_for_kernel_processes());
+    VERIFY(&path.canonicalized_path() != &CanonicalizedPath::fake_root_path());
+    return path;
 }
 
 ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length)
@@ -836,12 +852,14 @@ ErrorOr<void> Process::dump_core()
     auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
     TRY(coredump->write());
 
-    auto root_custody = vfs_root_context()->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
-        return custody;
+    auto root_custody = vfs_root_context()->root_path().with([](auto& root_path) -> NonnullRefPtr<Custody> {
+        return root_path.custody();
     });
 
     auto new_path = TRY(KString::try_create(coredump_path->view().trim(".partial"sv)));
-    TRY(VirtualFileSystem::rename(vfs_root_context(), credentials(), *root_custody, coredump_path->view(), *root_custody, new_path->view()));
+    UnresolvedPath unresolved_source_path(root_custody, coredump_path->view());
+    UnresolvedPath unresolved_target_path(root_custody, new_path->view());
+    TRY(VirtualFileSystem::rename(vfs_root_context(), credentials(), unresolved_source_path, unresolved_target_path));
 
     return {};
 }
@@ -857,10 +875,11 @@ ErrorOr<void> Process::dump_perfcore()
         return KString::formatted("{}_{}", process_name.representable_view(), pid().value());
     }));
     auto perfcore_filename = TRY(KString::formatted("{}.profile", base_filename));
+    UnresolvedPath unresolved_path(current_directory().custody(), perfcore_filename->view());
     RefPtr<OpenFileDescription> description;
     auto credentials = this->credentials();
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::open(*this, vfs_root_context(), credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
+        auto description_or_error = VirtualFileSystem::open(*this, vfs_root_context(), credentials, unresolved_path, O_CREAT | O_EXCL, 0400, UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;
@@ -1322,17 +1341,23 @@ ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vf
 {
     bool different_vfs_root_context = false;
     auto vfs_root_context = TRY(acquire_vfs_root_context_for_id_and_validate_path(different_vfs_root_context, vfs_root_context_id, path));
-    RefPtr<Custody> target_custody;
     if (different_vfs_root_context) {
-        VERIFY(KLexicalPath::is_canonical(path));
-        auto vfs_root_context_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
-            return custody;
+        VERIFY(KLexicalPath::is_absolute(path));
+        auto vfs_root_context_custody = vfs_root_context->root_path().with([](auto& root_path) -> NonnullRefPtr<Custody> {
+            return root_path.custody();
         });
-        target_custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), path, vfs_root_context_custody));
+
+        // NOTE: We create an UnresolvedPath for a VFSRootContext, so it has a different "base".
+        UnresolvedPath target(vfs_root_context_custody, path);
+        auto resolved_path = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), target));
+        return MountTargetContext { move(resolved_path), *vfs_root_context };
     } else {
-        target_custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), path, current_directory()));
+        UnresolvedPath target(current_directory().custody(), path);
+        auto resolved_path = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), target));
+        return MountTargetContext { move(resolved_path), *vfs_root_context };
     }
-    return MountTargetContext { *target_custody.release_nonnull(), *vfs_root_context };
+
+    VERIFY_NOT_REACHED();
 }
 
 void Process::replace_vfs_root_context(VFSRootContext& new_context)
@@ -1388,7 +1413,7 @@ void Process::replace_resource(ScopedProcessList& list)
     replace_scoped_process_list(list);
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<CustodyBase>, int dirfd)
+ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<UnresolvedPath>, int dirfd)
 {
     return custody_for_dirfd(dirfd);
 }
@@ -1396,7 +1421,7 @@ ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<CustodyBase>, i
 ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(int dirfd)
 {
     if (dirfd == AT_FDCWD)
-        return current_directory();
+        return current_directory().custody();
     auto description = TRY(open_file_description(dirfd));
     if (!description->custody())
         return EINVAL;

@@ -15,7 +15,7 @@
 
 namespace Kernel {
 
-class Mount {
+class Mount : public AtomicRefCounted<Mount> {
     AK_MAKE_NONCOPYABLE(Mount);
     AK_MAKE_NONMOVABLE(Mount);
     friend class VFSRootContext;
@@ -65,7 +65,6 @@ private:
 
     SetOnce m_immutable;
 
-    IntrusiveListNode<Mount> m_vfs_list_node;
+    IntrusiveListNode<Mount, NonnullRefPtr<Mount>> m_vfs_list_node;
 };
-
 }

@@ -39,19 +39,28 @@ public:
 
     ErrorOr<NonnullOwnPtr<KString>> try_clone() const;
 
-    [[nodiscard]] bool is_empty() const { return m_length == 0; }
-    [[nodiscard]] size_t length() const { return m_length; }
+    [[nodiscard]] bool is_empty() const { return m_actual_length == 0; }
+    [[nodiscard]] size_t length() const { return m_actual_length; }
     [[nodiscard]] char const* characters() const { return m_characters; }
     [[nodiscard]] StringView view() const { return { characters(), length() }; }
     [[nodiscard]] ReadonlyBytes bytes() const { return { characters(), length() }; }
 
+    void decrease_size(size_t new_size)
+    {
+        if (new_size > m_actual_length)
+            return;
+        m_actual_length = new_size;
+    }
+
 private:
     explicit KString(size_t length)
-        : m_length(length)
+        : m_actual_length(length)
+        , m_allocated_length(length)
     {
     }
 
-    size_t m_length { 0 };
+    size_t m_actual_length { 0 };
+    size_t m_allocated_length { 0 };
     char m_characters[0];
 };
 
