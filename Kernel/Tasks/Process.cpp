@@ -1337,13 +1337,18 @@ ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vf
 
 void Process::replace_vfs_root_context(VFSRootContext& new_context)
 {
-    m_attached_vfs_root_context.with([&new_context](auto& context) {
-        if (context.ptr() == &new_context)
-            return;
-        VERIFY(context);
-        context->detach({});
-        context = new_context;
-        new_context.attach({});
+    m_current_directory.with([&](auto& current_directory) {
+        m_attached_vfs_root_context.with([&new_context, &current_directory](auto& context) {
+            if (context.ptr() == &new_context)
+                return;
+            VERIFY(context);
+            context->detach({});
+            context = new_context;
+            new_context.attach({});
+            new_context.root_custody().with([&](auto& custody) {
+                current_directory = custody;
+            });
+        });
     });
 }
 
