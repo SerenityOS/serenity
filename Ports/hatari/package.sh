@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='hatari'
 useconfigure='true'
-version='2.4.1'
+version='2.6.1'
 depends=(
     'SDL2'
     'zlib'
@@ -10,7 +10,7 @@ configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/hatari/hatari/archive/refs/tags/v${version}.tar.gz#68c5edbe60db7a83e6e9b427eaac1136b62653846d64e415850e88d9a6a2cbc2"
+    "https://github.com/hatari/hatari/archive/refs/tags/v${version}.tar.gz#75f09c8deddb511b8c1574b84c507743097db9abc6edbb078f942efa8677547e"
 )
 launcher_name='Hatari'
 launcher_category='&Games'
@@ -22,5 +22,5 @@ configure() {
 }
 
 install() {
-    run make install
+    run make DESTDIR="${SERENITY_INSTALL_ROOT}" install
 }
