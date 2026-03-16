@@ -36,4 +36,7 @@ install() {
     for p in "${known_failures[@]}"; do
       echo skipped > "$outdir/out/serenityos/$p.out"
     done
+
+    run mkdir -p "$SERENITY_INSTALL_ROOT/root/"
+    run cp "$SERENITY_SOURCE_DIR/Meta/Contrib/os-test/run-os-test-and-shutdown.sh" "$SERENITY_INSTALL_ROOT/root/"
 }
