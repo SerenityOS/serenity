@@ -1,0 +1,92 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lucas Chollet <lucas.chollet@free.fr>
+Date: Thu, 22 Jan 2026 10:02:57 +0100
+Subject: [PATCH] Use env to locate shell in shebangs
+
+---
+ misc/compile.sh                 | 2 +-
+ misc/run.sh                     | 2 +-
+ misc/try-compile.sh             | 2 +-
+ os-available/cross-ssh-template | 2 +-
+ os-available/in-template        | 2 +-
+ os-available/local              | 2 +-
+ os-available/ssh-template       | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/misc/compile.sh b/misc/compile.sh
+index e6da6db4b5278739063cbaa68d30c559435ab203..fad3ac7a5da3ece12010bccea8ca1bde6a377749 100755
+--- a/misc/compile.sh
++++ b/misc/compile.sh
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/env sh
+ set -e
+ 
+ COMPILE=$1
+diff --git a/misc/run.sh b/misc/run.sh
+index 901a56a2be96db2150f012a968379aae0b2e2e50..e9ef2bb3f442b520cde5dedc12f284f448cca283 100755
+--- a/misc/run.sh
++++ b/misc/run.sh
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/env sh
+ mkdir -p -- "$(dirname "$2")"
+ ./$1 > $2 2>&1
+ CODE=$?
+diff --git a/misc/try-compile.sh b/misc/try-compile.sh
+index 3da7bb941abedcfa757bc2c68737c47d00f64e4b..d274f72f74696ecec8274d27de9fb61658167ff6 100755
+--- a/misc/try-compile.sh
++++ b/misc/try-compile.sh
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/env sh
+ set -e
+ 
+ COMPILE=$1
+diff --git a/os-available/cross-ssh-template b/os-available/cross-ssh-template
+index 9b7372e7742d6c3ec08cdaf2523dacdcb808b742..590f411e4be367a4bf6edd2fa4d77accaa00b8ff 100644
+--- a/os-available/cross-ssh-template
++++ b/os-available/cross-ssh-template
+@@ -1,7 +1,7 @@
+ if [ -z "$host" ] || [ -z "$directory" ]; then
+   cat << \EOF
+ usage:
+-#!/bin/sh
++#!/bin/env sh
+ host=$HOST
+ directory=$DIRECTORY
+ #cross_make=$CROSS_MAKE
+diff --git a/os-available/in-template b/os-available/in-template
+index 821b1051487771da075e0a665c7e111dfa346c2d..a7e73aa81d00d0be59344c45228777799f30997d 100644
+--- a/os-available/in-template
++++ b/os-available/in-template
+@@ -1,7 +1,7 @@
+ if [ -z "$directory" ]; then
+   cat << \EOF
+ usage:
+-#!/bin/sh
++#!/bin/env sh
+ directory=$DIRECTORY
+ . "$(dirname -- "$(which -- "$0")")/../os-available/in-template"
+ EOF
+diff --git a/os-available/local b/os-available/local
+index 90406fd8c7813163b700dc5da3af640d37c6d542..d3f41ba37edfefb4c3f2a61288b36ab6b346892d 100755
+--- a/os-available/local
++++ b/os-available/local
+@@ -1,2 +1,2 @@
+-#!/bin/sh
++#!/bin/env sh
+ CC='gcc -std=gnu17' ${MAKE-make} clean clean-test && ${MAKE-make} test
+diff --git a/os-available/ssh-template b/os-available/ssh-template
+index 3bc14215cfab9ae7ae8512a2a33bed87b47cd034..ba554afcceb61c505237acadbf81864c7690bda8 100644
+--- a/os-available/ssh-template
++++ b/os-available/ssh-template
+@@ -1,7 +1,7 @@
+ if [ -z "$host" ] || [ -z "$directory" ]; then
+   cat << \EOF
+ usage:
+-#!/bin/sh
++#!/bin/env sh
+ host=$HOST
+ directory=$DIRECTORY
+ #make=$MAKE

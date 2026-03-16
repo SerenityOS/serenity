@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lucas Chollet <lucas.chollet@free.fr>
+Date: Thu, 22 Jan 2026 15:47:16 +0100
+Subject: [PATCH] Don't use undefined errno codes in misc/errors.h
+
+---
+ misc/errors.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/misc/errors.h b/misc/errors.h
+index 1f3149d4021e5bf22fa2a21ce06948949237d591..d8a6626e80846c1bff1cc64ed19b3ee07fa191cf 100644
+--- a/misc/errors.h
++++ b/misc/errors.h
+@@ -1,3 +1,5 @@
++#pragma once
++
+ const char* strerrno(int errnum)
+ {
+ 	switch ( errnum )
+@@ -13,7 +15,9 @@ const char* strerrno(int errnum)
+ #endif
+ 	case EALREADY: return "EALREADY";
+ 	case EBADF: return "EBADF";
++#ifdef EBADMSG
+ 	case EBADMSG: return "EBADMSG";
++#endif
+ 	case EBUSY: return "EBUSY";
+ 	case ECANCELED: return "ECANCELED";
+ 	case ECHILD: return "ECHILD";
+@@ -28,7 +32,9 @@ const char* strerrno(int errnum)
+ 	case EFAULT: return "EFAULT";
+ 	case EFBIG: return "EFBIG";
+ 	case EHOSTUNREACH: return "EHOSTUNREACH";
++#ifdef EIDRM
+ 	case EIDRM: return "EIDRM";
++#endif
+ 	case EILSEQ: return "EILSEQ";
+ 	case EINPROGRESS: return "EINPROGRESS";
+ 	case EINTR: return "EINTR";

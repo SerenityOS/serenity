@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lucas Chollet <lucas.chollet@free.fr>
+Date: Thu, 22 Jan 2026 08:58:01 +0100
+Subject: [PATCH] Only use POSIX arguments with `head`
+
+---
+ misc/compile.sh     | 8 ++++----
+ misc/try-compile.sh | 8 ++++----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/misc/compile.sh b/misc/compile.sh
+index 1c218868839a430b09a4b8ae5b6c59cd1b0554a5..e6da6db4b5278739063cbaa68d30c559435ab203 100755
+--- a/misc/compile.sh
++++ b/misc/compile.sh
+@@ -17,13 +17,13 @@ if ! $COMPILE -c "$FILE.c" -o "$OUT_PATH/$FILE.o" -D_GNU_SOURCE -D_BSD_SOURCE -D
+   rm -f "$OUT_PATH/$FILE.o"
+   if grep -Eq '^/\*optional\*/$' "$FILE.c"; then
+     outcome=missing_optional
+-  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'fatal error' > /dev/null; then
++  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'fatal error' > /dev/null; then
+     outcome=missing_header
+-  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'incompatible|pointer-sign' > /dev/null; then
++  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'incompatible|pointer-sign' > /dev/null; then
+     outcome=incompatible
+-  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'undeclared|no member named|is not defined' > /dev/null; then
++  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'undeclared|no member named|is not defined' > /dev/null; then
+     outcome=undeclared
+-  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'unknown type name|Wvisibility|expected declaration specifiers|function cannot return function type|storage size of|declared inside parameter list|tentative definition has type|expected identifier|a parameter list without types|parameter names \(without types\) in function declaration' > /dev/null; then
++  elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'unknown type name|Wvisibility|expected declaration specifiers|function cannot return function type|storage size of|declared inside parameter list|tentative definition has type|expected identifier|a parameter list without types|parameter names \(without types\) in function declaration' > /dev/null; then
+     outcome=unknown_type
+    else
+     outcome=compile_error
+diff --git a/misc/try-compile.sh b/misc/try-compile.sh
+index fbac4c99f4e9dfc5d4b3bf544cc55de5aad49c3d..3da7bb941abedcfa757bc2c68737c47d00f64e4b 100755
+--- a/misc/try-compile.sh
++++ b/misc/try-compile.sh
+@@ -19,13 +19,13 @@ if ! $COMPILE -c "$FILE.c" -o "$OUT_PATH/$FILE.o" -D_POSIX_C_SOURCE=202405L 2>>
+       rm -f "$OUT_PATH/$FILE.o"
+       if grep -Eq '^/\*optional\*/$' "$FILE.c"; then
+         echo "missing_optional" > "$OUT_PATH/$FILE.out"
+-      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'fatal error' > /dev/null; then
++      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'fatal error' > /dev/null; then
+         echo "missing_header" > "$OUT_PATH/$FILE.out"
+-      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'incompatible|pointer-sign' > /dev/null; then
++      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'incompatible|pointer-sign' > /dev/null; then
+         echo "incompatible" > "$OUT_PATH/$FILE.out"
+-      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'undeclared|no member named|is not defined' > /dev/null; then
++      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'undeclared|no member named|is not defined' > /dev/null; then
+         echo "undeclared" > "$OUT_PATH/$FILE.out"
+-      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -1 | grep -E 'unknown type name|Wvisibility|expected declaration specifiers|function cannot return function type|storage size of|declared inside parameter list|tentative definition has type|expected identifier|a parameter list without types|parameter names \(without types\) in function declaration' > /dev/null; then
++      elif grep -E 'error:' "$OUT_PATH/$FILE.err" | grep -Ev 'type specifier missing,' | head -n 1 | grep -E 'unknown type name|Wvisibility|expected declaration specifiers|function cannot return function type|storage size of|declared inside parameter list|tentative definition has type|expected identifier|a parameter list without types|parameter names \(without types\) in function declaration' > /dev/null; then
+         echo "unknown_type" > "$OUT_PATH/$FILE.out"
+       else
+         echo "compile_error" > "$OUT_PATH/$FILE.out"
