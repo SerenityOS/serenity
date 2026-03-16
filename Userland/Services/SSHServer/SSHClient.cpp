@@ -33,7 +33,7 @@ ErrorOr<void> SSHClient::handle_data(ByteBuffer& data)
     case State::WaitingForNewKeysMessage:
         TRY(handle_new_keys_message(data));
         m_state = State::KeyExchanged;
-        break;
+        return {};
     case State::KeyExchanged:
         return handle_service_request(TRY(unpack_generic_message(data)));
     case State::Authentified:
@@ -169,7 +169,7 @@ ErrorOr<void> SSHClient::handle_key_exchange(ByteBuffer& data)
 
     TRY(send_new_keys_message());
 
-    m_state = State::KeyExchanged;
+    m_state = State::WaitingForNewKeysMessage;
     return {};
 }
 
@@ -191,11 +191,13 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
     // "Compute shared secret."
     auto shared_secret = TRY(curve.compute_coordinate(private_key, client_public_key));
     m_key_exchange_data.shared_secret = shared_secret;
+    set_shared_secret(move(shared_secret));
 
     // FIXME: Abort if shared_point is not valid (at least when it's all zero, maybe there are other cases too).
 
     // Generate and sign exchange hash.
     auto hash = TRY(m_key_exchange_data.compute_sha_256());
+    set_hash(hash);
 
     // "The server responds with:
     // byte     SSH_MSG_KEX_ECDH_REPLY

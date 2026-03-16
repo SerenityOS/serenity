@@ -16,7 +16,12 @@ namespace SSH {
 // https://datatracker.ietf.org/doc/html/rfc4253#section-6
 ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
 {
-    TRY(m_cipher->decrypt(data.bytes()));
+    // Packet length is a u32, we want at least one byte of actual data
+    // and 4 of padding.
+    if (data.size() < m_cipher->mac_size() + sizeof(u32) + 1 + 4)
+        return Error::from_string_literal("Packet is too small");
+
+    TRY(m_cipher->decrypt(m_incoming_packet_sequence_number, data.bytes()));
 
     auto stream = FixedMemoryStream { data.bytes() };
     u32 packet_length = TRY(stream.read_value<NetworkOrdered<u32>>());
@@ -44,8 +49,7 @@ ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
     TRY(stream.read_until_filled(payload));
     // FIXME: Uncompress payload if it was negotiated.
 
-    // FIXME: Read MAC if it was negotiated.
-
+    m_incoming_packet_sequence_number++;
     data.clear();
 
     return payload;
@@ -110,6 +114,8 @@ ErrorOr<void> Peer::handle_new_keys_message(ByteBuffer& data)
         return Error::from_string_literal("Invalid NEWKEYS message");
 
     dbgln_if(SSH_DEBUG, "NEWKEYS message received, we should use encryption from now on");
+
+    m_cipher = ChaCha20Poly1305Cipher::create(m_shared_secret, m_hash, *m_session_id);
 
     return {};
 }

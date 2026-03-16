@@ -18,6 +18,7 @@ namespace SSH {
 
 ErrorOr<ByteBuffer> decode_string(FixedMemoryStream& stream);
 
+ErrorOr<ByteBuffer> as_mpint(ReadonlyBytes);
 ErrorOr<void> encode_mpint(AllocatingMemoryStream& stream, ReadonlyBytes);
 ErrorOr<void> encode_string(AllocatingMemoryStream& stream, StringView);
 ErrorOr<void> encode_name_list(AllocatingMemoryStream& stream, Span<StringView const> names);

@@ -1,6 +1,7 @@
 set(TEST_SOURCES
-    TestSSHIdentificationString.cpp
+    TestSSHCipher.cpp
     TestSSHEncodeDecode.cpp
+    TestSSHIdentificationString.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
