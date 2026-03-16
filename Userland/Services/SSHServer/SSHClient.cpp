@@ -35,6 +35,8 @@ ErrorOr<void> SSHClient::handle_data(ByteBuffer& data)
         m_state = State::KeyExchanged;
         break;
     case State::KeyExchanged:
+        return handle_service_request(TRY(unpack_generic_message(data)));
+    case State::Authentified:
         return Error::from_string_literal("Draw the rest of the owl");
     }
     VERIFY_NOT_REACHED();
@@ -224,6 +226,46 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
     dbgln_if(SSH_DEBUG, "KEX_ECDH_REPLY message sent");
 
     return {};
+}
+
+ErrorOr<GenericMessage> SSHClient::unpack_generic_message(ByteBuffer& data)
+{
+    auto payload = TRY(read_packet(data));
+
+    // This is ensured by read_packet().
+    VERIFY(payload.size() >= 1);
+
+    auto stream = FixedMemoryStream { payload.bytes() };
+    auto type = MUST(stream.read_value<MessageID>());
+    return GenericMessage { type, stream };
+}
+
+// 10.  Service Request
+// https://datatracker.ietf.org/doc/html/rfc4253#section-10
+ErrorOr<void> SSHClient::handle_service_request(GenericMessage message)
+{
+    if (message.type != MessageID::SERVICE_REQUEST) {
+        dbgln_if(SSH_DEBUG, "Received packet type: {}", to_underlying(message.type));
+        return Error::from_string_literal("Expected packet of type SERVICE_REQUEST");
+    }
+
+    auto service_name = TRY(decode_string(message.payload));
+    dbgln_if(SSH_DEBUG, "Service '{:s}' requested", service_name.bytes());
+
+    if (service_name == "ssh-userauth"sv.bytes()) {
+        // "If the server supports the service (and permits the client to use
+        // it), it MUST respond with the following:
+        //   byte      SSH_MSG_SERVICE_ACCEPT
+        //   string    service name
+        // "
+
+        return Error::from_string_literal("Draw the rest of the owl");
+    }
+
+    // FIXME: "If the server rejects the service request, it SHOULD send an
+    // appropriate SSH_MSG_DISCONNECT message and MUST disconnect."
+
+    return Error::from_string_literal("Unexpected service name");
 }
 
 } // SSHServer

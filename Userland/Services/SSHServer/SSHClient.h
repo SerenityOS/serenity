@@ -15,6 +15,11 @@ namespace SSH::Server {
 
 class TCPClient;
 
+struct GenericMessage {
+    MessageID type {};
+    FixedMemoryStream payload;
+};
+
 class SSHClient : public Peer {
 public:
     explicit SSHClient(Core::TCPSocket& tcp_socket)
@@ -32,6 +37,7 @@ private:
         WaitingForKeyExchange,
         WaitingForNewKeysMessage,
         KeyExchanged,
+        Authentified,
     };
 
     ErrorOr<void> handle_protocol_version(ByteBuffer& data);
@@ -41,6 +47,10 @@ private:
 
     ErrorOr<void> handle_key_exchange(ByteBuffer& data);
     ErrorOr<void> send_ecdh_reply(ByteBuffer&& client_public_key);
+
+    ErrorOr<GenericMessage> unpack_generic_message(ByteBuffer& data);
+
+    ErrorOr<void> handle_service_request(GenericMessage data);
 
     State m_state { State::Constructed };
     Core::TCPSocket& m_tcp_socket;
