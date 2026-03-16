@@ -696,9 +696,30 @@ constexpr T sin(T angle)
     if (angle > Pi<T> / 2)
         return sin(Pi<T> - angle);
 
-    // https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula
-    // FIXME: This is not a good formula! It requires divisions, so it's slow, and it's not very accurate either.
-    return 16 * angle * (Pi<T> - angle) / (5 * Pi<T> * Pi<T> - 4 * angle * (Pi<T> - angle));
+    // https://github.com/samhocevar/lolremez/wiki/Tutorial-4-of-5%3A-fixing-lower-order-parameters
+    auto f = [](T x) {
+        if constexpr (IsSame<T, f32>) {
+            // lolremez --float --degree 3 --range "1e-50:pi*pi/4" "(sin(sqrt(x))-sqrt(x))/(x*sqrt(x))" "1/(x*sqrt(x))"
+            // "Estimated max error: 4.618689e-9"
+            f32 u = 2.6000548e-06f;
+            u = u * x + -0.00019806615f;
+            u = u * x + 0.0083330171f;
+            return u * x + -0.16666657f;
+        } else {
+            // FIXME: Could do something custom for long double.
+            // lolremez --degree 6 --range "1e-50:pi*pi/4" "(sin(sqrt(x))-sqrt(x))/(x*sqrt(x))" "1/(x*sqrt(x))"
+            // "Estimated max error: 1.1015766629825144e-16"
+            T u = -7.3646464502210486e-13;
+            u = u * x + 1.6047301196685753e-10;
+            u = u * x + -2.5051851497012596e-08;
+            u = u * x + 2.7557316077007725e-06;
+            u = u * x + -0.00019841269820094207;
+            u = u * x + 0.0083333333332628792;
+            return u * x + -0.16666666666665811;
+        }
+    };
+    T angle_squared = angle * angle;
+    return angle + angle * angle_squared * f(angle_squared);
 #    else
     return __builtin_sin(angle);
 #    endif
@@ -730,9 +751,32 @@ constexpr T cos(T angle)
     if (angle > Pi<T> / 2)
         return -cos(Pi<T> - angle);
 
-    // https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula
-    // FIXME: This is not a good formula! It requires divisions, so it's slow, and it's not very accurate either.
-    return (Pi<T> * Pi<T> - 4 * angle * angle) / (Pi<T> * Pi<T> + angle * angle);
+    // https://github.com/samhocevar/lolremez/wiki/Tutorial-3-of-5:-changing-variables-for-simpler-polynomials
+    // for cos(x): cos(x) - 1 is a function of x^2 terms, so we do the substitution on that page like
+    // max | cos(x) - 1 - x^2 Q(x^2) | and then set y = x^2. That yields:
+    // max | (cos(sqrt(y)) - 1) - y Q(y) |. Dividing through with y (instead of sqrt(y) as in the sin() case) gives us:
+    auto f = [](T x) {
+        if constexpr (IsSame<T, f32>) {
+            // lolremez --float --degree 3 --range "1e-50:pi*pi/4" "(cos(sqrt(x)) - 1)/x"  "1/x"
+            // "Estimated max error: 5.2720126e-8"
+            f32 u = 2.3194387e-05f;
+            u = u * x + -0.0013855927f;
+            u = u * x + 0.041663989f;
+            return u * x + -0.49999931f;
+        } else {
+            // lolremez --degree 6 --range "1e-50:pi*pi/4" "(cos(sqrt(x)) - 1)/x"  "1/x"
+            // "Estimated max error: 2.0880269759116624e-15"
+            T u = -1.101249182846601e-11;
+            u = u * x + 2.0858735176345955e-09;
+            u = u * x + -2.7556950755056579e-07;
+            u = u * x + 2.4801583156341611e-05;
+            u = u * x + -0.001388888886393419;
+            u = u * x + 0.041666666665954213;
+            return u * x + -0.49999999999993117;
+        }
+    };
+    T angle_squared = angle * angle;
+    return 1 + angle_squared * f(angle_squared);
 #    else
     return __builtin_cos(angle);
 #    endif
