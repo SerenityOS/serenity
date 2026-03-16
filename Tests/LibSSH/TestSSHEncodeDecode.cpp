@@ -78,9 +78,7 @@ TEST_CASE(mpint)
     // -deadbeef          00 00 00 05 ff 21 52 41 11
 
     auto test = [](ReadonlyBytes value, ReadonlyBytes expected) -> ErrorOr<void> {
-        AllocatingMemoryStream stream;
-        TRY(SSH::encode_mpint(stream, value));
-        auto encoded = TRY(stream.read_until_eof());
+        auto encoded = TRY(SSH::as_mpint(value));
         EXPECT_EQ(encoded.bytes(), expected);
         return {};
     };

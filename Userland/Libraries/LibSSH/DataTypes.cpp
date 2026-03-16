@@ -17,6 +17,13 @@ ErrorOr<ByteBuffer> decode_string(FixedMemoryStream& stream)
     return data;
 }
 
+ErrorOr<ByteBuffer> as_mpint(ReadonlyBytes bytes)
+{
+    AllocatingMemoryStream stream;
+    TRY(encode_mpint(stream, bytes));
+    return stream.read_until_eof();
+}
+
 ErrorOr<void> encode_mpint(AllocatingMemoryStream& stream, ReadonlyBytes bytes)
 {
     VERIFY(bytes.size() > 0);
