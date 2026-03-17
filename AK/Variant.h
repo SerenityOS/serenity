@@ -247,10 +247,7 @@ private:
 
 public:
     template<typename T>
-    static constexpr bool can_contain()
-    {
-        return index_of<T>() != invalid_index;
-    }
+    static constexpr bool can_contain() { return IsOneOf<T, Ts...>; }
 
     template<typename... NewTs>
     Variant(Variant<NewTs...>&& old)
