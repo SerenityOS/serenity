@@ -14,66 +14,49 @@
 
 namespace AK::Detail {
 
-template<typename T, typename IndexType, IndexType InitialIndex, typename... InTypes>
-struct VariantIndexOf {
-    static_assert(DependentFalse<T, IndexType, InTypes...>, "Invalid VariantIndex instantiated");
-};
-
-template<typename T, typename IndexType, IndexType InitialIndex, typename InType, typename... RestOfInTypes>
-struct VariantIndexOf<T, IndexType, InitialIndex, InType, RestOfInTypes...> {
-    consteval IndexType operator()()
-    {
-        if constexpr (IsSame<T, InType>)
-            return InitialIndex;
-        else
-            return VariantIndexOf<T, IndexType, InitialIndex + 1, RestOfInTypes...> {}();
-    }
-};
-
-template<typename T, typename IndexType, IndexType InitialIndex>
-struct VariantIndexOf<T, IndexType, InitialIndex> {
-    consteval IndexType operator()() { return InitialIndex; }
-};
-
 template<typename T, typename IndexType, typename... Ts>
 consteval IndexType index_of()
 {
-    return VariantIndexOf<T, IndexType, 0, Ts...> {}();
+    bool matches[] = { IsSame<T, Ts>... };
+    for (size_t i = 0; i < sizeof...(Ts); ++i) {
+        if (matches[i])
+            return static_cast<IndexType>(i);
+    }
+    return static_cast<IndexType>(sizeof...(Ts));
 }
 
-template<typename IndexType, IndexType InitialIndex, typename... Ts>
+template<typename IndexType, IndexType CurrentIndex, typename... Ts>
 struct Variant;
 
-template<typename IndexType, IndexType InitialIndex, typename F, typename... Ts>
-struct Variant<IndexType, InitialIndex, F, Ts...> {
-    static constexpr auto current_index = VariantIndexOf<F, IndexType, InitialIndex, F, Ts...> {}();
+template<typename IndexType, IndexType CurrentIndex, typename F, typename... Ts>
+struct Variant<IndexType, CurrentIndex, F, Ts...> {
     ALWAYS_INLINE static void delete_(IndexType id, void* data)
     {
-        if (id == current_index)
+        if (id == CurrentIndex)
             bit_cast<F*>(data)->~F();
         else
-            Variant<IndexType, InitialIndex + 1, Ts...>::delete_(id, data);
+            Variant<IndexType, CurrentIndex + 1, Ts...>::delete_(id, data);
     }
 
     ALWAYS_INLINE static void move_(IndexType old_id, void* old_data, void* new_data)
     {
-        if (old_id == current_index)
+        if (old_id == CurrentIndex)
             new (new_data) F(move(*bit_cast<F*>(old_data)));
         else
-            Variant<IndexType, InitialIndex + 1, Ts...>::move_(old_id, old_data, new_data);
+            Variant<IndexType, CurrentIndex + 1, Ts...>::move_(old_id, old_data, new_data);
     }
 
     ALWAYS_INLINE static void copy_(IndexType old_id, void const* old_data, void* new_data)
     {
-        if (old_id == current_index)
+        if (old_id == CurrentIndex)
             new (new_data) F(*bit_cast<F const*>(old_data));
         else
-            Variant<IndexType, InitialIndex + 1, Ts...>::copy_(old_id, old_data, new_data);
+            Variant<IndexType, CurrentIndex + 1, Ts...>::copy_(old_id, old_data, new_data);
     }
 };
 
-template<typename IndexType, IndexType InitialIndex>
-struct Variant<IndexType, InitialIndex> {
+template<typename IndexType, IndexType CurrentIndex>
+struct Variant<IndexType, CurrentIndex> {
     ALWAYS_INLINE static void delete_(IndexType, void*) { }
     ALWAYS_INLINE static void move_(IndexType, void*, void*) { }
     ALWAYS_INLINE static void copy_(IndexType, void const*, void*) { }
