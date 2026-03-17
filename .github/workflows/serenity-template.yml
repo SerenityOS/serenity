@@ -20,6 +20,10 @@ on:
           required: false
           type: string
           default: 'OFF'
+        os-test:
+          required: false
+          type: boolean
+          default: false
 
 env:
   # runner.workspace = /home/runner/work/serenity
@@ -163,7 +167,7 @@ jobs:
         run: ninja install && ninja qemu-image
 
       - name: Run On-Target Tests
-        if: ${{ inputs.debug_options == 'NORMAL_DEBUG' }}
+        if: ${{ inputs.debug_options == 'NORMAL_DEBUG' && !inputs.os-test }}
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
@@ -191,7 +195,7 @@ jobs:
 
       - name: Print Target Logs
         # Extremely useful if Serenity hangs trying to run one of the tests
-        if: ${{ !cancelled() && inputs.debug_options == 'NORMAL_DEBUG'}}
+        if: ${{ !cancelled() && inputs.debug_options == 'NORMAL_DEBUG' && !inputs.os-test }}
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         run: '[ ! -e debug.log ] || cat debug.log'
 
@@ -214,4 +218,40 @@ jobs:
         with:
           name: serenity-coverage
           path: ${{ steps.build-parameters.outputs.build_directory }}/reports
+          retention-days: 90
+
+      # === os-test ===
+
+      - name: Install os-test
+        if: ${{ inputs.os-test }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          ./Meta/Contrib/os-test/install_os_test.sh
+          cd ${{ steps.build-parameters.outputs.build_directory }}
+          ninja install && ninja qemu-image
+
+      - name: Run os-test
+        if: ${{ inputs.os-test }}
+        working-directory: ${{ steps.build-parameters.outputs.build_directory }}
+        env:
+          SERENITY_QEMU_CPU: "max,vmx=off"
+          SERENITY_KERNEL_CMDLINE: "graphics_subsystem_mode=off panic=shutdown system_mode=os-test"
+          SERENITY_RUN: "ci"
+        run: |
+          echo "::group::ninja run # Qemu output"
+          ninja run
+          echo "::endgroup::"
+        timeout-minutes: 10
+
+      - name: Extract os-test results
+        if: ${{ inputs.os-test }}
+        run: |
+          ${{ github.workspace }}/Meta/Contrib/os-test/extract_results.sh
+
+      - name: Upload os-test Results
+        if: ${{ inputs.os-test && github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: serenity-os-test
+          path: ${{ steps.build-parameters.outputs.build_directory }}/os-test-results
           retention-days: 90
