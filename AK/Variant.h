@@ -81,25 +81,25 @@ struct VisitImpl {
     }
 
     template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, void const* data, Visitor&& visitor)
+    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, Visitor&& visitor)
     requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
-        if (id == CurrentIndex) {
+        if (self.index() == CurrentIndex) {
             // Check if Visitor::operator() is an explicitly typed function (as opposed to a templated function)
             // if so, try to call that with `T const&` first before copying the Variant's const-ness.
             // This emulates normal C++ call semantics where templated functions are considered last, after all non-templated overloads
             // are checked and found to be unusable.
-            using ReturnType = decltype(visitor(*bit_cast<T*>(data)));
+            using ReturnType = decltype(visitor(declval<T&>()));
             if constexpr (should_invoke_const_overload<ReturnType, T, Visitor>(MakeIndexSequence<Visitor::Types::size>()))
-                return visitor(*bit_cast<AddConst<T>*>(data));
+                return visitor(AddConstToReferencedType<Self&>(self).template get<T>());
 
-            return visitor(*bit_cast<CopyConst<Self, T>*>(data));
+            return visitor(self.template get<T>());
         }
 
         if constexpr ((CurrentIndex + 1) < sizeof...(Ts))
-            return visit<Self, Visitor, CurrentIndex + 1>(self, id, data, forward<Visitor>(visitor));
+            return visit<Self, Visitor, CurrentIndex + 1>(self, forward<Visitor>(visitor));
         else
             VERIFY_NOT_REACHED();
     }
@@ -422,14 +422,14 @@ public:
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, move(visitor));
     }
 
     template<typename... Fs>
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, move(visitor));
     }
 
     template<typename... NewTs>
