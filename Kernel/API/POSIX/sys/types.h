@@ -20,11 +20,6 @@ extern "C" {
 typedef __SIZE_TYPE__ ssize_t;
 #undef unsigned
 
-typedef unsigned char u_char;
-typedef unsigned short u_short;
-typedef unsigned int u_int;
-typedef unsigned long u_long;
-
 typedef uint32_t uid_t;
 typedef uint32_t gid_t;
 
