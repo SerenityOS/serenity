@@ -1557,7 +1557,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
 
 void TextEditor::set_cursor_and_focus_line(size_t line, size_t column)
 {
-    u_int index_max = line_count() - 1;
+    size_t index_max = line_count() - 1;
     set_cursor(line, column);
     if (line > 1 && line < index_max) {
         int headroom = frame_inner_rect().height() / 3;
