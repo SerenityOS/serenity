@@ -54,6 +54,13 @@ public:
     void set_gecos(StringView gecos) { m_gecos = gecos; }
     void set_deleted() { m_deleted = true; }
     void set_extra_gids(Vector<gid_t> extra_gids) { m_extra_gids = move(extra_gids); }
+    void add_extra_gid(gid_t gid) { m_extra_gids.append(gid); }
+
+    void remove_extra_gid(gid_t gid)
+    {
+        m_extra_gids.remove_all_matching([gid](auto g) { return g == gid; });
+    }
+
     void delete_password();
 
     // A nonexistent password means that this account was missing from /etc/shadow.
