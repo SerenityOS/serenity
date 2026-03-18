@@ -456,6 +456,11 @@ patch_internal() {
             fi
 
             if [ -e "${workdir}/.git" ]; then
+                author_name=$(sed -n 's/^From: \(.*\) <.*>/\1/p' "${filepath}" | head -n 1)
+                author_email=$(sed -n 's/^From: .* <\(.*\)>/\1/p' "${filepath}" | head -n 1)
+
+                GIT_COMMITTER_NAME="$author_name" \
+                GIT_COMMITTER_EMAIL="$author_email" \
                 run git am --keep-cr --keep-non-patch "${filepath}"
             else
                 run patch -p"$patchlevel" < "$filepath"
