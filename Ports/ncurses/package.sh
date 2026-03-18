@@ -21,10 +21,12 @@ files=(
 check_tic_version() {
     local tic_path="$1"
 
-    # "ncurses A.B.C" -> "A.B.C" -> "A"
-    local major_version="$("${tic_path}" -V | cut -d ' ' -f2 | cut -d '.' -f1)"
+    # "ncurses A.B.C" -> "A" and "B"; require >= 6.1
+    local version_str="$("${tic_path}" -V | cut -d ' ' -f2)"
+    local major="$(echo "$version_str" | cut -d '.' -f1)"
+    local minor="$(echo "$version_str" | cut -d '.' -f2)"
 
-    [ "$major_version" -ge 6 ]
+    [ "$major" -gt 6 ] || { [ "$major" -eq 6 ] && [ "$minor" -ge 1 ]; }
 }
 
 get_tic_path() {
@@ -65,7 +67,7 @@ pre_configure() {
 install() {
     local tic_path="$(get_tic_path)"
     if [ ! $? ]; then
-        echo 'Error: installing cross-compiled ncurses requires locally installed ncurses >= 6.0'
+        echo 'Error: installing cross-compiled ncurses requires locally installed ncurses >= 6.1'
         exit 1
     fi
 
