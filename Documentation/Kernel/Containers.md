@@ -10,9 +10,9 @@ unshared resources such as PIDs, filesystem view and hostname.
 
 The kernel currently exposes 3 types of possible isolation mechanisms:
 
--   VFS Root contexts
--   Process lists
--   Hostname contexts
+- VFS Root contexts
+- Process lists
+- Hostname contexts
 
 ### VFS Root Contexts
 
@@ -56,9 +56,9 @@ from it.
 
 There are 3 main syscalls to handle resource isolation:
 
--   `unshare_open` which creates a new file descriptor for a new unshared resource and returns a file descriptor to work on.
--   `unshare_create` which creates the unshared resource.
--   `unshare_enter` which enters the unshared resource for the user process based on the index number of the resource.
+- `unshare_open` which creates a new file descriptor for a new unshared resource and returns a file descriptor to work on.
+- `unshare_create` which creates the unshared resource.
+- `unshare_enter` which enters the unshared resource for the user process based on the index number of the resource.
 
 ## Jails as a security mechanism
 

@@ -34,16 +34,16 @@ For WSL users: If you have the image on your native WSL drive (recommended), thi
 
 ## Method 4: Enable OpenSSH on host and use sftp client on SerenityOS
 
--   Setup OpenSSH server on your host.
-    For windows: Google is your friend (https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
-    For linux: Google is your friend.
--   Ensure that you already have a working SerenityOS working build.
+- Setup OpenSSH server on your host.
+  For windows: Google is your friend (https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
+  For linux: Google is your friend.
+- Ensure that you already have a working SerenityOS working build.
 
 ```console
 $ Meta/serenity.sh rebuild-world
 ```
 
--   To enable OpenSSH package from SerenityOS: (initial directory is SerenityOS ROOT_DIR)
+- To enable OpenSSH package from SerenityOS: (initial directory is SerenityOS ROOT_DIR)
 
 ```console
 cd Ports
@@ -53,7 +53,7 @@ cd ../..
 Meta/serenity.sh run
 ```
 
--   From within SerenityOS, check that you have a working sftp app:
+- From within SerenityOS, check that you have a working sftp app:
 
 ```console
 courage:~ $ sftp
@@ -70,15 +70,15 @@ usage: sftp [-46aCfNpqrv] [-B buffer_size] [-b batchfile] [-c cipher]
           destination
 ```
 
--   Assume that you have a working OpenSSH server as mentioned earlier, with an IP address of 192.168.0.11.
--   Assume that you have a valid user on that host with account name user1.
--   Assume that you are currently inside the folder from which you want to transfer the file(s) from.
--   Local
-    User: anon
--   Remote
-    User: user1
-    IP Address: 192.168.0.11
--   Connect to remote server via sftp
+- Assume that you have a working OpenSSH server as mentioned earlier, with an IP address of 192.168.0.11.
+- Assume that you have a valid user on that host with account name user1.
+- Assume that you are currently inside the folder from which you want to transfer the file(s) from.
+- Local
+  User: anon
+- Remote
+  User: user1
+  IP Address: 192.168.0.11
+- Connect to remote server via sftp
 
 ```console
 courage:~ $ sftp user1@192.168.0.11
@@ -91,8 +91,8 @@ Connected to 192.168.0.11
 
 ```
 
--   By this time, you have successfully connected and logged on to the remote host.
--   You can get more information by typing `help`.
--   The most often used (simplified) sftp commands are `ls`, `cd`, `put [filename]`, `get [filename]`, and `quit`. I said simplified since the actual commands have many more options.
--   Be aware that there will be a time you would think that nothing is happening since the cursor just stares back at you. It is always waiting for your next instruction. Typing `quit` or `bye` will close the program.
--   Congratulations. Pat yourself at the back.
+- By this time, you have successfully connected and logged on to the remote host.
+- You can get more information by typing `help`.
+- The most often used (simplified) sftp commands are `ls`, `cd`, `put [filename]`, `get [filename]`, and `quit`. I said simplified since the actual commands have many more options.
+- Be aware that there will be a time you would think that nothing is happening since the cursor just stares back at you. It is always waiting for your next instruction. Typing `quit` or `bye` will close the program.
+- Congratulations. Pat yourself at the back.

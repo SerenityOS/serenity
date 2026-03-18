@@ -19,12 +19,12 @@ entry.
 
 ## Options
 
--   `-P`, `--posix-names`: Show POSIX names for file types
--   `-t`, `--total-entries-count`: Print count of listed entries when traversing a directory
+- `-P`, `--posix-names`: Show POSIX names for file types
+- `-t`, `--total-entries-count`: Print count of listed entries when traversing a directory
 
 ## Arguments
 
--   `path`: Directory to list
+- `path`: Directory to list
 
 ## Examples
 
@@ -41,4 +41,4 @@ $ lsdir -t /proc
 
 ## See also
 
--   [`ls`(1)](help://man/1/ls)
+- [`ls`(1)](help://man/1/ls)

@@ -14,7 +14,7 @@ Run a command under certain path restrictions by using [`unveil`(2)](help://man/
 
 ## Options
 
--   `-u`, `--path`: Unveil a path, with the format of `permissions,path`
+- `-u`, `--path`: Unveil a path, with the format of `permissions,path`
 
 ## Examples
 
@@ -32,6 +32,6 @@ $ unveil --path=r,/etc/timezone --path=r,/usr/lib --path=r,/sys/ --path=r,/etc/p
 
 ## See also
 
--   [`pledge`(2)](help://man/2/pledge)
--   [`unveil`(2)](help://man/2/unveil)
--   [`Mitigations`(7)](help://man/7/Mitigations)
+- [`pledge`(2)](help://man/2/pledge)
+- [`unveil`(2)](help://man/2/unveil)
+- [`Mitigations`(7)](help://man/7/Mitigations)

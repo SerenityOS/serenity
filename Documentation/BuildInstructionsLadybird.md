@@ -103,8 +103,8 @@ The simplest way to build and run ladybird is via the serenity.sh script:
 
 The above commands will build Ladybird with one of the following browser chromes, depending on the platform:
 
--   [AppKit](https://developer.apple.com/documentation/appkit?language=objc) - The native chrome on macOS.
--   [Qt](https://doc.qt.io/qt-6/) - The chrome used on all other platforms.
+- [AppKit](https://developer.apple.com/documentation/appkit?language=objc) - The native chrome on macOS.
+- [Qt](https://doc.qt.io/qt-6/) - The chrome used on all other platforms.
 
 The Qt chrome is available on platforms where it is not the default as well. To build the
 Qt chrome, install the Qt dependencies for your platform, and enable the Qt chrome via CMake:

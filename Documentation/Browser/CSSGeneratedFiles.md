@@ -51,12 +51,12 @@ The [Web Animations spec](https://www.w3.org/TR/web-animations/#animation-type) 
 
 These are two separate concepts, with unfortunately similar names:
 
--   [Legacy name aliases](https://drafts.csswg.org/css-cascade-5/#legacy-name-alias) are properties whose spec names have changed,
-    but the syntax has not, so setting the old one is defined as setting the new one directly.
-    For example, `font-stretch` was renamed to `font-width`, so `font-stretch` is now a legacy name alias for `font-width`.
--   Logical aliases are properties like `margin-block-start`, which may assign a value to one of several other properties
-    (`margin-top`, `margin-bottom`, `margin-left`, or `margin-right`) depending on the element they are applied to.
-    List all the properties that they can alias.
+- [Legacy name aliases](https://drafts.csswg.org/css-cascade-5/#legacy-name-alias) are properties whose spec names have changed,
+  but the syntax has not, so setting the old one is defined as setting the new one directly.
+  For example, `font-stretch` was renamed to `font-width`, so `font-stretch` is now a legacy name alias for `font-width`.
+- Logical aliases are properties like `margin-block-start`, which may assign a value to one of several other properties
+  (`margin-top`, `margin-bottom`, `margin-left`, or `margin-right`) depending on the element they are applied to.
+  List all the properties that they can alias.
 
 ### `quirks`
 
@@ -82,10 +82,10 @@ All keyword values used by any property or media-feature need to be defined here
 
 The generated code provides:
 
--   A `Keyword` enum as used by `CSSKeywordValue`
--   `Optional<Keyword> keyword_from_string(StringView)` to attempt to convert a string into a Keyword
--   `StringView string_from_keyword(Keyword)` to convert a Keyword back into a string
--   `bool is_css_wide_keyword(StringView)` which returns whether the string is one of the special "CSS-wide keywords"
+- A `Keyword` enum as used by `CSSKeywordValue`
+- `Optional<Keyword> keyword_from_string(StringView)` to attempt to convert a string into a Keyword
+- `StringView string_from_keyword(Keyword)` to convert a Keyword back into a string
+- `bool is_css_wide_keyword(StringView)` which returns whether the string is one of the special "CSS-wide keywords"
 
 ## Enums.json
 
@@ -101,10 +101,10 @@ are implemented as a `line-style` enum.
 
 The generated code provides these for each enum, using "foo" as an example:
 
--   A `Foo` enum for its values
--   `Optional<Foo> keyword_to_foo(Keyword)` to convert a `Keyword` to a `Foo`
--   `Keyword to_keyword(Foo)` to convert the `Foo` back to a `Keyword`
--   `StringView to_string(Foo)` to convert the `Foo` directly to a string
+- A `Foo` enum for its values
+- `Optional<Foo> keyword_to_foo(Keyword)` to convert a `Keyword` to a `Foo`
+- `Keyword to_keyword(Foo)` to convert the `Foo` back to a `Keyword`
+- `StringView to_string(Foo)` to convert the `Foo` directly to a string
 
 ## PseudoClasses.json
 
@@ -117,11 +117,11 @@ The grammar is taken directly from the spec.
 
 The generated code provides:
 
--   A `PseudoClass` enum listing every pseudo-class name
--   `Optional<PseudoClass> pseudo_class_from_string(StringView)` to parse a string as a `PseudoClass` name
--   `StringView pseudo_class_name(PseudoClass)` to convert a `PseudoClass` back into a string
--   The `PseudoClassMetadata` struct which holds a representation of the data from the JSON file
--   `PseudoClassMetadata pseudo_class_metadata(PseudoClass)` to retrieve that data
+- A `PseudoClass` enum listing every pseudo-class name
+- `Optional<PseudoClass> pseudo_class_from_string(StringView)` to parse a string as a `PseudoClass` name
+- `StringView pseudo_class_name(PseudoClass)` to convert a `PseudoClass` back into a string
+- The `PseudoClassMetadata` struct which holds a representation of the data from the JSON file
+- `PseudoClassMetadata pseudo_class_metadata(PseudoClass)` to retrieve that data
 
 ## MediaFeatures.json
 
@@ -140,13 +140,13 @@ The definitions here are like a simplified version of the `Properties.json` defi
 
 The generated code provides:
 
--   A `MediaFeatureValueType` enum listing the possible value types
--   A `MediaFeatureID` enum, listing each media-feature
--   `Optional<MediaFeatureID> media_feature_id_from_string(StringView)` to convert a string to a `MediaFeatureID`
--   `StringView string_from_media_feature_id(MediaFeatureID)` to convert a `MediaFeatureID` back to a string
--   `bool media_feature_type_is_range(MediaFeatureID)` returns whether the media feature is a `range` type, as opposed to a `discrete` type
--   `bool media_feature_accepts_type(MediaFeatureID, MediaFeatureValueType)` returns whether the media feature will accept values of this type
--   `bool media_feature_accepts_keyword(MediaFeatureID, Keyword)` returns whether the media feature accepts this keyword
+- A `MediaFeatureValueType` enum listing the possible value types
+- A `MediaFeatureID` enum, listing each media-feature
+- `Optional<MediaFeatureID> media_feature_id_from_string(StringView)` to convert a string to a `MediaFeatureID`
+- `StringView string_from_media_feature_id(MediaFeatureID)` to convert a `MediaFeatureID` back to a string
+- `bool media_feature_type_is_range(MediaFeatureID)` returns whether the media feature is a `range` type, as opposed to a `discrete` type
+- `bool media_feature_accepts_type(MediaFeatureID, MediaFeatureValueType)` returns whether the media feature will accept values of this type
+- `bool media_feature_accepts_keyword(MediaFeatureID, Keyword)` returns whether the media feature accepts this keyword
 
 ## MathFunctions.json
 
@@ -165,8 +165,8 @@ Parameter definitions have the following properties:
 
 The generated code provides:
 
--   A `MathFunction` enum listing the math functions
--   The implementation of the CSS Parser's `parse_math_function()` method
+- A `MathFunction` enum listing the math functions
+- The implementation of the CSS Parser's `parse_math_function()` method
 
 ## TransformFunctions.json
 
@@ -184,7 +184,7 @@ Parameter definitions have the following properties:
 
 The generated code provides:
 
--   A `TransformFunction` enum listing the transform functions
--   `Optional<TransformFunction> transform_function_from_string(StringView)` to parse a string as a `TransformFunction`
--   `StringView to_string(TransformFunction)` to convert a `TransformFunction` back to a string
--   `TransformFunctionMetadata transform_function_metadata(TransformFunction)` to obtain metadata about the transform function, such as its parameter list
+- A `TransformFunction` enum listing the transform functions
+- `Optional<TransformFunction> transform_function_from_string(StringView)` to parse a string as a `TransformFunction`
+- `StringView to_string(TransformFunction)` to convert a `TransformFunction` back to a string
+- `TransformFunctionMetadata transform_function_metadata(TransformFunction)` to obtain metadata about the transform function, such as its parameter list

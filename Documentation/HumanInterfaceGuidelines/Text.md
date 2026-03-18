@@ -4,8 +4,8 @@
 
 SerenityOS employs two capitalization styles:
 
--   Book title capitalization
--   Sentence-style capitalization
+- Book title capitalization
+- Sentence-style capitalization
 
 ### Book title capitalization
 
@@ -16,21 +16,21 @@ and prepositions with up to four letters (at, by, for, with, into, ...)
 
 #### Examples:
 
--   Create New Layer
--   Copy URL
--   Move to Front
--   Save and Exit
--   Sort by Name
+- Create New Layer
+- Copy URL
+- Move to Front
+- Save and Exit
+- Sort by Name
 
 #### Used for:
 
--   Button text
--   Icon labels
--   Menu names
--   Menu items
--   Tab titles
--   Window titles
--   Tooltips
+- Button text
+- Icon labels
+- Menu names
+- Menu items
+- Tab titles
+- Window titles
+- Tooltips
 
 ### Sentence-style capitalization
 
@@ -40,28 +40,28 @@ of proper names, weekdays, etc.
 
 #### Examples:
 
--   An error occurred
--   Use system defaults
--   Copy the selected text
--   Enable Linux compatibility hacks
+- An error occurred
+- Use system defaults
+- Copy the selected text
+- Enable Linux compatibility hacks
 
 #### Used for:
 
--   Check box labels
--   Group box labels
--   List items
--   Messages (as in message boxes)
--   Radio button labels
--   Status bar text
--   Text box labels
+- Check box labels
+- Group box labels
+- List items
+- Messages (as in message boxes)
+- Radio button labels
+- Status bar text
+- Text box labels
 
 ## Ellipses
 
 The ellipsis, represented by a series of three periods (...), has two special
 functions in the interface:
 
--   Eliding text
--   Foreshadowing additional user input
+- Eliding text
+- Foreshadowing additional user input
 
 The first occurs programmatically, but the second requires care when setting
 text manually.
@@ -75,6 +75,6 @@ Ellipses should be used sparingly elsewhere to avoid confusion with elision.
 
 #### Examples:
 
--   Save As...
--   Browse...
--   Insert Emoji...
+- Save As...
+- Browse...
+- Insert Emoji...

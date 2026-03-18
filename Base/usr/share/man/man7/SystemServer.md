@@ -48,4 +48,4 @@ the accepted socket to the service process.
 
 ## See also
 
--   [`SystemServer`(5)](help://man/5/SystemServer)
+- [`SystemServer`(5)](help://man/5/SystemServer)

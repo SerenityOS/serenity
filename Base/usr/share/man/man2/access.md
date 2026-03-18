@@ -15,10 +15,10 @@ int access(const char* path, int mode);
 Check if a file at the given _path_ exists and is accessible to the current user for the given _mode_.
 Valid flags for _mode_ are:
 
--   `F_OK` to check if the file is accessible at all,
--   `R_OK` to check if the file can be read,
--   `W_OK` to check if the file can be written to,
--   `X_OK` to check if the file can be executed as a program.
+- `F_OK` to check if the file is accessible at all,
+- `R_OK` to check if the file can be read,
+- `W_OK` to check if the file can be written to,
+- `X_OK` to check if the file can be executed as a program.
 
 ## Return value
 

@@ -14,7 +14,7 @@ Dump a portion of the physical memory space.
 
 ## Options
 
--   `-r`: Dump from /dev/mem with `read(2)` instead of doing `mmap(2)` on it.
+- `-r`: Dump from /dev/mem with `read(2)` instead of doing `mmap(2)` on it.
 
 ## Examples
 
@@ -34,4 +34,4 @@ offset fails.
 
 ## See also
 
--   [`mem`(4)](help://man/4/mem)
+- [`mem`(4)](help://man/4/mem)

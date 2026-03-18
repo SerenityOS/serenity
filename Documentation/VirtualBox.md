@@ -46,8 +46,8 @@ Serenity will not be able to boot with the default configuration. There are a co
 
 There are a couple of settings to check:
 
--   In **Storage**, click on the **Controller**. Make sure the controller type is AHCI(SATA) or NVMe. Anything else is guaranteed not to work, as Serenity does not currently support them.
--   In **Network** and in the **Advanced** drop down, make sure the **Adapter Type** is anything but **Intel PRO/1000 MT Desktop (82540EM)**. While it is the only adapter type Serenity currently supports, it does not currently work in VirtualBox.
+- In **Storage**, click on the **Controller**. Make sure the controller type is AHCI(SATA) or NVMe. Anything else is guaranteed not to work, as Serenity does not currently support them.
+- In **Network** and in the **Advanced** drop down, make sure the **Adapter Type** is anything but **Intel PRO/1000 MT Desktop (82540EM)**. While it is the only adapter type Serenity currently supports, it does not currently work in VirtualBox.
 
 Please note that at the time of writing, audio and networking do not work in VirtualBox.
 
@@ -57,8 +57,8 @@ That is all you need to boot Serenity in VirtualBox! Read on for additional conf
 
 If you only see a blinking cursor after selecting an option in the GRUB menu, it is very likely you have encountered one of the errors listed in the [troubleshooting document.](Troubleshooting.md)
 
--   Check that you have enabled PAE/NX in the **Settings** > **System** > **Processor** tab.
--   If you are using a 64-bit disk image, check that **Version** is set to **Other/Unknown (64-bit)** instead of **Other/Unknown** in **Settings** > **General**.
+- Check that you have enabled PAE/NX in the **Settings** > **System** > **Processor** tab.
+- If you are using a 64-bit disk image, check that **Version** is set to **Other/Unknown (64-bit)** instead of **Other/Unknown** in **Settings** > **General**.
 
 ## Additional configuration (optional)
 

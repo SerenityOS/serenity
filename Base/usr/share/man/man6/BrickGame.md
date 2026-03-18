@@ -16,9 +16,9 @@ BrickGame is a classic game. Pieces consisting of four small squares each fall f
 
 You can control where and how a piece falls, by moving it left or right, making it move down faster, dropping it down instantly, or rotating it left and right. There are multiple control schemes available for these six basic actions; and the `space bar` always serves as the instant drop key.
 
--   `Left`: Move left, `Right`: Move right, `Up`: Rotate right, `Down`: Move down
--   `A`: Move left, `D`: Move right, `W`: Rotate right, `E`: Rotate left, `S`: Move down
--   `H`: Move left, `L`: Move right, `K`: Rotate right, `Z`: Rotate left
+- `Left`: Move left, `Right`: Move right, `Up`: Rotate right, `Down`: Move down
+- `A`: Move left, `D`: Move right, `W`: Rotate right, `E`: Rotate left, `S`: Move down
+- `H`: Move left, `L`: Move right, `K`: Rotate right, `Z`: Rotate left
 
 The `Escape` and `P` keys pause and unpause the game.
 

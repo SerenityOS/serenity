@@ -7,14 +7,14 @@ manage all graphics devices, framebuffers, hardware 3D acceleration, memory mapp
 
 ## Responsibilities
 
--   Provide a convenient interface to all supported video hardware in the Kernel.
--   Manage 3D rendering on supported hardware.
+- Provide a convenient interface to all supported video hardware in the Kernel.
+- Manage 3D rendering on supported hardware.
 
 ## Current Limitations and Future features?
 
--   No locking on who can do `mmap` on DisplayConnector devices currently, which can
-    lead to malicious applications "fighting" with WindowServer on what is shown to the user
-    from the framebuffer.
+- No locking on who can do `mmap` on DisplayConnector devices currently, which can
+  lead to malicious applications "fighting" with WindowServer on what is shown to the user
+  from the framebuffer.
 
 # DisplayConnector Devices
 

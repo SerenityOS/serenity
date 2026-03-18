@@ -8,9 +8,9 @@ As for recommended requirements, listed below are the specifications of the curr
 
 #### IdanHo runner:
 
--   Ryzen 5 3600 - 12 cores w/ KVM support
--   64GB of RAM
--   512GB of SSD space
+- Ryzen 5 3600 - 12 cores w/ KVM support
+- 64GB of RAM
+- 512GB of SSD space
 
 ###### This runner can be split into 2 runners with half the cores/RAM/space if needed.
 

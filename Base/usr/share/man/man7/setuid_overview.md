@@ -62,10 +62,10 @@ For historical reasons, there are many functions for setting and getting these I
 
 ## See also
 
--   "Setuid Demystified", Proceedings of the 11th USENIX Security Symposium, August 2002, Pages 171–190
--   [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
--   [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
--   [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
--   [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
--   [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
--   [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)
+- "Setuid Demystified", Proceedings of the 11th USENIX Security Symposium, August 2002, Pages 171–190
+- [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
+- [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
+- [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
+- [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
+- [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
+- [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)

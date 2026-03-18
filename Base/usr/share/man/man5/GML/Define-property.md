@@ -37,4 +37,4 @@ REGISTER_ENUM_PROPERTY(
 
 ## See also
 
--   [GML Define widget(5)](help://man/5/GML/Define-widget)
+- [GML Define widget(5)](help://man/5/GML/Define-widget)

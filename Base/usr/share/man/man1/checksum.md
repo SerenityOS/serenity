@@ -21,4 +21,4 @@ if the checksums cannot be verified.
 
 ## Options
 
--   `-c`, `--check`: Verify checksums against `file` or stdin.
+- `-c`, `--check`: Verify checksums against `file` or stdin.

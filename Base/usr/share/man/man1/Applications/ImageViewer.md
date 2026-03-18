@@ -22,7 +22,7 @@ ImageViewer is even smart enough to detect other images and display them when cl
 
 ## Arguments
 
--   `file`: The image file to be displayed.
+- `file`: The image file to be displayed.
 
 ## Examples
 

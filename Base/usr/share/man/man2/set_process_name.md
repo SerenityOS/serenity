@@ -20,9 +20,9 @@ In pledged programs, the `proc` promise is required for this system call.
 
 ## Errors
 
--   `EFAULT`: `name` is not in readable memory.
--   `ENAMETOOLONG`: `name_length` is too long.
+- `EFAULT`: `name` is not in readable memory.
+- `ENAMETOOLONG`: `name_length` is too long.
 
 ## See also
 
--   [`get_process_name`(2)](help://man/2/get_process_name)
+- [`get_process_name`(2)](help://man/2/get_process_name)

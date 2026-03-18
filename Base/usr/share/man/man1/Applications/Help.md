@@ -51,5 +51,5 @@ this man page should be located at `/usr/share/man/man1/Applications/Help.md`.
 
 ## See Also
 
--   [`man`(1)](help://man/1/man) To read these same man pages from the terminal
--   [`man`(7)](help://man/7/man) For an overview on how manpages are organized
+- [`man`(1)](help://man/1/man) To read these same man pages from the terminal
+- [`man`(7)](help://man/7/man) For an overview on how manpages are organized

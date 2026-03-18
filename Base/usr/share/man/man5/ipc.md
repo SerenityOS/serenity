@@ -140,5 +140,5 @@ asynchronous functions are prefixed with `async_` and the names of the synchrono
 
 ## See also
 
--   [`Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp`](../../../../../Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp)
--   [ipc(4)](help://man/4/ipc) (IPC Unix socket documentation)
+- [`Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp`](../../../../../Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp)
+- [ipc(4)](help://man/4/ipc) (IPC Unix socket documentation)

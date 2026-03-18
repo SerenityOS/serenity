@@ -62,5 +62,5 @@ int main()
 
 ## See also
 
--   [`posix_spawnattr`(2)](help://man/3/posix_spawnattr_init)
--   [`posix_spawn_file_actions`(2)](help://man/3/posix_spawn_file_actions_init)
+- [`posix_spawnattr`(2)](help://man/3/posix_spawnattr_init)
+- [`posix_spawn_file_actions`(2)](help://man/3/posix_spawn_file_actions_init)

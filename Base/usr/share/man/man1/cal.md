@@ -22,9 +22,9 @@ Days, months and years are specified with numbers. Week starts at Sunday.
 
 ## Options
 
--   `-s`, `--starting-day`: Specify which day should start the week. Accepts either short or long weekday names or indexes (0 being Sunday).
--   `-3`, `--three-month-view`: Display the previous, current, and next months side-by-side.
--   `-y`, `--year`: Display an entire year by laying out months on a grid. If no year number is specified, the current year is used as a default.
+- `-s`, `--starting-day`: Specify which day should start the week. Accepts either short or long weekday names or indexes (0 being Sunday).
+- `-3`, `--three-month-view`: Display the previous, current, and next months side-by-side.
+- `-y`, `--year`: Display an entire year by laying out months on a grid. If no year number is specified, the current year is used as a default.
 
 ## Examples
 

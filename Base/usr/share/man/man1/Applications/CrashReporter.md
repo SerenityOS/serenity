@@ -24,14 +24,14 @@ If CrashDaemon is running, CrashReporter is automatically opened when a program 
 
 ## Options
 
--   `--help`: Display help message and exit
--   `--version`: Print version
--   `--unlink`: Delete the coredump after it's parsed
+- `--help`: Display help message and exit
+- `--version`: Print version
+- `--unlink`: Delete the coredump after it's parsed
 
 ## Arguments
 
--   `coredump-path`: Path to the core dump file to display
+- `coredump-path`: Path to the core dump file to display
 
 ## See Also
 
--   [`dump_backtrace`(2)](help://man/2/dump_backtrace)
+- [`dump_backtrace`(2)](help://man/2/dump_backtrace)

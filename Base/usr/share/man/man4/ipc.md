@@ -14,11 +14,11 @@ The format can be identified by the format magic, which is derived in [`Meta/Lag
 
 In general, communication works by packets, which might have been sent in response to other packets. Everything is host endianness. Each packet consists of:
 
--   a 32-bit message size (see `Connection::try_parse_messages` in [`Userland/Libraries/LibIPC/Connection.h`](../../../../../Userland/Libraries/LibIPC/Connection.h))
--   the 32-bit endpoint magic (note that responses use the endpoint of the requesting packet, so the Clipboard server might use the endpoint magic 4008793515 to signal that this packet is a response)
--   the 32-bit message ID within that endpoint (sequentially assigned, starting at 1)
--   the data of that message itself (e.g. see `Messages::ClipboardServer::SetClipboardData::{en,de}code` in `Build/*/Userland/Services/Clipboard/ClipboardServerEndpoint.h`).
+- a 32-bit message size (see `Connection::try_parse_messages` in [`Userland/Libraries/LibIPC/Connection.h`](../../../../../Userland/Libraries/LibIPC/Connection.h))
+- the 32-bit endpoint magic (note that responses use the endpoint of the requesting packet, so the Clipboard server might use the endpoint magic 4008793515 to signal that this packet is a response)
+- the 32-bit message ID within that endpoint (sequentially assigned, starting at 1)
+- the data of that message itself (e.g. see `Messages::ClipboardServer::SetClipboardData::{en,de}code` in `Build/*/Userland/Services/Clipboard/ClipboardServerEndpoint.h`).
 
 ## See Also
 
--   [ipc(5)](help://man/5/ipc) (IPC file format documentation)
+- [ipc(5)](help://man/5/ipc) (IPC file format documentation)

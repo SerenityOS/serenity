@@ -24,9 +24,9 @@ chmod 660 /dev/mem
 
 ## Returned error values after [`mmap`(2)](help://man/2/mmap)
 
--   `EINVAL`: An access violation was detected.
--   `ENOMEM`: The requested range would wrap around, creating an access violation.
+- `EINVAL`: An access violation was detected.
+- `ENOMEM`: The requested range would wrap around, creating an access violation.
 
 ## See also
 
--   [`mmap`(2)](help://man/2/mmap)
+- [`mmap`(2)](help://man/2/mmap)

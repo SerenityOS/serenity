@@ -19,7 +19,7 @@ from `pipefd[0]` will return EOF.
 
 `pipe2()` behaves the same as `pipe()`, but it additionally accepts the following _flags_:
 
--   `O_CLOEXEC`: Automatically close the file descriptors created by this call, as if by `close()` call, when performing an `exec()`.
+- `O_CLOEXEC`: Automatically close the file descriptors created by this call, as if by `close()` call, when performing an `exec()`.
 
 ## Examples
 

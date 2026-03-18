@@ -23,10 +23,10 @@ If standard error is a tty, one out of the following will occur:
 
 ## Arguments
 
--   `utility`: Utility to be invoked
--   `args`: Arguments to pass to `utility`
+- `utility`: Utility to be invoked
+- `args`: Arguments to pass to `utility`
 
 ## Exit Status
 
--   126 - `utility` was found but could not be invoked.
--   127 - Either `utility` could not be found or an error occurred in `nohup`.
+- 126 - `utility` was found but could not be invoked.
+- 127 - Either `utility` could not be found or an error occurred in `nohup`.

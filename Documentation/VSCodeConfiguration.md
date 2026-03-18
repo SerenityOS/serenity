@@ -6,9 +6,9 @@ The WSL Remote extension allows you to use VS Code in Windows while using the no
 
 The recommended extensions for VS Code include:
 
--   [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
--   [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
--   [Jakt](https://github.com/SerenityOS/jakt/tree/main/editors/vscode) (See [Jakt](#jakt) for more information)
+- [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
+- [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
+- [Jakt](https://github.com/SerenityOS/jakt/tree/main/editors/vscode) (See [Jakt](#jakt) for more information)
 
 ## Code comprehension
 

@@ -14,12 +14,12 @@ Remove given `directory(ies)`, if they are empty
 
 ## Options
 
--   `-p`, `--parents`: Remove all directories in each given path
--   `-v`, `--verbose`: List each directory as it is removed
+- `-p`, `--parents`: Remove all directories in each given path
+- `-v`, `--verbose`: List each directory as it is removed
 
 ## Arguments
 
--   `directory`: directory(ies) to remove
+- `directory`: directory(ies) to remove
 
 ## Examples
 
@@ -43,5 +43,5 @@ $ rmdir -p foo/bar/baz/
 
 ## See also
 
--   [`mkdir`(1)](help://man/1/mkdir)
--   [`rm`(1)](help://man/1/rm)
+- [`mkdir`(1)](help://man/1/mkdir)
+- [`rm`(1)](help://man/1/rm)

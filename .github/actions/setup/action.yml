@@ -11,7 +11,7 @@ inputs:
     required: false
     default: 'x86_64'
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: 'Install Dependencies'
       if: ${{ inputs.os == 'Linux' }}
@@ -47,7 +47,7 @@ runs:
     - name: 'Install JS dependencies'
       if: ${{ inputs.os == 'Linux' || inputs.os == 'Serenity' }}
       shell: bash
-      run: sudo npm install -g prettier@2.7.1
+      run: sudo npm install -g prettier@3.8.1
 
     - name: 'Install Python dependencies'
       if: ${{ inputs.os == 'Linux' || inputs.os == 'Serenity' }}
@@ -92,4 +92,4 @@ runs:
       if: ${{ inputs.os == 'macOS' }}
       shell: bash
       run: |
-          sudo xcode-select -s /Applications/Xcode_26.1.app/Contents/Developer
+        sudo xcode-select -s /Applications/Xcode_26.1.app/Contents/Developer

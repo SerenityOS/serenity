@@ -17,7 +17,7 @@ then `rev` will read from standard input. If the file `-` is specified then
 
 ## Arguments
 
--   `file`: Files to print
+- `file`: Files to print
 
 ## Examples
 

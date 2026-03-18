@@ -10,8 +10,8 @@ This is a collection of common keyboard shortcuts in SerenityOS.
 
 ### Keywords
 
--   `Super` means the ⊞ Windows or ⌘ Command key (and is sometimes called 'Meta' on Linux)
--   `Alt` is equivalent to ⌥ Option on macOS
+- `Super` means the ⊞ Windows or ⌘ Command key (and is sometimes called 'Meta' on Linux)
+- `Alt` is equivalent to ⌥ Option on macOS
 
 ## General
 
@@ -75,4 +75,4 @@ This is a collection of common keyboard shortcuts in SerenityOS.
 
 ## See also
 
--   [Tips and Tricks](help://man/7/Tips-and-Tricks)
+- [Tips and Tricks](help://man/7/Tips-and-Tricks)

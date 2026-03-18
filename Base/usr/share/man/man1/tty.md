@@ -21,4 +21,4 @@ $ tty
 
 ## See also
 
--   [`stty`(1)](help://man/1/stty)
+- [`stty`(1)](help://man/1/stty)

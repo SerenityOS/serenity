@@ -18,8 +18,8 @@ The optional [files] argument can be used to only extract specific files within 
 
 ## Options
 
--   `-d path`, `--output-directory path`: Directory to receive the archive output
--   `-q`, `--quiet`: Be less verbose
+- `-d path`, `--output-directory path`: Directory to receive the archive output
+- `-q`, `--quiet`: Be less verbose
 
 ## Examples
 
@@ -40,5 +40,5 @@ Archive: archive.unzip
 
 ## See also
 
--   [`zip`(1)](help://man/1/zip)
--   [`tar`(1)](help://man/1/tar)
+- [`zip`(1)](help://man/1/zip)
+- [`tar`(1)](help://man/1/tar)

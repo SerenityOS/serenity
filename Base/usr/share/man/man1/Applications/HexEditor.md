@@ -38,8 +38,8 @@ Hex Editor's simple and straight-forward interface offers search, export, byte p
 
 ## Options
 
--   `-a`, `--annotations`: Path to an annotations file to load on startup
+- `-a`, `--annotations`: Path to an annotations file to load on startup
 
 ## Arguments
 
--   `file`: File to open on startup
+- `file`: File to open on startup

@@ -34,4 +34,4 @@ Defines a GUI checkbox widget.
 
 ## See also
 
--   [GML Button](help://man/5/GML/Widget/Button)
+- [GML Button](help://man/5/GML/Widget/Button)

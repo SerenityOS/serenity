@@ -14,10 +14,10 @@ $ printf <format> [arguments...]
 
 _format_ is similar to the C printf format string, with the following differences:
 
--   The format specifier `b` (`%b`) is not supported.
--   The format specifiers that require a writable pointer (e.g. `n`) are not supported.
--   The format specifier `q` (`%q`) has a different behavior, where it shall print a given string as a quoted string, which is safe to use in shell inputs.
--   Common escape sequences are interpreted, namely the following:
+- The format specifier `b` (`%b`) is not supported.
+- The format specifiers that require a writable pointer (e.g. `n`) are not supported.
+- The format specifier `q` (`%q`) has a different behavior, where it shall print a given string as a quoted string, which is safe to use in shell inputs.
+- Common escape sequences are interpreted, namely the following:
 
 | escape | description            |
 | :----: | :--------------------- |
@@ -50,4 +50,4 @@ $ printf '%d%d%d' 1 2 3 4 x
 
 ## See also
 
--   [`echo`(1)](help://man/1/echo)
+- [`echo`(1)](help://man/1/echo)

@@ -24,7 +24,7 @@ The C library function does not propagate errors.
 
 The system call itself can fail with the following errors:
 
--   `EFAULT`: Invalid or inaccessible string.
+- `EFAULT`: Invalid or inaccessible string.
 
 No error is reported if the output cannot be written to a serial device.
 
@@ -32,4 +32,4 @@ If the return value is positive, this indicates the actual number of characters 
 
 ## See Also
 
--   [`dump_backtrace`(2)](help://man/2/dump_backtrace)
+- [`dump_backtrace`(2)](help://man/2/dump_backtrace)

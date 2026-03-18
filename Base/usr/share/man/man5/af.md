@@ -42,6 +42,6 @@ Category=Utilities
 
 ## See also
 
--   [ini(5)](help://man/5/ini)
--   [`Userland/Services/Taskbar/main.cpp`](../../../../../Userland/Services/Taskbar/main.cpp)
--   `Launcher::load_handlers` in [`Userland/Services/LaunchServer/Launcher.cpp`](../../../../../Userland/Services/LaunchServer/Launcher.cpp)
+- [ini(5)](help://man/5/ini)
+- [`Userland/Services/Taskbar/main.cpp`](../../../../../Userland/Services/Taskbar/main.cpp)
+- `Launcher::load_handlers` in [`Userland/Services/LaunchServer/Launcher.cpp`](../../../../../Userland/Services/LaunchServer/Launcher.cpp)

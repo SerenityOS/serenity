@@ -99,17 +99,17 @@ It allows a program to be placed inside a lightweight OS-level virtualization en
 
 Current restrictions on jailed processes (configurable when creating a Jail):
 
--   Process ID view isolation, being limited (both in `/proc` and `/sys/kernel/processes`) to only processes that share the same jail.
+- Process ID view isolation, being limited (both in `/proc` and `/sys/kernel/processes`) to only processes that share the same jail.
 
 Special restrictions on filesystem also apply:
 
--   Write access is forbidden to the `/sys/kernel/power_state` node.
--   Read accesses is forbidden by default to all nodes in `/sys/kernel` directory, except for:
-    `df`, `interrupts`, `keymap`, `memstat`, `processes`, `stats` and `uptime`.
--   Write access is forbidden to kernel configuration variables (which are located in `/sys/kernel/conf`).
--   Open access is forbidden to all device nodes except for `/dev/full`, `/dev/null`, `/dev/zero`, `/dev/random` and various
-    other TTY/PTY devices (not including Kernel virtual consoles).
--   Executing SUID binaries is forbidden.
+- Write access is forbidden to the `/sys/kernel/power_state` node.
+- Read accesses is forbidden by default to all nodes in `/sys/kernel` directory, except for:
+  `df`, `interrupts`, `keymap`, `memstat`, `processes`, `stats` and `uptime`.
+- Write access is forbidden to kernel configuration variables (which are located in `/sys/kernel/conf`).
+- Open access is forbidden to all device nodes except for `/dev/full`, `/dev/null`, `/dev/zero`, `/dev/random` and various
+  other TTY/PTY devices (not including Kernel virtual consoles).
+- Executing SUID binaries is forbidden.
 
 It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/5e062414c11df31ed595c363990005eef00fa263),
 for kernel support, and the following commits added basic userspace utilities:
@@ -434,5 +434,5 @@ Kernel: Enable -ftrivial-auto-var-init as a security mitigation
 
 ## See also
 
--   [`unveil`(2)](help://man/2/unveil)
--   [`pledge`(2)](help://man/2/pledge)
+- [`unveil`(2)](help://man/2/unveil)
+- [`pledge`(2)](help://man/2/pledge)

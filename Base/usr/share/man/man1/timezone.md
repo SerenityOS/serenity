@@ -14,11 +14,11 @@ The `timezone` utility can be used to view or change the current system time zon
 
 ## Options
 
--   `-l`, `--list-time-zones`: View all available time zones and exit.
+- `-l`, `--list-time-zones`: View all available time zones and exit.
 
 ## Arguments
 
--   `time-zone`: Time zone to change the system to use.
+- `time-zone`: Time zone to change the system to use.
 
 ## Examples
 

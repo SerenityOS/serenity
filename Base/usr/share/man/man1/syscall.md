@@ -14,9 +14,9 @@ The `syscall` utility can be used to invoke a system call with the given argumen
 
 ## Options
 
--   `-o`: Output the contents of the buffer argument specified as buf to stdout.
--   `-l`: Print a space separated list of all the Serenity system calls and exit. Note that not all the system calls can be invoked using this tool.
--   `-h`: Print a help message and exit.
+- `-o`: Output the contents of the buffer argument specified as buf to stdout.
+- `-l`: Print a space separated list of all the Serenity system calls and exit. Note that not all the system calls can be invoked using this tool.
+- `-h`: Print a help message and exit.
 
 ## Examples
 

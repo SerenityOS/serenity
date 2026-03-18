@@ -14,8 +14,8 @@ If you want more information on the structure of the manual system, take a look 
 
 ### Getting Started
 
--   [Keyboard Shortcuts](help://man/7/KeyboardShortcuts)
--   [Tips and Tricks](help://man/7/Tips-and-Tricks)
+- [Keyboard Shortcuts](help://man/7/KeyboardShortcuts)
+- [Tips and Tricks](help://man/7/Tips-and-Tricks)
 
 ---
 

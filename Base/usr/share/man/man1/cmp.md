@@ -14,20 +14,20 @@ Compare two files and report the location of any differences. By default, execut
 
 ## Options
 
--   `--help`: Display help message and exit
--   `-l`, `--verbose`: Output the byte number, and the differing bytes, for every difference.
--   `-s`, `--silent`: Silence output.
+- `--help`: Display help message and exit
+- `-l`, `--verbose`: Output the byte number, and the differing bytes, for every difference.
+- `-s`, `--silent`: Silence output.
 
 ## Arguments
 
--   `file1` and `file2`: Files to compare. Use `-` as the file name to read from standard input.
+- `file1` and `file2`: Files to compare. Use `-` as the file name to read from standard input.
 
 ## Exit status
 
--   0 - Files are identical.
--   1 - Files are different.
--   2 - An error occurred.
+- 0 - Files are identical.
+- 1 - Files are different.
+- 2 - An error occurred.
 
 ## See also
 
--   [`comm`(1)](help://man/1/comm)
+- [`comm`(1)](help://man/1/comm)

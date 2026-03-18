@@ -5,10 +5,11 @@ set -e
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "${script_path}/.." || exit 1
 
+# Find all .js, .mjs, and .md files that are tracked by git and not excluded by .prettierignore and remove any symlinks.
 if [ "$#" -eq "0" ]; then
     files=()
     while IFS= read -r file; do
-        files+=("$file")
+        [ -L "$file" ] || files+=("$file")
     done < <(
         git ls-files \
             --exclude-from .prettierignore \
@@ -30,8 +31,8 @@ if (( ${#files[@]} )); then
         exit 1
     fi
 
-    if ! prettier --version | grep -qF '2.' ; then
-        echo "You are using '$(prettier --version)', which appears to not be prettier 2."
+    if ! prettier --version | grep -qF '3.' ; then
+        echo "You are using '$(prettier --version)', which appears to not be prettier 3."
         exit 1
     fi
 

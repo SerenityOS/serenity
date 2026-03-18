@@ -28,6 +28,6 @@ This syscall does not return any errors to the user.
 
 ## See Also
 
--   [`dbgputstr`(2)](help://man/2/dbgputstr)
--   [`crash`(2)](help://man/1/crash)
--   [`CrashReporter(1)`](help://man/1/Applications/CrashReporter)
+- [`dbgputstr`(2)](help://man/2/dbgputstr)
+- [`crash`(2)](help://man/1/crash)
+- [`CrashReporter(1)`](help://man/1/Applications/CrashReporter)

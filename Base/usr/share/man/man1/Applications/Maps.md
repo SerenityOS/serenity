@@ -25,10 +25,10 @@ Double-clicking anywhere on the map zooms-in to that location. Double-clicking w
 
 Right-click on a location to:
 
--   Copy its coordinates to the Clipboard
--   Save it to your favorites
--   Open it in various mapping services
--   Center the map on it
+- Copy its coordinates to the Clipboard
+- Save it to your favorites
+- Open it in various mapping services
+- Center the map on it
 
 Show and hide the search panel by clicking on the leftmost magnifying glass in the toolbar. Type your query, press `Return` and then click on a result to focus on it in the map. Navigate the search results with the `Up` and `Down` arrow keys.
 

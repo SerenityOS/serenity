@@ -62,16 +62,16 @@ access and modification times of the specified file unmodified.
 
 `futimens()` and `utimensat()` may return the following error codes.
 
--   `EFAULT`: `path` of `utimensat()` is a null pointer.
--   `EINVAL`: Length of `path` is too long.
--   `EINVAL`: `flag` is not 0 or `AT_SYMLINK_NOFOLLOW`
--   `EINVAL`: The timestamp is not supported by the file system.
--   `EINVAL`: Fields of `times` are less than 0 or greater than or equal to 1000
-    million and not `UTIME_NOW` or `UTIME_OMIT`.
--   `EACCES`: The current user does not have write access to the file.
--   `EROFS`: The file system that contains the file is read-only.
--   `ENOTDIR`: `path` is not absolute and `dirfd` is not a file descriptor
-    associated with a directory.
+- `EFAULT`: `path` of `utimensat()` is a null pointer.
+- `EINVAL`: Length of `path` is too long.
+- `EINVAL`: `flag` is not 0 or `AT_SYMLINK_NOFOLLOW`
+- `EINVAL`: The timestamp is not supported by the file system.
+- `EINVAL`: Fields of `times` are less than 0 or greater than or equal to 1000
+  million and not `UTIME_NOW` or `UTIME_OMIT`.
+- `EACCES`: The current user does not have write access to the file.
+- `EROFS`: The file system that contains the file is read-only.
+- `ENOTDIR`: `path` is not absolute and `dirfd` is not a file descriptor
+  associated with a directory.
 
 ## Examples
 
@@ -102,4 +102,4 @@ int main()
 
 ## See also
 
--   [`touch`(1)](help://man/1/touch)
+- [`touch`(1)](help://man/1/touch)

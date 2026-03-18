@@ -17,9 +17,9 @@ Note that for convenience, the audio device may not block the call to `write` an
 
 ## Available `ioctl`s
 
--   `SOUNDCARD_IOCTL_GET_SAMPLE_RATE`: Passes the current device sample rate (in samples per second) into a provided `u16*` (16-bit unsigned integer pointer).
--   `SOUNDCARD_IOCTL_SET_SAMPLE_RATE`: Sets the sample rate of the underlying hardware from a provided 16-bit unsigned integer. Note that not all sound cards support all sample rate and the actually achieved sample rate should be checked with the GET_SAMPLE_RATE ioctl.
+- `SOUNDCARD_IOCTL_GET_SAMPLE_RATE`: Passes the current device sample rate (in samples per second) into a provided `u16*` (16-bit unsigned integer pointer).
+- `SOUNDCARD_IOCTL_SET_SAMPLE_RATE`: Sets the sample rate of the underlying hardware from a provided 16-bit unsigned integer. Note that not all sound cards support all sample rate and the actually achieved sample rate should be checked with the GET_SAMPLE_RATE ioctl.
 
 ## See also
 
--   [Audio-subsystem](help://man/7/Audio-subsystem)
+- [Audio-subsystem](help://man/7/Audio-subsystem)

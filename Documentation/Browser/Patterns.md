@@ -7,8 +7,8 @@ This document aims to describe agreed upon code style and patterns used across L
 Generally we use a subdirectory, and thus C++ namespace, for each individual spec. For example XHR
 (`xhr.spec.whatwg.org`):
 
--   Code lives in `LibWeb/XHR/`
--   Uses the C++ namespace `Web::XHR`
+- Code lives in `LibWeb/XHR/`
+- Uses the C++ namespace `Web::XHR`
 
 If necessary, code can also be grouped into sub-subdirectories (for example `HTML/Scripting/`).
 
@@ -35,9 +35,9 @@ This should be propagated as far as possible before being turned into a JS error
 This is the most common and at the same time most broad error type in LibWeb. Internally it stores a
 variant of supported errors:
 
--   `SimpleException`
--   `JS::NonnullGCPtr<DOMException>`
--   `JS::Completion` (from `JS::ThrowCompletionOr<T>`, assumed to be of `Type::Throw`)
+- `SimpleException`
+- `JS::NonnullGCPtr<DOMException>`
+- `JS::Completion` (from `JS::ThrowCompletionOr<T>`, assumed to be of `Type::Throw`)
 
 Use this error type for anything that needs to interact with the JS bindings, which will generally
 know how to turn any of the internally supported errors into JS objects.
@@ -46,11 +46,11 @@ know how to turn any of the internally supported errors into JS objects.
 
 This is a thin wrapper around various built-in errors from ECMAScript:
 
--   `EvalError`
--   `RangeError`
--   `ReferenceError`
--   `TypeError`
--   `URIError`
+- `EvalError`
+- `RangeError`
+- `ReferenceError`
+- `TypeError`
+- `URIError`
 
 Instead of constructing one of these directly, create a `SimpleException` with the appropriate type
 and message instead whenever required by a web spec. These will be converted into actual JS objects
@@ -82,7 +82,7 @@ propagation.
 As in LibJS, **all** functions that represent an operation or JS function from a web specification
 must have:
 
--   A spec link, above the function definition:
+- A spec link, above the function definition:
 
     ```cpp
     // https://fetch.spec.whatwg.org/#concept-fetch
@@ -92,7 +92,7 @@ must have:
     }
     ```
 
--   Comments for each individual step of the operation:
+- Comments for each individual step of the operation:
 
     ```cpp
     // 1. Assert: request’s mode is "navigate" or processEarlyHintsResponse is null.
@@ -104,18 +104,18 @@ must have:
     // ...
     ```
 
-    -   If a step cannot be implemented at the time, prepend it with a `FIXME`
-    -   Add a blank line between code and the next comment
+    - If a step cannot be implemented at the time, prepend it with a `FIXME`
+    - Add a blank line between code and the next comment
 
--   Optimizations (e.g. fast paths) should be marked as such with an `// OPTIMIZATION:` comment
-    explaining the reasoning
+- Optimizations (e.g. fast paths) should be marked as such with an `// OPTIMIZATION:` comment
+  explaining the reasoning
 
--   When adding non-standard code for a feature that is otherwise well-specified, it should be
-    marked as such. This does not universally apply as certain areas (layout and painting, for
-    instance) are only broadly spec'd
+- When adding non-standard code for a feature that is otherwise well-specified, it should be
+  marked as such. This does not universally apply as certain areas (layout and painting, for
+  instance) are only broadly spec'd
 
--   If the spec has additional prose before or after its algorithm steps, that doesn't need to be
-    copied into the code
+- If the spec has additional prose before or after its algorithm steps, that doesn't need to be
+  copied into the code
 
 ## JS Interfaces
 

@@ -6,15 +6,15 @@ The Shell Command Language
 
 The shell operates according to the following general steps:
 
--   Some string is read from a source, be it a file, the standard input, or a command string (see [`Shell`(1)](help://man/1/Shell))
--   The shell parses the input to an abstract syntax tree
--   The shell performs various expansions and/or resolutions on the nodes
--   The shell performs various type checks and syntactic checks
--   The shell interprets the AST, evaluating commands as needed
--   For each given command, the shell flattens all the string/list arguments
--   For each given command, the shell records the applicable redirections
--   Should a command be executed, the shell applies the redirections, and executes the command with the flattened argument list
--   Should a command need waiting, the shell shall wait for the command to finish, and continue execution
+- Some string is read from a source, be it a file, the standard input, or a command string (see [`Shell`(1)](help://man/1/Shell))
+- The shell parses the input to an abstract syntax tree
+- The shell performs various expansions and/or resolutions on the nodes
+- The shell performs various type checks and syntactic checks
+- The shell interprets the AST, evaluating commands as needed
+- For each given command, the shell flattens all the string/list arguments
+- For each given command, the shell records the applicable redirections
+- Should a command be executed, the shell applies the redirections, and executes the command with the flattened argument list
+- Should a command need waiting, the shell shall wait for the command to finish, and continue execution
 
 Any text below is superseded by the formal grammar defined in the _formal grammar_ section.
 
@@ -43,12 +43,12 @@ Any sequence of characters between two single quotes (`'`)
 
 Any sequence of _Double Quoted String Part_ tokens:
 
--   Barewords
--   Single Quotes
--   Variable References
--   History Events
--   Evaluate expressions
--   Escaped sequences
+- Barewords
+- Single Quotes
+- Variable References
+- History Events
+- Evaluate expressions
+- Escaped sequences
 
 ##### Heredocs
 
@@ -56,10 +56,10 @@ Heredocs are made in two parts, the _initiator_ and the _contents_, the _initiat
 
 There are four different _initiators_:
 
--   `<<-token`: The _contents_ may contain interpolations, and are terminated with a line containing only whitespace and then _token_
--   `<<-'token'`: The _contents_ may _not_ contain interpolations, but otherwise is the same as `<<-token`
--   `<<~token`: Similar to `<<-token`, but the starting whitespace of the lines in the _contents_ is stripped, note that this happens after any and all expansions/interpolations are done.
--   `<<~'token'`: Dedents (i.e. strips the initial whitespace) like `<<~token`, and disallows interpolations like `<<-'token'`.
+- `<<-token`: The _contents_ may contain interpolations, and are terminated with a line containing only whitespace and then _token_
+- `<<-'token'`: The _contents_ may _not_ contain interpolations, but otherwise is the same as `<<-token`
+- `<<~token`: Similar to `<<-token`, but the starting whitespace of the lines in the _contents_ is stripped, note that this happens after any and all expansions/interpolations are done.
+- `<<~'token'`: Dedents (i.e. strips the initial whitespace) like `<<~token`, and disallows interpolations like `<<-'token'`.
 
 Note that heredocs _must_ be listed in the same order as they are used after a sequence that has been terminated with a newline.
 
@@ -81,42 +81,42 @@ For example, `$lst[1..-2]` can be used to select a permutation of a 4-element li
 An expression of the form '${identifier expression...}', such expressions are expanded to other kinds of nodes before resolution, and are internal functions provided by the shell.
 Currently, the following functions are exposed:
 
--   ${length (string|list)? _expression_}
-    Finds the length of the given _expression_. if either `string` or `list` is given, the shell will attempt to treat _expression_ as that type, otherwise the type of _expression_ will be inferred.
+- ${length (string|list)? _expression_}
+  Finds the length of the given _expression_. if either `string` or `list` is given, the shell will attempt to treat _expression_ as that type, otherwise the type of _expression_ will be inferred.
 
--   ${length*across (string|list) \_expression*}
-    Finds the lengths of the entries in _expression_, this requires _expression_ to be a list.
-    If either `string` or `list` is given, the shell attempts to treat the elements of _expression_ as that type, otherwise the types are individually inferred.
+- ${length*across (string|list) \_expression*}
+  Finds the lengths of the entries in _expression_, this requires _expression_ to be a list.
+  If either `string` or `list` is given, the shell attempts to treat the elements of _expression_ as that type, otherwise the types are individually inferred.
 
--   ${split _delimiter_ _string_}
-    Splits the _string_ with _delimiter_, and evaluates to a list.
-    Both _string_ and _delimiter_ must be strings.
+- ${split _delimiter_ _string_}
+  Splits the _string_ with _delimiter_, and evaluates to a list.
+  Both _string_ and _delimiter_ must be strings.
 
--   ${remove*suffix \_suffix* _string_}
-    Removes the suffix _suffix_ (if present) from the given _string_.
+- ${remove*suffix \_suffix* _string_}
+  Removes the suffix _suffix_ (if present) from the given _string_.
 
--   ${remove*prefix \_prefix* _string_}
-    Removes the prefix _prefix_ (if present) from the given _string_.
+- ${remove*prefix \_prefix* _string_}
+  Removes the prefix _prefix_ (if present) from the given _string_.
 
--   ${concat*lists \_list*...}
-    Concatenates all the given expressions as lists, and evaluates to a list.
+- ${concat*lists \_list*...}
+  Concatenates all the given expressions as lists, and evaluates to a list.
 
--   ${regex*replace \_pattern* _replacement-template_ _string_}
-    Replaces all occurrences of the regular expression _pattern_ in the given _string_, using the given _replacement-template_.
-    Capture groups in _pattern_ can be referred to as `\<group_number>` in the _replacement template_, for example, to reference capture group 1, use `\1`.
+- ${regex*replace \_pattern* _replacement-template_ _string_}
+  Replaces all occurrences of the regular expression _pattern_ in the given _string_, using the given _replacement-template_.
+  Capture groups in _pattern_ can be referred to as `\<group_number>` in the _replacement template_, for example, to reference capture group 1, use `\1`.
 
 ##### Evaluate expression
 
 Any expression following a `$` that is not a variable reference:
 
--   Inline execution: A _syntactic list_ following a `$`:
--   Dynamic evaluation: Any other expression following a `$`
+- Inline execution: A _syntactic list_ following a `$`:
+- Dynamic evaluation: Any other expression following a `$`
 
 ##### Lists
 
 Any two expressions joined by the Join operator (` ` [whitespace]), or a _variable reference_ referring to a list value
 
--   Syntactic Lists: Any _list_ enclosed in parentheses (`(` and `)`)
+- Syntactic Lists: Any _list_ enclosed in parentheses (`(` and `)`)
 
 ##### Comments
 
@@ -126,21 +126,21 @@ Any text following and including that in a word starting with `#`, up to but not
 
 The following tokens:
 
--   `for` in command name position
--   `in` as a syntactic element of a `for` expression
--   `if` in command name position, or after the `else` keyword
--   `else` after a partial `if` expression
--   `match` in command name position
--   `as` as part of a `match` expression
+- `for` in command name position
+- `in` as a syntactic element of a `for` expression
+- `if` in command name position, or after the `else` keyword
+- `else` after a partial `if` expression
+- `match` in command name position
+- `as` as part of a `match` expression
 
 ##### Special characters
 
 Any of the following:
 
--   `;` in bareword position
--   `\\n` (a newline) in _bareword_ position
--   Any of `(){}`
--   Any of `*?` not in _glob_ position
+- `;` in bareword position
+- `\\n` (a newline) in _bareword_ position
+- Any of `(){}`
+- Any of `*?` not in _glob_ position
 
 ##### Tilde
 
@@ -158,13 +158,13 @@ Redirections take two main forms, Read/Write redirections, and fd closure redire
 
 ##### Read/Write
 
--   Allowed operators: all
--   Allowed destinations: file paths (any shell _expression_) and _file descriptor references_
+- Allowed operators: all
+- Allowed destinations: file paths (any shell _expression_) and _file descriptor references_
 
 ##### Close
 
--   Allowed operators: `Write` (`>`)
--   Allowed destinations: the special "close" reference `&-`
+- Allowed operators: `Write` (`>`)
+- Allowed destinations: the special "close" reference `&-`
 
 #### Examples
 
@@ -183,15 +183,15 @@ $ >/dev/null
 
 The shell performs various expansions, in different stages.
 
--   Glob Expansion: Globs shall be expanded to a list.
+- Glob Expansion: Globs shall be expanded to a list.
 
--   Variable Expansion: Variables shall be expanded preserving their types.
+- Variable Expansion: Variables shall be expanded preserving their types.
 
--   Brace Expansions: Brace expansions shall be expanded to a list.
+- Brace Expansions: Brace expansions shall be expanded to a list.
 
--   Juxtaposition Expansion: Juxtapositions shall be expanded as list products.
+- Juxtaposition Expansion: Juxtapositions shall be expanded as list products.
 
--   Other expansions: Tildes, Evaluate expressions, etc. shall be expanded as needed.
+- Other expansions: Tildes, Evaluate expressions, etc. shall be expanded as needed.
 
 ### Brace Expansions
 
@@ -199,8 +199,8 @@ Brace expansions are of two kinds, _normal brace expansions_ and _range brace ex
 _Normal brace expansions_ are sequences of optional expressions inside braces (`{}`), delimited by a comma (`','`); a missing expression is treated as an empty string literal. Such expressions are simply expanded to the expressions they enclose.
 _Range brace expansions_ are of the form `{start_expression..end_expression}`, where `start_expression` and `end_expression` denote the bounds of an inclusive _range_, and can be one of two types:
 
--   Single unicode code points: The range expands to all code points between the start and end, e.g. `{a..c}` shall expand to the list `(a b c)`.
--   Numbers: The range expands to all numbers between the start and end, e.g. `{8..11}` shall expand to the list `(8 9 10 11)`.
+- Single unicode code points: The range expands to all code points between the start and end, e.g. `{a..c}` shall expand to the list `(a b c)`.
+- Numbers: The range expands to all numbers between the start and end, e.g. `{8..11}` shall expand to the list `(8 9 10 11)`.
 
 ### Juxtapositions
 
@@ -215,8 +215,8 @@ Any bareword starting with a tilde (`~`) and spanning up to the first path separ
 
 Evaluate expressions take the general form of a dollar sign (`$`) followed by some _expression_, which is evaluated by the rules below.
 
--   Should the _expression_ be a string, it shall be evaluated as a dynamic variable lookup by first evaluating the string, and then looking up the given variable.
--   Should the _expression_ be a list or a command, it shall be converted to a command, whose output (from the standard output) shall be captured, and split to a list with the shell local variable `IFS` (or the default splitter `\n` (newline, 0x0a)). It should be noted that the shell option `inline_exec_keep_empty_segments` will determine whether empty segments in the split list shall be preserved when this expression is evaluated, this behavior is disabled by default.
+- Should the _expression_ be a string, it shall be evaluated as a dynamic variable lookup by first evaluating the string, and then looking up the given variable.
+- Should the _expression_ be a list or a command, it shall be converted to a command, whose output (from the standard output) shall be captured, and split to a list with the shell local variable `IFS` (or the default splitter `\n` (newline, 0x0a)). It should be noted that the shell option `inline_exec_keep_empty_segments` will determine whether empty segments in the split list shall be preserved when this expression is evaluated, this behavior is disabled by default.
 
 ## Commands
 

@@ -35,15 +35,15 @@ The toolbar contains common actions such as creating, opening and saving a file.
 
 The last icon on the toolbar opens the levels adjustment window. Levels control the exposure (light) in an image.
 
--   **Brightness** - Lighten or darken all colors.
--   **Contrast** - Increase or decrease the difference between light and dark areas.
--   **Gamma** - Redistribute light intensities, allowing adjustments that can bring a digital image closer to the way human eyes perceive details, particularly in darker areas.
+- **Brightness** - Lighten or darken all colors.
+- **Contrast** - Increase or decrease the difference between light and dark areas.
+- **Gamma** - Redistribute light intensities, allowing adjustments that can bring a digital image closer to the way human eyes perceive details, particularly in darker areas.
 
 ### Main Workspace
 
--   The tab bar above the canvas allows multiple documents to be open simultaneously.
--   Surrounding the canvas is a vertical and horizontal ruler. When the Guide Tool is active, dragging from these rulers creates a line guide.
--   In the center is the Canvas in which you can paint, create shapes, write text and manipulate images. Use the left mouse-button to paint with the primary color and the right mouse-button to paint with the secondary color. Zoom in/out with `Ctrl +` / `Ctrl -` or use the mouse wheel. Pan with the middle-mouse button. Zooming-in far enough reveals a pixel grid which is useful for precise work, such as making pixel art.
+- The tab bar above the canvas allows multiple documents to be open simultaneously.
+- Surrounding the canvas is a vertical and horizontal ruler. When the Guide Tool is active, dragging from these rulers creates a line guide.
+- In the center is the Canvas in which you can paint, create shapes, write text and manipulate images. Use the left mouse-button to paint with the primary color and the right mouse-button to paint with the secondary color. Zoom in/out with `Ctrl +` / `Ctrl -` or use the mouse wheel. Pan with the middle-mouse button. Zooming-in far enough reveals a pixel grid which is useful for precise work, such as making pixel art.
 
 ### Color Panel
 
@@ -100,12 +100,12 @@ Draws a vector rectangle that is rasterized upon releasing the mouse. To draw a 
 
 Options:
 
--   **Outline** - Rectangle with no fill. The line thickness can be adjusted.
--   **Fill** - Filled with the primary color.
--   **Gradient** - Filled with a gradient between the primary and secondary colors, from left-to-right.
--   **Rounded** - Draws a vector square with rounded corners that is rasterized upon releasing the mouse. Adjust the corner radius before drawing, as it cannot be changed afterward.
--   **Anti-alias** - Smoothens jagged edges for a more polished appearance.
--   **Aspect ratio** - Sets the ratio of width and height (e.g. `1` x `1` for a square).
+- **Outline** - Rectangle with no fill. The line thickness can be adjusted.
+- **Fill** - Filled with the primary color.
+- **Gradient** - Filled with a gradient between the primary and secondary colors, from left-to-right.
+- **Rounded** - Draws a vector square with rounded corners that is rasterized upon releasing the mouse. Adjust the corner radius before drawing, as it cannot be changed afterward.
+- **Anti-alias** - Smoothens jagged edges for a more polished appearance.
+- **Aspect ratio** - Sets the ratio of width and height (e.g. `1` x `1` for a square).
 
 #### Ellipse Tool (`Ctrl+Shift+E`)
 
@@ -125,10 +125,10 @@ Select All with `Ctrl+A`. Press `Esc` to clear a selection. Invert a selection i
 
 Modes:
 
--   **Set** - Making an initial selection.
--   **Add** - Expands the selection area with each new selection, including merging areas.
--   **Subtract** - Removes areas from selection.
--   **Intersect** - Keeps the overlap with other selections.
+- **Set** - Making an initial selection.
+- **Add** - Expands the selection area with each new selection, including merging areas.
+- **Subtract** - Removes areas from selection.
+- **Intersect** - Keeps the overlap with other selections.
 
 ##### Rectangle Select Tool (`R`)
 
@@ -164,10 +164,10 @@ To the right of the main workspace, editor panels facilitate layer configuration
 
 The default panels are:
 
--   **Layers** - Add, remove, reorder or manipulate layers. Adjust layers by right-clicking or in the _Layers_ menu.
-    -   **Masks** - An overlay that controls a layer's visibility: black hides, white shows and shades of gray provide varying levels of transparency. Masks are non-destructive, allowing reversible edits without permanently altering the original image. Return to the mask menu to delete (completely remove a mask), apply (merge the mask and the underlying layer), invert (reverse the black and white contents) and clear (retain an empty mask layer).
--   **Layer properties** - Rename, show/hide or adjust the opacity of a layer.
--   **Tool properties** - Configure the settings for the currently selected tool.
+- **Layers** - Add, remove, reorder or manipulate layers. Adjust layers by right-clicking or in the _Layers_ menu.
+    - **Masks** - An overlay that controls a layer's visibility: black hides, white shows and shades of gray provide varying levels of transparency. Masks are non-destructive, allowing reversible edits without permanently altering the original image. Return to the mask menu to delete (completely remove a mask), apply (merge the mask and the underlying layer), invert (reverse the black and white contents) and clear (retain an empty mask layer).
+- **Layer properties** - Rename, show/hide or adjust the opacity of a layer.
+- **Tool properties** - Configure the settings for the currently selected tool.
 
 #### Color Visualizations
 
@@ -175,8 +175,8 @@ The default panels are:
 
 Two additional editor panels that visualize color can be enabled in _View → Scopes_:
 
--   **Histogram** - A graph showing the range of color tones in an image, from the darkest on the left to the lightest on the right. As the cursor hovers over the canvas, a yellow line indicates where the pixels under the cursor are represented on the graph.
--   **Vectorscope** - Corresponding to the [color wheel](https://en.wikipedia.org/wiki/Color_wheel), the markings indicate the degree of Hue and Saturation in an image. The further the marking from the center, the greater the Saturation. The line going up between red and yellow is the Skin Tone Line indicating the optimal location for all skin tones. As the cursor hovers over the canvas, a circle highlights where the colors are represented on the Vectorscope.
+- **Histogram** - A graph showing the range of color tones in an image, from the darkest on the left to the lightest on the right. As the cursor hovers over the canvas, a yellow line indicates where the pixels under the cursor are represented on the graph.
+- **Vectorscope** - Corresponding to the [color wheel](https://en.wikipedia.org/wiki/Color_wheel), the markings indicate the degree of Hue and Saturation in an image. The further the marking from the center, the greater the Saturation. The line going up between red and yellow is the Skin Tone Line indicating the optimal location for all skin tones. As the cursor hovers over the canvas, a circle highlights where the colors are represented on the Vectorscope.
 
 ### Filters
 
@@ -186,34 +186,34 @@ In the _Filter_ menu is the Filter Gallery which enables adjustment of the whole
 
 #### Artistic
 
--   **Bloom** - Adds a glow around bright areas. Adjust the glow area brightness threshold and the radius of the glow.
+- **Bloom** - Adds a glow around bright areas. Adjust the glow area brightness threshold and the radius of the glow.
 
 #### Edge Detection
 
 Edge detection highlights transitions between visual elements, emphasizing object boundaries. There are two different methods of achieving this:
 
--   **Laplacian Cardinal** - Emphasizes horizontal and vertical edges, accentuating areas with significant intensity changes along these cardinal directions.
--   **Laplacian Diagonal** - Emphasizes and highlights diagonal edges in an image, focusing on areas with pronounced intensity changes along diagonal directions.
+- **Laplacian Cardinal** - Emphasizes horizontal and vertical edges, accentuating areas with significant intensity changes along these cardinal directions.
+- **Laplacian Diagonal** - Emphasizes and highlights diagonal edges in an image, focusing on areas with pronounced intensity changes along diagonal directions.
 
 #### Blur & Sharpen
 
 Various methods exist for producing a blur, leading to varied results. They differ in how they allocate weight, which represents the value assigned to pixels determining their greater or lesser impact on the final image. The Gaussian and Box Blurs offer two choices: `3x3` and `5x5`, indicating the grid size for blur calculation. In simple terms, a larger grid results in a smoother blur.
 
--   **Fast Box Blur** - Quickly blurs an image by averaging the colors of pixels within a defined square area, resulting in a smoother appearance. The blur's radius can be adjusted. Enable _Asymmetric Radii_ to adjust the blur along the horizontal, vertical or both axes. Enable _Use Direction and Magnitude_ to adjust the blur angle and intensity. The _Approximate Gaussian Blur_ option achieves a smoother blur by applying the box blur multiple times with different weights.
--   **Gaussian Blur** - Smoothens an image by gradually blending pixel colors based on a bell-shaped distribution, resulting in a softened appearance.
--   **Box Blur** - Takes more time than a Fast Box Blur by considering a broader range of neighboring pixels, resulting in a more thorough and refined smoothing.
--   **Sharpen** - Enhances the clarity and detail of an image by increasing the contrast at edges, making them more distinct.
--   **Median Filter** - Replaces each pixel's value with the median value of its neighboring pixels, providing effective noise reduction while preserving edges and details. Useful for removing dust or defective pixels from an image.
+- **Fast Box Blur** - Quickly blurs an image by averaging the colors of pixels within a defined square area, resulting in a smoother appearance. The blur's radius can be adjusted. Enable _Asymmetric Radii_ to adjust the blur along the horizontal, vertical or both axes. Enable _Use Direction and Magnitude_ to adjust the blur angle and intensity. The _Approximate Gaussian Blur_ option achieves a smoother blur by applying the box blur multiple times with different weights.
+- **Gaussian Blur** - Smoothens an image by gradually blending pixel colors based on a bell-shaped distribution, resulting in a softened appearance.
+- **Box Blur** - Takes more time than a Fast Box Blur by considering a broader range of neighboring pixels, resulting in a more thorough and refined smoothing.
+- **Sharpen** - Enhances the clarity and detail of an image by increasing the contrast at edges, making them more distinct.
+- **Median Filter** - Replaces each pixel's value with the median value of its neighboring pixels, providing effective noise reduction while preserving edges and details. Useful for removing dust or defective pixels from an image.
 
 #### Color
 
--   **Hue/Saturation** - Precisely adjust the colors in an image by modifying the type of color, its intensity and the amount of black/white mixed in with it.
-    -   **Hue** - The type of color, based on degrees of the color wheel starting from 0% (red).
-    -   **Saturation** - The purity of the color, from 0% (black) to 100% (pure color).
-    -   **Lightness** - The amount of black/white mixed in with the color, from 0% (black) to 100% (white).
--   **Grayscale** - Converts an image to black and white by removing the color information, resulting in shades of gray based on the original colors' intensity.
--   **Invert** - Transforms an image by reversing the colors, turning dark areas light and vice versa.
--   **Sepia** - Makes an image black and white while adding warm, brownish tones, creating a nostalgic or aged appearance reminiscent of old photographs. The intensity can be adjusted.
+- **Hue/Saturation** - Precisely adjust the colors in an image by modifying the type of color, its intensity and the amount of black/white mixed in with it.
+    - **Hue** - The type of color, based on degrees of the color wheel starting from 0% (red).
+    - **Saturation** - The purity of the color, from 0% (black) to 100% (pure color).
+    - **Lightness** - The amount of black/white mixed in with the color, from 0% (black) to 100% (white).
+- **Grayscale** - Converts an image to black and white by removing the color information, resulting in shades of gray based on the original colors' intensity.
+- **Invert** - Transforms an image by reversing the colors, turning dark areas light and vice versa.
+- **Sepia** - Makes an image black and white while adding warm, brownish tones, creating a nostalgic or aged appearance reminiscent of old photographs. The intensity can be adjusted.
 
 #### Generic 5x5 Convolution
 
@@ -221,7 +221,7 @@ The last option in the _Filter_ menu, a Generic 5x5 Convolution filter alters an
 
 ## Arguments
 
--   `file`: The image file to be edited
+- `file`: The image file to be edited
 
 ## Example
 

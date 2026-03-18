@@ -34,10 +34,10 @@ It can be re-enabled if you don't mind the noisy inlay hints and problems.
 
 Adding and removing compiler flags can fix many bugs, but also be useful for better code comprehension. Here are some tips:
 
--   Add `-D__serenity__` if you are not using the Serenity toolchain clangd, so that clangd treats all code as being compiled for Serenity and not for your host system.
--   Add the flags `-DKERNEL` or `-DPREKERNEL` if you want clangd to behave like the Kernel or Prekernel compilation, respectively.
--   When using a GCC compilation database (e.g. Build/x86_64), clangd will frequently complain about command-line arguments at the top of files. For instance: `clang: Unknown argument: '-mpreferred-stack-boundary=3'`. To fix this, simply add `-mno-<flag name>` to the `Add` list. In the example, that would be `-mno-preferred-stack-boundary`.
--   There are also known issues with the GCC compilation database for the Kernel, here `-mno-sse` and `-mno-8087` may help.
+- Add `-D__serenity__` if you are not using the Serenity toolchain clangd, so that clangd treats all code as being compiled for Serenity and not for your host system.
+- Add the flags `-DKERNEL` or `-DPREKERNEL` if you want clangd to behave like the Kernel or Prekernel compilation, respectively.
+- When using a GCC compilation database (e.g. Build/x86_64), clangd will frequently complain about command-line arguments at the top of files. For instance: `clang: Unknown argument: '-mpreferred-stack-boundary=3'`. To fix this, simply add `-mno-<flag name>` to the `Add` list. In the example, that would be `-mno-preferred-stack-boundary`.
+- There are also known issues with the GCC compilation database for the Kernel, here `-mno-sse` and `-mno-8087` may help.
 
 Run `./Meta/serenity.sh run` at least once to generate the `compile_commands.json` file. Every time a new source is added or the compilation commands get adjusted (through CMake) you need to rerun `./Meta/serenity.sh build` or any other build command in order to update the compile commands. Until you do so, clangd will not be aware of the new source or report incorrect compile errors.
 
@@ -53,5 +53,5 @@ The LLVM/Clang toolchain for Serenity is capable of building a version of clangd
 
 ## Known Issues
 
--   Some distribution clangd packages still have issues identifying paths to the serenity cross-compilers' builtin include paths after supplying the `--query-driver` option. This has been seen on at least Debian. If the inlay hints suggest that `<new>` cannot be found, first triple check your configuration matches the `.clangd` file from above, verify that you've run the OS via `Meta/serenity.sh run`, and quadruple check your clangd command-line arguments. If all of the above are correct, building `clangd` from the serenity clang toolchain is known to work.
--   clangd has a tendency to crash when stressing bleeding edge compiler features. Sometimes, just opening `AK/Variant.h` is enough. You can usually just restart clangd. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.
+- Some distribution clangd packages still have issues identifying paths to the serenity cross-compilers' builtin include paths after supplying the `--query-driver` option. This has been seen on at least Debian. If the inlay hints suggest that `<new>` cannot be found, first triple check your configuration matches the `.clangd` file from above, verify that you've run the OS via `Meta/serenity.sh run`, and quadruple check your clangd command-line arguments. If all of the above are correct, building `clangd` from the serenity clang toolchain is known to work.
+- clangd has a tendency to crash when stressing bleeding edge compiler features. Sometimes, just opening `AK/Variant.h` is enough. You can usually just restart clangd. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.

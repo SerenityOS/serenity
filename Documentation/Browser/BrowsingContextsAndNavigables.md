@@ -144,11 +144,11 @@ TODO: Finish this section
 
 TODO:
 
--   Agents defined by the HTML Spec
--   Global Objects (Global Scopes) defined by the HTML Spec
--   Agents and Browsing Context Groups
--   Navigables and their relationship to Browsing Contexts
--   Walk through construction of a browser tab, its traversable navigable, and its navigation both same and
-    cross-origin
--   Walk through construction of a browser tab with a nested browsing context and what happens when the
-    nested context within its navigable container navigates on its own
+- Agents defined by the HTML Spec
+- Global Objects (Global Scopes) defined by the HTML Spec
+- Agents and Browsing Context Groups
+- Navigables and their relationship to Browsing Contexts
+- Walk through construction of a browser tab, its traversable navigable, and its navigation both same and
+  cross-origin
+- Walk through construction of a browser tab with a nested browsing context and what happens when the
+  nested context within its navigable container navigates on its own

@@ -88,4 +88,4 @@ $ command --force -- -argument --another-argument
 
 ## See also
 
--   [`getopt`(3)](help://man/3/getopt)
+- [`getopt`(3)](help://man/3/getopt)

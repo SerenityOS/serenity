@@ -8,9 +8,9 @@ The official clangd extension can be used for C++ comprehension. Refer to [Clang
 
 There are a few different ways to specify which clangd to use:
 
--   By default, without configuration `lsp-mode` will try to find and use your system `clangd`. This is the easiest solution, but your system clangd might be out of date.
--   You can manually specify any `clangd` binary with `lsp-clangd-binary-path`.
--   You can have `lsp-mode` manage your `clangd` installation with emacs' `lsp-install-server`. This will install a `clangd` binary for you.
+- By default, without configuration `lsp-mode` will try to find and use your system `clangd`. This is the easiest solution, but your system clangd might be out of date.
+- You can manually specify any `clangd` binary with `lsp-clangd-binary-path`.
+- You can have `lsp-mode` manage your `clangd` installation with emacs' `lsp-install-server`. This will install a `clangd` binary for you.
 
 ### lsp-mode
 
@@ -30,8 +30,8 @@ There are a few different ways to specify which clangd to use:
 There are multiple packages to handle auto formatting with
 `clang-format`, within emacs. Choose what works best for your setup:
 
--   [format-all-mode](https://github.com/lassik/emacs-format-all-the-code)
--   [clang-format-plus](https://github.com/SavchenkoValeriy/emacs-clang-format-plus)
+- [format-all-mode](https://github.com/lassik/emacs-format-all-the-code)
+- [clang-format-plus](https://github.com/SavchenkoValeriy/emacs-clang-format-plus)
 
 Alternatively, this can be done without additional packages, using `lsp-mode`.
 You can use the following `.dir-locals.el` file placed in the project root:

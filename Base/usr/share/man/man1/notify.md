@@ -10,13 +10,13 @@ $ notify <title> <message> [-I icon-path] [-L launch-url]
 
 ## Options
 
--   `-I`, `--icon-path`: Path to icon image file
--   `-L`, `--launch-url`: Notification launch URL
+- `-I`, `--icon-path`: Path to icon image file
+- `-L`, `--launch-url`: Notification launch URL
 
 ## Arguments
 
--   `title`: Notification title
--   `message`: Notification message
+- `title`: Notification title
+- `message`: Notification message
 
 ## Description
 

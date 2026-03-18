@@ -2,23 +2,22 @@
 
 ## Background
 
--   macOS: Only integer scale factors at app level. Can stretch final composited framebuffer at very end for non-integer display scales.
+- macOS: Only integer scale factors at app level. Can stretch final composited framebuffer at very end for non-integer display scales.
+    - advantages: simple programming model, still fairly flexible; scaling at end produces coherent final image
+    - disadvantages: needs 4x memory even for 1.5x scale; scaling at very makes final image less detailed than it could be
 
-    -   advantages: simple programming model, still fairly flexible; scaling at end produces coherent final image
-    -   disadvantages: needs 4x memory even for 1.5x scale; scaling at very makes final image less detailed than it could be
+- Android: Many (but discrete) scale levels (ldpi (0.75x), mdpi, hdpi (1.5x), xhdpi (2x), xxhdpi (3x), xxhdpi (4x))
 
--   Android: Many (but discrete) scale levels (ldpi (0.75x), mdpi, hdpi (1.5x), xhdpi (2x), xxhdpi (3x), xxhdpi (4x))
-
--   Windows: has "not recommended" free form text entry for scale factor between 100% and 500%.
+- Windows: has "not recommended" free form text entry for scale factor between 100% and 500%.
 
 Integer scale factors are needed in any case so let's get that working first. Actually, let's focus on just 2x for now.
 
 ## Desired end state
 
--   All rects (Window and Widget rects, mouse cursor, even bitmap sizes) are in "logical" coordinates, which is the same as pixels at 1x scale, as much as possible.
--   If something needs to be in pixels, its name starts with `physical_`. Physical coordinates should as much as possible not cross API boundaries.
--   Jury's still out if logical coordinates should stay ints. Probably, but it means mouse cursor etc only have point resolution, not pixel resolution
--   We should have something that can store a collection of (lazily-loaded?) bitmaps and fonts that each represent a single image / font at different scale levels, and at paint time the right representation is picked for the current scale
+- All rects (Window and Widget rects, mouse cursor, even bitmap sizes) are in "logical" coordinates, which is the same as pixels at 1x scale, as much as possible.
+- If something needs to be in pixels, its name starts with `physical_`. Physical coordinates should as much as possible not cross API boundaries.
+- Jury's still out if logical coordinates should stay ints. Probably, but it means mouse cursor etc only have point resolution, not pixel resolution
+- We should have something that can store a collection of (lazily-loaded?) bitmaps and fonts that each represent a single image / font at different scale levels, and at paint time the right representation is picked for the current scale
 
 ## Resource loading
 
@@ -135,28 +134,24 @@ For now, we're going with a "-2x" suffix on the file name.
 
 ### Resource loading strategy tradeoffs
 
--   eagerly load one scale, reload at new scale on scale factor change events
+- eagerly load one scale, reload at new scale on scale factor change events
+    - needs explicit code
+    - random code in LibGfx currently loads icons, and scale factor change events would be more a LibGUI level concept, not clear how to plumb the event to there
+    * memory efficient -- only have one copy of each resource in memory
+    * easy to understand: Bitmap stays Bitmap, Font stays Font, no need for collections
 
-    -   needs explicit code
-    -   random code in LibGfx currently loads icons, and scale factor change events would be more a LibGUI level concept, not clear how to plumb the event to there
+- have BitmapCollection that stores high-res and low-res path and load lazily when needed
+    - need to do synchronous disk access at first paint on UI thread
+        - or load compressed data at each scale eagerly and decompress lazily. still a blocking decode on UI thread then, and needs more memory -- 2x compressed resources in memory even if they might never be needed
+    * puts complexity in framework, app doesn't have to care
+    * can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
 
-    *   memory efficient -- only have one copy of each resource in memory
-    *   easy to understand: Bitmap stays Bitmap, Font stays Font, no need for collections
-
--   have BitmapCollection that stores high-res and low-res path and load lazily when needed
-
-    -   need to do synchronous disk access at first paint on UI thread
-        -   or load compressed data at each scale eagerly and decompress lazily. still a blocking decode on UI thread then, and needs more memory -- 2x compressed resources in memory even if they might never be needed
-
-    *   puts complexity in framework, app doesn't have to care
-    *   can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
-
--   eagerly load both and use the right one at paint time
-    -   similar to GUI::Icon
-    -   400% memory overhead in 1x mode (but most icons are small)
-    *   conceptually easy to understand, but still need some collection class
-    *   puts (less) complexity in framework, app doesn't have to care
-    *   can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
+- eagerly load both and use the right one at paint time
+    - similar to GUI::Icon
+    - 400% memory overhead in 1x mode (but most icons are small)
+    * conceptually easy to understand, but still need some collection class
+    * puts (less) complexity in framework, app doesn't have to care
+    * can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
 
 This isn't figured out yet, for now we're doing the first approach in select places in the window server.
 

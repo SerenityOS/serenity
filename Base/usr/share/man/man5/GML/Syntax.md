@@ -89,29 +89,29 @@ A property's `value` is required to be either a JSON value or another object. Ob
 
 Among the supported JSON values, these types can be further distinguished:
 
--   `int`: Regular JSON integer, note that JSON floats are not currently used.
--   `ui_dimension`: either positive integers, that work just like `int`, or special meaning values as JSON strings; see [UI Dimensions](help://man/5/GML/UI-Dimensions)
--   `bool`: Regular JSON boolean, may be enclosed in quotes but this is discouraged.
--   `string`: JSON string, also used as a basis for other types.
--   `readonly_string`: String-valued property that cannot be changed from C++ later.
--   `enum`: A JSON string with special semantics. This is always the value of some C++ enum, but it's enclosed in quotes.
-    -   `font_weight`: Special case of `enum` for `Gfx::FontWeight`. One of `Thin`, `ExtraLight`, `Light`, `Regular`, `Medium`, `SemiBold`, `Bold`, `ExtraBold`, `Black`, `ExtraBlack`.
-    -   `text_alignment`: Special case of `enum` for `Gfx::TextAlignment`. Supports values of the form `VerticalHorizontal`, where `Vertical` is the vertical alignment, one of `Center`, `Top`, `Bottom`, and `Horizontal` is the horizontal alignment, one of `Left`, `Right`, `Center`. The exception is the value `Center` (because `CenterCenter` is silly).
-    -   `text_wrapping`: Special case of `enum` for `Gfx::TextWrapping`. One of `Wrap` or `DontWrap`.
--   `rect`: A JSON object of four `int`s specifying a rectangle. The keys are `x`, `y`, `width`, `height`.
--   `size`: A JSON array of two `int`s specifying two sizes in the format `[width, height]`.
--   `ui_size`: A JSON array of two `ui_dimension`s specifying two sizes in the format `[width, height]`
--   `margins`: A JSON array or object specifying four-directional margins as `int`s. If this is a JSON object, the four keys `top`, `right`, `bottom`, `left` are used. If this is a JSON array, there can be one to four integers. These have the following meaning (see also `GUI::Margins`):
-    -   `[ all_four_margins ]`
-    -   `[ top_and_bottom, right_and_left ]`
-    -   `[ top, right_and_left, bottom ]`
-    -   `[ top, right, bottom, left ]`
+- `int`: Regular JSON integer, note that JSON floats are not currently used.
+- `ui_dimension`: either positive integers, that work just like `int`, or special meaning values as JSON strings; see [UI Dimensions](help://man/5/GML/UI-Dimensions)
+- `bool`: Regular JSON boolean, may be enclosed in quotes but this is discouraged.
+- `string`: JSON string, also used as a basis for other types.
+- `readonly_string`: String-valued property that cannot be changed from C++ later.
+- `enum`: A JSON string with special semantics. This is always the value of some C++ enum, but it's enclosed in quotes.
+    - `font_weight`: Special case of `enum` for `Gfx::FontWeight`. One of `Thin`, `ExtraLight`, `Light`, `Regular`, `Medium`, `SemiBold`, `Bold`, `ExtraBold`, `Black`, `ExtraBlack`.
+    - `text_alignment`: Special case of `enum` for `Gfx::TextAlignment`. Supports values of the form `VerticalHorizontal`, where `Vertical` is the vertical alignment, one of `Center`, `Top`, `Bottom`, and `Horizontal` is the horizontal alignment, one of `Left`, `Right`, `Center`. The exception is the value `Center` (because `CenterCenter` is silly).
+    - `text_wrapping`: Special case of `enum` for `Gfx::TextWrapping`. One of `Wrap` or `DontWrap`.
+- `rect`: A JSON object of four `int`s specifying a rectangle. The keys are `x`, `y`, `width`, `height`.
+- `size`: A JSON array of two `int`s specifying two sizes in the format `[width, height]`.
+- `ui_size`: A JSON array of two `ui_dimension`s specifying two sizes in the format `[width, height]`
+- `margins`: A JSON array or object specifying four-directional margins as `int`s. If this is a JSON object, the four keys `top`, `right`, `bottom`, `left` are used. If this is a JSON array, there can be one to four integers. These have the following meaning (see also `GUI::Margins`):
+    - `[ all_four_margins ]`
+    - `[ top_and_bottom, right_and_left ]`
+    - `[ top, right_and_left, bottom ]`
+    - `[ top, right, bottom, left ]`
 
 Properties are never ended with `;` or `,`, and the property key is never enclosed in quotes or double quotes.
 
 ## See also
 
--   The SerenityOS source code is the best source of further information on GML. The GML parser and AST builder can be found in the `GML` subdirectory in the `LibGUI` library. The `AK` JSON parsers and data structures are used for all JSON values.
+- The SerenityOS source code is the best source of further information on GML. The GML parser and AST builder can be found in the `GML` subdirectory in the `LibGUI` library. The `AK` JSON parsers and data structures are used for all JSON values.
 
 ## Examples
 

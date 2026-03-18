@@ -27,7 +27,7 @@ describe("correct behavior", () => {
 
         expect(o.foo).toBe("bar");
         expect(o["foo"]).toBe("bar");
-        expect(o.qux).toBe(10), expect(o.hello).toBe("friends");
+        (expect(o.qux).toBe(10), expect(o.hello).toBe("friends"));
         expect(o["hello"]).toBe("friends");
     });
 

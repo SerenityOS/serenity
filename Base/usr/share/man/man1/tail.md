@@ -14,13 +14,13 @@ $ tail [-f] [-n number] [file]
 
 ## Options
 
--   `-f`, `--follow`: Output data as it is written to the file
--   `-n [+]NUM`, `--lines [+]NUM`: output the last NUM lines, instead of the last 10; or use -n +NUM to output starting with line NUM
--   `-c [+]NUM`, `--bytes [+]NUM`: output the last NUM bytes; or use -n +NUM to output starting with byte NUM
+- `-f`, `--follow`: Output data as it is written to the file
+- `-n [+]NUM`, `--lines [+]NUM`: output the last NUM lines, instead of the last 10; or use -n +NUM to output starting with line NUM
+- `-c [+]NUM`, `--bytes [+]NUM`: output the last NUM bytes; or use -n +NUM to output starting with byte NUM
 
 ## Arguments
 
--   `file`: Target file. If unspecified or `-`, defaults to the standard input.
+- `file`: Target file. If unspecified or `-`, defaults to the standard input.
 
 ## Examples
 
@@ -56,5 +56,5 @@ $ tail -c 1337 leet.txt
 
 ## See also
 
--   [`head`(1)](help://man/1/head)
--   [`cat`(1)](help://man/1/cat)
+- [`head`(1)](help://man/1/head)
+- [`cat`(1)](help://man/1/cat)

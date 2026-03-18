@@ -35,4 +35,4 @@ The order is big-endian.
 
 ## See also
 
--   Format header definition in `Gfx::FontFileHeader` in [`Userland/Libraries/LibGfx/Font/BitmapFont.cpp`](../../../../../Userland/Libraries/LibGfx/Font/BitmapFont.cpp)
+- Format header definition in `Gfx::FontFileHeader` in [`Userland/Libraries/LibGfx/Font/BitmapFont.cpp`](../../../../../Userland/Libraries/LibGfx/Font/BitmapFont.cpp)

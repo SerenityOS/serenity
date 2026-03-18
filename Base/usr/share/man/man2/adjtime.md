@@ -28,6 +28,6 @@ In pledged programs, the `settime` promise is required when `delta` is not null.
 
 ## Errors
 
--   `EFAULT`: `delta` and/or `old_delta` are not null and not in readable memory.
--   `EINVAL`: `delta` is not null and has a `tv_nsec` field that's less than 0 or larger or equal to `10^6`. Negative deltas should have a negative `tv_sec` field but a `tv_nsec` that's larger or equal zero. For example, a delta of -0.5 s is represented by `{-1, 500'000}`.
--   `EPERM`: `delta` is not null but geteuid() is not 0.
+- `EFAULT`: `delta` and/or `old_delta` are not null and not in readable memory.
+- `EINVAL`: `delta` is not null and has a `tv_nsec` field that's less than 0 or larger or equal to `10^6`. Negative deltas should have a negative `tv_sec` field but a `tv_nsec` that's larger or equal zero. For example, a delta of -0.5 s is represented by `{-1, 500'000}`.
+- `EPERM`: `delta` is not null but geteuid() is not 0.
