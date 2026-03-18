@@ -19,7 +19,7 @@ if [ "$#" -eq "0" ]; then
 else
     files=()
     for file in "$@"; do
-        if [[ "${file}" == *".js" || "${file}" == *".mjs" || "${file}" == *".md" ]]; then
+        if [[ "${file}" == *".js" || "${file}" == *".mjs" || "${file}" == *".md" || "${file}" == *".yml" || "${file}" == *".yaml" ]]; then
             files+=("${file}")
         fi
     done
