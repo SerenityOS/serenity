@@ -7,6 +7,7 @@
 #include <AK/FixedArray.h>
 #include <AK/QuickSort.h>
 #include <AK/TypedTransfer.h>
+#include <Applications/TerminalSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/Account.h>
@@ -296,41 +297,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     Config::monitor_domain("Terminal");
-    auto should_confirm_close = Config::read_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, true);
+    auto should_confirm_close = Config::read_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, Terminal::Defaults::CONFIRM_CLOSE);
     TerminalChangeListener listener { terminal };
 
-    auto bell = Config::read_string("Terminal"sv, "Window"sv, "Bell"sv, "Visible"sv);
-    if (bell == "AudibleBeep") {
-        terminal->set_bell_mode(VT::TerminalWidget::BellMode::AudibleBeep);
-    } else if (bell == "Disabled") {
-        terminal->set_bell_mode(VT::TerminalWidget::BellMode::Disabled);
-    } else {
-        terminal->set_bell_mode(VT::TerminalWidget::BellMode::Visible);
-    }
+    terminal->set_bell_mode(VT::TerminalWidget::parse_bell(Config::read_string("Terminal"sv, "Window"sv, "Bell"sv)).value_or(Terminal::Defaults::BELL_MODE));
 
-    auto automark = Config::read_string("Terminal"sv, "Terminal"sv, "AutoMark"sv, "MarkInteractiveShellPrompt"sv);
-    if (automark == "MarkNothing") {
-        terminal->set_auto_mark_mode(VT::TerminalWidget::AutoMarkMode::MarkNothing);
-    } else {
-        terminal->set_auto_mark_mode(VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt);
-    }
+    terminal->set_auto_mark_mode(VT::TerminalWidget::parse_automark_mode(Config::read_string("Terminal"sv, "Terminal"sv, "AutoMark"sv)).value_or(Terminal::Defaults::AUTOMARK_MODE));
 
-    auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Block"sv)).value_or(VT::CursorShape::Block);
+    auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv)).value_or(Terminal::Defaults::CURSOR_SHAPE);
     terminal->set_cursor_shape(cursor_shape);
 
-    auto cursor_blinking = Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, true);
+    auto cursor_blinking = Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, Terminal::Defaults::CURSOR_BLINKING);
     terminal->set_cursor_blinking(cursor_blinking);
 
     auto find_window = TRY(create_find_window(terminal));
 
-    auto new_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv, 255);
+    auto new_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv, Terminal::Defaults::OPACITY);
     terminal->set_opacity(new_opacity);
     window->set_has_alpha_channel(new_opacity < 255);
 
-    auto new_scrollback_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, terminal->max_history_size());
+    auto new_scrollback_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, Terminal::Defaults::MAX_HISTORY_SIZE);
     terminal->set_max_history_size(new_scrollback_size);
 
-    auto show_scroll_bar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, true);
+    auto show_scroll_bar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, Terminal::Defaults::SHOW_SCROLLBAR);
     terminal->set_show_scrollbar(show_scroll_bar);
 
     auto open_settings_action = GUI::Action::create("Terminal &Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)),
