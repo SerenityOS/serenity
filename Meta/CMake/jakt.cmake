@@ -37,6 +37,27 @@ if (ENABLE_JAKT)
         message(WARNING "Jakt compiler not found at ${JAKT_COMPILER}, disabling jakt")
         set(ENABLE_JAKT OFF CACHE BOOL "Enable jakt" FORCE)
     else()
+        find_package(Python COMPONENTS Interpreter REQUIRED)
+        file(WRITE ${CMAKE_BINARY_DIR}/jakt_test.cpp "#include <new>")
+        execute_process(
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/get_cxx_includes.py
+                --compiler ${CMAKE_CXX_COMPILER}
+                --test-file "${CMAKE_BINARY_DIR}/jakt_test.cpp"
+                --target "${CMAKE_CXX_COMPILER_TARGET}"
+            OUTPUT_VARIABLE CXX_SYSTEM_INCLUDES_CLEAN
+        )
+        list(REMOVE_DUPLICATES CXX_SYSTEM_INCLUDES_CLEAN)
+
+        set(test_sysroot_arg)
+        if (CMAKE_SYSROOT)
+            set(test_sysroot_arg "--extra-cpp-flag--sysroot=${CMAKE_SYSROOT}")
+        endif()
+
+        set(test_system_includes)
+        foreach(include IN LISTS CXX_SYSTEM_INCLUDES_CLEAN)
+            list(APPEND test_system_includes "--extra-cpp-flag-isystem${include}")
+        endforeach()
+
         file(WRITE ${CMAKE_BINARY_DIR}/jakt_test.jakt "import extern \"LibMain/Main.h\"\nfn main() { }\n")
         set(include_args)
         set(all_includes
@@ -58,6 +79,8 @@ if (ENABLE_JAKT)
                 --ak-is-my-only-stdlib
                 -T ${JAKT_TARGET_TRIPLE}
                 --binary-dir ${CMAKE_BINARY_DIR}
+                ${test_sysroot_arg}
+                ${test_system_includes}
                 ${include_args}
                 ${CMAKE_BINARY_DIR}/jakt_test.jakt
             RESULT_VARIABLE JAKT_COMPILER_RESULT
@@ -75,19 +98,6 @@ endif()
 if (NOT ENABLE_JAKT)
     return()
 endif()
-
-find_package(Python COMPONENTS Interpreter REQUIRED)
-file(WRITE ${CMAKE_BINARY_DIR}/jakt_test.cpp "#include <new>")
-execute_process(
-    COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/get_cxx_includes.py
-        --compiler ${CMAKE_CXX_COMPILER}
-        --test-file "${CMAKE_BINARY_DIR}/jakt_test.cpp"
-        --target "${CMAKE_CXX_COMPILER_TARGET}"
-    OUTPUT_VARIABLE CXX_SYSTEM_INCLUDES_CLEAN
-)
-
-# Remove duplicates
-list(REMOVE_DUPLICATES CXX_SYSTEM_INCLUDES_CLEAN)
 
 cmake_host_system_information(RESULT JAKT_PROCESSOR_COUNT QUERY NUMBER_OF_PHYSICAL_CORES)
 set_property(GLOBAL PROPERTY JOB_POOLS jakt_pool=1)
