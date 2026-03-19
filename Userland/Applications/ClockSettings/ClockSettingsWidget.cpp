@@ -112,7 +112,6 @@ void ClockSettingsWidget::reset_default_values()
 {
     m_24_hour_radio->set_checked(true);
     m_show_seconds_checkbox->set_checked(true);
-    Config::write_string("Taskbar"sv, "Clock"sv, "TimeFormat"sv, time_format_24h_seconds);
 }
 
 void ClockSettingsWidget::update_time_format_string()
