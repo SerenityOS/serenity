@@ -11,6 +11,7 @@
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibMain/Main.h>
 
@@ -31,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-terminal"sv);
 
-    auto window = TRY(GUI::SettingsWindow::create("Terminal Settings"));
+    auto window = TRY(GUI::SettingsWindow::create("Terminal Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
     (void)TRY(window->add_tab(TRY(TerminalSettings::ViewWidget::create()), "View"_string, "view"sv));
     (void)TRY(window->add_tab(TRY(TerminalSettings::MainWidget::create()), "Terminal"_string, "terminal"sv));

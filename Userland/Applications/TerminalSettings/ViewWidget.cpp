@@ -5,6 +5,7 @@
  */
 
 #include "ViewWidget.h"
+#include "Defaults.h"
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
@@ -37,125 +38,124 @@ ErrorOr<NonnullRefPtr<ViewWidget>> ViewWidget::create()
 
 ErrorOr<void> ViewWidget::setup()
 {
-    auto& slider = *find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_opacity_slider");
-    m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv, 255);
+    m_opacity_slider = find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_opacity_slider");
+    m_font_label = find_descendant_of_type_named<GUI::Label>("terminal_font_label");
+    m_font_selection = find_descendant_of_type_named<GUI::Widget>("terminal_font_selection");
+    m_use_default_font_checkbox = find_descendant_of_type_named<GUI::CheckBox>("terminal_font_defaulted");
+    m_cursor_block_radio = find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_block");
+    m_cursor_underline_radio = find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_underline");
+    m_cursor_bar_radio = find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_bar");
+    m_cursor_blinking_checkbox = find_descendant_of_type_named<GUI::CheckBox>("terminal_cursor_blinking");
+    m_history_size_spinbox = find_descendant_of_type_named<GUI::SpinBox>("history_size_spinbox");
+    m_show_scrollbar_checkbox = find_descendant_of_type_named<GUI::CheckBox>("terminal_show_scrollbar");
+    auto font_button = find_descendant_of_type_named<GUI::Button>("terminal_font_button");
+
+    m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv, Terminal::Defaults::OPACITY);
     m_original_opacity = m_opacity;
-    slider.set_value(m_opacity);
-    slider.on_change = [this](int value) {
+    m_opacity_slider->set_value(m_opacity);
+    m_opacity_slider->on_change = [this](int value) {
         m_opacity = value;
         Config::write_i32("Terminal"sv, "Window"sv, "Opacity"sv, static_cast<i32>(m_opacity));
         set_modified(true);
     };
 
-    auto& font_button = *find_descendant_of_type_named<GUI::Button>("terminal_font_button");
-    auto& font_text = *find_descendant_of_type_named<GUI::Label>("terminal_font_label");
-    auto font_name = Config::read_string("Terminal"sv, "Text"sv, "Font"sv);
-    if (font_name.is_empty())
+    auto initial_font_name = Config::read_string("Terminal"sv, "Text"sv, "Font"sv);
+    if (initial_font_name.is_empty())
         m_font = Gfx::FontDatabase::the().default_fixed_width_font();
     else
-        m_font = Gfx::FontDatabase::the().get_by_name(font_name);
+        m_font = Gfx::FontDatabase::the().get_by_name(initial_font_name);
     m_original_font = m_font;
-    font_text.set_text(m_font->human_readable_name());
-    font_text.set_font(m_font);
-    font_button.on_click = [&](auto) {
+    m_font_label->set_text(m_font->human_readable_name());
+    m_font_label->set_font(m_font);
+    font_button->on_click = [this](auto) {
         auto picker = GUI::FontPicker::construct(window(), m_font.ptr(), true);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_font = picker->font();
-            font_text.set_text(m_font->human_readable_name());
-            font_text.set_font(m_font);
+            m_font_label->set_text(m_font->human_readable_name());
+            m_font_label->set_font(m_font);
             Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
             set_modified(true);
         }
     };
 
-    auto& font_selection = *find_descendant_of_type_named<GUI::Widget>("terminal_font_selection");
-    auto& use_default_font_button = *find_descendant_of_type_named<GUI::CheckBox>("terminal_font_defaulted");
-    use_default_font_button.on_checked = [&, font_name](bool use_default_font) {
+    // The "use default font" setting is not stored itself - we automatically set it if the actually present font is the default,
+    // whether that was filled in by the above defaulting code or by the user.
+    m_use_default_font_checkbox->set_checked(m_font == Gfx::FontDatabase::the().default_fixed_width_font());
+    m_use_default_font_checkbox->on_checked = [this, initial_font_name](bool use_default_font) {
         if (use_default_font) {
-            font_selection.set_enabled(false);
+            m_font_selection->set_enabled(false);
             m_font = Gfx::FontDatabase::the().default_fixed_width_font();
-            font_text.set_text(m_font->human_readable_name());
-            font_text.set_font(m_font);
+            m_font_label->set_text(m_font->human_readable_name());
+            m_font_label->set_font(m_font);
             Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
         } else {
-            font_selection.set_enabled(true);
-            m_font = font_name.is_empty()
+            m_font_selection->set_enabled(true);
+            m_font = initial_font_name.is_empty()
                 ? Gfx::FontDatabase::the().default_fixed_width_font()
-                : Gfx::FontDatabase::the().get_by_name(font_name);
+                : Gfx::FontDatabase::the().get_by_name(initial_font_name);
             Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
         }
         set_modified(true);
     };
-    // The "use default font" setting is not stored itself - we automatically set it if the actually present font is the default,
-    // whether that was filled in by the above defaulting code or by the user.
-    use_default_font_button.set_checked(m_font == Gfx::FontDatabase::the().default_fixed_width_font(), GUI::AllowCallback::No);
-    font_selection.set_enabled(!use_default_font_button.is_checked());
+    m_font_selection->set_enabled(!m_use_default_font_checkbox->is_checked());
 
-    auto& terminal_cursor_block = *find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_block");
-    auto& terminal_cursor_underline = *find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_underline");
-    auto& terminal_cursor_bar = *find_descendant_of_type_named<GUI::RadioButton>("terminal_cursor_bar");
-
-    auto& terminal_cursor_blinking = *find_descendant_of_type_named<GUI::CheckBox>("terminal_cursor_blinking");
-
-    m_cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv)).value_or(VT::CursorShape::Block);
+    m_cursor_shape = VT::TerminalWidget::parse_cursor_shape(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv)).value_or(Terminal::Defaults::CURSOR_SHAPE);
     m_original_cursor_shape = m_cursor_shape;
 
-    m_cursor_is_blinking_set = Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, true);
+    m_cursor_is_blinking_set = Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, Terminal::Defaults::CURSOR_BLINKING);
     m_original_cursor_is_blinking_set = m_cursor_is_blinking_set;
 
     switch (m_cursor_shape) {
     case VT::CursorShape::Underline:
-        terminal_cursor_underline.set_checked(true);
+        m_cursor_underline_radio->set_checked(true);
         break;
     case VT::CursorShape::Bar:
-        terminal_cursor_bar.set_checked(true);
+        m_cursor_bar_radio->set_checked(true);
         break;
     default:
-        terminal_cursor_block.set_checked(true);
+        m_cursor_block_radio->set_checked(true);
     }
 
-    terminal_cursor_blinking.on_checked = [&](bool is_checked) {
+    m_cursor_blinking_checkbox->set_checked(Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, Terminal::Defaults::CURSOR_BLINKING), GUI::AllowCallback::No);
+    m_cursor_blinking_checkbox->on_checked = [this](bool is_checked) {
         set_modified(true);
         m_cursor_is_blinking_set = is_checked;
         Config::write_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, is_checked);
     };
-    terminal_cursor_blinking.set_checked(Config::read_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, true));
 
-    terminal_cursor_block.on_checked = [&](bool) {
+    m_cursor_block_radio->on_checked = [this](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Block;
         Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Block"sv);
     };
-    terminal_cursor_underline.on_checked = [&](bool) {
+    m_cursor_underline_radio->on_checked = [this](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Underline;
         Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Underline"sv);
     };
-    terminal_cursor_bar.on_checked = [&](bool) {
+    m_cursor_bar_radio->on_checked = [this](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Bar;
         Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Bar"sv);
     };
 
-    m_max_history_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, 1024);
+    m_max_history_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, Terminal::Defaults::MAX_HISTORY_SIZE);
     m_original_max_history_size = m_max_history_size;
-    auto& history_size_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("history_size_spinbox");
-    history_size_spinbox.set_value(m_max_history_size, GUI::AllowCallback::No);
-    history_size_spinbox.on_change = [this](int value) {
+    m_history_size_spinbox->set_value(m_max_history_size);
+    m_history_size_spinbox->on_change = [this](int value) {
         m_max_history_size = value;
         Config::write_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, static_cast<i32>(m_max_history_size));
         set_modified(true);
     };
 
-    m_show_scrollbar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, true);
+    m_show_scrollbar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, Terminal::Defaults::SHOW_SCROLLBAR);
     m_original_show_scrollbar = m_show_scrollbar;
-    auto& show_scrollbar_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("terminal_show_scrollbar");
-    show_scrollbar_checkbox.on_checked = [&](bool show_scrollbar) {
+    m_show_scrollbar_checkbox->set_checked(m_show_scrollbar);
+    m_show_scrollbar_checkbox->on_checked = [this](bool show_scrollbar) {
         m_show_scrollbar = show_scrollbar;
         Config::write_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, show_scrollbar);
         set_modified(true);
     };
-    show_scrollbar_checkbox.set_checked(m_show_scrollbar, GUI::AllowCallback::No);
     return {};
 }
 
@@ -183,5 +183,25 @@ void ViewWidget::write_back_settings() const
 void ViewWidget::cancel_settings()
 {
     write_back_settings();
+}
+
+void ViewWidget::reset_default_values()
+{
+    m_opacity = Terminal::Defaults::OPACITY;
+    m_cursor_shape = Terminal::Defaults::CURSOR_SHAPE;
+    m_cursor_is_blinking_set = Terminal::Defaults::CURSOR_BLINKING;
+    m_max_history_size = Terminal::Defaults::MAX_HISTORY_SIZE;
+    m_show_scrollbar = Terminal::Defaults::SHOW_SCROLLBAR;
+    m_font = Gfx::FontDatabase::the().default_fixed_width_font();
+
+    m_opacity_slider->set_value(m_opacity, GUI::AllowCallback::No);
+    m_font_label->set_text(m_font->human_readable_name());
+    m_font_label->set_font(m_font);
+    m_font_selection->set_enabled(false);
+    m_use_default_font_checkbox->set_checked(true, GUI::AllowCallback::No);
+    m_cursor_block_radio->set_checked(true, GUI::AllowCallback::No);
+    m_cursor_blinking_checkbox->set_checked(m_cursor_is_blinking_set, GUI::AllowCallback::No);
+    m_history_size_spinbox->set_value(m_max_history_size, GUI::AllowCallback::No);
+    m_show_scrollbar_checkbox->set_checked(m_show_scrollbar, GUI::AllowCallback::No);
 }
 }
