@@ -685,17 +685,22 @@ constexpr T sin(T angle)
     return ret;
 #else
 #    if defined(AK_OS_SERENITY)
-    if (angle < 0)
-        return -sin(-angle);
+    T sign = 1;
+    if (angle < 0) {
+        angle = -angle;
+        sign = -1;
+    }
 
     if (angle >= 2 * Pi<T>)
         angle = fmod(angle, 2 * Pi<T>);
 
-    if (angle >= Pi<T>)
-        return -sin(angle - Pi<T>);
+    if (angle >= Pi<T>) {
+        angle = angle - Pi<T>;
+        sign = -sign;
+    }
 
     if (angle > Pi<T> / 2)
-        return sin(Pi<T> - angle);
+        angle = Pi<T> - angle;
 
     // https://github.com/samhocevar/lolremez/wiki/Tutorial-4-of-5%3A-fixing-lower-order-parameters
     auto f = [](T x) {
@@ -720,7 +725,7 @@ constexpr T sin(T angle)
         }
     };
     T angle_squared = angle * angle;
-    return angle + angle * angle_squared * f(angle_squared);
+    return sign * (angle + angle * angle_squared * f(angle_squared));
 #    else
     return __builtin_sin(angle);
 #    endif
@@ -742,16 +747,21 @@ constexpr T cos(T angle)
 #else
 #    if defined(AK_OS_SERENITY)
     if (angle < 0)
-        return cos(-angle);
+        angle = -angle;
 
     if (angle >= 2 * Pi<T>)
         angle = fmod(angle, 2 * Pi<T>);
 
-    if (angle >= Pi<T>)
-        return -cos(angle - Pi<T>);
+    T sign = 1;
+    if (angle >= Pi<T>) {
+        angle = angle - Pi<T>;
+        sign = -1;
+    }
 
-    if (angle > Pi<T> / 2)
-        return -cos(Pi<T> - angle);
+    if (angle > Pi<T> / 2) {
+        angle = Pi<T> - angle;
+        sign = -sign;
+    }
 
     // https://github.com/samhocevar/lolremez/wiki/Tutorial-3-of-5:-changing-variables-for-simpler-polynomials
     // for cos(x): cos(x) - 1 is a function of x^2 terms, so we do the substitution on that page like
@@ -778,7 +788,7 @@ constexpr T cos(T angle)
         }
     };
     T angle_squared = angle * angle;
-    return 1 + angle_squared * f(angle_squared);
+    return sign * (1 + angle_squared * f(angle_squared));
 #    else
     return __builtin_cos(angle);
 #    endif
