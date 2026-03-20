@@ -45,3 +45,31 @@ TEST_CASE(wrap_to_range)
     EXPECT_EQ(AK::wrap_to_range(0., 180.), 0.);
     EXPECT_EQ(AK::wrap_to_range(-85., 180.), -85.);
 }
+
+#define BENCHMARK_TRIG(type, function)                                                                         \
+    do {                                                                                                       \
+        for (type value = -4 * AK::Pi<type>; value < 4 * AK::Pi<type>; value += static_cast<type>(0.000001)) { \
+            auto result = function(value);                                                                     \
+            AK::taint_for_optimizer(result);                                                                   \
+        }                                                                                                      \
+    } while (false)
+
+BENCHMARK_CASE(bench_trig_cos)
+{
+    BENCHMARK_TRIG(double, AK::cos);
+}
+
+BENCHMARK_CASE(bench_trig_cosf)
+{
+    BENCHMARK_TRIG(float, AK::cos);
+}
+
+BENCHMARK_CASE(bench_trig_sin)
+{
+    BENCHMARK_TRIG(double, AK::sin);
+}
+
+BENCHMARK_CASE(bench_trig_sinf)
+{
+    BENCHMARK_TRIG(float, AK::sin);
+}
