@@ -24,6 +24,7 @@ public:
     static ByteString tempfile_directory();
     static ByteString config_directory();
     static ByteString data_directory();
+    static ByteString cache_directory();
     static ErrorOr<ByteString> runtime_directory();
     static ErrorOr<Vector<String>> font_directories();
 };

@@ -143,6 +143,23 @@ ByteString StandardPaths::data_directory()
     return LexicalPath::canonicalized_path(builder.to_byte_string());
 }
 
+ByteString StandardPaths::cache_directory()
+{
+    if (auto* cache_directory = getenv("XDG_CACHE_HOME"))
+        return LexicalPath::canonicalized_path(cache_directory);
+
+    StringBuilder builder;
+    builder.append(home_directory());
+#if defined(AK_OS_MACOS)
+    builder.append("/Library/Caches"sv);
+#elif defined(AK_OS_HAIKU)
+    builder.append("/config/cache"sv);
+#else
+    builder.append("/.cache"sv);
+#endif
+    return LexicalPath::canonicalized_path(builder.to_byte_string());
+}
+
 ErrorOr<ByteString> StandardPaths::runtime_directory()
 {
     if (auto* data_directory = getenv("XDG_RUNTIME_DIR"))
