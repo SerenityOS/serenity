@@ -97,7 +97,6 @@ public:
 
     Function<void(size_t)> on_tab_count_change;
     Function<void(Widget&)> on_change;
-    Function<void(Widget&)> on_middle_click;
     Function<void(Widget&)> on_tab_close_click;
     Function<void(Widget&, ContextMenuEvent const&)> on_context_menu_request;
     Function<void(Widget&)> on_double_click;
