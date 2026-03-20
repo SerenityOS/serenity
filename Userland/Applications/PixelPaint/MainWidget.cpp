@@ -70,10 +70,6 @@ MainWidget::MainWidget()
         }
     };
 
-    m_tab_widget->on_middle_click = [&](auto& widget) {
-        m_tab_widget->on_tab_close_click(widget);
-    };
-
     m_tab_widget->on_tab_close_click = [&](auto& widget) {
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
         if (image_editor.request_close()) {

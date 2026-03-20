@@ -81,11 +81,6 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
         update_displayed_zoom_level();
     };
 
-    m_tab_widget->on_middle_click = [](auto& clicked_widget) {
-        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
-        tab.on_tab_close_request(tab);
-    };
-
     m_tab_widget->on_tab_close_click = [](auto& clicked_widget) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.on_tab_close_request(tab);

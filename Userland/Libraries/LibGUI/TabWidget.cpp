@@ -488,8 +488,8 @@ void TabWidget::mousedown_event(MouseEvent& event)
         } else if (event.button() == MouseButton::Middle) {
             auto* widget = m_tabs[i].widget;
             deferred_invoke([this, widget] {
-                if (on_middle_click && widget)
-                    on_middle_click(*widget);
+                if (on_tab_close_click && widget)
+                    on_tab_close_click(*widget);
             });
         }
         return;
