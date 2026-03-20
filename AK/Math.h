@@ -688,7 +688,8 @@ constexpr T sin(T angle)
     if (angle < 0)
         return -sin(-angle);
 
-    angle = fmod(angle, 2 * Pi<T>);
+    if (angle >= 2 * Pi<T>)
+        angle = fmod(angle, 2 * Pi<T>);
 
     if (angle >= Pi<T>)
         return -sin(angle - Pi<T>);
@@ -743,7 +744,8 @@ constexpr T cos(T angle)
     if (angle < 0)
         return cos(-angle);
 
-    angle = fmod(angle, 2 * Pi<T>);
+    if (angle >= 2 * Pi<T>)
+        angle = fmod(angle, 2 * Pi<T>);
 
     if (angle >= Pi<T>)
         return -cos(angle - Pi<T>);
