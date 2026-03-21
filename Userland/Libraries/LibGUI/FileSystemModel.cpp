@@ -17,11 +17,8 @@
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
-#include <LibGUI/Painter.h>
+#include <LibGUI/FileSystemModelThumbnailCache.h>
 #include <LibGfx/Bitmap.h>
-#include <LibImageDecoderClient/Client.h>
-#include <LibThreading/BackgroundAction.h>
-#include <LibThreading/MutexProtected.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -688,141 +685,44 @@ Icon FileSystemModel::icon_for(Node const& node) const
     return FileIconProvider::icon_for_path(node.full_path(), node.mode);
 }
 
-using BitmapBackgroundAction = Threading::BackgroundAction<NonnullRefPtr<Gfx::Bitmap>>;
-
-// Mutex protected thumbnail cache data shared between threads.
-struct ThumbnailCache {
-    // Null pointers indicate an image that couldn't be loaded due to errors.
-    HashMap<ByteString, RefPtr<Gfx::Bitmap>> thumbnail_cache {};
-    HashMap<ByteString, NonnullRefPtr<BitmapBackgroundAction>> loading_thumbnails {};
-};
-
-static Threading::MutexProtected<ThumbnailCache> s_thumbnail_cache {};
-static Threading::MutexProtected<RefPtr<ImageDecoderClient::Client>> s_image_decoder_client {};
-
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
-{
-    Core::EventLoop event_loop;
-    Gfx::IntSize const thumbnail_size { 32, 32 };
-
-    auto file = TRY(Core::MappedFile::map(path));
-    auto decoded_image = TRY(s_image_decoder_client.with_locked([=, &file](auto& maybe_client) -> ErrorOr<Optional<ImageDecoderClient::DecodedImage>> {
-        if (!maybe_client) {
-            maybe_client = TRY(ImageDecoderClient::Client::try_create());
-            maybe_client->on_death = []() {
-                s_image_decoder_client.with_locked([](auto& client) {
-                    client = nullptr;
-                });
-            };
-        }
-
-        auto mime_type = Core::guess_mime_type_based_on_filename(path);
-
-        // FIXME: Refactor thumbnail rendering to be more async-aware. Possibly return this promise to the caller.
-        auto decoded_image = TRY(maybe_client->decode_image(file->bytes(), {}, {}, thumbnail_size, mime_type)->await());
-
-        return decoded_image;
-    }));
-
-    auto bitmap = decoded_image.value().frames[0].bitmap;
-
-    auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, thumbnail_size));
-
-    double scale = min(thumbnail_size.width() / (double)bitmap->width(), thumbnail_size.height() / (double)bitmap->height());
-    auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
-
-    Painter painter(thumbnail);
-    painter.draw_scaled_bitmap(destination, *bitmap, bitmap->rect(), 1.f, Gfx::ScalingMode::BoxSampling);
-    return thumbnail;
-}
-
 bool FileSystemModel::fetch_thumbnail_for(Node const& node)
 {
     auto path = node.full_path();
-
-    // See if we already have the thumbnail we're looking for in the cache.
-    auto was_in_cache = s_thumbnail_cache.with_locked([&](auto& cache) {
-        auto it = cache.thumbnail_cache.find(path);
-        if (it != cache.thumbnail_cache.end()) {
-            // Loading was unsuccessful.
-            if (!(*it).value)
-                return TriState::False;
-            // Loading was successful.
-            node.thumbnail = (*it).value;
-            return TriState::True;
-        }
-        // Loading is in progress.
-        if (cache.loading_thumbnails.contains(path))
-            return TriState::False;
-        return TriState::Unknown;
-    });
-    if (was_in_cache != TriState::Unknown)
-        return was_in_cache == TriState::True;
-
-    // Otherwise, arrange to render the thumbnail in background and make it available later.
-
-    m_thumbnail_progress_total++;
-
     auto weak_this = make_weak_ptr();
 
-    auto const action = [path](auto&) {
-        return render_thumbnail(path);
-    };
-    auto const update_progress = [weak_this](bool with_success) {
-        using namespace AK::TimeLiterals;
-        if (auto strong_this = weak_this.strong_ref(); !strong_this.is_null()) {
+    RefPtr<Gfx::Bitmap> thumbnail;
+    auto result = ThumbnailCache::the().fetch(path, thumbnail,
+        [weak_this](RefPtr<Gfx::Bitmap> bitmap) {
+            using namespace AK::TimeLiterals;
+            auto strong_this = weak_this.strong_ref();
+            if (strong_this.is_null())
+                return;
             strong_this->m_thumbnail_progress++;
             if (strong_this->on_thumbnail_progress)
                 strong_this->on_thumbnail_progress(strong_this->m_thumbnail_progress, strong_this->m_thumbnail_progress_total);
             if (strong_this->m_thumbnail_progress == strong_this->m_thumbnail_progress_total) {
                 strong_this->m_thumbnail_progress = 0;
                 strong_this->m_thumbnail_progress_total = 0;
+                strong_this->m_ui_update_timer.reset();
             }
-
-            if (with_success && (!strong_this->m_ui_update_timer.is_valid() || strong_this->m_ui_update_timer.elapsed_time() > 100_ms)) {
+            if (bitmap && (!strong_this->m_ui_update_timer.is_valid() || strong_this->m_ui_update_timer.elapsed_time() > 100_ms)) {
                 strong_this->did_update(UpdateFlag::DontInvalidateIndices);
                 strong_this->m_ui_update_timer.start();
             }
-        }
-    };
-
-    auto const on_complete = [weak_this, path, update_progress](auto thumbnail) -> ErrorOr<void> {
-        auto finished_generating_thumbnails = false;
-        s_thumbnail_cache.with_locked([path, thumbnail, &finished_generating_thumbnails](auto& cache) {
-            cache.thumbnail_cache.set(path, thumbnail);
-            cache.loading_thumbnails.remove(path);
-            finished_generating_thumbnails = cache.loading_thumbnails.is_empty();
         });
 
-        if (auto strong_this = weak_this.strong_ref(); finished_generating_thumbnails && !strong_this.is_null())
-            strong_this->m_ui_update_timer.reset();
-
-        update_progress(true);
-
-        return {};
-    };
-
-    auto const on_error = [path, update_progress](Error error) -> void {
-        // Note: We need to defer that to avoid the function removing its last reference
-        //       i.e. trying to destroy itself, which is prohibited.
-        Core::EventLoop::current().deferred_invoke([path, error = Error::copy(error)]() mutable {
-            s_thumbnail_cache.with_locked([path, error = move(error)](auto& cache) {
-                if (error != Error::from_errno(ECANCELED)) {
-                    cache.thumbnail_cache.set(path, nullptr);
-                    dbgln("Failed to load thumbnail for {}: {}", path, error);
-                }
-                cache.loading_thumbnails.remove(path);
-            });
-        });
-
-        update_progress(false);
-    };
-
-    s_thumbnail_cache.with_locked([path, action, on_complete, on_error](auto& cache) {
-        cache.loading_thumbnails.set(path, BitmapBackgroundAction::construct(move(action), move(on_complete), move(on_error)));
-    });
-
-    return false;
+    switch (result) {
+    case ThumbnailCache::FetchResult::Cached:
+        node.thumbnail = thumbnail;
+        return true;
+    case ThumbnailCache::FetchResult::StartedLoading:
+        m_thumbnail_progress_total++;
+        return false;
+    case ThumbnailCache::FetchResult::Error:
+    case ThumbnailCache::FetchResult::Loading:
+        return false;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 int FileSystemModel::column_count(ModelIndex const&) const

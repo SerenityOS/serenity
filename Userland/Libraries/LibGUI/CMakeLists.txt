@@ -53,6 +53,7 @@ set(SOURCES
     FilePicker.cpp
     FilePickerDialogGML.cpp
     FileSystemModel.cpp
+    FileSystemModelThumbnailCache.cpp
     FilteringProxyModel.cpp
     FontPicker.cpp
     FontPickerDialogGML.cpp
@@ -156,5 +157,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI PRIVATE LibCore LibELF LibFileSystem LibGfx LibImageDecoderClient LibIPC LibThreading LibRegex LibConfig LibUnicode LibURL)
+target_link_libraries(LibGUI PRIVATE LibCore LibCrypto LibELF LibFileSystem LibGfx LibImageDecoderClient LibIPC LibThreading LibRegex LibConfig LibUnicode LibURL)
 target_link_libraries(LibGUI PUBLIC LibSyntax)
