@@ -337,6 +337,7 @@ bool GLContextWidget::load_file(ByteString const& filename, NonnullOwnPtr<Core::
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::create(arguments));
+    app->set_config_domain("3DFileViewer"_string);
 
     auto const man_file = "/usr/share/man/man1/Applications/3DFileViewer.md";
 
@@ -387,9 +388,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
 
         auto file = response.release_value();
-        widget->load_file(file.filename(), file.release_stream());
+        auto filename = file.filename();
+        widget->load_file(filename, file.release_stream());
+        GUI::Application::the()->set_most_recently_open_file(filename);
     }));
     file_menu->add_separator();
+    file_menu->add_recent_files_list([&](auto& action) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, action.text());
+        if (response.is_error())
+            return;
+        auto file = response.release_value();
+        auto filename = file.filename();
+        widget->load_file(filename, file.release_stream());
+        GUI::Application::the()->set_most_recently_open_file(filename);
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
