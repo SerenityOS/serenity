@@ -25,6 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     argument_parser.parse(arguments);
 
     auto app = TRY(GUI::Application::create(arguments));
+    app->set_config_domain("Presenter"_string);
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Applications/Presenter.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
