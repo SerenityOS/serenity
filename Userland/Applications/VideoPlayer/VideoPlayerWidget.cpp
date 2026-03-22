@@ -8,6 +8,7 @@
 #include <LibConfig/Client.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/HorizontalSlider.h>
@@ -126,6 +127,7 @@ void VideoPlayerWidget::open_file(FileSystemAccessClient::File file)
     }
 
     m_path = MUST(String::from_byte_string(file.filename()));
+    GUI::Application::the()->set_most_recently_open_file(file.filename());
     update_title();
     close_file();
 
@@ -384,6 +386,12 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
         open_file(response.release_value());
     }));
     file_menu->add_separator();
+    file_menu->add_recent_files_list([&](auto& action) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        if (response.is_error())
+            return;
+        open_file(response.release_value());
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         window.close();
     }));
