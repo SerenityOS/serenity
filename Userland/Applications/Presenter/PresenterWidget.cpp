@@ -51,6 +51,9 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     });
     file_menu->add_action(open_action);
     file_menu->add_separator();
+    file_menu->add_recent_files_list([this](auto& action) {
+        this->set_file(action.text());
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
@@ -158,6 +161,7 @@ void PresenterWidget::set_file(StringView file_name)
         GUI::MessageBox::show_error(window(), ByteString::formatted("The presentation \"{}\" could not be loaded.\n{}", file_name, presentation.error()));
     } else {
         m_current_presentation = presentation.release_value();
+        GUI::Application::the()->set_most_recently_open_file(file_name);
         window()->set_title(ByteString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
         set_min_size(m_current_presentation->normative_size());
         m_web_view->load_html(MUST(m_current_presentation->render()));
