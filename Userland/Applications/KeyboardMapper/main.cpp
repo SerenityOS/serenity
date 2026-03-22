@@ -26,6 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd unix"));
 
     auto app = TRY(GUI::Application::create(arguments));
+    app->set_config_domain("KeyboardMapper"_string);
     auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper"sv);
 
     auto window = GUI::Window::construct();
@@ -54,6 +55,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto error_or = keyboard_mapper_widget->load_map_from_file(path.value()); error_or.is_error())
                 keyboard_mapper_widget->show_error_to_user(error_or.release_error());
+            else
+                GUI::Application::the()->set_most_recently_open_file(path.value());
         });
 
     auto save_action = GUI::CommonActions::make_save_action(
@@ -87,6 +90,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(open_action);
+    file_menu->add_separator();
+    file_menu->add_recent_files_list([&](auto& action) {
+        if (!keyboard_mapper_widget->request_close())
+            return;
+        if (auto error_or = keyboard_mapper_widget->load_map_from_file(action.text()); error_or.is_error())
+            keyboard_mapper_widget->show_error_to_user(error_or.release_error());
+        else
+            GUI::Application::the()->set_most_recently_open_file(action.text());
+    });
     file_menu->add_action(save_action);
     file_menu->add_action(save_as_action);
     file_menu->add_separator();
