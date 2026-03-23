@@ -64,9 +64,17 @@ ErrorOr<void> Peer::write_packet(ReadonlyBytes payload)
     // is a multiple of the cipher block size or 8, whichever is
     // larger.
 
-    // FIXME: Support cipher block size.
-    auto const packet_alignment = 8;
+    auto const packet_alignment = max(8, m_cipher->block_size());
     auto size_without_padding = sizeof(u32) + sizeof(u8) + payload.size();
+
+    // NOTE: Introduced with RFC 5647, AEAD (Authenticated Encryption with Associated Data) ciphers
+    //       consider the packet_length field as AAD (Additional Authenticated Data). In this RFC, the
+    //       packet length is sent as plain text and thus does not influence the padding length calculation.
+    //       Being an AEAD cipher, ChaCha20Poly1305 inherits from this rule even if the packet length is also
+    //       encrypted.
+    VERIFY(size_without_padding > m_cipher->aad_size());
+    size_without_padding -= m_cipher->aad_size();
+
     auto padding_length = packet_alignment - (size_without_padding % packet_alignment);
 
     // "There MUST be at least four bytes of padding."
@@ -84,9 +92,15 @@ ErrorOr<void> Peer::write_packet(ReadonlyBytes payload)
     fill_with_random(random_padding);
     TRY(stream.write_until_depleted(random_padding));
 
-    // FIXME: Include MAC.
+    Array<u8, 16> mac_placeholder {};
+    VERIFY(mac_placeholder.size() >= m_cipher->mac_size());
+    TRY(stream.write_until_depleted(mac_placeholder.span().trim(m_cipher->mac_size())));
 
     auto packet_buffer = TRY(stream.read_until_eof());
+
+    TRY(m_cipher->encrypt(m_outgoing_packet_sequence_number, packet_buffer));
+    m_outgoing_packet_sequence_number++;
+
     TRY(m_tcp_socket.write_until_depleted(packet_buffer));
     return {};
 }

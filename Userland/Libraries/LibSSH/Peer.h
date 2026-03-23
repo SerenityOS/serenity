@@ -54,6 +54,7 @@ private:
     ByteBuffer m_shared_secret {};
 
     u32 m_incoming_packet_sequence_number {};
+    u32 m_outgoing_packet_sequence_number {};
 };
 
 // 4.1.2.  Initial Assignments
