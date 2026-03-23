@@ -16,8 +16,26 @@ namespace SSH::Server {
 class TCPClient;
 
 struct GenericMessage {
-    MessageID type {};
+    AK_MAKE_NONCOPYABLE(GenericMessage);
+
+public:
+    explicit GenericMessage(ByteBuffer&& data)
+        : data(move(data))
+        , payload(this->data.bytes())
+        , type(MUST(payload.read_value<MessageID>()))
+    {
+    }
+    GenericMessage(GenericMessage&& other)
+        : data(move(other.data))
+        , payload(data.bytes())
+        , type(other.type)
+    {
+        MUST(payload.discard(other.payload.offset()));
+    }
+
+    ByteBuffer data;
     FixedMemoryStream payload;
+    MessageID type {};
 };
 
 class SSHClient : public Peer {
