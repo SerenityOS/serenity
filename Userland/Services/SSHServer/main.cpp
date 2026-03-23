@@ -18,7 +18,8 @@ static constexpr auto DEFAULT_PORT = 22;
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio accept inet unix"));
+    TRY(Core::System::pledge("stdio accept inet unix rpath"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Optional<u32> port {};
@@ -54,6 +55,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     outln("Listening on {}:{}", tcp_server->local_address().value(), tcp_server->local_port());
 
-    TRY(Core::System::pledge("stdio accept"));
+    TRY(Core::System::pledge("stdio accept rpath"));
     return loop.exec();
 }
