@@ -12,7 +12,7 @@
 
 namespace SSH::Server {
 
-ServerConfiguration const& ServerConfiguration::the()
+ServerConfiguration& ServerConfiguration::the()
 {
     static ServerConfiguration config {};
     return config;
@@ -34,10 +34,21 @@ void ServerConfiguration::ensure_ssh_ed25519_keys() const
 {
     if (m_ssh_ed25519_server_public_key.key.is_empty()
         || m_ssh_ed25519_server_private_key.key.is_empty()) {
-        m_ssh_ed25519_server_private_key = {
-            TypedBlob::Type::SSH_ED25519,
-            MUST(Crypto::Curves::Ed25519::generate_private_key())
-        };
+
+        if (m_use_unsafe_stubbed_private_key) {
+            auto stub = MUST(ByteBuffer ::create_uninitialized(32));
+            stub.bytes().fill(0x42);
+            m_ssh_ed25519_server_private_key = {
+                TypedBlob::Type::SSH_ED25519,
+                stub
+            };
+        } else {
+            m_ssh_ed25519_server_private_key = {
+                TypedBlob::Type::SSH_ED25519,
+                MUST(Crypto::Curves::Ed25519::generate_private_key())
+            };
+        }
+
         m_ssh_ed25519_server_public_key = {
             TypedBlob::Type::SSH_ED25519,
             MUST(Crypto::Curves::Ed25519::generate_public_key(m_ssh_ed25519_server_private_key.key))
