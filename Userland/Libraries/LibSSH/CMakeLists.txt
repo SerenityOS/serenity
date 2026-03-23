@@ -4,6 +4,7 @@ set(SOURCES
     IdentificationString.cpp
     KeyExchangeData.cpp
     Peer.cpp
+    Session.cpp
 )
 
 serenity_lib(LibSSH ssh)

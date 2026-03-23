@@ -10,6 +10,7 @@
 #include <LibCore/Forward.h>
 #include <LibSSH/KeyExchangeData.h>
 #include <LibSSH/Peer.h>
+#include <LibSSH/Session.h>
 
 namespace SSH::Server {
 
@@ -57,10 +58,22 @@ private:
     ErrorOr<void> handle_user_authentication(GenericMessage data);
     ErrorOr<void> send_user_authentication_success();
 
+    ErrorOr<void> handle_generic_packet(GenericMessage&&);
+
+    ErrorOr<void> handle_channel_open_message(GenericMessage&);
+    ErrorOr<void> send_channel_open_confirmation(Session const&);
+    ErrorOr<void> handle_channel_request(GenericMessage&);
+    ErrorOr<void> send_channel_success_message(Session const&);
+    ErrorOr<void> send_channel_data(Session const&, ByteBuffer const&);
+    ErrorOr<void> send_channel_close(Session const&);
+    ErrorOr<Session*> find_session(u32 sender_channel_id);
+
     State m_state { State::Constructed };
     Core::TCPSocket& m_tcp_socket;
 
     KeyExchangeData m_key_exchange_data {};
+
+    Vector<Session> m_sessions;
 };
 
 } // SSHServer

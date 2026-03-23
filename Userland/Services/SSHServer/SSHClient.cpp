@@ -12,6 +12,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCore/Account.h>
+#include <LibCore/Command.h>
 #include <LibCore/Socket.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/X25519.h>
@@ -23,7 +24,6 @@ namespace SSH::Server {
 
 ErrorOr<void> SSHClient::handle_data(ByteBuffer& data)
 {
-
     switch (m_state) {
     case State::Constructed:
         return handle_protocol_version(data);
@@ -40,7 +40,8 @@ ErrorOr<void> SSHClient::handle_data(ByteBuffer& data)
     case State::WaitingForUserAuthentication:
         return handle_user_authentication(TRY(unpack_generic_message(data)));
     case State::Authentified:
-        return Error::from_string_literal("Draw the rest of the owl");
+        TRY(handle_generic_packet(TRY(unpack_generic_message(data))));
+        return {};
     }
     VERIFY_NOT_REACHED();
 }
@@ -322,6 +323,164 @@ ErrorOr<void> SSHClient::send_user_authentication_success()
 {
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::USERAUTH_SUCCESS));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+ErrorOr<void> SSHClient::handle_generic_packet(GenericMessage&& message)
+{
+    switch (message.type) {
+    case MessageID::CHANNEL_OPEN:
+        return handle_channel_open_message(message);
+    case MessageID::CHANNEL_REQUEST:
+        return handle_channel_request(message);
+    default:
+        dbgln_if(SSH_DEBUG, "Unexpected packet: {}", to_underlying(message.type));
+        return Error::from_string_literal("Unexpected packet type");
+    }
+    VERIFY_NOT_REACHED();
+}
+
+// 5.1.  Opening a Channel
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.1
+ErrorOr<void> SSHClient::handle_channel_open_message(GenericMessage& message)
+{
+    auto channel_type = TRY(decode_string(message.payload));
+    u32 sender_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 initial_window_size = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 maximum_packet_size = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+
+    dbgln_if(SSH_DEBUG, "Channel open request with: {:s} - {} - {} - {}",
+        channel_type.bytes(), sender_channel_id, initial_window_size, maximum_packet_size);
+
+    if (channel_type != "session"sv.bytes())
+        return Error::from_string_literal("Unexpected channel type");
+
+    m_sessions.empend(TRY(Session::create(sender_channel_id, initial_window_size, maximum_packet_size)));
+
+    TRY(send_channel_open_confirmation(m_sessions.last()));
+
+    return {};
+}
+
+// 5.1.  Opening a Channel
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.1
+ErrorOr<void> SSHClient::send_channel_open_confirmation(Session const& session)
+{
+    AllocatingMemoryStream stream;
+
+    //  byte      SSH_MSG_CHANNEL_OPEN_CONFIRMATION
+    //  uint32    recipient channel
+    //  uint32    sender channel
+    //  uint32    initial window size
+    //  uint32    maximum packet size
+
+    TRY(stream.write_value(MessageID::CHANNEL_OPEN_CONFIRMATION));
+    // "The 'recipient channel' is the channel number given in the original
+    // open request, and 'sender channel' is the channel number allocated by
+    // the other side."
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.sender_channel_id));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.window.size()));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.maximum_packet_size));
+
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+ErrorOr<Session*> SSHClient::find_session(u32 sender_channel_id)
+{
+    for (auto& session : m_sessions) {
+        if (session.sender_channel_id == sender_channel_id)
+            return &session;
+    }
+    return Error::from_string_literal("Session not found");
+}
+
+// 5.4.  Channel-Specific Requests
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.4
+ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
+{
+    auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto request_type = TRY(decode_string(message.payload));
+    auto want_reply = TRY(message.payload.read_value<bool>());
+
+    auto& session = *TRY(find_session(recipient_channel_id));
+
+    dbgln_if(SSH_DEBUG, "CHANNEL_REQUEST id({}): {:s}", session.local_channel_id, request_type.bytes());
+
+    if (request_type == "env"sv.bytes() && !want_reply) {
+        dbgln("FIXME: Ignored channel request: {:s}", request_type.bytes());
+        return {};
+    }
+
+    if (request_type == "exec"sv.bytes()) {
+        auto command = TRY(decode_string(message.payload));
+
+        // FIXME: This is a naive implementation, we should stream the result back
+        //        to the user and not block the event loop during the execution of
+        //        the command.
+        //        We should also use the user's shell rather than hardcoding it.
+
+#ifdef AK_OS_SERENITY
+        auto shell = "/bin/Shell"sv;
+#else
+        auto shell = "/bin/sh"sv;
+#endif
+
+        Vector<ByteString> args;
+        args.append(shell);
+        args.append("-c");
+        args.append(ByteString(command.bytes()));
+
+        Vector<char const*> raw_args;
+        raw_args.ensure_capacity(args.size() + 1);
+        for (auto& arg : args)
+            raw_args.append(arg.characters());
+
+        raw_args.append(nullptr);
+
+        auto child = TRY(Core::Command::create(shell, raw_args.data()));
+        auto output = TRY(child->read_all());
+        auto status = TRY(child->status());
+
+        if (status != Core::Command::ProcessResult::DoneWithZeroExitCode)
+            return Error::from_string_literal("Unable to run command");
+
+        TRY(send_channel_success_message(session));
+        TRY(send_channel_data(session, output.standard_output));
+        TRY(send_channel_close(session));
+        return {};
+    }
+
+    return Error::from_string_literal("Unsupported channel request");
+}
+
+ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::CHANNEL_SUCCESS));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+ErrorOr<void> SSHClient::send_channel_data(Session const& session, ByteBuffer const& data)
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::CHANNEL_DATA));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    TRY(encode_string(stream, data));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+ErrorOr<void> SSHClient::send_channel_close(Session const& session)
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::CHANNEL_CLOSE));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
 }
