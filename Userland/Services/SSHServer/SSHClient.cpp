@@ -261,13 +261,24 @@ ErrorOr<void> SSHClient::handle_service_request(GenericMessage message)
         //   string    service name
         // "
 
-        return Error::from_string_literal("Draw the rest of the owl");
+        TRY(send_service_accept(service_name));
+        m_state = State::Authentified;
+        return {};
     }
 
     // FIXME: "If the server rejects the service request, it SHOULD send an
     // appropriate SSH_MSG_DISCONNECT message and MUST disconnect."
 
     return Error::from_string_literal("Unexpected service name");
+}
+
+ErrorOr<void> SSHClient::send_service_accept(StringView service_name)
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::SERVICE_ACCEPT));
+    TRY(encode_string(stream, service_name));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
 }
 
 } // SSHServer
