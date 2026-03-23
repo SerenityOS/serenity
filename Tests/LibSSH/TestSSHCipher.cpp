@@ -36,6 +36,8 @@ TEST_CASE(ChaCha20Poly1305_decrypt)
 
     auto encrypted_raw = "\x0c\x3b\x6d\x66\xb1\x72\xf3\x85\xa4\x88\x35\xf2\x0a\x6d\xa5\x9b\x29\xcf\xe6\xe8\x5f\xad\x05\x6b\x94\x89\xae\xab\x10\x37\x88\x7a\x6b\x58\x30\xb1\x9b\x6f\xc1\x8f\x6c\x89\x68\x24"sv;
     auto packet = TRY_OR_FAIL(ByteBuffer::copy(encrypted_raw.bytes()));
+    auto additional_data = "This should still be present at the end of the test!"sv;
+    packet.append(additional_data.bytes());
 
     auto cipher = SSH::ChaCha20Poly1305Cipher::create(shared_secret, hash, hash);
 
@@ -50,6 +52,8 @@ TEST_CASE(ChaCha20Poly1305_decrypt)
     });
 
     EXPECT_EQ(packet.bytes().trim(expected.size()), expected.span());
+
+    EXPECT_EQ(packet.bytes().slice_from_end(additional_data.length()), additional_data.bytes());
 }
 
 TEST_CASE(ChaCha20Poly1305_encrypt)

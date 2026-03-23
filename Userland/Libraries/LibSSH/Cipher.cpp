@@ -6,6 +6,7 @@
 
 #include "Cipher.h"
 
+#include <AK/ByteReader.h>
 #include <AK/Endian.h>
 #include <AK/OwnPtr.h>
 #include <LibCrypto/Authentication/Poly1305.h>
@@ -127,7 +128,7 @@ void ChaCha20Poly1305Cipher::decrypt_impl(u32 packet_sequence_number, Bytes byte
     // "the packet decrypted using ChaCha20 as described above (with K_1, the packet
     // sequence number as nonce and a starting block counter of 1)."
 
-    auto packet_length = bytes.size() - 4 - mac_size();
+    u32 packet_length = AK::convert_between_host_and_network_endian(ByteReader::load32(encrypted_length.data()));
     auto packet = bytes.slice(4, packet_length);
 
     Crypto::Cipher::ChaCha20 packet_decryptor(m_k_1_client_to_server.bytes(), nonce, 1);
