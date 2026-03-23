@@ -8,6 +8,7 @@
 
 #include <AK/Endian.h>
 #include <AK/OwnPtr.h>
+#include <LibCrypto/Authentication/Poly1305.h>
 #include <LibCrypto/Cipher/ChaCha20.h>
 #include <LibCrypto/Hash/SHA2.h>
 #include <LibSSH/DataTypes.h>
@@ -133,8 +134,44 @@ void ChaCha20Poly1305Cipher::decrypt_impl(u32 packet_sequence_number, Bytes byte
     packet_decryptor.decrypt(packet, packet);
 }
 
-void ChaCha20Poly1305Cipher::encrypt_impl(u32, Bytes)
+// 7. Packet Handling
+// https://datatracker.ietf.org/doc/html/draft-ietf-sshm-chacha20-poly1305-02#section-7
+void ChaCha20Poly1305Cipher::encrypt_impl(u32 packet_sequence_number, Bytes bytes)
 {
+    VERIFY(bytes.size() % block_size() == 0);
+    VERIFY(bytes.size() >= mac_size() + sizeof(u32) + 4);
+
+    auto packet_length_bytes = bytes.trim(4);
+    auto mac = bytes.slice_from_end(mac_size());
+    auto packet = bytes.trim(bytes.size() - mac.size()).slice(packet_length_bytes.size());
+    VERIFY(packet_length_bytes.size() + packet.size() + mac.size() == bytes.size());
+
+    // "To send a packet, first encode the 4 byte length and encrypt it using K_2."
+    NetworkOrdered<u64> nonce_data(packet_sequence_number);
+    ReadonlyBytes nonce { &nonce_data, sizeof(nonce_data) };
+
+    Crypto::Cipher::ChaCha20 length_encryptor(m_k_2_server_to_client.bytes(), nonce, 0);
+    length_encryptor.encrypt(packet_length_bytes, packet_length_bytes);
+
+    // "Encrypt the packet payload (using K_1) and append it to the encrypted length."
+    Crypto::Cipher::ChaCha20 packet_encryptor(m_k_1_server_to_client.bytes(), nonce, 1);
+    packet_encryptor.encrypt(packet, packet);
+
+    // "Finally, calculate a MAC tag and append it."
+
+    // From  6. Detailed Construction:
+    // "To generate keying information for the Poly1305 MAC, the K_1 cipher instance is run with
+    // the same key and nonce but a block counter value of 0."
+    Array<u8, 32> poly_key {};
+
+    Crypto::Cipher::ChaCha20 mac_generator(m_k_1_server_to_client.bytes(), nonce, 0);
+    mac_generator.encrypt(poly_key, poly_key);
+
+    Crypto::Authentication::Poly1305 poly1305(poly_key);
+    poly1305.update(packet_length_bytes);
+    poly1305.update(packet);
+    auto mac_result = MUST(poly1305.digest());
+    mac_result.bytes().copy_to(mac);
 }
 
 } // SSH

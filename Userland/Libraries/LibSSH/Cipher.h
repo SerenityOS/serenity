@@ -23,6 +23,7 @@ public:
 
     u8 block_size() const { return m_block_size; }
     u8 mac_size() const { return m_mac_size; }
+    virtual u8 aad_size() const { return 0; }
 
 private:
     virtual void decrypt_impl(u32 packet_sequence_number, Bytes) = 0;
@@ -65,6 +66,15 @@ private:
 
     void decrypt_impl(u32, Bytes) override;
     void encrypt_impl(u32, Bytes) override;
+
+    virtual u8 aad_size() const override
+    {
+        // From the view of the payload's encryptor, the packet is:
+        //     - u32 packet_length (AAD)
+        //     - padding_length, payload, padding (message to encrypt)
+        //     - MAC
+        return sizeof(u32);
+    }
 
     Digest m_k_1_client_to_server {};
     Digest m_k_2_client_to_server {};
