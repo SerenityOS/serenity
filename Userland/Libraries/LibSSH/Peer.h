@@ -16,7 +16,7 @@ namespace SSH {
 // RFC 4253:  https://datatracker.ietf.org/doc/html/rfc4253
 class Peer {
 public:
-    Peer(Core::TCPSocket& tcp_socket)
+    Peer(Core::Socket& tcp_socket)
         : m_tcp_socket(tcp_socket)
         , m_cipher(make<IdentityCipher>())
     {
@@ -46,7 +46,7 @@ protected:
     }
 
 private:
-    Core::TCPSocket& m_tcp_socket;
+    Core::Socket& m_tcp_socket;
     NonnullOwnPtr<Cipher> m_cipher;
 
     Optional<Crypto::Hash::Digest<256>> m_session_id {};
