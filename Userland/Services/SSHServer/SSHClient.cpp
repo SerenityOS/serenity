@@ -237,9 +237,7 @@ ErrorOr<GenericMessage> SSHClient::unpack_generic_message(ByteBuffer& data)
     // This is ensured by read_packet().
     VERIFY(payload.size() >= 1);
 
-    auto stream = FixedMemoryStream { payload.bytes() };
-    auto type = MUST(stream.read_value<MessageID>());
-    return GenericMessage { type, stream };
+    return GenericMessage { move(payload) };
 }
 
 // 10.  Service Request
