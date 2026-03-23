@@ -11,6 +11,7 @@
 #include <AK/Format.h>
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
+#include <LibCore/Account.h>
 #include <LibCore/Socket.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/X25519.h>
@@ -36,6 +37,8 @@ ErrorOr<void> SSHClient::handle_data(ByteBuffer& data)
         return {};
     case State::KeyExchanged:
         return handle_service_request(TRY(unpack_generic_message(data)));
+    case State::WaitingForUserAuthentication:
+        return handle_user_authentication(TRY(unpack_generic_message(data)));
     case State::Authentified:
         return Error::from_string_literal("Draw the rest of the owl");
     }
@@ -262,7 +265,7 @@ ErrorOr<void> SSHClient::handle_service_request(GenericMessage message)
         // "
 
         TRY(send_service_accept(service_name));
-        m_state = State::Authentified;
+        m_state = State::WaitingForUserAuthentication;
         return {};
     }
 
@@ -277,6 +280,48 @@ ErrorOr<void> SSHClient::send_service_accept(StringView service_name)
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::SERVICE_ACCEPT));
     TRY(encode_string(stream, service_name));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+// 5.  Authentication Requests
+// https://datatracker.ietf.org/doc/html/rfc4252#section-5
+ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
+{
+    if (message.type != MessageID::USERAUTH_REQUEST)
+        return Error::from_string_literal("Expected packet of type USERAUTH_REQUEST");
+
+    auto username = TRY(decode_string(message.payload));
+    auto service_name = TRY(decode_string(message.payload));
+    auto method_name = TRY(decode_string(message.payload));
+
+    dbgln_if(SSH_DEBUG, "User authentication username: {:s}", username.bytes());
+    dbgln_if(SSH_DEBUG, "User authentication service_name: {:s}", service_name.bytes());
+    dbgln_if(SSH_DEBUG, "User authentication method name: {:s}", method_name.bytes());
+
+    if (username != TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).username())
+        return Error::from_string_literal("Can't authenticate for another user account");
+
+    if (method_name == "none"sv.bytes()) {
+        // FIXME: Implement proper authentication!!!
+
+        m_state = State::Authentified;
+        TRY(send_user_authentication_success());
+
+        // FIXME: Also send a cool banner :^)
+
+        return {};
+    }
+
+    return Error::from_string_literal("Unsupported userauth method");
+}
+
+// 5.1.  Responses to Authentication Requests
+// https://datatracker.ietf.org/doc/html/rfc4252#section-5.1
+ErrorOr<void> SSHClient::send_user_authentication_success()
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::USERAUTH_SUCCESS));
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
 }

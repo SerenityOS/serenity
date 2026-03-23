@@ -37,6 +37,7 @@ private:
         WaitingForKeyExchange,
         WaitingForNewKeysMessage,
         KeyExchanged,
+        WaitingForUserAuthentication,
         Authentified,
     };
 
@@ -52,6 +53,9 @@ private:
 
     ErrorOr<void> handle_service_request(GenericMessage data);
     ErrorOr<void> send_service_accept(StringView);
+
+    ErrorOr<void> handle_user_authentication(GenericMessage data);
+    ErrorOr<void> send_user_authentication_success();
 
     State m_state { State::Constructed };
     Core::TCPSocket& m_tcp_socket;
