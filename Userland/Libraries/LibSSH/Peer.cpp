@@ -50,7 +50,9 @@ ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
     // FIXME: Uncompress payload if it was negotiated.
 
     m_incoming_packet_sequence_number++;
-    data.clear();
+
+    auto total_packet_size = sizeof(u32) + packet_length + m_cipher->mac_size();
+    data = TRY(data.slice(total_packet_size, data.size() - total_packet_size));
 
     return payload;
 }

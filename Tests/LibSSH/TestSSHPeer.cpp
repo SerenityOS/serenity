@@ -56,7 +56,15 @@ public:
     {
         return SSH::Peer::send_new_keys_message();
     }
+
+    ErrorOr<ByteBuffer> read_packet(ByteBuffer& data)
+    {
+        return SSH::Peer::read_packet(data);
+    }
 };
+
+// Copied from wireshark, sniffed from a connection between an openssh server and client.
+static constexpr auto new_keys_message = "\000\000\000\f\n\025\000\000\000\000\000\000\000\000\000\000"sv;
 
 TEST_CASE(new_keys)
 {
@@ -64,16 +72,28 @@ TEST_CASE(new_keys)
     SocketMock socket(stream);
     auto peer = PeerMock(socket);
 
-    // Copied from wireshark, sniffed from a connection between an openssh server and client.
-    auto raw_message = "\000\000\000\f\n\025\000\000\000\000\000\000\000\000\000\000"sv;
-
     TRY_OR_FAIL(peer.send_new_keys_message());
     auto written_packet = TRY_OR_FAIL(stream.read_until_eof());
     EXPECT_EQ(written_packet.size(), 16u);
     // The packet include random bytes at the end.
     u8 size_without_padding = 6;
-    EXPECT_EQ(written_packet.bytes().trim(size_without_padding), raw_message.bytes().trim(size_without_padding));
+    EXPECT_EQ(written_packet.bytes().trim(size_without_padding), new_keys_message.bytes().trim(size_without_padding));
 
-    auto message = TRY_OR_FAIL(ByteBuffer::copy(raw_message.bytes()));
+    auto message = TRY_OR_FAIL(ByteBuffer::copy(new_keys_message.bytes()));
     TRY_OR_FAIL(peer.handle_new_keys_message(message));
+}
+
+TEST_CASE(consecutive_packets)
+{
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket);
+
+    auto input = TRY_OR_FAIL(ByteBuffer::copy(new_keys_message.bytes()));
+    auto additional_data = "This is additional data that should still be present at the end of the test!"sv;
+
+    input.append(additional_data.bytes());
+
+    TRY_OR_FAIL(peer.read_packet(input));
+    EXPECT_EQ(input.bytes(), additional_data.bytes());
 }

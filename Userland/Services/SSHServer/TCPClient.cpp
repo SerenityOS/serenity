@@ -49,7 +49,9 @@ ErrorOr<void> TCPClient::on_ready_to_read()
     if (m_read_buffer.is_empty())
         return {};
 
-    return m_ssh_client.handle_data(m_read_buffer);
+    while (!m_read_buffer.is_empty())
+        TRY(m_ssh_client.handle_data(m_read_buffer));
+    return {};
 }
 
 void TCPClient::die()
