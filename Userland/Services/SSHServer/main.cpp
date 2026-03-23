@@ -10,6 +10,7 @@
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 #include <LibMain/Main.h>
+#include <SSHServer/ServerConfiguration.h>
 #include <SSHServer/TCPClient.h>
 
 static constexpr auto DEFAULT_LISTEN_ADDRESS = "0.0.0.0"sv;
@@ -21,14 +22,19 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Optional<u32> port {};
+    bool unsafe_stub_private_key { false };
 
     Core::ArgsParser parser;
     parser.add_option(port, "Port to listen on", "port", 'p', "port");
+    parser.add_option(unsafe_stub_private_key, "Stub the server's private key - UNSAFE", "unsafe-stub-private-key");
 
     parser.parse(args);
 
     if (port.has_value() && *port != static_cast<u16>(*port))
         return Error::from_string_literal("Invalid port number");
+
+    if (unsafe_stub_private_key)
+        SSH::Server::ServerConfiguration::the().use_unsafe_stubbed_private_key();
 
     Core::EventLoop loop;
 

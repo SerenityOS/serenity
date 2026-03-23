@@ -15,15 +15,22 @@ namespace SSH::Server {
 //        make it persistent.
 class ServerConfiguration {
 public:
-    static ServerConfiguration const& the();
+    static ServerConfiguration& the();
 
     TypedBlob const& ssh_ed25519_server_public_key() const;
     TypedBlob const& ssh_ed25519_server_private_key() const;
+
+    void use_unsafe_stubbed_private_key()
+    {
+        m_use_unsafe_stubbed_private_key = true;
+    }
 
 private:
     mutable TypedBlob m_ssh_ed25519_server_public_key;
     mutable TypedBlob m_ssh_ed25519_server_private_key;
     void ensure_ssh_ed25519_keys() const;
+
+    bool m_use_unsafe_stubbed_private_key { false };
 };
 
 }
