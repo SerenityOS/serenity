@@ -51,6 +51,7 @@ private:
     ErrorOr<GenericMessage> unpack_generic_message(ByteBuffer& data);
 
     ErrorOr<void> handle_service_request(GenericMessage data);
+    ErrorOr<void> send_service_accept(StringView);
 
     State m_state { State::Constructed };
     Core::TCPSocket& m_tcp_socket;
