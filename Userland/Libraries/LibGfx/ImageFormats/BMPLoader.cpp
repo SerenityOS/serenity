@@ -7,6 +7,7 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/ByteString.h>
+#include <AK/Checked.h>
 #include <AK/Debug.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
@@ -1023,16 +1024,15 @@ static ErrorOr<void> uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuf
     // ByteBuffer asserts that allocating the memory never fails.
     // FIXME: ByteBuffer should return either RefPtr<> or Optional<>.
     // Decoding the RLE data on-the-fly might actually be faster, and avoids this topic entirely.
-    u32 buffer_size;
-    if (compression == Compression::RLE24) {
-        buffer_size = total_rows * round_up_to_power_of_two(total_columns, 4) * 4;
-    } else {
-        buffer_size = total_rows * round_up_to_power_of_two(total_columns, 4);
-    }
-    if (buffer_size > 300 * MiB) {
+    Checked<u32> checked_buffer_size = total_rows;
+    checked_buffer_size *= round_up_to_power_of_two(total_columns, 4);
+    if (compression == Compression::RLE24)
+        checked_buffer_size *= 4;
+    if (checked_buffer_size.has_overflow() || checked_buffer_size.value() > 300 * MiB) {
         dbgln("Suspiciously large amount of RLE data");
         return Error::from_string_literal("Suspiciously large amount of RLE data");
     }
+    u32 buffer_size = checked_buffer_size.value();
     auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
     if (buffer_result.is_error()) {
         dbgln("Not enough memory for buffer allocation");

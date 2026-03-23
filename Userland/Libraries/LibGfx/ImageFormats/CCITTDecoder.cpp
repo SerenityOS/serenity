@@ -6,6 +6,7 @@
 
 #include <AK/Array.h>
 #include <AK/BitStream.h>
+#include <AK/Checked.h>
 #include <AK/MemoryStream.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/ImageFormats/CCITTCommon.h>
@@ -343,7 +344,15 @@ ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 i
     auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
 
     // Note: We put image_height extra-space to handle at most one alignment to byte boundary per line.
-    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8) + image_height));
+    Checked<u32> pixel_count = image_width;
+    pixel_count *= image_height;
+    if (pixel_count.has_overflow())
+        return Error::from_string_literal("CCITTDecoder: image dimensions too large");
+    Checked<u32> allocation_size = pixel_count.value() / 8 + (pixel_count.value() % 8 != 0 ? 1 : 0);
+    allocation_size += image_height;
+    if (allocation_size.has_overflow())
+        return Error::from_string_literal("CCITTDecoder: image dimensions too large");
+    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(allocation_size.value()));
     auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
     auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
 
@@ -362,7 +371,15 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
     auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
 
     // Note: We put image_height extra-space to handle at most one alignment to byte boundary per line.
-    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(ceil_div(image_width * image_height, 8) + image_height));
+    Checked<u32> pixel_count = image_width;
+    pixel_count *= image_height;
+    if (pixel_count.has_overflow())
+        return Error::from_string_literal("CCITTDecoder: image dimensions too large");
+    Checked<u32> allocation_size = pixel_count.value() / 8 + (pixel_count.value() % 8 != 0 ? 1 : 0);
+    allocation_size += image_height;
+    if (allocation_size.has_overflow())
+        return Error::from_string_literal("CCITTDecoder: image dimensions too large");
+    ByteBuffer decoded_bytes = TRY(ByteBuffer::create_zeroed(allocation_size.value()));
     auto output_stream = make<FixedMemoryStream>(decoded_bytes.bytes());
     auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
 

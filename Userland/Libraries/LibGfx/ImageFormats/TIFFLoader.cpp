@@ -5,6 +5,7 @@
  */
 
 #include "TIFFLoader.h"
+#include <AK/Checked.h>
 #include <AK/ConstrainedStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
@@ -384,7 +385,20 @@ private:
         for (u32 segment_index = 0; segment_index < offsets.size(); ++segment_index) {
             TRY(m_stream->seek(offsets[segment_index]));
 
-            auto const rows_in_segment = segment_index < offsets.size() - 1 ? segment_length : *m_metadata.image_length() - segment_length * segment_index;
+            // For tiled images, segment_index is a linear index across all tile columns then rows.
+            // The tile row is segment_index / segment_per_rows; all tiles in the same tile row
+            // start at the same image y-offset. Using segment_index directly would give a false
+            // overflow for valid tiled TIFFs with multiple tile columns.
+            u32 const tile_row = segment_index / segment_per_rows;
+
+            // Validate that rows already decoded by prior tile rows don't exceed image_length,
+            // which would cause unsigned underflow in the last-segment row calculation below.
+            Checked<u32> rows_used_before_this_tile_row = segment_length;
+            rows_used_before_this_tile_row *= tile_row;
+            if (rows_used_before_this_tile_row.has_overflow() || rows_used_before_this_tile_row.value() > *m_metadata.image_length())
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid strip/tile configuration: too many segments for image height");
+
+            auto const rows_in_segment = segment_index < offsets.size() - 1 ? segment_length : *m_metadata.image_length() - rows_used_before_this_tile_row.value();
             auto decoded_bytes = TRY(segment_decoder(byte_counts[segment_index], { segment_width, rows_in_segment }));
 
             ByteBuffer differential_predictor_buffer;
@@ -397,15 +411,21 @@ private:
             auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_segment));
 
             for (u32 row = 0; row < segment_length; row++) {
-                auto const image_row = row + segment_length * (segment_index / segment_per_rows);
-                if (image_row >= *m_metadata.image_length())
+                Checked<u32> checked_image_row = segment_length;
+                checked_image_row *= tile_row;
+                checked_image_row += row;
+                if (checked_image_row.has_overflow() || checked_image_row.value() >= *m_metadata.image_length())
                     break;
+                auto const image_row = checked_image_row.value();
 
                 for (u32 column = 0; column < segment_width; ++column) {
                     // If image_length % segment_length != 0, the last tile will be padded.
                     // This variable helps us to skip these last columns. Note that we still
                     // need to read the sample from the stream.
-                    auto const image_column = column + segment_width * (segment_index % segment_per_rows);
+                    Checked<u32> checked_image_column = segment_width;
+                    checked_image_column *= (segment_index % segment_per_rows);
+                    checked_image_column += column;
+                    auto const image_column = checked_image_column.has_overflow() ? m_image_width : checked_image_column.value();
 
                     if (m_photometric_interpretation == PhotometricInterpretation::CMYK) {
                         auto const cmyk = TRY(read_color_cmyk(*decoded_stream));

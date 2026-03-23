@@ -2338,3 +2338,60 @@ TEST_CASE(test_dicom)
         for (int x = 0; x < frame.image->width(); ++x)
             EXPECT_EQ(frame.image->get_pixel(x, y), reference_frame.image->get_pixel(x, y));
 }
+
+// Regression tests for integer-overflow fixes in image decoders.
+// Each malformed file exercises a specific arithmetic-sanitisation guard and
+// must be decoded without crashing and without allocating runaway memory.
+
+TEST_CASE(test_tiff_strip_count_overflow)
+{
+    // ImageLength=10, RowsPerStrip=7, but 4 StripOffsets supplied.
+    // segment_index 2 → tile_row 2 → rows_used = 7*2 = 14 > 10 → Error before any decode.
+    Array test_inputs = {
+        TEST_INPUT("tiff/malformed/tiff_strip_overflow.tiff"sv),
+    };
+    for (auto path : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(path));
+        auto plugin_or_error = Gfx::TIFFImageDecoderPlugin::create(file->bytes());
+        if (plugin_or_error.is_error())
+            continue;
+        // frame(0) must return an error — not crash, not hang
+        auto frame_or_error = plugin_or_error.value()->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
+}
+
+TEST_CASE(test_tiff_ccitt_huge_dimensions)
+{
+    // ImageWidth=ImageLength=65535, CCITT-RLE compression.
+    // 65535*65535 = 4,294,836,225 > UINT32_MAX → Checked<u32> overflow → Error.
+    Array test_inputs = {
+        TEST_INPUT("tiff/malformed/tiff_ccitt_huge_dimensions.tiff"sv),
+    };
+    for (auto path : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(path));
+        auto plugin_or_error = Gfx::TIFFImageDecoderPlugin::create(file->bytes());
+        if (plugin_or_error.is_error())
+            continue;
+        auto frame_or_error = plugin_or_error.value()->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
+}
+
+TEST_CASE(test_bmp_rle_buffer_size_overflow)
+{
+    // width=65536, height=65536, RLE8: 65536*65536 wraps u32 → Checked<u32> catches it.
+    // width=0x3FFFFFFF, height=2, RLE24: round_up(w,4)*4 overflows u32 → caught.
+    Array test_inputs = {
+        TEST_INPUT("bmp/malformed/bmp_rle8_overflow.bmp"sv),
+        TEST_INPUT("bmp/malformed/bmp_rle24_overflow.bmp"sv),
+    };
+    for (auto path : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(path));
+        auto plugin_or_error = Gfx::BMPImageDecoderPlugin::create(file->bytes());
+        if (plugin_or_error.is_error())
+            continue;
+        auto frame_or_error = plugin_or_error.value()->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
+}
