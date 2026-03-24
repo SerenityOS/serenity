@@ -223,12 +223,12 @@ function(serenity_jakt_app target_name source)
     add_jakt_executable(${target_name} ${source}
         INCLUDES
             ${INCLUDE_DIRECTORIES}
-            ${PROJECT_SOURCE_DIR}
-            ${PROJECT_SOURCE_DIR}/Userland/Libraries
-            ${PROJECT_SOURCE_DIR}/Userland/Libraries/LibCrypt
-            ${PROJECT_SOURCE_DIR}/Userland/Libraries/LibSystem
-            ${PROJECT_SOURCE_DIR}/Userland/Services
-            ${PROJECT_SOURCE_DIR}/Userland
+            ${SerenityOS_SOURCE_DIR}
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries/LibCrypt
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries/LibSystem
+            ${SerenityOS_SOURCE_DIR}/Userland/Services
+            ${SerenityOS_SOURCE_DIR}/Userland
             ${PROJECT_BINARY_DIR}
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
@@ -249,12 +249,12 @@ function(serenity_jakt_executable target_name)
     add_jakt_executable(${target_name} ${SERENITY_JAKT_EXECUTABLE_MAIN_SOURCE}
         INCLUDES
             ${INCLUDE_DIRECTORIES}
-            ${PROJECT_SOURCE_DIR}
-            ${PROJECT_SOURCE_DIR}/Userland/Libraries
-            ${PROJECT_SOURCE_DIR}/Userland/Libraries/LibCrypt
-            ${PROJECT_SOURCE_DIR}/Userland/Libraries/LibSystem
-            ${PROJECT_SOURCE_DIR}/Userland/Services
-            ${PROJECT_SOURCE_DIR}/Userland
+            ${SerenityOS_SOURCE_DIR}
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries/LibCrypt
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries/LibSystem
+            ${SerenityOS_SOURCE_DIR}/Userland/Services
+            ${SerenityOS_SOURCE_DIR}/Userland
             ${PROJECT_BINARY_DIR}
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
