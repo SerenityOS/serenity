@@ -50,11 +50,6 @@ ErrorOr<void> Service::setup_socket(SocketDescriptor& socket)
     int const socket_fd = TRY(Core::System::socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0));
     socket.fd = socket_fd;
 
-    if (m_account.has_value()) {
-        auto& account = m_account.value();
-        TRY(Core::System::fchown(socket_fd, account.uid(), account.gid()));
-    }
-
     TRY(Core::System::fchmod(socket_fd, socket.permissions));
 
     auto socket_address = Core::SocketAddress::local(socket.path);
@@ -67,6 +62,24 @@ ErrorOr<void> Service::setup_socket(SocketDescriptor& socket)
 
     TRY(Core::System::bind(socket_fd, (sockaddr const*)&un, sizeof(un)));
     socket.was_created = true;
+
+    uid_t socket_uid = static_cast<uid_t>(-1);
+    gid_t socket_gid = static_cast<gid_t>(-1);
+
+    if (m_account.has_value()) {
+        socket_uid = m_account.value().uid();
+        socket_gid = m_account.value().gid();
+    }
+
+    if (!socket.group.is_empty()) {
+        auto maybe_group = TRY(Core::System::getgrnam(socket.group));
+        if (!maybe_group.has_value())
+            return Error::from_string_literal("SocketGroup not found");
+        socket_gid = maybe_group.value().gr_gid;
+    }
+
+    if (socket_uid != static_cast<uid_t>(-1) || socket_gid != static_cast<gid_t>(-1))
+        TRY(Core::System::chown(socket.path, socket_uid, socket_gid));
 
     TRY(Core::System::listen(socket_fd, 16));
     return {};
@@ -325,6 +338,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");
 
     ByteString socket_entry = config.read_entry(name, "Socket");
+    ByteString socket_group = config.read_entry(name, "SocketGroup");
     ByteString socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
 
     if (!socket_entry.is_empty()) {
@@ -348,7 +362,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
             // be applied for every socket.
             mode_t permissions = strtol(socket_perms.at(min(socket_perms.size() - 1, (long unsigned)i)).characters(), nullptr, 8) & 0777;
 
-            m_sockets.empend(path.value(), -1, permissions, false);
+            m_sockets.empend(path.value(), -1, permissions, false, socket_group);
         }
     }
 
