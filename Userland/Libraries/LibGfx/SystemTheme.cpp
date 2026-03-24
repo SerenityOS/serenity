@@ -146,6 +146,8 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
             switch (role) {
             case (int)PathRole::TitleButtonIcons:
                 return "/res/icons/16x16/";
+            case (int)PathRole::OverlayAudioVolumeIcons:
+                return "/res/icons/16x16/";
             default:
                 return allow_empty ? "" : "/res/";
             }
@@ -169,6 +171,7 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
     if (!color_scheme.has_value())
         ENCODE_PATH(ColorScheme, true);
     ENCODE_PATH(OverlayRectShadow, true);
+    ENCODE_PATH(OverlayAudioVolumeIcons, true);
 
 #undef __ENUMERATE_COLOR_ROLE
 #define __ENUMERATE_COLOR_ROLE(role)                                    \

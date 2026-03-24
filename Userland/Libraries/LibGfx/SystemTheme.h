@@ -148,7 +148,8 @@ namespace Gfx {
     C(MenuShadow)               \
     C(TooltipShadow)            \
     C(ColorScheme)              \
-    C(OverlayRectShadow)
+    C(OverlayRectShadow)        \
+    C(OverlayAudioVolumeIcons)
 
 enum class ColorRole {
     NoRole,

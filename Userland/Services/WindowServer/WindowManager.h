@@ -7,11 +7,14 @@
 #pragma once
 
 #include "WindowStack.h"
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/WeakPtr.h>
+#include <LibAudio/ConnectionToManagerServer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Painter.h>
@@ -42,6 +45,7 @@ class ConnectionFromClient;
 class WindowSwitcher;
 class Button;
 class DndOverlay;
+class VolumeOverlay;
 class WindowGeometryOverlay;
 class TileWindowOverlay;
 
@@ -486,6 +490,15 @@ private:
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 
     RefPtr<Core::ConfigFile> m_config;
+
+    void try_connect_audio_manager();
+    ErrorOr<void> show_volume_overlay();
+
+    RefPtr<Audio::ConnectionToManagerServer> m_audio_manager;
+    double m_audio_volume { 1.0 };
+    bool m_audio_muted { false };
+    OwnPtr<VolumeOverlay> m_volume_overlay;
+    RefPtr<Core::Timer> m_volume_overlay_dismiss_timer;
 
     OwnPtr<DndOverlay> m_dnd_overlay;
     WeakPtr<ConnectionFromClient> m_dnd_client;
