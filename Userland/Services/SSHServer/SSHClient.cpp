@@ -332,6 +332,8 @@ ErrorOr<void> SSHClient::handle_generic_packet(GenericMessage&& message)
         return handle_channel_open_message(message);
     case MessageID::CHANNEL_REQUEST:
         return handle_channel_request(message);
+    case MessageID::CHANNEL_CLOSE:
+        return handle_channel_close(message);
     default:
         dbgln_if(SSH_DEBUG, "Unexpected packet: {}", to_underlying(message.type));
         return Error::from_string_literal("Unexpected packet type");
@@ -474,8 +476,23 @@ ErrorOr<void> SSHClient::send_channel_data(Session const& session, ByteBuffer co
     return {};
 }
 
-ErrorOr<void> SSHClient::send_channel_close(Session const& session)
+ErrorOr<void> SSHClient::handle_channel_close(GenericMessage& message)
 {
+    auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto& session = *TRY(find_session(recipient_channel_id));
+
+    if (!session.is_closed)
+        TRY(send_channel_close(session));
+
+    m_sessions.remove_first_matching([&](Session const& s) { return s.local_channel_id == session.local_channel_id; });
+
+    return {};
+}
+
+ErrorOr<void> SSHClient::send_channel_close(Session& session)
+{
+    session.is_closed = true;
+
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_CLOSE));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
