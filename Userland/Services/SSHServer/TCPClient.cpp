@@ -50,8 +50,10 @@ ErrorOr<void> TCPClient::on_ready_to_read()
     if (m_read_buffer.is_empty())
         return {};
 
-    while (!m_read_buffer.is_empty())
-        TRY(m_ssh_client.handle_data(m_read_buffer));
+    while (!m_read_buffer.is_empty()) {
+        if (TRY(m_ssh_client.handle_data(m_read_buffer)) == SSHClient::ShouldDisconnect::Yes)
+            die();
+    }
     return {};
 }
 

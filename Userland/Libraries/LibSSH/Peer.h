@@ -30,6 +30,8 @@ protected:
     ErrorOr<void> handle_new_keys_message(ByteBuffer& data);
     ErrorOr<void> send_new_keys_message();
 
+    ErrorOr<void> handle_disconnect_message(ByteBuffer& data);
+
     void set_hash(Crypto::Hash::Digest<256> hash)
     {
         m_hash = hash;
