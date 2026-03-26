@@ -14,17 +14,18 @@
 
 namespace SSH::Server {
 
-class TCPClient : public Core::EventReceiver {
-    C_OBJECT(TCPClient)
+class TCPClient {
 public:
-    static NonnullRefPtr<TCPClient> create(NonnullOwnPtr<Core::TCPSocket>&& socket, NonnullRefPtr<Core::TCPServer> const& parent);
+    static NonnullOwnPtr<TCPClient> create(NonnullOwnPtr<Core::TCPSocket>&& socket, Function<void()>&& on_quit);
     virtual ~TCPClient() = default;
 
 private:
-    TCPClient(NonnullOwnPtr<Core::TCPSocket>&& socket, NonnullRefPtr<Core::TCPServer> const& parent);
+    TCPClient(NonnullOwnPtr<Core::TCPSocket>&& socket, Function<void()>&& on_quit);
 
     ErrorOr<void> on_ready_to_read();
     void die();
+
+    Function<void()> m_on_quit;
 
     NonnullOwnPtr<Core::TCPSocket> m_socket;
     ByteBuffer m_read_buffer;
