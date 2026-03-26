@@ -81,7 +81,7 @@ TEST_CASE(new_keys)
     TRY_OR_FAIL(peer.send_new_keys_message());
     auto written_packet = TRY_OR_FAIL(stream.read_until_eof());
     EXPECT_EQ(written_packet.size(), 16u);
-    // The packet include random bytes at the end.
+    // The packet includes random bytes at the end.
     u8 size_without_padding = 6;
     EXPECT_EQ(written_packet.bytes().trim(size_without_padding), new_keys_message.bytes().trim(size_without_padding));
 
