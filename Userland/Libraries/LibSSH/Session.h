@@ -20,6 +20,8 @@ struct Session {
     u32 sender_channel_id {};
     u32 maximum_packet_size {};
     ByteBuffer window {};
+
+    bool is_closed { false };
 };
 
 }
