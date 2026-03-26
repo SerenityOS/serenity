@@ -47,7 +47,12 @@ public:
     {
     }
 
-    ErrorOr<void> handle_data(ByteBuffer& data);
+    enum class ShouldDisconnect : u8 {
+        No,
+        Yes,
+    };
+
+    ErrorOr<ShouldDisconnect> handle_data(ByteBuffer& data);
 
 private:
     enum class State : u8 {
@@ -76,7 +81,7 @@ private:
     ErrorOr<void> handle_user_authentication(GenericMessage data);
     ErrorOr<void> send_user_authentication_success();
 
-    ErrorOr<void> handle_generic_packet(GenericMessage&&);
+    ErrorOr<ShouldDisconnect> handle_generic_packet(GenericMessage&&);
 
     ErrorOr<void> handle_channel_open_message(GenericMessage&);
     ErrorOr<void> send_channel_open_confirmation(Session const&);

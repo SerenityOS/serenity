@@ -23,8 +23,8 @@ public:
     }
 
     bool is_eof() const override { VERIFY_NOT_REACHED(); }
-    bool is_open() const override { VERIFY_NOT_REACHED(); }
-    void close() override { VERIFY_NOT_REACHED(); }
+    bool is_open() const override { return m_is_open; }
+    void close() override { m_is_open = false; }
 
     // ^Core::Socket
     ErrorOr<size_t> pending_bytes() const override { VERIFY_NOT_REACHED(); }
@@ -33,6 +33,7 @@ public:
     ErrorOr<void> set_close_on_exec(bool) override { VERIFY_NOT_REACHED(); }
 
     AllocatingMemoryStream& stream;
+    bool m_is_open { true };
 };
 
 class PeerMock final : public SSH::Peer {
@@ -60,6 +61,11 @@ public:
     ErrorOr<ByteBuffer> read_packet(ByteBuffer& data)
     {
         return SSH::Peer::read_packet(data);
+    }
+
+    ErrorOr<void> handle_disconnect_message(ByteBuffer& data)
+    {
+        return SSH::Peer::handle_disconnect_message(data);
     }
 };
 
@@ -96,4 +102,17 @@ TEST_CASE(consecutive_packets)
 
     TRY_OR_FAIL(peer.read_packet(input));
     EXPECT_EQ(input.bytes(), additional_data.bytes());
+}
+
+TEST_CASE(disconnect_packet)
+{
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket);
+
+    auto raw_message = "\x01\x00\x00\x00\x0b\x00\x00\x00\x14\x64\x69\x73\x63\x6f\x6e\x6e\x65\x63\x74\x65\x64\x20\x62\x79\x20\x75\x73\x65\x72\x00\x00\x00\x00"sv;
+    auto message = TRY_OR_FAIL(ByteBuffer::copy(raw_message.bytes()));
+
+    TRY_OR_FAIL(peer.handle_disconnect_message(message));
+    EXPECT(!socket.is_open());
 }

@@ -136,4 +136,16 @@ ErrorOr<void> Peer::handle_new_keys_message(ByteBuffer& data)
     return {};
 }
 
+ErrorOr<void> Peer::handle_disconnect_message(ByteBuffer& payload)
+{
+    VERIFY(payload[0] == to_underlying(MessageID::DISCONNECT));
+
+    // FIXME: Parse and report the disconnection reason.
+
+    dbgln_if(SSH_DEBUG, "Client disconnected");
+
+    m_tcp_socket.close();
+    return {};
+}
+
 } // SSH

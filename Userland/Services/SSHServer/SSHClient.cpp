@@ -22,28 +22,32 @@
 
 namespace SSH::Server {
 
-ErrorOr<void> SSHClient::handle_data(ByteBuffer& data)
+ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_data(ByteBuffer& data)
 {
     switch (m_state) {
     case State::Constructed:
-        return handle_protocol_version(data);
+        TRY(handle_protocol_version(data));
+        break;
     case State::WaitingForKeyProtocolExchange:
-        return handle_key_protocol_exchange(data);
+        TRY(handle_key_protocol_exchange(data));
+        break;
     case State::WaitingForKeyExchange:
-        return handle_key_exchange(data);
+        TRY(handle_key_exchange(data));
+        break;
     case State::WaitingForNewKeysMessage:
         TRY(handle_new_keys_message(data));
         m_state = State::KeyExchanged;
-        return {};
+        break;
     case State::KeyExchanged:
-        return handle_service_request(TRY(unpack_generic_message(data)));
+        TRY(handle_service_request(TRY(unpack_generic_message(data))));
+        break;
     case State::WaitingForUserAuthentication:
-        return handle_user_authentication(TRY(unpack_generic_message(data)));
+        TRY(handle_user_authentication(TRY(unpack_generic_message(data))));
+        break;
     case State::Authentified:
-        TRY(handle_generic_packet(TRY(unpack_generic_message(data))));
-        return {};
+        return handle_generic_packet(TRY(unpack_generic_message(data)));
     }
-    VERIFY_NOT_REACHED();
+    return ShouldDisconnect::No;
 }
 
 // 4.2.  Protocol Version Exchange
@@ -325,20 +329,26 @@ ErrorOr<void> SSHClient::send_user_authentication_success()
     return {};
 }
 
-ErrorOr<void> SSHClient::handle_generic_packet(GenericMessage&& message)
+ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_generic_packet(GenericMessage&& message)
 {
     switch (message.type) {
+    case MessageID::DISCONNECT:
+        TRY(handle_disconnect_message(message.data));
+        return ShouldDisconnect::Yes;
     case MessageID::CHANNEL_OPEN:
-        return handle_channel_open_message(message);
+        TRY(handle_channel_open_message(message));
+        break;
     case MessageID::CHANNEL_REQUEST:
-        return handle_channel_request(message);
+        TRY(handle_channel_request(message));
+        break;
     case MessageID::CHANNEL_CLOSE:
-        return handle_channel_close(message);
+        TRY(handle_channel_close(message));
+        break;
     default:
         dbgln_if(SSH_DEBUG, "Unexpected packet: {}", to_underlying(message.type));
         return Error::from_string_literal("Unexpected packet type");
     }
-    VERIFY_NOT_REACHED();
+    return ShouldDisconnect::No;
 }
 
 // 5.1.  Opening a Channel
