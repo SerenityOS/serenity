@@ -7,17 +7,13 @@
 #pragma once
 
 #include <AK/StringView.h>
-#include <Kernel/Library/KString.h>
-
+#include <Kernel/Library/PathCanonicalization.h>
 namespace Kernel::KLexicalPath {
 
-bool is_absolute(StringView);
 bool is_canonical(StringView);
 StringView basename(StringView);
 StringView dirname(StringView);
 Vector<StringView> parts(StringView);
-
-void canonicalize_absolute_path(KString& absolute_path);
 
 ErrorOr<NonnullOwnPtr<KString>> try_join_non_canonical_second(StringView first, StringView second);
 ErrorOr<NonnullOwnPtr<KString>> try_join(StringView, StringView);

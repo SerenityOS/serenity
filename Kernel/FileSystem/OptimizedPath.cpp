@@ -7,6 +7,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/FileSystem/OptimizedPath.h>
 #include <Kernel/Library/KLexicalPath.h>
+#include <Kernel/Library/PathCanonicalization.h>
 
 namespace Kernel {
 
@@ -38,12 +39,12 @@ ErrorOr<NonnullRefPtr<OptimizedPath>> OptimizedPath::create(Custody const& base,
 
     auto custody_absolute_base_path = TRY(base.try_serialize_absolute_path());
     OwnPtr<KString> full_path;
-    if (KLexicalPath::is_absolute(raw_path))
+    if (is_absolute_path(raw_path))
         full_path = TRY(KString::try_create(raw_path));
     else
         full_path = TRY(KLexicalPath::try_join_non_canonical_second(custody_absolute_base_path->view(), raw_path));
 
-    KLexicalPath::canonicalize_absolute_path(*full_path);
+    canonicalize_absolute_path(*full_path);
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OptimizedPath(full_path.release_nonnull(), special_basename)));
 }
 

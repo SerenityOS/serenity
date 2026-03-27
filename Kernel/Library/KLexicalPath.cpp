@@ -12,11 +12,6 @@ namespace Kernel::KLexicalPath {
 
 static StringView const s_single_dot = "."sv;
 
-bool is_absolute(StringView path)
-{
-    return !path.is_empty() && path[0] == '/';
-}
-
 bool is_canonical(StringView path)
 {
     // FIXME: This can probably be done more efficiently.
@@ -64,76 +59,11 @@ Vector<StringView> parts(StringView path)
     return path.split_view('/');
 }
 
-void canonicalize_absolute_path(KString& absolute_path)
-{
-    VERIFY(is_absolute(absolute_path.view()));
-    char* path = const_cast<char*>(absolute_path.characters());
-    char* src = path;
-    char* dst = path;
-
-    while (*src) {
-        /* Collapse multiple slashes */
-        if (*src == '/') {
-            if (dst == path || *(dst - 1) != '/')
-                *dst++ = '/';
-
-            src++;
-            while (*src == '/')
-                src++;
-            continue;
-        }
-
-        /* Identify segment */
-        char* seg = src;
-        while (*src && *src != '/')
-            src++;
-
-        int len = src - seg;
-
-        /* Handle "." */
-        if (len == 1 && seg[0] == '.') {
-            continue;
-        }
-
-        /* Handle ".." */
-        if (len == 2 && seg[0] == '.' && seg[1] == '.') {
-            if (dst > path + 1) {
-                dst--;
-                while (dst > path && *(dst - 1) != '/')
-                    dst--;
-            } else {
-                dst = path + 1;
-            }
-            continue;
-        }
-
-        /* Add slash if needed */
-        if (dst > path && *(dst - 1) != '/')
-            *dst++ = '/';
-
-        /* Copy segment */
-        memcpy(dst, seg, len);
-        dst += len;
-    }
-
-    /* Remove trailing slash unless root */
-    if (dst > path + 1 && *(dst - 1) == '/')
-        dst--;
-
-    /* Ensure at least "/" */
-    if (dst == path)
-        *dst++ = '/';
-
-    *dst = '\0';
-
-    absolute_path.decrease_size((dst - path));
-}
-
 ErrorOr<NonnullOwnPtr<KString>> try_join_non_canonical_second(StringView first, StringView second)
 {
-    VERIFY(is_absolute(first));
+    VERIFY(is_absolute_path(first));
     VERIFY(is_canonical(first));
-    VERIFY(!is_absolute(second));
+    VERIFY(!is_absolute_path(second));
     char* buffer;
     auto string = TRY(KString::try_create_uninitialized(first.length() + 1 + second.length(), buffer));
     __builtin_memcpy(buffer, first.characters_without_null_termination(), first.length());
@@ -147,7 +77,7 @@ ErrorOr<NonnullOwnPtr<KString>> try_join(StringView first, StringView second)
 {
     VERIFY(is_canonical(first));
     VERIFY(is_canonical(second));
-    VERIFY(!is_absolute(second));
+    VERIFY(!is_absolute_path(second));
 
     if (first == "/"sv) {
         char* buffer;

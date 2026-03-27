@@ -1331,7 +1331,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> Process::acquire_vfs_root_context_for_id_
     return m_attached_vfs_root_context.with([&different_vfs_root_context, path, context](auto& current_context) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {
         VERIFY(current_context);
         different_vfs_root_context = (current_context.ptr() != context.ptr());
-        if (!KLexicalPath::is_absolute(path) && different_vfs_root_context)
+        if (!is_absolute_path(path) && different_vfs_root_context)
             return Error::from_errno(EINVAL);
         return context;
     });
@@ -1342,7 +1342,7 @@ ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vf
     bool different_vfs_root_context = false;
     auto vfs_root_context = TRY(acquire_vfs_root_context_for_id_and_validate_path(different_vfs_root_context, vfs_root_context_id, path));
     if (different_vfs_root_context) {
-        VERIFY(KLexicalPath::is_absolute(path));
+        VERIFY(is_absolute_path(path));
         auto vfs_root_context_custody = vfs_root_context->root_path().with([](auto& root_path) -> NonnullRefPtr<Custody> {
             return root_path.custody();
         });
