@@ -11,7 +11,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
-#include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
@@ -22,66 +21,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static Vector<ByteString> found_libraries;
-
-static ErrorOr<void> recusively_resolve_all_necessary_libraries(StringView interpreter_path, bool path_only_formatting, size_t recursive_iteration_max, size_t recursive_iteration, ELF::DynamicObject& object)
-{
-    if (recursive_iteration > recursive_iteration_max)
-        return ELOOP;
-
-    Vector<ByteString> libraries;
-    object.for_each_needed_library([&libraries](StringView entry) {
-        libraries.append(ByteString::formatted("{}", entry));
-    });
-    for (auto& library_name : libraries) {
-        auto possible_library_path = ELF::DynamicLinker::resolve_library(library_name, object);
-        if (!possible_library_path.has_value())
-            continue;
-        auto library_path = LexicalPath::absolute_path(TRY(Core::System::getcwd()), possible_library_path.value());
-        if (found_libraries.contains_slow(library_path))
-            continue;
-        auto file = TRY(Core::MappedFile::map(library_path));
-
-        auto elf_image_data = file->bytes();
-        ELF::Image elf_image(elf_image_data);
-        if (!elf_image.is_valid()) {
-            outln("Shared library is not valid ELF: {}", library_path);
-            continue;
-        }
-        if (!elf_image.is_dynamic()) {
-            outln("Shared library is not dynamic loaded object: {}", library_path);
-            continue;
-        }
-
-        int fd = TRY(Core::System::open(library_path, O_RDONLY));
-        auto result = ELF::DynamicLoader::try_create(fd, library_path);
-        if (result.is_error()) {
-            outln("{}", result.error().text);
-            continue;
-        }
-        auto& loader = result.value();
-        if (!loader->is_valid()) {
-            outln("{} is not a valid ELF dynamic shared object!", library_path);
-            continue;
-        }
-
-        RefPtr<ELF::DynamicObject> library_object = loader->map();
-        if (!library_object) {
-            outln("Failed to map dynamic ELF object {}", library_path);
-            continue;
-        }
-
-        if (path_only_formatting)
-            outln("{}", library_path);
-        else
-            outln("{} => {}", library_name, library_path);
-
-        recursive_iteration++;
-        found_libraries.append(library_path);
-        TRY(recusively_resolve_all_necessary_libraries(interpreter_path, path_only_formatting, recursive_iteration_max, recursive_iteration, *library_object));
-    }
-    return {};
-}
+static Vector<ELF::DynamicObject::DynamicDependecyPath> found_libraries;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -151,7 +91,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("Failed to map dynamic ELF object {}", path);
             return 1;
         }
-        TRY(recusively_resolve_all_necessary_libraries(interpreter_path, path_only_formatting, recursive_iteration_max.value_or(10), 0, *object));
+        TRY(object->recusively_resolve_dynamic_dependency_paths(found_libraries,
+            recursive_iteration_max.value_or(10),
+            0,
+            [path_only_formatting](ByteString library_name, ELF::DynamicObject::DynamicDependecyPath library_path) -> ErrorOr<void> {
+                if (path_only_formatting)
+                    outln("{}", library_path);
+                else
+                    outln("{} => {}", library_name, library_path);
+                return {};
+            }));
     } else {
         outln("ELF program is not dynamic loaded!");
         return 1;
