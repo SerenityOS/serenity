@@ -6,6 +6,14 @@
 
 #include "LayoutParsing.h"
 
+#include <AK/LexicalPath.h>
+#include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
+#include <LibELF/DynamicLoader.h>
+#include <LibELF/DynamicObject.h>
+#include <LibELF/Image.h>
+#include <LibELF/Validation.h>
+
 namespace LayoutParsing {
 
 struct JSONPropertyHandler {
@@ -82,6 +90,22 @@ static ErrorOr<bool> copy_custom_object_probe(JsonObject const& object)
     return true;
 }
 
+static ErrorOr<bool> copy_executable_object_probe(JsonObject const& object)
+{
+    VERIFY(object.has_string("type"sv));
+    auto type = object.get_byte_string("type"sv).value();
+    if (type != "copy_executable"sv)
+        return false;
+
+    if (!object.has_string("source"sv))
+        return Error::from_string_view("Object (copy_executable type) source property not found"sv);
+
+    if (!object.has_string("target"sv))
+        return Error::from_string_view("Object (copy_executable type) target property not found"sv);
+
+    return true;
+}
+
 static ErrorOr<void> copy_custom_object_handle(VFSRootContextLayout& layout, JsonObject const& object)
 {
     VERIFY(object.has_string("source"sv));
@@ -89,6 +113,73 @@ static ErrorOr<void> copy_custom_object_handle(VFSRootContextLayout& layout, Jso
     auto source = object.get_byte_string("source"sv).value();
     auto target = object.get_byte_string("target"sv).value();
     TRY(layout.copy_to_custom_location(source, target));
+    return {};
+}
+
+static ErrorOr<void> copy_executable_object_handle(VFSRootContextLayout& layout, JsonObject const& object)
+{
+    VERIFY(object.has_string("source"sv));
+    VERIFY(object.has_string("target"sv));
+    auto source = object.get_byte_string("source"sv).value();
+    auto target = object.get_byte_string("target"sv).value();
+
+    // First, try to copy the actual executable...
+    TRY(layout.copy_to_custom_location(source, target));
+
+    auto path = LexicalPath::absolute_path(TRY(Core::System::getcwd()), source);
+
+    auto file = TRY(Core::MappedFile::map(path));
+
+    auto elf_image_data = file->bytes();
+    ELF::Image elf_image(elf_image_data);
+
+    if (!elf_image.is_valid()) {
+        dbgln("File is not a valid ELF object");
+        return EINVAL;
+    }
+
+    Optional<Elf_Phdr> interpreter_path_program_header {};
+    if (!ELF::validate_program_headers(*bit_cast<Elf_Ehdr const*>(elf_image_data.data()), elf_image_data.size(), elf_image_data, interpreter_path_program_header))
+        return EINVAL;
+
+    StringBuilder interpreter_path_builder;
+    if (interpreter_path_program_header.has_value())
+        TRY(interpreter_path_builder.try_append({ elf_image_data.offset(interpreter_path_program_header.value().p_offset), static_cast<size_t>(interpreter_path_program_header.value().p_filesz) - 1 }));
+    auto interpreter_path = interpreter_path_builder.string_view();
+
+    RefPtr<ELF::DynamicObject> dynamic_object = nullptr;
+    if (!elf_image.is_dynamic()) {
+        dbgln("ELF program is not dynamic loaded!");
+        return EINVAL;
+    }
+
+    // We technically can support this if we want to
+    if (interpreter_path != "/usr/lib/Loader.so"sv)
+        return EINVAL;
+
+    int fd = TRY(Core::System::open(path, O_RDONLY));
+    auto result = ELF::DynamicLoader::try_create(fd, path);
+    if (result.is_error()) {
+        outln("{}", result.error().text);
+        return EINVAL;
+    }
+    auto& loader = result.value();
+    if (!loader->is_valid())
+        return EINVAL;
+
+    dynamic_object = loader->map();
+    if (!dynamic_object)
+        return ENOTSUP;
+
+    Vector<ByteString> found_libraries;
+    // FIXME: Is 50 really enough for max recursion? It seems like the Browser can fail on less than 35
+    TRY(dynamic_object->recusively_resolve_dynamic_dependency_paths(found_libraries,
+        50,
+        0,
+        [&layout](ByteString, ELF::DynamicObject::DynamicDependecyPath library_path) -> ErrorOr<void> {
+            TRY(layout.copy_to_custom_location(library_path, library_path));
+            return {};
+        }));
     return {};
 }
 
@@ -147,6 +238,7 @@ static constexpr JSONPropertyHandler s_handlers[] = {
     { mount_object_probe, mount_object_handle },
     { directory_object_probe, directory_object_handle },
     { copy_custom_object_probe, copy_custom_object_handle },
+    { copy_executable_object_probe, copy_executable_object_handle },
     { copy_original_object_probe, copy_original_object_handle },
     { symlink_object_probe, symlink_object_handle },
 };

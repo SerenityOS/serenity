@@ -93,7 +93,7 @@ static ErrorOr<void> extract_values_from_file(Core::File& file, String& command,
 
 static ErrorOr<void> deploy_container_based_on_config_file(StringView config_file_path)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath proc mount unshare exec fattr chown"));
+    TRY(Core::System::pledge("stdio rpath wpath cpath proc mount unshare exec fattr chown map_fixed"));
     auto file = TRY(Core::File::open(config_file_path, Core::File::OpenMode::Read));
 
     bool pid_isolation = false;
