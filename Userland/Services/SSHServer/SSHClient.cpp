@@ -577,6 +577,11 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
         return {};
     }
 
+    if (request_type == "subsystem"sv.bytes()) {
+        TRY(handle_channel_subsystem(session, message));
+        return {};
+    }
+
     return Error::from_string_literal("Unsupported channel request");
 }
 
@@ -724,6 +729,26 @@ Coroutine<void> SSHClient::async_wait_for_child(NonnullRefPtr<Session> session)
         // FIXME: Think about what we should do with this error.
     }
     co_return;
+}
+
+// 6.5.  Starting a Shell or a Command
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
+ErrorOr<void> SSHClient::handle_channel_subsystem(Session& session, GenericMessage& message)
+{
+    auto subsystem = TRY(decode_string(message.payload));
+    dbgln_if(SSH_DEBUG, "Subsystem requested: {:s}", subsystem.bytes());
+
+    if (subsystem == "sftp"sv.bytes()) {
+        // 2. Use with the SSH Connection Protocol
+        // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-2
+
+        session.system = SFTP::Server { [this, &session](ReadonlyBytes bytes) -> ErrorOr<void> {
+            return send_channel_data(session, bytes);
+        } };
+        return TRY(send_channel_success_message(session));
+    }
+
+    return Error::from_string_literal("Unsupported subsystem");
 }
 
 ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)

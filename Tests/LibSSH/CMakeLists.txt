@@ -1,4 +1,6 @@
 set(TEST_SOURCES
+    SFTP/TestSFTPPeer.cpp
+    SFTP/TestSFTPServerBasic.cpp
     TestSSHCipher.cpp
     TestSSHEncodeDecode.cpp
     TestSSHIdentificationString.cpp
