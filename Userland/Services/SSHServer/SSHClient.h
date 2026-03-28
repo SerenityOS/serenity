@@ -90,6 +90,7 @@ private:
     ErrorOr<void> send_channel_open_confirmation(Session const&);
     ErrorOr<void> handle_channel_request(GenericMessage&);
     ErrorOr<void> handle_channel_data(GenericMessage&);
+    ErrorOr<void> handle_channel_subsystem(Session&, GenericMessage&);
     ErrorOr<void> handle_channel_exec(NonnullRefPtr<Session> const&, GenericMessage&);
     ErrorOr<void> send_channel_success_message(Session const&);
     ErrorOr<void> send_channel_data(Session const&, ReadonlyBytes);
