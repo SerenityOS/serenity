@@ -86,6 +86,7 @@ private:
     ErrorOr<void> handle_channel_open_message(GenericMessage&);
     ErrorOr<void> send_channel_open_confirmation(Session const&);
     ErrorOr<void> handle_channel_request(GenericMessage&);
+    ErrorOr<void> handle_channel_exec(Session&, GenericMessage&);
     ErrorOr<void> send_channel_success_message(Session const&);
     ErrorOr<void> send_channel_data(Session const&, ByteBuffer const&);
     ErrorOr<void> handle_channel_close(GenericMessage&);

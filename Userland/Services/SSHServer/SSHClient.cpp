@@ -426,45 +426,53 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
     }
 
     if (request_type == "exec"sv.bytes()) {
-        auto command = TRY(decode_string(message.payload));
-
-        // FIXME: This is a naive implementation, we should stream the result back
-        //        to the user and not block the event loop during the execution of
-        //        the command.
-        //        We should also use the user's shell rather than hardcoding it.
-
-#ifdef AK_OS_SERENITY
-        auto shell = "/bin/Shell"sv;
-#else
-        auto shell = "/bin/sh"sv;
-#endif
-
-        Vector<ByteString> args;
-        args.append(shell);
-        args.append("-c");
-        args.append(ByteString(command.bytes()));
-
-        Vector<char const*> raw_args;
-        raw_args.ensure_capacity(args.size() + 1);
-        for (auto& arg : args)
-            raw_args.append(arg.characters());
-
-        raw_args.append(nullptr);
-
-        auto child = TRY(Core::Command::create(shell, raw_args.data()));
-        auto output = TRY(child->read_all());
-        auto status = TRY(child->status());
-
-        if (status != Core::Command::ProcessResult::DoneWithZeroExitCode)
-            return Error::from_string_literal("Unable to run command");
-
-        TRY(send_channel_success_message(session));
-        TRY(send_channel_data(session, output.standard_output));
-        TRY(send_channel_close(session));
+        TRY(handle_channel_exec(session, message));
         return {};
     }
 
     return Error::from_string_literal("Unsupported channel request");
+}
+
+// 6.5.  Starting a Shell or a Command
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
+ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& message)
+{
+    auto command = TRY(decode_string(message.payload));
+
+    // FIXME: This is a naive implementation, we should stream the result back
+    //        to the user and not block the event loop during the execution of
+    //        the command.
+    //        We should also use the user's shell rather than hardcoding it.
+
+#ifdef AK_OS_SERENITY
+    auto shell = "/bin/Shell"sv;
+#else
+    auto shell = "/bin/sh"sv;
+#endif
+
+    Vector<ByteString> args;
+    args.append(shell);
+    args.append("-c");
+    args.append(ByteString(command.bytes()));
+
+    Vector<char const*> raw_args;
+    raw_args.ensure_capacity(args.size() + 1);
+    for (auto& arg : args)
+        raw_args.append(arg.characters());
+
+    raw_args.append(nullptr);
+
+    auto child = TRY(Core::Command::create(shell, raw_args.data()));
+    auto output = TRY(child->read_all());
+    auto status = TRY(child->status());
+
+    if (status != Core::Command::ProcessResult::DoneWithZeroExitCode)
+        return Error::from_string_literal("Unable to run command");
+
+    TRY(send_channel_success_message(session));
+    TRY(send_channel_data(session, output.standard_output));
+    TRY(send_channel_close(session));
+    return {};
 }
 
 ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
