@@ -91,6 +91,11 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
         tab.context_menu_requested(context_menu_event.screen_position());
     };
 
+    m_tab_widget->set_add_tab_button_enabled(true);
+    m_tab_widget->on_add_tab_button_click = [this] {
+        create_new_tab(Browser::g_new_tab_url, Web::HTML::ActivateTab::Yes);
+    };
+
     m_window_actions.on_create_new_tab = [this] {
         create_new_tab(Browser::g_new_tab_url, Web::HTML::ActivateTab::Yes);
     };
