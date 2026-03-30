@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Vector.h>
+#include <LibCore/File.h>
+#include <LibCrypto/Hash/HashFunction.h>
 #include <LibSSH/SFTP/Peer.h>
 #include <sys/stat.h>
 
@@ -26,6 +29,11 @@ private:
         Initialized,
     };
 
+    struct File {
+        NonnullOwnPtr<Core::File> file;
+        Crypto::Hash::Digest<128> handle;
+    };
+
     ErrorOr<void> handle_init_message(FixedMemoryStream& stream);
     ErrorOr<void> send_version_message();
 
@@ -38,7 +46,12 @@ private:
     ErrorOr<void> handle_stat(FixedMemoryStream& stream, StatType);
     ErrorOr<void> send_file_attribute_message(u32 id, struct ::stat const&);
 
+    ErrorOr<void> handle_open(FixedMemoryStream& stream);
+    ErrorOr<void> send_file_handle(u32, File const&);
+
     State m_state { State::Constructed };
+
+    Vector<File> m_open_files {};
 };
 
 } // SSH::SFTP
