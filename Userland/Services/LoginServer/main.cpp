@@ -18,6 +18,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+static constexpr Array WELL_KNOWN_HOME_DIRS = { "Desktop"sv, "Documents"sv, "Downloads"sv, "Music"sv, "Pictures"sv, "Videos"sv };
+
 static void child_process(Core::Account const& account)
 {
     pid_t rc = setsid();
@@ -29,6 +31,15 @@ static void child_process(Core::Account const& account)
     if (result.is_error()) {
         dbgln("Failed to create temporary directory for session: {}", result.error());
         exit(1);
+    }
+
+    // Create well-known home subdirectories when not existing.
+    for (auto dir : WELL_KNOWN_HOME_DIRS) {
+        auto path = MUST(String::formatted("{}/{}", account.home_directory(), dir));
+        if (FileSystem::exists(path))
+            continue;
+        MUST(Core::System::mkdir(path, 0755));
+        MUST(Core::System::chown(path, account.uid(), account.gid()));
     }
 
     if (auto const result = account.login(); result.is_error()) {
@@ -65,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd cpath chown rpath exec proc id"));
-    TRY(Core::System::unveil("/home", "r"));
+    TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/tmp", "c"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/shadow", "r"));
