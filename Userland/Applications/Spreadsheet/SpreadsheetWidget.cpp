@@ -119,6 +119,9 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
 
     setup_tabs(m_workbook->sheets());
 
+    m_tab_widget->set_add_tab_button_enabled(true);
+    m_tab_widget->on_add_tab_button_click = [&] { add_sheet(); };
+
     m_new_action = GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         add_sheet();
     });
@@ -344,6 +347,7 @@ void SpreadsheetWidget::clipboard_content_did_change(ByteString const& mime_type
 
 void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
 {
+    RefPtr<GUI::Widget> last_view;
     for (auto& sheet : new_sheets) {
         auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(String::from_byte_string(sheet->name()).release_value_but_fixme_should_propagate_errors(), sheet);
         new_view.model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
@@ -439,7 +443,10 @@ void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
 
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
         };
+        last_view = new_view;
     }
+    if (last_view)
+        m_tab_widget->set_active_widget(last_view.ptr());
 }
 
 void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source, size_t cursor_offset)
