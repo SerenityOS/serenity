@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibSSH/SFTP/Peer.h>
+#include <sys/stat.h>
 
 namespace SSH::SFTP {
 
@@ -29,6 +30,13 @@ private:
     ErrorOr<void> send_version_message();
 
     ErrorOr<void> handle_packet(FixedMemoryStream& stream);
+
+    enum class StatType : u8 {
+        Normal,
+        LStat,
+    };
+    ErrorOr<void> handle_stat(FixedMemoryStream& stream, StatType);
+    ErrorOr<void> send_file_attribute_message(u32 id, struct ::stat const&);
 
     State m_state { State::Constructed };
 };
