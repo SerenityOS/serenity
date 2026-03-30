@@ -32,6 +32,26 @@ enum class FrameStyle {
     SunkenPanel,
 };
 
+enum class ScrollbarGutterClickState {
+    NotPressed,
+    BeforeScrubber,
+    AfterScrubber,
+};
+
+struct ScrollbarState {
+    bool decrement_pressed = false;
+    bool decrement_hovered = false;
+    bool increment_pressed = false;
+    bool increment_hovered = false;
+    bool thumb_hovered = false;
+    bool gutter_hovered = false;
+    bool has_scrubber = true;
+    bool enabled = true;
+    bool is_at_min = false;
+    bool is_at_max = false;
+    ScrollbarGutterClickState gutter_click_state = ScrollbarGutterClickState::NotPressed;
+};
+
 // FIXME: should this be in its own header?
 class BaseStylePainter {
 public:

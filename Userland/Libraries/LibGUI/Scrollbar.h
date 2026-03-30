@@ -10,6 +10,7 @@
 #include <AK/Function.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractSlider.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 
@@ -63,11 +64,7 @@ protected:
     virtual void change_event(Event&) override;
 
 private:
-    enum class GutterClickState {
-        NotPressed,
-        BeforeScrubber,
-        AfterScrubber,
-    } m_gutter_click_state { GutterClickState::NotPressed };
+    Gfx::ScrollbarGutterClickState m_gutter_click_state { Gfx::ScrollbarGutterClickState::NotPressed };
 
     int default_button_size() const { return 16; }
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }

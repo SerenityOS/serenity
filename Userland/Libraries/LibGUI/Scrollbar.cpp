@@ -174,24 +174,38 @@ void Scrollbar::paint_event(PaintEvent& event)
     if (!has_scrubber() || (m_pressed_component != Component::None && m_hovered_component != m_pressed_component))
         hovered_component_for_painting = Component::None;
 
+    Gfx::ScrollbarState state {
+        .decrement_pressed = (m_pressed_component == Component::DecrementButton) && (m_pressed_component == m_hovered_component) && !is_min(),
+        .decrement_hovered = hovered_component_for_painting == Component::DecrementButton,
+        .increment_pressed = (m_pressed_component == Component::IncrementButton) && (m_pressed_component == m_hovered_component) && !is_max(),
+        .increment_hovered = hovered_component_for_painting == Component::IncrementButton,
+        .thumb_hovered = hovered_component_for_painting == Component::Scrubber || m_pressed_component == Component::Scrubber,
+        .gutter_hovered = hovered_component_for_painting == Component::Gutter,
+        .has_scrubber = has_scrubber(),
+        .enabled = is_enabled(),
+        .is_at_min = is_min(),
+        .is_at_max = is_max(),
+        .gutter_click_state = m_gutter_click_state,
+    };
+
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
-    if (m_gutter_click_state != GutterClickState::NotPressed && has_scrubber() && !scrubber_rect().is_empty() && hovered_component_for_painting == Component::Gutter) {
+    if (state.gutter_click_state != Gfx::ScrollbarGutterClickState::NotPressed && state.has_scrubber && !scrubber_rect().is_empty() && state.gutter_hovered) {
         Gfx::IntRect rect_to_fill = rect();
         if (orientation() == Orientation::Vertical) {
-            if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
+            if (state.gutter_click_state == Gfx::ScrollbarGutterClickState::BeforeScrubber) {
                 rect_to_fill.set_top(decrement_button_rect().bottom() - 1);
                 rect_to_fill.set_bottom(scrubber_rect().top() + 1);
             } else {
-                VERIFY(m_gutter_click_state == GutterClickState::AfterScrubber);
+                VERIFY(state.gutter_click_state == Gfx::ScrollbarGutterClickState::AfterScrubber);
                 rect_to_fill.set_top(scrubber_rect().bottom() - 1);
                 rect_to_fill.set_bottom(increment_button_rect().top() + 1);
             }
         } else {
-            if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
+            if (state.gutter_click_state == Gfx::ScrollbarGutterClickState::BeforeScrubber) {
                 rect_to_fill.set_left(decrement_button_rect().right() - 1);
                 rect_to_fill.set_right(scrubber_rect().left() + 1);
             } else {
-                VERIFY(m_gutter_click_state == GutterClickState::AfterScrubber);
+                VERIFY(state.gutter_click_state == Gfx::ScrollbarGutterClickState::AfterScrubber);
                 rect_to_fill.set_left(scrubber_rect().right() - 1);
                 rect_to_fill.set_right(increment_button_rect().left() + 1);
             }
@@ -199,30 +213,27 @@ void Scrollbar::paint_event(PaintEvent& event)
         painter.fill_rect_with_dither_pattern(rect_to_fill, palette().button(), palette().button().lightened(0.77f));
     }
 
-    bool decrement_pressed = (m_pressed_component == Component::DecrementButton) && (m_pressed_component == m_hovered_component) && !is_min();
-    bool increment_pressed = (m_pressed_component == Component::IncrementButton) && (m_pressed_component == m_hovered_component) && !is_max();
-
-    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, decrement_pressed, hovered_component_for_painting == Component::DecrementButton && !is_min());
-    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, increment_pressed, hovered_component_for_painting == Component::IncrementButton && !is_max());
+    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, state.decrement_pressed, state.decrement_hovered && !state.is_at_min);
+    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, state.increment_pressed, state.increment_hovered && !state.is_at_max);
 
     if (length(orientation()) >= default_button_size() * 2) {
         auto decrement_location = decrement_button_rect().location().translated(3, 3);
-        if (decrement_pressed)
+        if (state.decrement_pressed)
             decrement_location.translate_by(1, 1);
-        if (!has_scrubber() || !is_enabled() || is_min())
+        if (!state.has_scrubber || !state.enabled || state.is_at_min)
             painter.draw_triangle(decrement_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, palette().threed_highlight());
-        painter.draw_triangle(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, (has_scrubber() && is_enabled() && !is_min()) ? palette().button_text() : palette().threed_shadow1());
+        painter.draw_triangle(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, (state.has_scrubber && state.enabled && !state.is_at_min) ? palette().button_text() : palette().threed_shadow1());
 
         auto increment_location = increment_button_rect().location().translated(3, 3);
-        if (increment_pressed)
+        if (state.increment_pressed)
             increment_location.translate_by(1, 1);
-        if (!has_scrubber() || !is_enabled() || is_max())
+        if (!state.has_scrubber || !state.enabled || state.is_at_max)
             painter.draw_triangle(increment_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, palette().threed_highlight());
-        painter.draw_triangle(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, (has_scrubber() && is_enabled() && !is_max()) ? palette().button_text() : palette().threed_shadow1());
+        painter.draw_triangle(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, (state.has_scrubber && state.enabled && !state.is_at_max) ? palette().button_text() : palette().threed_shadow1());
     }
 
-    if (has_scrubber() && !scrubber_rect().is_empty())
-        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::ThickCap, false, hovered_component_for_painting == Component::Scrubber || m_pressed_component == Component::Scrubber);
+    if (state.has_scrubber && !scrubber_rect().is_empty())
+        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::ThickCap, false, state.thumb_hovered);
 }
 
 void Scrollbar::automatic_scrolling_timer_did_fire()
@@ -240,13 +251,13 @@ void Scrollbar::automatic_scrolling_timer_did_fire()
         if (m_hovered_component != component_at_position(m_last_mouse_position)) {
             m_hovered_component = component_at_position(m_last_mouse_position);
             if (m_hovered_component != Component::Gutter)
-                m_gutter_click_state = GutterClickState::NotPressed;
+                m_gutter_click_state = Gfx::ScrollbarGutterClickState::NotPressed;
             update();
         }
         return;
     }
-    if (m_gutter_click_state != GutterClickState::NotPressed) {
-        m_gutter_click_state = GutterClickState::NotPressed;
+    if (m_gutter_click_state != Gfx::ScrollbarGutterClickState::NotPressed) {
+        m_gutter_click_state = Gfx::ScrollbarGutterClickState::NotPressed;
         update();
         return;
     }
@@ -324,7 +335,7 @@ void Scrollbar::set_automatic_scrolling_timer_active(bool active, Component pres
         m_automatic_scrolling_timer->start();
     } else {
         m_automatic_scrolling_timer->stop();
-        m_gutter_click_state = GutterClickState::NotPressed;
+        m_gutter_click_state = Gfx::ScrollbarGutterClickState::NotPressed;
     }
 }
 
@@ -336,10 +347,10 @@ void Scrollbar::scroll_by_page(Gfx::IntPoint click_position)
     float page_increment = range_size * rel_scrubber_size;
 
     if (click_position.primary_offset_for_orientation(orientation()) < scrubber_rect().primary_offset_for_orientation(orientation())) {
-        m_gutter_click_state = GutterClickState::BeforeScrubber;
+        m_gutter_click_state = Gfx::ScrollbarGutterClickState::BeforeScrubber;
         decrease_slider_by(page_increment);
     } else {
-        m_gutter_click_state = GutterClickState::AfterScrubber;
+        m_gutter_click_state = Gfx::ScrollbarGutterClickState::AfterScrubber;
         increase_slider_by(page_increment);
     }
 }
