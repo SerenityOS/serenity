@@ -456,6 +456,12 @@ CommandResult DisplayListPlayerCPU::blit_corner_clipping(BlitCornerClipping cons
     return CommandResult::Continue;
 }
 
+CommandResult DisplayListPlayerCPU::paint_scrollbar(PaintScrollbar const& command)
+{
+    Gfx::StylePainter::paint_scrollbar(painter(), command.rect, command.thumb_rect, command.palette, command.orientation, command.state);
+    return CommandResult::Continue;
+}
+
 bool DisplayListPlayerCPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
     return !painter().clip_rect().intersects(rect.translated(painter().translation()));

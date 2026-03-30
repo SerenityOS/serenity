@@ -14,6 +14,10 @@
 #include <LibWeb/Painting/PaintableFragment.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
+#if defined(AK_OS_SERENITY)
+#    include <LibGfx/StylePainter.h>
+#endif
+
 namespace Web::Painting {
 
 class PaintableBox : public Paintable
@@ -224,6 +228,7 @@ protected:
         Horizontal,
         Vertical,
     };
+    [[nodiscard]] Optional<CSSPixelRect> scrollbar_rect(ScrollDirection) const;
     [[nodiscard]] Optional<CSSPixelRect> scroll_thumb_rect(ScrollDirection) const;
     [[nodiscard]] bool is_scrollable(ScrollDirection) const;
 
@@ -235,6 +240,23 @@ private:
     virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
     virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
     virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers) override;
+    virtual void handle_mouseleave(Badge<EventHandler>) override;
+
+#if defined(AK_OS_SERENITY)
+    enum class ScrollbarComponent { None,
+        DecrementButton,
+        GutterBeforeScrubber,
+        Thumb,
+        GutterAfterScrubber,
+        IncrementButton };
+    ScrollbarComponent scrollbar_component_at(CSSPixelPoint, ScrollDirection) const;
+    Gfx::ScrollbarState compute_scrollbar_state(ScrollDirection) const;
+
+    ScrollbarComponent m_hovered_scrollbar_component { ScrollbarComponent::None };
+    Optional<ScrollDirection> m_hovered_scrollbar_direction;
+    ScrollbarComponent m_pressed_scrollbar_component { ScrollbarComponent::None };
+    Optional<ScrollDirection> m_pressed_scrollbar_direction;
+#endif
 
     Optional<OverflowData> m_overflow_data;
 

@@ -17,6 +17,7 @@
 #include <LibGfx/Gradients.h>
 #include <LibGfx/GrayscaleBitmap.h>
 #include <LibGfx/ImmutableBitmap.h>
+#include <LibGfx/Orientation.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Point.h>
@@ -359,6 +360,22 @@ struct BlitCornerClipping {
     void translate_by(Gfx::IntPoint const& offset) { border_rect.translate_by(offset); }
 };
 
+struct PaintScrollbar {
+    Gfx::IntRect rect;
+    Gfx::IntRect thumb_rect;
+    Gfx::Palette palette;
+    Orientation orientation;
+    Gfx::ScrollbarState state;
+
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
+
+    void translate_by(Gfx::IntPoint const& offset)
+    {
+        rect.translate_by(offset);
+        thumb_rect.translate_by(offset);
+    }
+};
+
 using Command = Variant<
     DrawGlyphRun,
     FillRect,
@@ -386,6 +403,7 @@ using Command = Variant<
     DrawRect,
     DrawTriangleWave,
     SampleUnderCorners,
-    BlitCornerClipping>;
+    BlitCornerClipping,
+    PaintScrollbar>;
 
 }
