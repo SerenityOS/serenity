@@ -43,6 +43,20 @@ enum class FXPMessageID : u8 {
     EXTENDED_REPLY = 201,
 };
 
+// 7. Responses from the Server to the Client
+// https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-7
+enum class FXStatus : u8 {
+    OK = 0,
+    FX_EOF = 1, // Renamed EOF => FX_EOF to avoid collision with the EOF macro.
+    NO_SUCH_FILE = 2,
+    PERMISSION_DENIED = 3,
+    FAILURE = 4,
+    BAD_MESSAGE = 5,
+    NO_CONNECTION = 6,
+    CONNECTION_LOST = 7,
+    OP_UNSUPPORTED = 8,
+};
+
 // This class implement the SFTP protocol v3. Newer version exist, but they
 // never really took off, this is the same version that openssh implements.
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02
