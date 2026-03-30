@@ -32,3 +32,29 @@ inline ErrorOr<void> server_process_data(SSH::SFTP::Server& server, ReadonlyByte
 
     return Core::run_async_in_new_event_loop([&]() { return server.handle_channel_data(session); });
 }
+
+struct Message {
+    SSH::SFTP::FXPMessageID type;
+    ReadonlyBytes payload;
+};
+
+inline SSH::SFTP::Server make_initialized_server(Function<ErrorOr<void>(Message)> callback)
+{
+    bool was_called { false };
+    SSH::SFTP::Server server([=, callback = move(callback)](ReadonlyBytes bytes) mutable -> ErrorOr<void> {
+        if (was_called) {
+            PeerMock peer { [](ReadonlyBytes) -> ErrorOr<void> { VERIFY_NOT_REACHED(); } };
+            FixedMemoryStream stream { bytes };
+            auto type = TRY(peer.read_header(stream));
+            return callback({ type, bytes.slice(bytes.size() - stream.remaining()) });
+        }
+        EXPECT_EQ(bytes, g_version_packet.bytes());
+        was_called = true;
+        return {};
+    });
+
+    if (server_process_data(server, g_initialization_packet.bytes()).is_error())
+        FAIL("Unable to perform handshake with server");
+
+    return server;
+}
