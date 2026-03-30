@@ -1324,7 +1324,8 @@ ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vf
     auto vfs_root_context = TRY(acquire_vfs_root_context_for_id_and_validate_path(different_vfs_root_context, vfs_root_context_id, path));
     RefPtr<Custody> target_custody;
     if (different_vfs_root_context) {
-        VERIFY(KLexicalPath::is_canonical(path));
+        if (!KLexicalPath::is_canonical(path))
+            return EINVAL;
         auto vfs_root_context_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
             return custody;
         });
