@@ -5,6 +5,7 @@
  */
 
 #include "Server.h"
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <LibSSH/Session.h>
 
@@ -21,7 +22,7 @@ Coroutine<ErrorOr<void>> Server::handle_channel_data(Session& session)
     case State::Constructed:
         co_return handle_init_message(stream);
     case State::Initialized:
-        co_return Error::from_string_literal("Draw the rest of the owl");
+        co_return handle_packet(stream);
     }
     VERIFY_NOT_REACHED();
 }
@@ -63,6 +64,17 @@ ErrorOr<void> Server::send_version_message()
 
     TRY(write_packet(packet));
     return {};
+}
+
+ErrorOr<void> Server::handle_packet(FixedMemoryStream& stream)
+{
+    auto type = TRY(read_header(stream));
+
+    switch (type) {
+    default:
+        dbgln_if(SSH_DEBUG, "Received packet with type: {}", to_underlying(type));
+        return Error::from_string_literal("Unknown packet type");
+    }
 }
 
 } // SSH::SFTP
