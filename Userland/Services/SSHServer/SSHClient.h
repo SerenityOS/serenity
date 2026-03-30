@@ -88,7 +88,7 @@ private:
     ErrorOr<void> handle_channel_request(GenericMessage&);
     ErrorOr<void> handle_channel_exec(Session&, GenericMessage&);
     ErrorOr<void> send_channel_success_message(Session const&);
-    ErrorOr<void> send_channel_data(Session const&, ByteBuffer const&);
+    ErrorOr<void> send_channel_data(Session const&, ReadonlyBytes);
     ErrorOr<void> handle_channel_close(GenericMessage&);
     ErrorOr<void> send_channel_close(Session&);
     ErrorOr<Session*> find_session(u32 sender_channel_id);

@@ -484,7 +484,7 @@ ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
     return {};
 }
 
-ErrorOr<void> SSHClient::send_channel_data(Session const& session, ByteBuffer const& data)
+ErrorOr<void> SSHClient::send_channel_data(Session const& session, ReadonlyBytes data)
 {
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_DATA));
