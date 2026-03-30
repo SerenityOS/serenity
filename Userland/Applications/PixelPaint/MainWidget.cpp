@@ -184,6 +184,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             }
         });
 
+    m_tab_widget->set_add_tab_button_enabled(true);
+    m_tab_widget->on_add_tab_button_click = [this, &window] {
+        m_new_image_action->activate(&window);
+    };
+
     m_new_image_from_clipboard_action = GUI::Action::create(
         "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, Key_V }, g_icon_bag.new_clipboard, [&](auto&) {
             auto result = create_image_from_clipboard();
