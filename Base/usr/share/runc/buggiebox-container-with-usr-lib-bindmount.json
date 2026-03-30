@@ -1,0 +1,74 @@
+{
+    "jail": true,
+    "pid-isolation": true,
+    "command": "/bin/sh",
+    "hostname": null,
+    "layout": [
+        {
+            "type": "root_mount",
+            "source": null,
+            "fs_type": "RAMFS"
+        },
+        {
+            "type": "directory",
+            "target": "/tmp"
+        },
+        {
+            "type": "directory",
+            "target": "/bin"
+        },
+        {
+            "type": "directory",
+            "target": "/usr/"
+        },
+        {
+            "type": "directory",
+            "target": "/usr/lib/"
+        },
+        {
+            "type": "bindmount",
+            "source": "/usr/lib",
+            "target": "/usr/lib"
+        },
+        {
+            "type": "copy_original",
+            "sources": [
+                "/bin/BuggieBox"
+            ]
+        },
+        {
+            "type": "directory",
+            "target": "/etc/"
+        },
+        {
+            "type": "copy_original",
+            "sources": [
+                "/etc/passwd"
+            ]
+        },
+        {
+            "type": "symlink",
+            "path": "/bin/sh",
+            "target": "/bin/BuggieBox"
+        },
+        {
+            "type": "symlink",
+            "path": "/bin/ls",
+            "target": "/bin/BuggieBox"
+        },
+        {
+            "type": "directory",
+            "target": "/lib/"
+        },
+        {
+            "type": "directory",
+            "target": "/proc/"
+        },
+        {
+            "type": "mount",
+            "source": null,
+            "target": "/proc",
+            "fs_type": "ProcFS"
+        }
+    ]
+}

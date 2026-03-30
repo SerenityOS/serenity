@@ -98,6 +98,14 @@ ErrorOr<NonnullOwnPtr<VFSRootContextLayout>> VFSRootContextLayout::create_with_r
     return adopt_nonnull_own_or_enomem(new (nothrow) VFSRootContextLayout(move(path), vfs_root_context_index));
 }
 
+ErrorOr<void> VFSRootContextLayout::bindmount(StringView target_path, StringView source_path)
+{
+    auto fd = TRY(get_source_fd(source_path));
+    // TODO: A bindmount should be RDONLY as there's right now no benefit
+    // from a writable bindmount in such case, but it might have in the future
+    return Core::System::bindmount(m_target_vfs_root_context_id, fd, target_path, MS_RDONLY);
+}
+
 ErrorOr<void> VFSRootContextLayout::apply_mounts_on_vfs_root_context_id()
 {
     for (auto& mount : m_mounts) {

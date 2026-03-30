@@ -46,6 +46,8 @@ public:
 
     ErrorOr<void> mount_new_filesystem(StringView fstype, StringView source, StringView target_path, int flags);
 
+    ErrorOr<void> bindmount(StringView target_path, StringView source_path);
+
     ErrorOr<void> chown(StringView path, uid_t uid, gid_t gid);
     ErrorOr<void> chmod(StringView target_path, mode_t);
     ErrorOr<void> symlink(StringView path, StringView target_path);

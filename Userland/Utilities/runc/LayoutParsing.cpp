@@ -234,12 +234,38 @@ static ErrorOr<void> symlink_object_handle(VFSRootContextLayout& layout, JsonObj
     return {};
 }
 
+static ErrorOr<bool> bindmount_object_probe(JsonObject const& object)
+{
+    VERIFY(object.has_string("type"sv));
+    auto type = object.get_byte_string("type"sv).value();
+    if (type != "bindmount"sv)
+        return false;
+
+    if (!object.has_string("source"sv))
+        return Error::from_string_view("Object (bindmount) source property not found"sv);
+    if (!object.has_string("target"sv))
+        return Error::from_string_view("Object (bindmount) target property not found"sv);
+
+    return true;
+}
+
+static ErrorOr<void> bindmount_object_handle(VFSRootContextLayout& layout, JsonObject const& object)
+{
+    VERIFY(object.has_string("source"sv));
+    VERIFY(object.has_string("target"sv));
+    auto path = object.get_byte_string("source"sv).value();
+    auto target = object.get_byte_string("target"sv).value();
+    TRY(layout.bindmount(path, target));
+    return {};
+}
+
 static constexpr JSONPropertyHandler s_handlers[] = {
     { mount_object_probe, mount_object_handle },
     { directory_object_probe, directory_object_handle },
     { copy_custom_object_probe, copy_custom_object_handle },
     { copy_executable_object_probe, copy_executable_object_handle },
     { copy_original_object_probe, copy_original_object_handle },
+    { bindmount_object_probe, bindmount_object_handle },
     { symlink_object_probe, symlink_object_handle },
 };
 
