@@ -1,0 +1,7 @@
+[App]
+Name=Users Settings
+Executable=/bin/UsersSettings
+Category=Settings
+Description=Configure users
+ExcludeFromSystemMenu=true
+RequiresRoot=true
