@@ -49,6 +49,12 @@ private:
     ErrorOr<void> handle_open(FixedMemoryStream& stream);
     ErrorOr<void> send_file_handle(u32, File const&);
 
+    ErrorOr<void> handle_read(FixedMemoryStream& stream);
+    ErrorOr<void> send_data(u32, ReadonlyBytes);
+    ErrorOr<void> send_eof(u32);
+
+    ErrorOr<File*> find_file(ReadonlyBytes handle);
+
     State m_state { State::Constructed };
 
     Vector<File> m_open_files {};

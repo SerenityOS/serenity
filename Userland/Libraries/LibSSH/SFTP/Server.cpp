@@ -65,6 +65,8 @@ ErrorOr<void> Server::handle_packet(FixedMemoryStream& stream)
     switch (type) {
     case FXPMessageID::OPEN:
         return handle_open(stream);
+    case FXPMessageID::READ:
+        return handle_read(stream);
     case FXPMessageID::STAT:
         return handle_stat(stream, StatType::Normal);
     case FXPMessageID::LSTAT:
@@ -212,6 +214,110 @@ ErrorOr<void> Server::send_file_handle(u32 id, File const& file)
     TRY(stream.write_value(FXPMessageID::HANDLE));
     TRY(stream.write_value<NetworkOrdered<u32>>(id));
     TRY(encode_string(stream, file.handle.bytes()));
+
+    auto packet = TRY(stream.read_until_eof());
+    TRY(write_packet(packet));
+    return {};
+}
+
+ErrorOr<Server::File*> Server::find_file(ReadonlyBytes handle)
+{
+    auto maybe_file = m_open_files.first_matching([&](auto const& file) {
+        return file.handle.bytes() == handle;
+    });
+
+    if (maybe_file.has_value())
+        return &maybe_file.value();
+
+    return Error::from_string_literal("Unable to find file for given handle");
+}
+
+// 6.4 Reading and Writing
+// https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-6.4
+ErrorOr<void> Server::handle_read(FixedMemoryStream& stream)
+{
+    u32 id = TRY(stream.read_value<NetworkOrdered<u32>>());
+    auto handle = TRY(decode_string(stream));
+    u64 offset = TRY(stream.read_value<NetworkOrdered<u64>>());
+    u32 len = TRY(stream.read_value<NetworkOrdered<u32>>());
+
+    auto& file = *TRY(find_file(handle));
+
+    // "If an error occurs or EOF is encountered before reading any
+    //   data, the server will respond with SSH_FXP_STATUS."
+    // FIXME: Send FXP_STATUS
+    ByteBuffer buffer;
+    bool should_send_eof { false };
+    auto operation_result = [&]() -> ErrorOr<void> {
+        // FIXME: Ensure len is somewhat reasonable.
+        TRY(buffer.try_resize(len));
+
+        Optional<u64> last_read;
+        u64 read {};
+        while (!last_read.has_value() || last_read.value() != 0) {
+            if (read == buffer.size())
+                break;
+            last_read = TRY(Core::System::pread(file.file->fd(), buffer.bytes().slice(read), offset + read));
+            read += *last_read;
+        }
+
+        if (last_read == 0u) {
+            buffer.trim(read, false);
+            if (buffer.size() == 0)
+                should_send_eof = true;
+        }
+
+        return {};
+    }();
+
+    if (operation_result.is_error()) {
+        // FIXME: Send SSH_FXP_STATUS
+        return operation_result.release_error();
+    }
+
+    if (should_send_eof)
+        TRY(send_eof(id));
+    else
+        TRY(send_data(id, buffer));
+
+    return {};
+}
+
+ErrorOr<void> Server::send_data(u32 id, ReadonlyBytes data)
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(FXPMessageID::DATA));
+    TRY(stream.write_value<NetworkOrdered<u32>>(id));
+    TRY(encode_string(stream, data));
+
+    auto packet = TRY(stream.read_until_eof());
+    TRY(write_packet(packet));
+    return {};
+}
+
+// 7. Responses from the Server to the Client
+// https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-7
+
+#define SSH_FX_OK 0
+#define SSH_FX_EOF 1
+#define SSH_FX_NO_SUCH_FILE 2
+#define SSH_FX_PERMISSION_DENIED 3
+#define SSH_FX_FAILURE 4
+#define SSH_FX_BAD_MESSAGE 5
+#define SSH_FX_NO_CONNECTION 6
+#define SSH_FX_CONNECTION_LOST 7
+#define SSH_FX_OP_UNSUPPORTED 8
+
+ErrorOr<void> Server::send_eof(u32 id)
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(FXPMessageID::STATUS));
+    TRY(stream.write_value<NetworkOrdered<u32>>(id));
+    TRY(stream.write_value<NetworkOrdered<u32>>(SSH_FX_EOF));
+
+    // error message and language tag
+    TRY(encode_string(stream, ""sv));
+    TRY(encode_string(stream, ""sv));
 
     auto packet = TRY(stream.read_until_eof());
     TRY(write_packet(packet));
