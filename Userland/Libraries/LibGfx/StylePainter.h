@@ -66,6 +66,7 @@ public:
     virtual void paint_check_box(Painter&, IntRect const&, Palette const&, bool is_enabled, bool is_checked, bool is_being_pressed) = 0;
     virtual void paint_transparency_grid(Painter&, IntRect const&, Palette const&) = 0;
     virtual void paint_simple_rect_shadow(Painter&, IntRect const&, Bitmap const& shadow_bitmap, bool shadow_includes_frame = false, bool fill_content = false) = 0;
+    virtual void paint_scrollbar(Painter&, IntRect scrollbar_rect, IntRect thumb_rect, Palette const&, Orientation, ScrollbarState const&) = 0;
 
 protected:
     BaseStylePainter() = default;
@@ -85,6 +86,7 @@ public:
     static void paint_check_box(Painter&, IntRect const&, Palette const&, bool is_enabled, bool is_checked, bool is_being_pressed);
     static void paint_transparency_grid(Painter&, IntRect const&, Palette const&);
     static void paint_simple_rect_shadow(Painter&, IntRect const&, Bitmap const& shadow_bitmap, bool shadow_includes_frame = false, bool fill_content = false);
+    static void paint_scrollbar(Painter&, IntRect scrollbar_rect, IntRect thumb_rect, Palette const&, Orientation, ScrollbarState const&);
 };
 
 }

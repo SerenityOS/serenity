@@ -63,4 +63,9 @@ void StylePainter::paint_simple_rect_shadow(Painter& painter, IntRect const& rec
     current().paint_simple_rect_shadow(painter, rect, shadow_bitmap, shadow_includes_frame, fill_content);
 }
 
+void StylePainter::paint_scrollbar(Painter& painter, IntRect scrollbar_rect, IntRect thumb_rect, Palette const& palette, Orientation orientation, ScrollbarState const& state)
+{
+    current().paint_scrollbar(painter, scrollbar_rect, thumb_rect, palette, orientation, state);
+}
+
 }

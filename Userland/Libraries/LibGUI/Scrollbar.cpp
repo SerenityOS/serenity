@@ -20,30 +20,6 @@ REGISTER_WIDGET(GUI, Scrollbar)
 
 namespace GUI {
 
-static constexpr AK::Array<Gfx::IntPoint, 3> s_up_arrow_coords = {
-    Gfx::IntPoint { 4, 2 },
-    Gfx::IntPoint { 1, 5 },
-    Gfx::IntPoint { 7, 5 },
-};
-
-static constexpr AK::Array<Gfx::IntPoint, 3> s_down_arrow_coords = {
-    Gfx::IntPoint { 1, 3 },
-    Gfx::IntPoint { 7, 3 },
-    Gfx::IntPoint { 4, 6 },
-};
-
-static constexpr AK::Array<Gfx::IntPoint, 3> s_left_arrow_coords = {
-    Gfx::IntPoint { 5, 1 },
-    Gfx::IntPoint { 2, 4 },
-    Gfx::IntPoint { 5, 7 },
-};
-
-static constexpr AK::Array<Gfx::IntPoint, 3> s_right_arrow_coords = {
-    Gfx::IntPoint { 3, 1 },
-    Gfx::IntPoint { 6, 4 },
-    Gfx::IntPoint { 3, 7 },
-};
-
 Scrollbar::Scrollbar(Orientation orientation)
     : AbstractSlider(orientation)
 {
@@ -188,52 +164,7 @@ void Scrollbar::paint_event(PaintEvent& event)
         .gutter_click_state = m_gutter_click_state,
     };
 
-    painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
-    if (state.gutter_click_state != Gfx::ScrollbarGutterClickState::NotPressed && state.has_scrubber && !scrubber_rect().is_empty() && state.gutter_hovered) {
-        Gfx::IntRect rect_to_fill = rect();
-        if (orientation() == Orientation::Vertical) {
-            if (state.gutter_click_state == Gfx::ScrollbarGutterClickState::BeforeScrubber) {
-                rect_to_fill.set_top(decrement_button_rect().bottom() - 1);
-                rect_to_fill.set_bottom(scrubber_rect().top() + 1);
-            } else {
-                VERIFY(state.gutter_click_state == Gfx::ScrollbarGutterClickState::AfterScrubber);
-                rect_to_fill.set_top(scrubber_rect().bottom() - 1);
-                rect_to_fill.set_bottom(increment_button_rect().top() + 1);
-            }
-        } else {
-            if (state.gutter_click_state == Gfx::ScrollbarGutterClickState::BeforeScrubber) {
-                rect_to_fill.set_left(decrement_button_rect().right() - 1);
-                rect_to_fill.set_right(scrubber_rect().left() + 1);
-            } else {
-                VERIFY(state.gutter_click_state == Gfx::ScrollbarGutterClickState::AfterScrubber);
-                rect_to_fill.set_left(scrubber_rect().right() - 1);
-                rect_to_fill.set_right(increment_button_rect().left() + 1);
-            }
-        }
-        painter.fill_rect_with_dither_pattern(rect_to_fill, palette().button(), palette().button().lightened(0.77f));
-    }
-
-    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, state.decrement_pressed, state.decrement_hovered && !state.is_at_min);
-    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, state.increment_pressed, state.increment_hovered && !state.is_at_max);
-
-    if (length(orientation()) >= default_button_size() * 2) {
-        auto decrement_location = decrement_button_rect().location().translated(3, 3);
-        if (state.decrement_pressed)
-            decrement_location.translate_by(1, 1);
-        if (!state.has_scrubber || !state.enabled || state.is_at_min)
-            painter.draw_triangle(decrement_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, palette().threed_highlight());
-        painter.draw_triangle(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, (state.has_scrubber && state.enabled && !state.is_at_min) ? palette().button_text() : palette().threed_shadow1());
-
-        auto increment_location = increment_button_rect().location().translated(3, 3);
-        if (state.increment_pressed)
-            increment_location.translate_by(1, 1);
-        if (!state.has_scrubber || !state.enabled || state.is_at_max)
-            painter.draw_triangle(increment_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, palette().threed_highlight());
-        painter.draw_triangle(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, (state.has_scrubber && state.enabled && !state.is_at_max) ? palette().button_text() : palette().threed_shadow1());
-    }
-
-    if (state.has_scrubber && !scrubber_rect().is_empty())
-        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::ThickCap, false, state.thumb_hovered);
+    Gfx::StylePainter::paint_scrollbar(painter, rect(), scrubber_rect(), palette(), orientation(), state);
 }
 
 void Scrollbar::automatic_scrolling_timer_did_fire()
