@@ -28,6 +28,8 @@ private:
     ErrorOr<void> handle_init_message(FixedMemoryStream& stream);
     ErrorOr<void> send_version_message();
 
+    ErrorOr<void> handle_packet(FixedMemoryStream& stream);
+
     State m_state { State::Constructed };
 };
 
