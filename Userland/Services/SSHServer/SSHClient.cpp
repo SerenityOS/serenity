@@ -305,6 +305,14 @@ ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
     if (username != TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).username())
         return Error::from_string_literal("Can't authenticate for another user account");
 
+    // "The 'service name' specifies the service to start after authentication. There may
+    // be several different authenticated services provided. If the requested service is
+    // not available, the server MAY disconnect immediately or at any later time. Sending
+    // a proper disconnect message is RECOMMENDED.  In any case, if the service does not
+    // exist, authentication MUST NOT be accepted."
+    if (service_name != "ssh-connection"sv.bytes())
+        return Error::from_string_literal("Unknown service name.");
+
     if (method_name == "none"sv.bytes()) {
         // FIXME: Implement proper authentication!!!
 
