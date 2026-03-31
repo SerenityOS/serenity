@@ -313,9 +313,7 @@ ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
     if (service_name != "ssh-connection"sv.bytes())
         return Error::from_string_literal("Unknown service name.");
 
-    if (method_name == "none"sv.bytes()) {
-        // FIXME: Implement proper authentication!!!
-
+    if (method_name == "publickey"sv.bytes()) {
         m_state = State::Authentified;
         TRY(send_user_authentication_success());
 
@@ -324,7 +322,27 @@ ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
         return {};
     }
 
-    return Error::from_string_literal("Unsupported userauth method");
+    TRY(send_available_authentication_methods());
+    // FIXME: Disconnect the client after too many attempts.
+
+    return {};
+}
+
+// 5.1.  Responses to Authentication Requests
+// https://datatracker.ietf.org/doc/html/rfc4252#section-5.1
+ErrorOr<void> SSHClient::send_available_authentication_methods()
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::USERAUTH_FAILURE));
+    static constexpr auto available_methods = to_array({ "publickey"sv });
+    TRY(encode_name_list(stream, available_methods));
+
+    // "The value of 'partial success' MUST be TRUE if the authentication
+    //   request to which this is a response was successful."
+    TRY(stream.write_value(false));
+
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
 }
 
 // 5.1.  Responses to Authentication Requests

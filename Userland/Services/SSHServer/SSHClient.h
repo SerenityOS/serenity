@@ -79,6 +79,7 @@ private:
     ErrorOr<void> send_service_accept(StringView);
 
     ErrorOr<void> handle_user_authentication(GenericMessage data);
+    ErrorOr<void> send_available_authentication_methods();
     ErrorOr<void> send_user_authentication_success();
 
     ErrorOr<ShouldDisconnect> handle_generic_packet(GenericMessage&&);
