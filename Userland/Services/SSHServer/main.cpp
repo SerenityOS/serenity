@@ -51,9 +51,8 @@ ErrorOr<void> accept_connection()
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio accept inet unix rpath proc exec"));
-    TRY(Core::System::unveil("/etc/passwd", "r"));
-    TRY(Core::System::unveil("/bin/Shell", "rx"));
-    TRY(Core::System::unveil(nullptr, nullptr));
+
+    // FIXME: Audit the server architecture and add veils wherever possible.
 
     Optional<u32> port {};
     bool unsafe_stub_private_key { false };
