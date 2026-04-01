@@ -206,6 +206,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`luajit`](luajit/)                           | LuaJIT                                                        | 18b087c                   | https://luajit.org/luajit.html                                       |
 | [`luarocks`](luarocks/)                       | LuaRocks                                                      | 3.8.0                     | https://luarocks.org/                                                |
 | [`lure`](lure/)                               | Lure of the Temptress                                         | 1.1                       | https://www.scummvm.org/games/#games-lure                            |
+| [`luv`](luv/)                                 | Bare libuv bindings for lua                                   | 1.52.1-0                  | https://github.com/luvit/luv                                         |
 | [`lxt`](lxt/)                                 | linuXtree - an XTree Gold clone                               | 1.3b                      | http://stahlke.org/dan/lxt/                                          |
 | [`lynx`](lynx/)                               | Lynx web browser                                              | 2.9.2                     | https://lynx.invisible-island.net/                                   |
 | [`lz4`](lz4/)                                 | lz4 - Extremely Fast Compression algorithm                    | 1.10.0                    | https://github.com/lz4/lz4                                           |
