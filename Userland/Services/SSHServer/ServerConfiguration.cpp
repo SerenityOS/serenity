@@ -5,10 +5,11 @@
  */
 
 #include "ServerConfiguration.h"
+#include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCrypto/Curves/Ed25519.h>
-#include <LibSSH/DataTypes.h>
-
 #include <LibCrypto/Hash/SHA2.h>
+#include <LibSSH/DataTypes.h>
 
 namespace SSH::Server {
 
@@ -54,6 +55,36 @@ void ServerConfiguration::ensure_ssh_ed25519_keys() const
             MUST(Crypto::Curves::Ed25519::generate_public_key(m_ssh_ed25519_server_private_key.key))
         };
     }
+}
+
+ErrorOr<Vector<TypedBlob>> ServerConfiguration::get_authorized_keys_for_user() const
+{
+    auto raw_file = TRY(Core::File::open(TRY(user_authorized_keys_file()), Core::File::OpenMode::Read));
+    auto file = TRY(Core::InputBufferedFile::create(move(raw_file)));
+
+    Vector<TypedBlob> blobs;
+
+    while (TRY(file->can_read_line())) {
+        Array<u8, 1024> buffer;
+        auto line = TRY(file->read_line(buffer));
+
+        blobs.append(TRY(TypedBlob::read_from_string(line)));
+    }
+
+    return blobs;
+}
+
+ErrorOr<StringView> ServerConfiguration::user_authorized_keys_file() const
+{
+    if (!m_user_authorized_keys_file.is_empty())
+        return m_user_authorized_keys_file;
+
+#ifdef AK_OS_SERENITY
+    static auto default_path = ByteString::formatted("{}/{}", Core::StandardPaths::config_directory(), "ssh/authorized_keys"sv);
+    return default_path;
+#endif
+
+    return Error::from_string_literal("No default path for ssh keys is provided on Lagom");
 }
 
 }

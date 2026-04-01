@@ -97,6 +97,9 @@ enum class MessageID : u8 {
     // https://datatracker.ietf.org/doc/html/rfc5656#section-7
     KEX_ECDH_INIT = 30,
     KEX_ECDH_REPLY = 31,
+
+    // https://datatracker.ietf.org/doc/html/rfc4252#section-7
+    USERAUTH_PK_OK = 60,
 };
 
 } // SSH
