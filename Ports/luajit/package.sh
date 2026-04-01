@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=luajit
-version=2.1.0-beta3
+version=18b087cd2cd4ddc4a79782bf155383a689d5093d
 useconfigure=true
 files=(
-    "git+https://luajit.org/git/luajit.git#v${version}"
+    "git+https://luajit.org/git/luajit.git#${version}"
 )
 workdir="LuaJIT-${version}"
 
