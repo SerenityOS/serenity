@@ -5,6 +5,7 @@
  */
 
 #include "DataTypes.h"
+#include <AK/Base64.h>
 #include <AK/Endian.h>
 
 namespace SSH {
@@ -103,6 +104,48 @@ StringView TypedBlob::type_to_string(Type t)
         return "ssh-ed25519"sv;
     }
     VERIFY_NOT_REACHED();
+}
+
+namespace {
+
+ErrorOr<TypedBlob> decode_already_unpacked(FixedMemoryStream& stream)
+{
+    auto type = TRY(decode_string(stream));
+
+    if (type != "ssh-ed25519"sv.bytes())
+        return Error::from_string_literal("Invalid key type");
+
+    auto key = TRY(decode_string(stream));
+    return TypedBlob { .type = TypedBlob::Type::SSH_ED25519, .key = move(key) };
+}
+
+}
+
+ErrorOr<TypedBlob> TypedBlob::decode(FixedMemoryStream& stream)
+{
+    auto inner = TRY(decode_string(stream));
+    FixedMemoryStream inner_stream { inner.bytes() };
+
+    return decode_already_unpacked(inner_stream);
+}
+
+ErrorOr<TypedBlob> TypedBlob::read_from_string(StringView input)
+{
+    auto tokens = input.split_view(' ');
+
+    if (tokens.size() != 3)
+        return Error::from_string_literal("Invalid public key file");
+
+    auto const& algorithm_name_ascii = tokens[0];
+
+    auto base64_decoded_blob = TRY(decode_base64(tokens[1]));
+    auto stream = FixedMemoryStream { base64_decoded_blob.bytes() };
+    auto blob = TRY(decode_already_unpacked(stream));
+
+    if (algorithm_name_ascii != type_to_string(blob.type))
+        return Error::from_string_literal("Incoherent algorithm name");
+
+    return blob;
 }
 
 } // SSH

@@ -100,7 +100,7 @@ TEST_CASE(typed_blob)
 
     AllocatingMemoryStream stream;
     TRY_OR_FAIL(input.encode(stream));
-    auto result = TRY_OR_FAIL(stream.read_until_eof());
+    auto encoded = TRY_OR_FAIL(stream.read_until_eof());
 
     auto expected = to_array<u8>({
         0x00, 0x00, 0x00, 27,                                  // Total size (string size + blob size + 8)
@@ -110,5 +110,22 @@ TEST_CASE(typed_blob)
         0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,        // blob
     });
 
-    EXPECT_EQ(result.bytes(), expected.span());
+    EXPECT_EQ(encoded.bytes(), expected.span());
+
+    FixedMemoryStream encoded_stream { encoded.bytes() };
+    auto roundtrip_blob = TRY_OR_FAIL(SSH::TypedBlob::decode(encoded_stream));
+
+    EXPECT_EQ(roundtrip_blob.type, input.type);
+    EXPECT_EQ(roundtrip_blob.key, input.key);
+}
+
+TEST_CASE(typed_blob_from_string)
+{
+    static constexpr auto public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICOZUtxv/6qw3GjU4OwgEeSrpKC/81n8yYLwAf/T26Ni lucas"sv;
+
+    auto typed_blob = TRY_OR_FAIL(SSH::TypedBlob::read_from_string(public_key));
+    EXPECT_EQ(typed_blob.type, SSH::TypedBlob::Type::SSH_ED25519);
+    EXPECT_EQ(typed_blob.key, "\x23\x99\x52\xdc\x6f\xff\xaa\xb0\xdc\x68\xd4\xe0\xec"
+                              "\x20\x11\xe4\xab\xa4\xa0\xbf\xf3\x59\xfc\xc9\x82\xf0"
+                              "\x01\xff\xd3\xdb\xa3\x62"sv.bytes());
 }
