@@ -200,6 +200,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`llvm`](llvm/)                               | LLVM                                                          | 22.1.0                    | https://llvm.org/                                                    |
 | [`lolcat`](lolcat/)                           | lolcat                                                        | 1212a9c                   | https://github.com/jaseg/lolcat/                                     |
 | [`lowdown`](lowdown/)                         | lowdown                                                       | 1.0.2                     | https://kristaps.bsd.lv/lowdown/                                     |
+| [`LPeg`](LPeg/)                               | LPeg                                                          | 1.1.0-2                   | https://www.inf.puc-rio.br/~roberto/lpeg/                            |
 | [`lrzip`](lrzip/)                             | lrzip                                                         | 0.651                     | https://github.com/ckolivas/lrzip                                    |
 | [`lua`](lua/)                                 | Lua                                                           | 5.4.6                     | https://www.lua.org/                                                 |
 | [`luajit`](luajit/)                           | LuaJIT                                                        | 18b087c                   | https://luajit.org/luajit.html                                       |
