@@ -31,7 +31,11 @@ public:
         m_user_authorized_keys_file = path;
     }
 
+    ErrorOr<Vector<TypedBlob>> get_authorized_keys_for_user() const;
+
 private:
+    ErrorOr<StringView> user_authorized_keys_file() const;
+
     mutable TypedBlob m_ssh_ed25519_server_public_key;
     mutable TypedBlob m_ssh_ed25519_server_private_key;
     void ensure_ssh_ed25519_keys() const;
