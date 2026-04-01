@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/ByteString.h>
 #include <LibSSH/DataTypes.h>
 
 namespace SSH::Server {
@@ -25,12 +26,19 @@ public:
         m_use_unsafe_stubbed_private_key = true;
     }
 
+    void set_user_authorized_keys_file(StringView path)
+    {
+        m_user_authorized_keys_file = path;
+    }
+
 private:
     mutable TypedBlob m_ssh_ed25519_server_public_key;
     mutable TypedBlob m_ssh_ed25519_server_private_key;
     void ensure_ssh_ed25519_keys() const;
 
     bool m_use_unsafe_stubbed_private_key { false };
+
+    ByteString m_user_authorized_keys_file;
 };
 
 }
