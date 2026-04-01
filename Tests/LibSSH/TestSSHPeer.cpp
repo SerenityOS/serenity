@@ -67,6 +67,16 @@ public:
     {
         return SSH::Peer::handle_disconnect_message(data);
     }
+
+    void set_hash(Crypto::Hash::Digest<256> hash)
+    {
+        SSH::Peer::set_hash(hash);
+    }
+
+    ReadonlyBytes session_id() const
+    {
+        return SSH::Peer::session_id();
+    }
 };
 
 // Copied from wireshark, sniffed from a connection between an openssh server and client.
@@ -115,4 +125,20 @@ TEST_CASE(disconnect_packet)
 
     TRY_OR_FAIL(peer.handle_disconnect_message(message));
     EXPECT(!socket.is_open());
+}
+
+TEST_CASE(stable_session_id)
+{
+    // A session ID is stable, even after the peers rekeyed.
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket);
+
+    auto session_id = peer.session_id();
+
+    Crypto::Hash::Digest<256> new_hash;
+    fill_with_random({ new_hash.data, sizeof(new_hash.data) });
+    peer.set_hash(new_hash);
+
+    EXPECT_EQ(peer.session_id(), session_id);
 }
