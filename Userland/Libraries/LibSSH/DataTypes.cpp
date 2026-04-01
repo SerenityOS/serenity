@@ -85,11 +85,7 @@ ErrorOr<void> TypedBlob::encode(AllocatingMemoryStream& stream) const
     //      byte[n]   signature blob in format specific encoding."
     AllocatingMemoryStream local_stream;
 
-    switch (type) {
-    case Type::SSH_ED25519:
-        TRY(encode_string(local_stream, "ssh-ed25519"sv));
-        break;
-    }
+    TRY(encode_string(local_stream, type_to_string(type)));
 
     TRY(encode_string(local_stream, key));
 
@@ -98,6 +94,15 @@ ErrorOr<void> TypedBlob::encode(AllocatingMemoryStream& stream) const
     TRY(stream.write_until_depleted(encoded));
 
     return {};
+}
+
+StringView TypedBlob::type_to_string(Type t)
+{
+    switch (t) {
+    case Type::SSH_ED25519:
+        return "ssh-ed25519"sv;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 } // SSH
