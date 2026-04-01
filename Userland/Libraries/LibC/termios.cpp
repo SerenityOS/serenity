@@ -150,8 +150,8 @@ void cfmakeraw(struct termios* tp)
 
     auto& termios = *tp;
     termios.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-    termios.c_lflag &= ~OPOST;
-    termios.c_cflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    termios.c_oflag &= ~OPOST;
+    termios.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
     termios.c_cflag |= CS8;
 }
 }
