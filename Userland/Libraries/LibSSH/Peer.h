@@ -47,6 +47,11 @@ protected:
         m_shared_secret = shared_secret;
     }
 
+    ReadonlyBytes session_id() const
+    {
+        return m_session_id.value().bytes();
+    }
+
 private:
     Core::Socket& m_tcp_socket;
     NonnullOwnPtr<Cipher> m_cipher;
