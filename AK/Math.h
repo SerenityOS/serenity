@@ -899,7 +899,50 @@ constexpr T atan(T value)
     return ret;
 #else
 #    if defined(AK_OS_SERENITY)
-    return asin(value / sqrt(1 + value * value));
+    if (value < 0)
+        return -atan(-value);
+
+    if (value > 1)
+        return Pi<T> / 2 - atan(1 / value);
+
+    // atan is an odd function a leading factor of 1, so this uses the same substitutions as sin().
+    // See there for a description.
+    auto f = [](T x) {
+        if constexpr (IsSame<T, f32>) {
+            // lolremez --float --degree 7 --range "1e-50:1" "(atan(sqrt(x))-sqrt(x))/(x*sqrt(x))" "1/(x*sqrt(x))"
+            // "Estimated max error: 7.351572e-9"
+            float u = 0.0026222446f;
+            u = u * x + -0.015132537f;
+            u = u * x + 0.041121863f;
+            u = u * x + -0.073667064f;
+            u = u * x + 0.10573932f;
+            u = u * x + -0.14185975f;
+            u = u * x + 0.19990396f;
+            return u * x + -0.33332986f;
+        } else {
+            // FIXME: Could do something custom for long double.
+            // lolremez --degree 15 --range "1e-50:1" "(atan(sqrt(x))-sqrt(x))/(x*sqrt(x))" "1/(x*sqrt(x))"
+            // "Estimated max error: 2.695747111292741e-15"
+            T u = 6.4855700791782353e-05;
+            u = u * x + -0.00062980993515420608;
+            u = u * x + 0.0028877745234626882;
+            u = u * x + -0.0083913659122280861;
+            u = u * x + 0.01759373283992496;
+            u = u * x + -0.028943865588822337;
+            u = u * x + 0.04001711781175539;
+            u = u * x + -0.049493567473208426;
+            u = u * x + 0.05782092815821073;
+            u = u * x + -0.066423996784058609;
+            u = u * x + 0.076879768543915233;
+            u = u * x + -0.090903598304650779;
+            u = u * x + 0.11111064186237864;
+            u = u * x + -0.14285711801574916;
+            u = u * x + 0.19999999929660117;
+            return u * x + -0.33333333332571796;
+        }
+    };
+    T squared = value * value;
+    return value + value * squared * f(squared);
 #    endif
     return __builtin_atan(value);
 #endif
