@@ -46,30 +46,70 @@ TEST_CASE(wrap_to_range)
     EXPECT_EQ(AK::wrap_to_range(-85., 180.), -85.);
 }
 
-#define BENCHMARK_TRIG(type, function)                                                                         \
-    do {                                                                                                       \
-        for (type value = -4 * AK::Pi<type>; value < 4 * AK::Pi<type>; value += static_cast<type>(0.000001)) { \
-            auto result = function(value);                                                                     \
-            AK::taint_for_optimizer(result);                                                                   \
-        }                                                                                                      \
+#define BENCHMARK_TRIG(type, function, from, to)                                    \
+    do {                                                                            \
+        for (type value = from; value < to; value += static_cast<type>(0.000001)) { \
+            auto result = function(value);                                          \
+            AK::taint_for_optimizer(result);                                        \
+        }                                                                           \
     } while (false)
 
 BENCHMARK_CASE(bench_trig_cos)
 {
-    BENCHMARK_TRIG(double, AK::cos);
+    BENCHMARK_TRIG(double, AK::cos, -4 * AK::Pi<double>, 4 * AK::Pi<double>);
 }
 
 BENCHMARK_CASE(bench_trig_cosf)
 {
-    BENCHMARK_TRIG(float, AK::cos);
+    BENCHMARK_TRIG(float, AK::cos, -4 * AK::Pi<float>, 4 * AK::Pi<float>);
 }
 
 BENCHMARK_CASE(bench_trig_sin)
 {
-    BENCHMARK_TRIG(double, AK::sin);
+    BENCHMARK_TRIG(double, AK::sin, -4 * AK::Pi<double>, 4 * AK::Pi<double>);
 }
 
 BENCHMARK_CASE(bench_trig_sinf)
 {
-    BENCHMARK_TRIG(float, AK::sin);
+    BENCHMARK_TRIG(float, AK::sin, -4 * AK::Pi<float>, 4 * AK::Pi<float>);
+}
+
+BENCHMARK_CASE(bench_trig_tan)
+{
+    BENCHMARK_TRIG(double, AK::tan, -4 * AK::Pi<double>, 4 * AK::Pi<double>);
+}
+
+BENCHMARK_CASE(bench_trig_tanf)
+{
+    BENCHMARK_TRIG(float, AK::tan, -4 * AK::Pi<float>, 4 * AK::Pi<float>);
+}
+
+BENCHMARK_CASE(bench_trig_acos)
+{
+    BENCHMARK_TRIG(double, AK::acos, -1.0, 1.0);
+}
+
+BENCHMARK_CASE(bench_trig_acosf)
+{
+    BENCHMARK_TRIG(float, AK::acos, -1.0f, 1.0f);
+}
+
+BENCHMARK_CASE(bench_trig_asin)
+{
+    BENCHMARK_TRIG(double, AK::asin, -1.0, 1.0);
+}
+
+BENCHMARK_CASE(bench_trig_asinf)
+{
+    BENCHMARK_TRIG(float, AK::asin, -1.0f, 1.0f);
+}
+
+BENCHMARK_CASE(bench_trig_atan)
+{
+    BENCHMARK_TRIG(double, AK::atan, -4 * AK::Pi<double>, 4 * AK::Pi<double>);
+}
+
+BENCHMARK_CASE(bench_trig_atanf)
+{
+    BENCHMARK_TRIG(float, AK::atan, -4 * AK::Pi<float>, 4 * AK::Pi<float>);
 }
