@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
- *
+ * Copyright (c) 2026, Francis Ssessaazi <ceo@cognospheredynamics.com>
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
@@ -38,5 +38,18 @@ private:
 
     virtual void detect_eeprom() override;
     virtual u32 read_eeprom(u8 address) override;
+    virtual void setup_link() override;
+    virtual void read_mac_address() override;
+    virtual void setup_interrupts() override;
+    virtual bool link_up() override;
+    virtual void send_raw(ReadonlyBytes) override;
+
+    static void rx_poll_thread_entry(void*);
+    void rx_poll_thread();
+
+    void receive();
+    u32 m_rx_current { 0 };
+
+    ErrorOr<void> mdic_write(u8 phyadd, u8 regadd, u16 data);
 };
 }
