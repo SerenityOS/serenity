@@ -76,15 +76,19 @@ FloatT copysign(FloatT x, FloatT y)
     return ex.to_float();
 }
 
-#define CONSTEXPR_STATE(function, args...)        \
-    if (is_constant_evaluated()) {                \
-        if (IsSame<T, long double>)               \
+#define CALL_BUILTIN(function, args...)           \
+    do {                                          \
+        if constexpr (IsSame<T, long double>)     \
             return __builtin_##function##l(args); \
-        if (IsSame<T, double>)                    \
+        if constexpr (IsSame<T, double>)          \
             return __builtin_##function(args);    \
-        if (IsSame<T, float>)                     \
+        if constexpr (IsSame<T, float>)           \
             return __builtin_##function##f(args); \
-    }
+    } while (0)
+
+#define CONSTEXPR_STATE(function, args...) \
+    if (is_constant_evaluated())           \
+        CALL_BUILTIN(function, args);
 
 #define AARCH64_INSTRUCTION(instruction, arg) \
     if constexpr (IsSame<T, long double>)     \
@@ -108,12 +112,7 @@ template<FloatingPoint T>
 constexpr T fabs(T x)
 {
     // Both GCC and Clang inline fabs by default, so this is just a cmath like wrapper
-    if constexpr (IsSame<T, long double>)
-        return __builtin_fabsl(x);
-    if constexpr (IsSame<T, double>)
-        return __builtin_fabs(x);
-    if constexpr (IsSame<T, float>)
-        return __builtin_fabsf(x);
+    CALL_BUILTIN(fabs, x);
 }
 
 namespace Rounding {
@@ -131,12 +130,7 @@ constexpr T ceil(T num)
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintp, num);
 #else
-    if constexpr (IsSame<T, long double>)
-        return __builtin_ceill(num);
-    if constexpr (IsSame<T, double>)
-        return __builtin_ceil(num);
-    if constexpr (IsSame<T, float>)
-        return __builtin_ceilf(num);
+    CALL_BUILTIN(ceil, num);
 #endif
 }
 
@@ -154,12 +148,7 @@ constexpr T floor(T num)
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintm, num);
 #else
-    if constexpr (IsSame<T, long double>)
-        return __builtin_floorl(num);
-    if constexpr (IsSame<T, double>)
-        return __builtin_floor(num);
-    if constexpr (IsSame<T, float>)
-        return __builtin_floorf(num);
+    CALL_BUILTIN(floor, num);
 #endif
 }
 
@@ -527,12 +516,7 @@ constexpr T fmod(T x, T y)
     x_bits.mantissa = x_mantissa;
     return x_bits.to_float();
 #    else
-    if constexpr (IsSame<T, long double>)
-        return __builtin_fmodl(x, y);
-    if constexpr (IsSame<T, double>)
-        return __builtin_fmod(x, y);
-    if constexpr (IsSame<T, float>)
-        return __builtin_fmodf(x, y);
+    CALL_BUILTIN(fmod, x, y);
 #    endif
 #endif
 }
@@ -557,12 +541,7 @@ constexpr T remainder(T x, T y)
     // TODO: Add implementation for this function.
     TODO();
 #    endif
-    if constexpr (IsSame<T, long double>)
-        return __builtin_remainderl(x, y);
-    if constexpr (IsSame<T, double>)
-        return __builtin_remainder(x, y);
-    if constexpr (IsSame<T, float>)
-        return __builtin_remainderf(x, y);
+    CALL_BUILTIN(remainder, x, y);
 #endif
 }
 }
@@ -1393,6 +1372,7 @@ constexpr T wrap_to_range(T a, IdentityType<T> b)
     return fmod(fmod(a + b, 2 * b) + 2 * b, 2 * b) - b;
 }
 
+#undef CALL_BUILTIN
 #undef CONSTEXPR_STATE
 #undef AARCH64_INSTRUCTION
 }
