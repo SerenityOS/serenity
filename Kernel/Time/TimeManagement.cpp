@@ -23,6 +23,7 @@
 #    include <Kernel/Arch/aarch64/Time/PL031.h>
 #elif ARCH(RISCV64)
 #    include <Kernel/Arch/riscv64/Timer.h>
+#    include <Kernel/Devices/Time/GoldfishRTC.h>
 #else
 #    error Unknown architecture
 #endif
@@ -269,8 +270,10 @@ UnixDateTime TimeManagement::boot_time()
         return UnixDateTime::epoch();
     return rtc->boot_time();
 #elif ARCH(RISCV64)
-    // FIXME: Return correct boot time
-    return UnixDateTime::epoch();
+    auto rtc = GoldfishRTC::the();
+    if (!rtc)
+        return UnixDateTime::epoch();
+    return rtc->boot_time();
 #else
 #    error Unknown architecture
 #endif
@@ -312,6 +315,9 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
         m_epoch_time += boot_time().offset_to_epoch();
     probe_and_set_aarch64_hardware_timers();
 #elif ARCH(RISCV64)
+    auto rtc = GoldfishRTC::the();
+    if (rtc)
+        m_epoch_time += boot_time().offset_to_epoch();
     probe_and_set_riscv64_hardware_timers();
 #else
 #    error Unknown architecture
