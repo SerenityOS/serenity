@@ -77,8 +77,9 @@ int fegetenv(fenv_t* env)
     if (!env)
         return 1;
 
-    (void)env;
-    TODO_AARCH64();
+    asm volatile("mrs %0, fpcr" : "=r"(env->fpcr));
+    asm volatile("mrs %0, fpsr" : "=r"(env->fpsr));
+
     return 0;
 }
 
@@ -87,8 +88,9 @@ int fesetenv(fenv_t const* env)
     if (!env)
         return 1;
 
-    (void)env;
-    TODO_AARCH64();
+    asm volatile("msr fpcr, %0" ::"r"(env->fpcr));
+    asm volatile("msr fpsr, %0" ::"r"(env->fpsr));
+
     return 0;
 }
 

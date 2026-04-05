@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <sys/cdefs.h>
 
 #ifndef __aarch64__
@@ -14,9 +15,9 @@
 
 __BEGIN_DECLS
 
-// TODO: Implement this.
 typedef struct fenv_t {
-    char __dummy; // NOTE: This silences -Wextern-c-compat.
+    uint64_t fpcr;
+    uint64_t fpsr;
 } fenv_t;
 
 __END_DECLS
