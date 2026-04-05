@@ -598,7 +598,7 @@ constexpr T sqrt(T x)
     // TODO: Add implementation for this function.
     TODO();
 #    endif
-    return __builtin_sqrt(x);
+    CALL_BUILTIN(sqrt, x);
 #endif
 }
 
@@ -706,7 +706,7 @@ constexpr T sin(T angle)
     T angle_squared = angle * angle;
     return sign * (angle + angle * angle_squared * f(angle_squared));
 #    else
-    return __builtin_sin(angle);
+    CALL_BUILTIN(sin, angle);
 #    endif
 #endif
 }
@@ -769,7 +769,7 @@ constexpr T cos(T angle)
     T angle_squared = angle * angle;
     return sign * (1 + angle_squared * f(angle_squared));
 #    else
-    return __builtin_cos(angle);
+    CALL_BUILTIN(cos, angle);
 #    endif
 #endif
 }
@@ -810,7 +810,7 @@ constexpr T tan(T angle)
 #    if defined(AK_OS_SERENITY)
     return sin(angle) / cos(angle);
 #    else
-    return __builtin_tan(angle);
+    CALL_BUILTIN(tan, angle);
 #    endif
 #endif
 }
@@ -923,7 +923,7 @@ constexpr T atan(T value)
     T squared = value * value;
     return value + value * squared * f(squared);
 #    endif
-    return __builtin_atan(value);
+    CALL_BUILTIN(atan, value);
 #endif
 }
 
@@ -1001,7 +1001,7 @@ constexpr T atan2(T y, T x)
     // y < 0 && x > 0
     return atan(y / x);
 #    else
-    return __builtin_atan2(y, x);
+    CALL_BUILTIN(atan2, y, x);
 #    endif
 #endif
 }
@@ -1120,7 +1120,7 @@ constexpr T log(T x)
     // FIXME: Adjust the polynomial and formula in log2 to fit this
     return log2<T>(x) / L2_E<T>;
 #else
-    return __builtin_log(x);
+    CALL_BUILTIN(log, x);
 #endif
 }
 
@@ -1142,7 +1142,7 @@ constexpr T log10(T x)
     // FIXME: Adjust the polynomial and formula in log2 to fit this
     return log2<T>(x) / L2_10<T>;
 #else
-    return __builtin_log10(x);
+    CALL_BUILTIN(log10, x);
 #endif
 }
 
