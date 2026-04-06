@@ -88,7 +88,7 @@ elseif (LINUX AND NOT EMSCRIPTEN)
         FileWatcherLinux.cpp
         Platform/ProcessStatisticsLinux.cpp
     )
-elseif (APPLE AND NOT IOS)
+elseif (APPLE)
     list(APPEND SOURCES
         FileWatcherMacOS.mm
         Platform/ProcessStatisticsMach.cpp

@@ -8,10 +8,6 @@ project(ladybird
 
 include(GNUInstallDirs)
 
-if (IOS)
-    set(BUILD_SHARED_LIBS OFF)
-endif()
-
 # FIXME: The rpath steps from lagom_install_rules.cmake do not produce a working binary
 #        in the build directory on macOS.
 #        We need to copy the libs into the build directory bundle as the install rules do.

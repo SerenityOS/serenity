@@ -12,7 +12,7 @@
 
 #ifdef AK_OS_SERENITY
 #    include <serenity.h>
-#elif defined(AK_OS_LINUX) || defined(AK_LIBC_GLIBC) || defined(AK_OS_MACOS) || defined(AK_OS_IOS) || defined(AK_OS_NETBSD) || defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU)
+#elif defined(AK_OS_LINUX) || defined(AK_LIBC_GLIBC) || defined(AK_OS_MACOS) || defined(AK_OS_NETBSD) || defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU)
 #    include <pthread.h>
 #    include <sys/resource.h>
 #elif defined(AK_OS_FREEBSD) || defined(AK_OS_OPENBSD)
@@ -55,7 +55,7 @@ StackInfo::StackInfo()
         VERIFY_NOT_REACHED();
     }
     pthread_attr_destroy(&attr);
-#elif defined(AK_OS_MACOS) || defined(AK_OS_IOS)
+#elif defined(AK_OS_MACOS)
     // NOTE: !! On MacOS, pthread_get_stackaddr_np gives the TOP of the stack, not the bottom!
     FlatPtr top_of_stack = (FlatPtr)pthread_get_stackaddr_np(pthread_self());
     m_size = (size_t)pthread_get_stacksize_np(pthread_self());

@@ -446,7 +446,7 @@ ErrorOr<Bytes> LocalSocket::receive_message(AK::Bytes buffer, int flags, Vector<
 
 ErrorOr<pid_t> LocalSocket::peer_pid() const
 {
-#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
+#if defined(AK_OS_MACOS)
     pid_t pid;
     socklen_t pid_size = sizeof(pid);
 #elif defined(AK_OS_FREEBSD)
@@ -468,7 +468,7 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
     socklen_t creds_size = sizeof(creds);
 #endif
 
-#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
+#if defined(AK_OS_MACOS)
     TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size));
     return pid;
 #elif defined(AK_OS_FREEBSD)
