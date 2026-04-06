@@ -37,7 +37,7 @@ First, make sure you have a working toolchain and can build and run SerenityOS. 
     Userland/Libraries/LibC/
     Userland/Libraries/LibSystem/
     Userland/Services/
-    Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0
+    Toolchain/Local/x86_64/x86_64-serenity/include/c++/13.1.0
     Build/x86_64/
     Build/x86_64/Userland/
     Build/x86_64/Userland/Libraries/
@@ -100,4 +100,4 @@ option "License template:". Click "Browse…", select your file (i.e.,
 ## Compiler Kits
 
 You can slightly improve how well Qt interprets the code by adding and setting up an appropriate "compiler kit".
-For that you will need to reference the compilers at `Toolchain/Local/x86_64/bin/x86_64-pc-serenity-gcc` and `Toolchain/Local/x86_64/bin/x86_64-pc-serenity-g++`.
+For that you will need to reference the compilers at `Toolchain/Local/x86_64/bin/x86_64-serenity-gcc` and `Toolchain/Local/x86_64/bin/x86_64-serenity-g++`.

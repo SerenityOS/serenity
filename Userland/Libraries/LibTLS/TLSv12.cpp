@@ -426,8 +426,7 @@ bool Context::verify_certificate_pair(Certificate const& subject, Certificate co
         return result.value();
     }
     case SupportedGroup::X25519: {
-        Crypto::Curves::Ed25519 curve;
-        auto result = curve.verify(issuer.public_key.raw_key, subject.signature_value, subject.tbs_asn1.bytes());
+        auto result = Crypto::Curves::Ed25519::verify(issuer.public_key.raw_key, subject.signature_value, subject.tbs_asn1.bytes());
         if (!result) {
             dbgln("verify_certificate_pair: Failed to check Ed25519 signature");
             return false;

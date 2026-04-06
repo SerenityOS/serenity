@@ -8,7 +8,7 @@ Subject: [PATCH] build: Remove unsupported zig linker flag -z separate-code
  1 file changed, 1 insertion(+)
 
 diff --git a/build b/build
-index 965ce0265515d0c50ec32746962a87f5198c41b2..980d7d02d11dce3c6684d9a965f6b86b6f041d5f 100755
+index b472795f3f21c3da866822185c1b5a26f878284a..e27ffac30d6263d0533d3679186c6ac287ab4d5d 100755
 --- a/build
 +++ b/build
 @@ -177,6 +177,7 @@ cmake "$ROOTDIR/llvm" \

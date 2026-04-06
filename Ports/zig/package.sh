@@ -36,7 +36,7 @@ post_fetch() {
 }
 
 build() {
-    local gcc_lib_dir="${DESTDIR}/usr/local/lib/gcc/${SERENITY_ARCH}-pc-serenity/${SERENITY_GCC_VERSION}"
+    local gcc_lib_dir="${DESTDIR}/usr/local/lib/gcc/${SERENITY_ARCH}-serenity/${SERENITY_GCC_VERSION}"
 
     if [ ! -f "${gcc_lib_dir}/crtbeginS.o" ] || [ ! -f "${gcc_lib_dir}/crtendS.o" ]; then
         echo "crtbeginS.o or crtendS.o could not be found, ensure the GCC port is installed."

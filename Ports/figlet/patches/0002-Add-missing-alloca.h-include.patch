@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Thu, 26 Feb 2026 11:23:20 +0100
+Subject: [PATCH] Add missing <alloca.h> include
+
+---
+ figlet.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/figlet.c b/figlet.c
+index 3de795a2b648bc66860222cb32bacefd73811934..8aed3e0b81888cc28241f16b2882a0cdca511b11 100644
+--- a/figlet.c
++++ b/figlet.c
+@@ -57,6 +57,7 @@
+ #define DEFAULTFONTFILE "standard.flf"
+ #endif
+ 
++#include <alloca.h>
+ #include <stdio.h>
+ #ifdef __STDC__
+ #include <stdlib.h>

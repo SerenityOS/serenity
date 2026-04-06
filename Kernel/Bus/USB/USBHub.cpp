@@ -292,7 +292,7 @@ void Hub::check_for_port_updates()
                 if (device->device_descriptor().device_class == USB_CLASS_HUB) {
                     auto hub_or_error = Hub::try_create_from_device(*device);
                     if (hub_or_error.is_error()) {
-                        dbgln("USB Hub: Failed to upgrade device to hub for port {}: {}", port_number, device_or_error.error());
+                        dbgln("USB Hub: Failed to upgrade device to hub for port {}: {}", port_number, hub_or_error.error());
                         return;
                     }
 

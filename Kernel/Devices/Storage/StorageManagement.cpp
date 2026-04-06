@@ -453,8 +453,6 @@ u32 StorageManagement::generate_controller_id()
 
 ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_context() const
 {
-    auto vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs(VFSRootContext::AddToGlobalContextList::Yes));
-
     auto const* fs_type_initializer = TRY(VirtualFileSystem::find_filesystem_type_initializer("ext2"sv));
     VERIFY(fs_type_initializer);
     auto mount_file = TRY(MountFile::create(*fs_type_initializer, root_mount_flags));
@@ -467,25 +465,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_
     auto description = TRY(OpenFileDescription::try_create(boot_device_description.release_nonnull()));
 
     auto fs = TRY(FileBackedFileSystem::create_and_append_filesystems_list_from_mount_file_and_description(mount_file, description));
-
-    // NOTE: Fake a mounted count of 1 so the called VirtualFileSystem function in the
-    // next pivot_root logic block thinks everything is OK.
-    fs->mounted_count().with([](auto& mounted_count) {
-        mounted_count++;
-    });
-
-    // Adding filesystems to the all_file_systems_list usually happens in add_to_mounts_list_and_increment_fs_mounted_count(),
-    // but that function isn't called for the root filesystem of the first VFSRootContext.
-    FileSystem::all_file_systems_list().with([&fs](auto& fs_list) {
-        fs_list.append(*fs);
-    });
-
-    TRY(VirtualFileSystem::pivot_root_by_copying_mounted_fs_instance(*vfs_root_context, *fs, root_mount_flags));
-    // NOTE: Return the mounted count to normal now we have it really mounted.
-    fs->mounted_count().with([](auto& mounted_count) {
-        mounted_count--;
-    });
-    return vfs_root_context;
+    return TRY(VFSRootContext::create_with_filesystem(VFSRootContext::AddToGlobalContextList::Yes, fs));
 }
 
 UNMAP_AFTER_INIT void StorageManagement::initialize(bool poll)

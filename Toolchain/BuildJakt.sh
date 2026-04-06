@@ -19,7 +19,7 @@ PREFIX="$DIR/Local/jakt"
 VALID_TOOLCHAINS=()
 
 for ARCH in "${ARCHES[@]}"; do
-  TARGET="$ARCH-pc-serenity"
+  TARGET="$ARCH-serenity"
 
   eval "BUILD_GNU_${ARCH}=\"$DIR/../Build/$ARCH\""
   eval "BUILD_CLANG_${ARCH}=\"$DIR/../Build/${ARCH}clang\""
@@ -82,7 +82,7 @@ buildstep_ninja() {
 
 mkdir -p "$DIR/Tarballs"
 
-JAKT_COMMIT_HASH="e990cc5667e32bc295556057972f117662b009bb"
+JAKT_COMMIT_HASH="6f6c9e9005683b0c1cf59f6282a1bb15770e1c92"
 JAKT_NAME="jakt-${JAKT_COMMIT_HASH}"
 JAKT_TARBALL="${JAKT_NAME}.tar.gz"
 JAKT_GIT_URL="https://github.com/serenityos/jakt"
@@ -188,8 +188,8 @@ build_for() {
     TOOLCHAIN="$1"
     ARCH="$2"
 
-    TARGET="$ARCH-pc-serenity"
-    JAKT_TARGET="$TARGET-unknown"
+    TARGET="$ARCH-serenity"
+    JAKT_TARGET="$ARCH-unknown-serenity-unknown"
 
     current_build="BUILD_${TOOLCHAIN}_${ARCH}"
     current_cxx="CXX_${TOOLCHAIN}_${ARCH}"

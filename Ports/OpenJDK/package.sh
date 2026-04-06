@@ -36,7 +36,7 @@ configure() {
         BUILD_AR=${HOST_AR} \
         BUILD_OBJCOPY=${HOST_OBJCOPY} \
         BUILD_STRIP=${HOST_STRIP} \
-        --openjdk-target=${SERENITY_ARCH}-pc-serenity \
+        --openjdk-target=${SERENITY_ARCH}-serenity \
         --with-sysroot=${SERENITY_INSTALL_ROOT} \
         --with-jvm-variants=zero \
         --enable-headless-only \

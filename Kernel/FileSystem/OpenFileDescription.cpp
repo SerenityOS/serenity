@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "UnsharedResourceFile.h"
 #include <AK/MemoryStream.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/BlockDevice.h>
@@ -311,6 +312,25 @@ InodeWatcher* OpenFileDescription::inode_watcher()
     if (!is_inode_watcher())
         return nullptr;
     return static_cast<InodeWatcher*>(m_file.ptr());
+}
+
+bool OpenFileDescription::is_unshared_resource_file() const
+{
+    return m_file->is_unshared_resource_file();
+}
+
+UnsharedResourceFile* OpenFileDescription::unshared_resource_file()
+{
+    if (!is_unshared_resource_file())
+        return nullptr;
+    return static_cast<UnsharedResourceFile*>(m_file.ptr());
+}
+
+UnsharedResourceFile const* OpenFileDescription::unshared_resource_file() const
+{
+    if (!is_unshared_resource_file())
+        return nullptr;
+    return static_cast<UnsharedResourceFile const*>(m_file.ptr());
 }
 
 bool OpenFileDescription::is_mount_file() const

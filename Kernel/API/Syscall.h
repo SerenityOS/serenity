@@ -192,8 +192,9 @@ enum class NeedsBigProcessLock {
     S(umount, NeedsBigProcessLock::No)                     \
     S(uname, NeedsBigProcessLock::No)                      \
     S(unlink, NeedsBigProcessLock::No)                     \
-    S(unshare_attach, NeedsBigProcessLock::No)             \
     S(unshare_create, NeedsBigProcessLock::No)             \
+    S(unshare_enter, NeedsBigProcessLock::No)              \
+    S(unshare_open, NeedsBigProcessLock::No)               \
     S(unveil, NeedsBigProcessLock::No)                     \
     S(utime, NeedsBigProcessLock::No)                      \
     S(utimensat, NeedsBigProcessLock::No)                  \
@@ -340,14 +341,18 @@ struct SC_setkeymap_params {
     StringArgument map_name;
 };
 
-struct SC_unshare_create_params {
+struct SC_unshare_open_params {
     int type;
-    int flags;
 };
 
-struct SC_unshare_attach_params {
+struct SC_unshare_create_params {
+    int unshared_resource_fd;
+};
+
+struct SC_unshare_enter_params {
     int type;
     int id;
+    int flags;
 };
 
 struct SC_getkeymap_params {

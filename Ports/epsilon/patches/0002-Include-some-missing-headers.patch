@@ -9,7 +9,7 @@ Subject: [PATCH] Include some missing headers
  2 files changed, 3 insertions(+)
 
 diff --git a/ion/src/simulator/linux/platform_files.cpp b/ion/src/simulator/linux/platform_files.cpp
-index b866fe0..cc31edc 100644
+index b866fe05cc5555b6c7e74e92a26fc3a79b6d0f78..cc31edc2ba3490ae3185543e97c07d99f0c28741 100644
 --- a/ion/src/simulator/linux/platform_files.cpp
 +++ b/ion/src/simulator/linux/platform_files.cpp
 @@ -1,4 +1,5 @@
@@ -19,7 +19,7 @@ index b866fe0..cc31edc 100644
  namespace Ion {
  namespace Simulator {
 diff --git a/ion/src/simulator/linux/platform_images.cpp b/ion/src/simulator/linux/platform_images.cpp
-index 0fb2386..94ed16c 100644
+index 0fb23867bc7b85c9d5ac98722e0a043fd4d23a56..94ed16c4a0b57607b81bc009b44be9b27ab7bb97 100644
 --- a/ion/src/simulator/linux/platform_images.cpp
 +++ b/ion/src/simulator/linux/platform_images.cpp
 @@ -1,10 +1,12 @@

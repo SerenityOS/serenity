@@ -1,13 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='llvm'
 useconfigure='true'
-version='21.1.0'
+version='22.1.0'
 workdir="llvm-project-${version}.src"
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-project-${version}.src.tar.xz#1672e3efb4c2affd62dbbe12ea898b28a451416c7d95c1bd0190c26cbe878825"
+    "https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-project-${version}.src.tar.xz#25d2e2adc4356d758405dd885fcfd6447bce82a90eb78b6b87ce0934bd077173"
 )
 depends=(
     "ncurses"
@@ -58,7 +58,7 @@ configure() {
         -DCROSS_TOOLCHAIN_FLAGS_NATIVE="-DCMAKE_C_COMPILER=$CC;-DCMAKE_CXX_COMPILER=$CXX" \
         -DHAVE_LIBRT=OFF \
         -DLLVM_APPEND_VC_REV=OFF \
-        -DLLVM_DEFAULT_TARGET_TRIPLE=$SERENITY_ARCH-pc-serenity \
+        -DLLVM_DEFAULT_TARGET_TRIPLE=$SERENITY_ARCH-serenity \
         -DLLVM_ENABLE_PROJECTS="clang;lld;compiler-rt" \
         -DLLVM_HAVE_LIBXAR=OFF \
         -DLLVM_INCLUDE_BENCHMARKS=OFF \

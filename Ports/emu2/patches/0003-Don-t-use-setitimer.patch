@@ -5,25 +5,17 @@ Subject: [PATCH] Don't use setitimer()
 
 Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 ---
- src/main.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ src/main.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
 diff --git a/src/main.c b/src/main.c
-index d0c0d2f..7e313a0 100644
+index 7d9c9f59d915cbb09c8b973417b053e2ab277602..baa4fde91fdfee4bc97dc4b2ba3ff1d59c6bc246 100644
 --- a/src/main.c
 +++ b/src/main.c
-@@ -12,6 +12,7 @@
- #include <errno.h>
- #include <fcntl.h>
- #include <math.h>
-+#include <signal.h>
- #include <stdio.h>
- #include <stdlib.h>
- #include <string.h>
-@@ -304,12 +305,6 @@ int main(int argc, char **argv)
-     signal(SIGQUIT, exit_handler);
-     signal(SIGPIPE, exit_handler);
-     signal(SIGTERM, exit_handler);
+@@ -336,12 +336,6 @@ int main(int argc, char **argv)
+     sigaction(SIGQUIT, &exit_action, NULL);
+     sigaction(SIGPIPE, &exit_action, NULL);
+     sigaction(SIGTERM, &exit_action, NULL);
 -    struct itimerval itv;
 -    itv.it_interval.tv_sec = 0;
 -    itv.it_interval.tv_usec = 54925;
@@ -31,5 +23,5 @@ index d0c0d2f..7e313a0 100644
 -    itv.it_value.tv_usec = 54925;
 -    setitimer(ITIMER_REAL, &itv, 0);
      init_bios_mem();
+     video_init_mem();
      while(1)
-     {

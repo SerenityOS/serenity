@@ -28,6 +28,9 @@ ErrorOr<void> parse_input_report(ParsedReportDescriptor const& report_descriptor
     if (!maybe_report.has_value())
         return {};
 
+    if (report_data.size() * 8 < maybe_report->size_in_bits)
+        return Error::from_string_view_or_print_error_and_return_errno("Report is too small"sv, EINVAL);
+
     for (auto const& field : maybe_report->fields) {
         // 8.4 Report Constraints: An item field cannot span more than 4 bytes in a report. For example, a 32-bit item must start on a byte boundary to satisfy this condition.
         // This means we can just load the containing byte-aligned 32-bit word and extract the bits from there.

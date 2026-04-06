@@ -31,6 +31,10 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         child_first_thread->set_state(Thread::State::Dying);
     };
 
+    child->m_exec_vfs_root_context.copy_from(m_exec_vfs_root_context);
+    child->m_exec_scoped_process_list.copy_from(m_exec_scoped_process_list);
+    child->m_exec_hostname_context.copy_from(m_exec_hostname_context);
+
     TRY(m_unveil_data.with([&](auto& parent_unveil_data) -> ErrorOr<void> {
         return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
             child_unveil_data.state = parent_unveil_data.state;

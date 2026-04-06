@@ -14,7 +14,7 @@ configure() {
     run sh -c "cd ../host-build && ../source/configure && make ${makeopts[*]}"
     target_env
     run ./configure \
-        --host="${SERENITY_ARCH}-pc-serenity" \
+        --host="${SERENITY_ARCH}-serenity" \
         --with-cross-build="$(pwd)/${workdir}/../host-build"
 }
 

@@ -31,7 +31,7 @@ else()
     set(CLANG_ENABLE_CLANGD OFF CACHE BOOL "" FORCE)
 endif()
 
-foreach(target x86_64-pc-serenity;aarch64-pc-serenity;riscv64-pc-serenity)
+foreach(target x86_64-serenity;aarch64-serenity;riscv64-serenity)
     list(APPEND targets "${target}")
 
     set(RUNTIMES_${target}_CMAKE_BUILD_TYPE Release CACHE STRING "")

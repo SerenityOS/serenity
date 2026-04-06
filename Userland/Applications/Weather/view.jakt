@@ -166,9 +166,10 @@ namespace Weather {
 
             .forecast_labels = []
             for i in 1..5 {
+                let name = format("forecast{}", i)
                 let label = must_be<GUI::Label>(
                     "forecast_labels"
-                    .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>(format("forecast{}", i))
+                    .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>(AK::StringView(&name))
                 )
 
                 .forecast_labels!.push(label)

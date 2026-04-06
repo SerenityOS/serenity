@@ -11,21 +11,6 @@
 
 #include "VFSRootContextLayout.h"
 
-static bool is_source_none(StringView source)
-{
-    return source == "none"sv;
-}
-
-static ErrorOr<int> get_source_fd(StringView source)
-{
-    if (is_source_none(source))
-        return -1;
-    auto fd_or_error = Core::System::open(source, O_RDWR);
-    if (fd_or_error.is_error())
-        fd_or_error = Core::System::open(source, O_RDONLY);
-    return fd_or_error;
-}
-
 ErrorOr<void> VFSRootContextLayout::mount_new_filesystem(StringView fstype, StringView source, StringView target_path, int flags)
 {
     auto source_fd = TRY(get_source_fd(source));
@@ -96,10 +81,21 @@ VFSRootContextLayout::VFSRootContextLayout(String preparation_environment_path, 
 {
 }
 
-ErrorOr<NonnullOwnPtr<VFSRootContextLayout>> VFSRootContextLayout::create(StringView preparation_environment_path, unsigned target_vfs_root_context_id)
+ErrorOr<NonnullOwnPtr<VFSRootContextLayout>> VFSRootContextLayout::create_with_root_mount_point(StringView preparation_environment_path)
 {
+    auto vfs_root_context_fd = TRY(Core::System::unshare_open(Kernel::UnshareType::VFSRootContext));
+
+    // At this point we are expecting this path to be mounted with the actual "root" filesystem for this VFS root context
+    auto preparation_environment_path_fd = TRY(Core::System::open(preparation_environment_path, O_DIRECTORY | O_RDONLY));
+    TRY(Core::System::ioctl(vfs_root_context_fd, UNSHARE_IOCTL_ATTACH_ROOT_FILESYSTEM_AT_FD, preparation_environment_path_fd));
+    close(preparation_environment_path_fd);
+
+    auto vfs_root_context_index = TRY(Core::System::unshare_create(vfs_root_context_fd));
+
+    close(vfs_root_context_fd);
+
     auto path = TRY(String::from_utf8(preparation_environment_path));
-    return adopt_nonnull_own_or_enomem(new (nothrow) VFSRootContextLayout(move(path), target_vfs_root_context_id));
+    return adopt_nonnull_own_or_enomem(new (nothrow) VFSRootContextLayout(move(path), vfs_root_context_index));
 }
 
 ErrorOr<void> VFSRootContextLayout::apply_mounts_on_vfs_root_context_id()

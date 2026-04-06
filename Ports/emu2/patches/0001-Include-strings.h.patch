@@ -8,7 +8,7 @@ Subject: [PATCH] Include <strings.h>
  1 file changed, 1 insertion(+)
 
 diff --git a/src/codepage.c b/src/codepage.c
-index 3916b61..9df0bd8 100644
+index a67e230dde65783a88a2ef26c493e2352f43ba5b..26fdb1ae591d9dc58e2c34a60bd04cfa2621bcc3 100644
 --- a/src/codepage.c
 +++ b/src/codepage.c
 @@ -3,6 +3,7 @@

@@ -4,7 +4,7 @@ version='2.44'
 useconfigure='true'
 use_fresh_config_sub='true'
 configopts=(
-    "--target=${SERENITY_ARCH}-pc-serenity"
+    "--target=${SERENITY_ARCH}-serenity"
     "--with-sysroot=/"
     "--with-build-sysroot=${SERENITY_INSTALL_ROOT}"
     "--disable-werror"

@@ -1,11 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='chocolate-doom'
-version='3.0.1'
+version='3.1.1'
 useconfigure='true'
-use_fresh_config_sub='true'
-config_sub_paths=('autotools/config.sub')
+workdir="${port}-${port}-${version}"
 files=(
-    "https://www.chocolate-doom.org/downloads/${version}/chocolate-doom-${version}.tar.gz#d435d6177423491d60be706da9f07d3ab4fabf3e077ec2a3fc216e394fcfc8c7"
+    "https://github.com/chocolate-doom/chocolate-doom/archive/refs/tags/chocolate-doom-${version}.tar.gz#1edcc41254bdc194beb0d33e267fae306556c4d24110a1d3d3f865717f25da23"
 )
 depends=(
     'libpng'
@@ -19,3 +18,7 @@ launcher_name='Chocolate Doom'
 launcher_category='&Games'
 launcher_command='/usr/local/bin/chocolate-doom'
 icon_file='data/doom.png'
+
+pre_configure() {
+    run autoreconf -i
+}

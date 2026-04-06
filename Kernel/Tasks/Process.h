@@ -157,6 +157,7 @@ public:
     friend class Thread;
     friend class Coredump;
     friend class ScopedProcessList;
+    friend class AfterExecResource;
 
     auto with_protected_data(auto&& callback) const
     {
@@ -506,7 +507,8 @@ public:
     ErrorOr<FlatPtr> sys$bindmount(Userspace<Syscall::SC_bindmount_params const*> user_params);
     ErrorOr<FlatPtr> sys$archctl(int option, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
     ErrorOr<FlatPtr> sys$unshare_create(Userspace<Syscall::SC_unshare_create_params const*>);
-    ErrorOr<FlatPtr> sys$unshare_attach(Userspace<Syscall::SC_unshare_attach_params const*>);
+    ErrorOr<FlatPtr> sys$unshare_enter(Userspace<Syscall::SC_unshare_enter_params const*>);
+    ErrorOr<FlatPtr> sys$unshare_open(Userspace<Syscall::SC_unshare_open_params const*>);
 
     enum SockOrPeerName {
         SockName,
@@ -960,8 +962,6 @@ public:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(Badge<CustodyBase>, int dirfd);
 
 private:
-    ErrorOr<NonnullRefPtr<ScopedProcessList>> scoped_process_list_for_id(int id);
-
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
 
     ErrorOr<NonnullRefPtr<VFSRootContext>> vfs_root_context_for_id(int id);
@@ -1014,6 +1014,58 @@ private:
     RecursiveSpinlockProtected<RefPtr<VFSRootContext>, LockRank::Process> m_attached_vfs_root_context;
 
     RecursiveSpinlockProtected<RefPtr<HostnameContext>, LockRank::Process> m_attached_hostname_context;
+
+    void replace_vfs_root_context(VFSRootContext&);
+    void replace_hostname_context(HostnameContext&);
+    void replace_scoped_process_list(ScopedProcessList&);
+
+    template<typename T>
+    class AfterExecResource {
+    public:
+        void set(T& new_context)
+        {
+            m_resource.with([&new_context](auto& context) {
+                context = new_context;
+            });
+        }
+
+        void copy_from(AfterExecResource<T> const& other)
+        {
+            other.m_resource.with([this](auto& other_resource) {
+                this->m_resource.with([&other_resource](auto& resource) {
+                    resource = other_resource;
+                });
+            });
+        }
+
+        // FIXME: We should ideally have an internal Process& reference but
+        // for now this works OK too.
+        void replace_resource(Process& process)
+        {
+            m_resource.with([&process](auto& resource) {
+                // NOTE: a VFSRootContext and HostnameContext are always
+                // being set for a new Process but a ScopedProcessList could be a nullptr
+                // when the system boots. This if condition prevents userspace
+                // from removing the scoped process list, so once a program
+                // is inside such list, it cannot ever change it, even if it's
+                // not jailed. Whether that's a problem or not remains to be seen.
+                if (resource)
+                    process.replace_resource(*resource);
+                resource = nullptr;
+            });
+        }
+
+    private:
+        SpinlockProtected<RefPtr<T>, LockRank::None> m_resource;
+    };
+
+    void replace_resource(VFSRootContext&);
+    void replace_resource(HostnameContext&);
+    void replace_resource(ScopedProcessList&);
+
+    AfterExecResource<VFSRootContext> m_exec_vfs_root_context;
+    AfterExecResource<HostnameContext> m_exec_hostname_context;
+    AfterExecResource<ScopedProcessList> m_exec_scoped_process_list;
 
     Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace"sv };

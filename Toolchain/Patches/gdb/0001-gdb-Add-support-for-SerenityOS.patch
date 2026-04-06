@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Sun, 1 Mar 2026 12:04:41 +0100
+Subject: [PATCH] gdb: Add support for SerenityOS
+
+---
+ bfd/config.bfd | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/bfd/config.bfd b/bfd/config.bfd
+index a5c3953a18a97ea9e321048c078fc9d3dce1ec46..6711b214f6389db4774f4ed8d61a467163764b57 100644
+--- a/bfd/config.bfd
++++ b/bfd/config.bfd
+@@ -281,6 +281,11 @@ case "${targ}" in
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec"
+     want64=true
+     ;;
++  aarch64-*-serenity*)
++    targ_defvec=aarch64_elf64_le_vec
++    targ_selvecs=
++    want64=true
++    ;;
+   aarch64-*-linux* | aarch64-*-netbsd* | aarch64-*-nto* | aarch64-*-gnu*)
+     targ_defvec=aarch64_elf64_le_vec
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec aarch64_pei_le_vec aarch64_pe_le_vec"
+@@ -720,6 +725,11 @@ case "${targ}" in
+     targ_selvecs="i386_elf32_vec iamcu_elf32_vec x86_64_elf32_vec"
+     want64=true
+     ;;
++  x86_64-*-serenity*)
++    targ_defvec=x86_64_elf64_vec
++    targ_selvecs=i386_elf32_vec
++    want64=true
++    ;;
+ #endif
+   i[3-7]86-*-lynxos*)
+     targ_defvec=i386_elf32_vec

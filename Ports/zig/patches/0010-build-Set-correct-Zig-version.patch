@@ -11,7 +11,7 @@ patch the version too.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/build b/build
-index 980d7d02d11dce3c6684d9a965f6b86b6f041d5f..d26efcfeab08d2c27c14bbcf4384b1fc8a064415 100755
+index e27ffac30d6263d0533d3679186c6ac287ab4d5d..aefa5a7b9bb3bc8fbba73b3bfc6a7cbd8b3f1122 100755
 --- a/build
 +++ b/build
 @@ -7,7 +7,7 @@ TARGET="$1" # Example: riscv64-linux-gnu

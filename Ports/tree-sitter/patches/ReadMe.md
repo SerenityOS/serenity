@@ -2,4 +2,6 @@
 
 ## `0001-Add-serenity-to-endian.h.patch`
 
-Add the __serenity__ identifier and define _GNU_SOURCE
+Add serenity to endian.h
+
+

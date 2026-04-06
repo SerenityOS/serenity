@@ -204,11 +204,13 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 
         for (u32 i = 0; i < precision; ++i)
             fraction = fraction * 10;
-        if (trailing_zeros || fraction) {
+
+        i64 ifraction = fraction;
+
+        if (trailing_zeros || ifraction > 0) {
             length++;
             putch(bufptr, '.');
 
-            i64 ifraction = fraction;
             while (!trailing_zeros && ifraction % 10 == 0) {
                 ifraction /= 10;
                 precision--;

@@ -221,9 +221,10 @@ ErrorOr<void, ParseError> Parser::parse_internal()
     }
 
     auto matched_source = m_source.substring_view(0, m_lexer.tell());
-    if (auto it = find_if(matched_source.begin(), matched_source.end(), s_restricted_characters); !it.is_end()) {
+    Utf8View view { matched_source };
+    if (auto it = find_if(view.begin(), view.end(), s_restricted_characters); it != view.end()) {
         return parse_error(
-            m_lexer.position_for(it.index()),
+            m_lexer.position_for(it.ptr() - view.bytes()),
             ByteString::formatted("Invalid character #{:x} used in document", *it));
     }
 

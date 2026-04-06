@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <LibDeviceTree/DeviceTree.h>
@@ -18,16 +19,16 @@ class Management;
 
 class Device {
     AK_MAKE_NONCOPYABLE(Device);
-    AK_MAKE_DEFAULT_MOVABLE(Device);
+    AK_MAKE_NONMOVABLE(Device);
 
 public:
     Device(::DeviceTree::Node const& node, StringView node_name)
-        : m_node(&node)
+        : m_node(node)
         , m_node_name(node_name)
     {
     }
 
-    ::DeviceTree::Node const& node() const { return *m_node; }
+    ::DeviceTree::Node const& node() const { return m_node; }
     StringView node_name() const { return m_node_name; }
 
     Driver const* driver() const { return m_driver; }
@@ -47,10 +48,14 @@ public:
     ErrorOr<size_t> get_interrupt_number(size_t index) const;
 
 private:
-    // This needs to be a pointer for the class to be movable.
-    ::DeviceTree::Node const* m_node;
+    ::DeviceTree::Node const& m_node;
     StringView m_node_name;
     Driver const* m_driver { nullptr };
+
+    IntrusiveListNode<Device> m_list_node;
+
+public:
+    using List = IntrusiveList<&Device::m_list_node>;
 };
 
 }

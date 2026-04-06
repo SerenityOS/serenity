@@ -25,7 +25,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 
     # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
     string(REGEX REPLACE "\\.(.*)" "" LLVM_MAJOR_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
-    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${LLVM_MAJOR_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
+    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${LLVM_MAJOR_VERSION}/lib/${SERENITY_ARCH}-serenity/)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "riscv64")

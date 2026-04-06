@@ -1,7 +1,7 @@
 set(CMAKE_SYSTEM_NAME SerenityOS)
 set(CMAKE_SYSTEM_PROCESSOR "@SERENITY_ARCH@")
 
-set(triple @SERENITY_ARCH@-pc-serenity)
+set(triple @SERENITY_ARCH@-serenity)
 set(TOOLCHAIN_ROOT @SERENITY_SOURCE_DIR@/Toolchain/Local/clang/)
 set(TOOLCHAIN_PATH ${TOOLCHAIN_ROOT}/bin)
 

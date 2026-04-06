@@ -83,23 +83,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 exit_if_running_as_root "Do not run serenity.sh as root, your Build directory will become root-owned"
 
-host_arch=$(uname -m)
-if [ "$host_arch" = "x86_64" ] || [ "$host_arch" = "amd64" ] || [ "$host_arch" = "x64" ]; then
-    host_arch="x86_64"
-elif [ "$host_arch" = "aarch64" ] || [ "$host_arch" = "arm64" ]; then
-    host_arch="aarch64"
-elif [ "$host_arch" = "riscv64" ]; then
-    host_arch="riscv64"
-else
-    die "Unknown host architecture: $host_arch"
-fi
-
 . "${DIR}/find_compiler.sh"
 
 if [ -n "$1" ]; then
     TARGET="$1"; shift
 else
-    TARGET="${SERENITY_ARCH:-${host_arch}}"
+    TARGET="${SERENITY_ARCH:-${HOST_ARCH}}"
 fi
 
 CMAKE_ARGS=()
@@ -180,7 +169,7 @@ cmd_with_target() {
         fi
         JAKT_TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/jakt"
         SUPER_BUILD_DIR="$SERENITY_SOURCE_DIR/Build/superbuild-$TARGET$TARGET_TOOLCHAIN"
-        JAKT_LIB_DIR="$BUILD_DIR/Root/usr/local/lib/$TARGET-pc-serenity-unknown"
+        JAKT_LIB_DIR="$BUILD_DIR/Root/usr/local/lib/$TARGET-unknown-serenity-unknown"
     else
         SUPER_BUILD_DIR="$BUILD_DIR"
         CMAKE_ARGS+=("-DCMAKE_INSTALL_PREFIX=$SERENITY_SOURCE_DIR/Build/lagom-install")
@@ -279,9 +268,14 @@ ensure_toolchain() {
     fi
     [ -d "$TOOLCHAIN_DIR" ] || build_toolchain
 
+    if [[ -n "$(find "$(dirname "$TOOLCHAIN_DIR")" -type f -name '*-pc-serenity*' -print -quit)" ]]; then
+        die "Your toolchain contains files using the old triple name: '\$arch-pc-serenity'." \
+            "Please delete both your toolchain and the Build directory (run \`rm -rf Toolchain/{Build,Local} Build\`)."
+    fi
+
     if [ "$TOOLCHAIN_TYPE" = "GNU" ]; then
         local ld_version
-        ld_version="$("$TOOLCHAIN_DIR"/bin/"$TARGET"-pc-serenity-ld -v)"
+        ld_version="$("$TOOLCHAIN_DIR"/bin/"$TARGET"-serenity-ld -v)"
         local expected_version="GNU ld (GNU Binutils) 2.44"
         if [ "$ld_version" != "$expected_version" ]; then
             echo "Your toolchain has an old version of binutils installed."
@@ -472,7 +466,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
                 ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
             else
-                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-pc-serenity-addr2line"
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-serenity-addr2line"
             fi
             "$ADDR2LINE" -e "$BUILD_DIR/Kernel/Kernel" "$@"
             ;;
@@ -487,7 +481,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             elif [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
                 ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
             else
-                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-pc-serenity-addr2line"
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-serenity-addr2line"
             fi
             if [ -x "$BINARY_FILE_PATH" ]; then
                 "$ADDR2LINE" -e "$BINARY_FILE_PATH" "$@"
