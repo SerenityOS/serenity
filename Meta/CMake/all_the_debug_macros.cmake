@@ -278,7 +278,5 @@ set(XML_PARSER_DEBUG ON)
 # set(ELF_DEBUG ON)
 # False positive: A32_DEBUG_INTERFACE is the name of a CPU feature, not a debug flag.
 # set(IA32_DEBUG_INTERFACE ON)
-# False positive: ANDROID_LOG_DEBUG is a log level, not a debug flag
-# set(ANDROID_LOG_DEBUG ON)
 # False positive: DEBUG_STRIPPED is a PE characteristic, not a debug flag
 # set(DEBUG_STRIPPED ON)
