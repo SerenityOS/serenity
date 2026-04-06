@@ -65,8 +65,6 @@ public:
     bool is_writable() const { return (m_raw & ReadWrite) == ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }
 
-    void set_memory_type(MemoryType t) { set_bit(CacheDisabled, t != MemoryType::Normal); }
-
     bool is_global() const { return (m_raw & Global) == Global; }
     void set_global(bool b) { set_bit(Global, b); }
 
