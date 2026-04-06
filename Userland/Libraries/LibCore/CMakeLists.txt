@@ -65,7 +65,7 @@ set(SOURCES
     TCPServer.cpp
     UDPServer.cpp
 )
-if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
+if (NOT WIN32 AND NOT EMSCRIPTEN)
     list(APPEND SOURCES
         Account.cpp
         FilePermissionsMask.cpp
@@ -112,8 +112,4 @@ if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
     target_link_libraries(LibCore PUBLIC "-framework CoreServices")
     target_link_libraries(LibCore PUBLIC "-framework Foundation")
-endif()
-
-if (ANDROID)
-    target_link_libraries(LibCore PRIVATE log)
 endif()
