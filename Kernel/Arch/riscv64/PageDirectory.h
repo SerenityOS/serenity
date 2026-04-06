@@ -84,7 +84,20 @@ public:
     bool is_writable() const { return (m_raw & to_underlying(PageTableEntryBits::Writeable)) != 0; }
     void set_writable(bool b) { set_bit(PageTableEntryBits::Writeable, b); }
 
-    void set_memory_type(MemoryType) { }
+    void set_memory_type(MemoryType memory_type)
+    {
+        if (!Processor::current().has_feature(CPUFeature::Svpbmt))
+            return;
+
+        m_raw &= ~(PTE_PBMT_MASK << PTE_PBMT_OFFSET);
+
+        if (memory_type == MemoryType::Normal)
+            m_raw |= to_underlying(PageBasedMemoryType::PMA) << PTE_PBMT_OFFSET;
+        else if (memory_type == MemoryType::NonCacheable)
+            m_raw |= to_underlying(PageBasedMemoryType::NonCacheable) << PTE_PBMT_OFFSET;
+        else if (memory_type == MemoryType::IO)
+            m_raw |= to_underlying(PageBasedMemoryType::IO) << PTE_PBMT_OFFSET;
+    }
 
     bool is_global() const { return (m_raw & to_underlying(PageTableEntryBits::Global)) != 0; }
     void set_global(bool b) { set_bit(PageTableEntryBits::Global, b); }
