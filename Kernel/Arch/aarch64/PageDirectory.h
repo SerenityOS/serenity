@@ -84,8 +84,6 @@ public:
     bool is_writable() const { TODO_AARCH64(); }
     void set_writable(bool) { }
 
-    void set_memory_type(MemoryType) { }
-
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
 
