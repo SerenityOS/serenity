@@ -258,6 +258,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`opfor`](opfor/)                             | Half-Life: Opposing Force                                     | 2022.12.26                | https://github.com/FWGS/hlsdk-portable                               |
 | [`optipng`](optipng/)                         | OptiPNG                                                       | 0.7.7                     | http://optipng.sourceforge.net/                                      |
 | [`opusfile`](opusfile/)                       | opusfile                                                      | 0.12                      | https://opus-codec.org/                                              |
+| [`os-test`](os-test/)                         | os-test                                                       | e1272e6                   | https://gitlab.com/sortix/os-test                                    |
 | [`p7zip`](p7zip/)                             | p7zip                                                         | 17.04                     | https://github.com/jinfeihan57/p7zip                                 |
 | [`pacman`](pacman/)                           | Pacman                                                        | b6241a3                   | https://github.com/ebuc99/pacman                                     |
 | [`pango`](pango/)                             | Pango                                                         | 1.54.0                    | https://gitlab.gnome.org/GNOME/pango                                 |

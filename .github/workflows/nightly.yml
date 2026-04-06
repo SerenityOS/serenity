@@ -23,6 +23,19 @@ jobs:
       arch: 'x86_64'
       coverage: 'ON'
 
+  OSTest:
+    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
+
+    strategy:
+      fail-fast: false
+
+    uses: ./.github/workflows/serenity-template.yml
+    with:
+      toolchain: 'GNU'
+      os: ubuntu-24.04
+      arch: 'x86_64'
+      os-test: true
+
   LagomGCC:
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
 
