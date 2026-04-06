@@ -15,7 +15,7 @@
 #include <AK/Error.h>
 #include <AK/Noncopyable.h>
 
-#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
+#if defined(AK_OS_MACOS)
 #    include <mach/mach.h>
 #else
 extern "C" {

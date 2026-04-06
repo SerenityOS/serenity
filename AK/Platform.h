@@ -76,13 +76,8 @@
 #    define AK_OS_LINUX
 #endif
 
-#if defined(__APPLE__) && defined(__MACH__) && !defined(__IOS__)
+#if defined(__APPLE__) && defined(__MACH__)
 #    define AK_OS_MACOS
-#    define AK_OS_BSD_GENERIC
-#endif
-
-#if defined(__IOS__)
-#    define AK_OS_IOS
 #    define AK_OS_BSD_GENERIC
 #endif
 
