@@ -134,6 +134,7 @@ ErrorOr<void> fsync(int fd);
 ErrorOr<struct stat> stat(StringView path);
 ErrorOr<struct stat> lstat(StringView path);
 ErrorOr<ssize_t> read(int fd, Bytes buffer);
+ErrorOr<ssize_t> pread(int fd, Bytes buffer, off_t offset);
 ErrorOr<ssize_t> write(int fd, ReadonlyBytes buffer);
 ErrorOr<void> kill(pid_t, int signal);
 ErrorOr<void> killpg(int pgrp, int signal);

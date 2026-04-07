@@ -674,6 +674,17 @@ ErrorOr<ssize_t> read(int fd, Bytes buffer)
     return rc;
 }
 
+ErrorOr<ssize_t> pread(int fd, Bytes buffer, off_t offset)
+{
+    ssize_t rc;
+    do {
+        rc = ::pread(fd, buffer.data(), buffer.size(), offset);
+    } while (rc < 0 && errno == EINTR);
+    if (rc < 0)
+        return Error::from_syscall("pread"sv, -errno);
+    return rc;
+}
+
 ErrorOr<ssize_t> write(int fd, ReadonlyBytes buffer)
 {
     ssize_t rc;
