@@ -26,7 +26,7 @@ extern "C" void syscall_handler(TrapFrame const*);
 
 static void dump_exception_syndrome_register(Aarch64::ESR_EL1 const& esr_el1)
 {
-    dbgln("Exception Syndrome: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b})", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2);
+    dbgln("Exception Syndrome: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b}) / {:#x}", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2, bit_cast<u64>(esr_el1));
     dbgln("    Class: {}", Aarch64::exception_class_to_string(esr_el1.EC));
 
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC))
