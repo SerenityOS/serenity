@@ -456,7 +456,7 @@ void VirtualConsole::set_window_title(StringView)
     // Do nothing.
 }
 
-void VirtualConsole::set_window_progress(int, int)
+void VirtualConsole::set_window_progress(VT::ProgressState, u8)
 {
     // Do nothing.
 }
