@@ -1360,14 +1360,50 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         }
 #endif
         break;
-    case 9:
-        if (parameters.size() < 2)
-            dbgln("Atttempted to set window progress but gave too few parameters");
-        else if (parameters.size() == 2)
-            m_client.set_window_progress(stringview_ify(1).to_number<int>().value_or(-1), 0);
-        else
-            m_client.set_window_progress(stringview_ify(1).to_number<int>().value_or(-1), stringview_ify(2).to_number<int>().value_or(0));
+    case 9: {
+        if (parameters.size() < 2) {
+            unimplemented_osc_sequence(parameters, last_byte);
+            return;
+        }
+
+        if (stringview_ify(1) != "4"sv) {
+            unimplemented_osc_sequence(parameters, last_byte);
+            return;
+        }
+
+        if (parameters.size() != 3 && parameters.size() != 4) {
+            dbgln("Atttempted to set window progress but gave incorrect number of parameters");
+            return;
+        }
+
+        auto maybe_new_state = stringview_ify(2).to_number<int>();
+        if (!maybe_new_state.has_value()
+            || maybe_new_state.value() < 0
+            || maybe_new_state.value() > to_underlying(ProgressState::Paused)) {
+            dbgln("Atttempted to set window progress but gave invalid state");
+            return;
+        }
+
+        auto new_state = static_cast<ProgressState>(maybe_new_state.value());
+
+        if (parameters.size() == 4) {
+            auto maybe_new_value = stringview_ify(3).to_number<int>();
+            if (!maybe_new_value.has_value()
+                || maybe_new_value.value() < 0
+                || maybe_new_value.value() > 100) {
+                dbgln("Atttempted to set window progress but gave invalid value");
+                return;
+            }
+
+            m_current_progress = maybe_new_value.value();
+        }
+
+        if (new_state == ProgressState::Inactive)
+            m_current_progress = 0;
+
+        m_client.set_window_progress(new_state, m_current_progress);
         break;
+    }
     default:
         unimplemented_osc_sequence(parameters, last_byte);
     }

@@ -83,7 +83,7 @@ inline void cleanup()
 {
     // Clear the taskbar progress.
     if (TestRunner::the() && TestRunner::the()->is_printing_progress())
-        warn("\033]9;-1;\033\\");
+        warn("\033]9;4;0\033\\");
 }
 
 [[noreturn]] inline void cleanup_and_exit()
@@ -102,11 +102,11 @@ inline void TestRunner::run(ByteString test_glob)
         ++progress_counter;
         do_run_single_test(path, progress_counter, test_paths.size());
         if (m_print_progress)
-            warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
+            warn("\033]9;4;1;{}\033\\", static_cast<int>((100. * progress_counter) / test_paths.size()));
     }
 
     if (m_print_progress)
-        warn("\033]9;-1;\033\\");
+        warn("\033]9;4;0\033\\");
 
     if (!m_print_json)
         print_test_results();

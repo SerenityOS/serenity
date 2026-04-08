@@ -477,17 +477,15 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void TerminalWidget::set_window_progress(int value, int max)
+void TerminalWidget::set_window_progress(VT::ProgressState state, u8 value)
 {
-    if (max == 0) {
+    // FIXME: What should we do for ProgressState::{Error,Indeterminate,Paused}?
+    if (state != VT::ProgressState::InProgress) {
         window()->set_progress(OptionalNone {});
         return;
     }
 
-    float float_value = value;
-    float float_max = max;
-    float progress = (float_value / float_max) * 100.0f;
-    window()->set_progress((int)roundf(progress));
+    window()->set_progress(value);
 }
 
 void TerminalWidget::set_window_title(StringView title)

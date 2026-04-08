@@ -41,13 +41,21 @@ enum CursorKeysMode {
     Cursor,
 };
 
+enum class ProgressState {
+    Inactive = 0,
+    InProgress = 1,
+    Error = 2,
+    Indeterminate = 3,
+    Paused = 4,
+};
+
 class TerminalClient {
 public:
     virtual ~TerminalClient() = default;
 
     virtual void beep() = 0;
     virtual void set_window_title(StringView) = 0;
-    virtual void set_window_progress(int value, int max) = 0;
+    virtual void set_window_progress(ProgressState, u8 percentage) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed(int delta) = 0;
     virtual void terminal_did_perform_possibly_partial_clear() = 0;
@@ -450,6 +458,8 @@ protected:
 #ifndef KERNEL
     u32 m_next_href_id { 0 };
 #endif
+
+    u8 m_current_progress { 0 };
 
     Vector<bool> m_horizontal_tabs;
     u32 m_last_code_point { 0 };
