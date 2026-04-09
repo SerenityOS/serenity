@@ -139,18 +139,61 @@ ErrorOr<void> Server::send_file_attribute_message(u32 id, struct stat const& s)
 // 6.3 Opening, Creating, and Closing Files
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-6.3
 
-#define SSH_FXF_READ 0x00000001
-#define SSH_FXF_WRITE 0x00000002
-#define SSH_FXF_APPEND 0x00000004
-#define SSH_FXF_CREAT 0x00000008
-#define SSH_FXF_TRUNC 0x00000010
-#define SSH_FXF_EXCL 0x00000020
+enum class PFlag : u8 {
+    None = 0, // This is AD-HOC.
+    READ = 0x01,
+    WRITE = 0x02,
+    APPEND = 0x04,
+    CREAT = 0x08,
+    TRUNC = 0x10,
+    EXCL = 0x20,
+};
+
+AK_ENUM_BITWISE_OPERATORS(PFlag)
+
+struct CoreAndPosixFlags {
+    Core::File::OpenMode open_mode {};
+    int posix_flags {};
+};
+
+static ErrorOr<CoreAndPosixFlags> convert_pflags(PFlag& pflags)
+{
+    int open_flags {};
+    Core::File::OpenMode open_mode {};
+    auto consume = [](PFlag& flags, PFlag mask) {
+        bool had_flag = has_flag(flags, mask);
+        flags &= ~mask;
+        return had_flag;
+    };
+
+    if (has_flag(pflags, PFlag::READ) && has_flag(pflags, PFlag::WRITE)) {
+        open_flags |= O_RDWR;
+        open_mode = Core::File::OpenMode::ReadWrite;
+        consume(pflags, PFlag::READ);
+        consume(pflags, PFlag::WRITE);
+    } else if (consume(pflags, PFlag::WRITE)) {
+        open_flags |= O_WRONLY;
+        open_mode = Core::File::OpenMode::Write;
+    } else if (consume(pflags, PFlag::READ)) {
+        open_flags |= O_RDONLY;
+        open_mode = Core::File::OpenMode::Read;
+    }
+    if (consume(pflags, PFlag::CREAT))
+        open_flags |= O_CREAT;
+
+    // FIXME: Support other pflags.
+    if (pflags != PFlag::None)
+        return Error::from_string_literal("Unsupported pflags");
+
+    return CoreAndPosixFlags { open_mode, open_flags };
+}
 
 ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
 {
     u32 id = TRY(stream.read_value<NetworkOrdered<u32>>());
     auto filename = TRY(decode_string(stream));
-    u32 pflags = TRY(stream.read_value<NetworkOrdered<u32>>());
+    u32 raw_pflags = TRY(stream.read_value<NetworkOrdered<u32>>());
+    PFlag pflags = static_cast<PFlag>(raw_pflags);
     auto attrs = TRY(Attributes::from_stream(stream));
 
     if (attrs.size.has_value() || attrs.uid.has_value() || attrs.gid.has_value()
@@ -161,20 +204,23 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
     if (filename.is_empty() || filename[0] != '/')
         return Error::from_string_literal("Relative paths are unsupported");
 
-    // FIXME: Support other pflags.
-    if (pflags != SSH_FXF_READ)
-        return Error::from_string_literal("Unsupported pflags");
+    // SSH flags maps one-to-one to POSIX flags, so use that and call open
+    // directly. This allows the SFTP server to be as transparent as possible.
+    // We still need to map these flags to a  Core::File::OpenMode so we can
+    // let Core::File adopt the fd later on (note that only read and write
+    // matters when adopting).
+    auto [open_mode, open_flags] = TRY(convert_pflags(pflags));
 
-    auto maybe_file = Core::File::open(StringView { filename.bytes() }, Core::File::OpenMode::Read);
+    auto maybe_fd = Core::System::open(StringView { filename.bytes() }, open_flags);
 
     // "The response to this message will be either SSH_FXP_HANDLE (if the
     //   operation is successful) or SSH_FXP_STATUS (if the operation fails)."
-    if (maybe_file.is_error()) {
+    if (maybe_fd.is_error()) {
         // FIXME: Send SSH_FXP_STATUS.
-        return maybe_file.release_error();
+        return maybe_fd.release_error();
     }
 
-    m_open_files.empend(maybe_file.release_value(),
+    m_open_files.empend(TRY(Core::File::adopt_fd(maybe_fd.value(), open_mode)),
         Crypto::Hash::MD5::hash(filename));
 
     TRY(send_file_handle(id, m_open_files.last()));
