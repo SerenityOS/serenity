@@ -112,6 +112,7 @@ public:
 
     VT::CursorShape cursor_shape() { return m_cursor_shape; }
     virtual void set_cursor_blinking(bool) override;
+    virtual void set_cursor_hidden(bool) override;
     virtual void set_cursor_shape(CursorShape) override;
 
     static Optional<VT::CursorShape> parse_cursor_shape(StringView);
@@ -230,6 +231,8 @@ private:
 
     VT::CursorShape m_cursor_shape { VT::CursorShape::Block };
     bool m_cursor_is_blinking_set { true };
+
+    bool m_cursor_is_hidden { false };
 
     enum class AutoScrollDirection {
         None,

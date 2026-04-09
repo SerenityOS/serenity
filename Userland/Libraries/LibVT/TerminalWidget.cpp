@@ -343,6 +343,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
+                && !m_cursor_is_hidden
                 && m_cursor_shape == VT::CursorShape::Block
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
@@ -417,6 +418,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         for (size_t column = 0; column < line.length(); ++column) {
             auto attribute = line.attribute_at(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
+                && !m_cursor_is_hidden
                 && m_cursor_shape == VT::CursorShape::Block
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
@@ -448,7 +450,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     }
 
     // Draw cursor.
-    if (m_cursor_blink_state && row_with_cursor < m_terminal.rows()) {
+    if (m_cursor_blink_state && !m_cursor_is_hidden && row_with_cursor < m_terminal.rows()) {
         auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
         if (m_terminal.cursor_row() >= (m_terminal.rows() - rows_from_history))
             return;
@@ -1138,6 +1140,12 @@ void TerminalWidget::set_cursor_blinking(bool blinking)
         m_cursor_blink_state = true;
         m_cursor_is_blinking_set = false;
     }
+    invalidate_cursor();
+}
+
+void TerminalWidget::set_cursor_hidden(bool hidden)
+{
+    m_cursor_is_hidden = hidden;
     invalidate_cursor();
 }
 

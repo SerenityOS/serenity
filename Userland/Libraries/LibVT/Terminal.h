@@ -62,6 +62,7 @@ public:
     virtual void emit(u8 const*, size_t) = 0;
     virtual void set_cursor_shape(CursorShape) = 0;
     virtual void set_cursor_blinking(bool) = 0;
+    virtual void set_cursor_hidden(bool) = 0;
 };
 
 class Terminal : public EscapeSequenceExecutor {
@@ -440,8 +441,6 @@ protected:
     bool m_stomp { false };
     bool m_in_application_keypad_mode { false };
 
-    CursorShape m_cursor_shape { VT::CursorShape::Block };
-    CursorShape m_saved_cursor_shape { VT::CursorShape::Block };
     bool m_cursor_is_blinking_set { true };
 
     bool m_needs_bracketed_paste { false };
