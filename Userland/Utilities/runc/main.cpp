@@ -23,12 +23,12 @@ static ErrorOr<void> create_custom_vfs_root_context_layout(JsonArray const& layo
     char pattern[] = "/tmp/container_root_XXXXXX";
     auto temp_directory_path = TRY(Core::System::mkdtemp(pattern));
     TRY(LayoutParsing::create_root_mount_point(temp_directory_path, layout_creation_sequence));
-    auto vfs_root_context_layout = TRY(VFSRootContextLayout::create_with_root_mount_point(temp_directory_path.bytes_as_string_view()));
+    auto vfs_root_context_layout = TRY(VFSRootContextLayout::create_with_root_mount_point(temp_directory_path));
     TRY(LayoutParsing::handle_creation_sequence(*vfs_root_context_layout, layout_creation_sequence));
 
     TRY(vfs_root_context_layout->apply_mounts_on_vfs_root_context_id());
 
-    TRY(Core::System::umount({}, temp_directory_path.bytes_as_string_view()));
+    TRY(Core::System::umount({}, temp_directory_path));
 
     TRY(Core::System::rmdir(temp_directory_path));
 
