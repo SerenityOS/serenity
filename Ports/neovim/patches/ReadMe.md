@@ -10,3 +10,8 @@ feat(vim.ui.open): support serenity "open" tool
 feat: has('serenity')
 
 
+## `0003-feat-provider-support-serenity-clipboard.patch`
+
+feat(provider): support serenity clipboard
+
+
