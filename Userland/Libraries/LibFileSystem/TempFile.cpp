@@ -28,8 +28,7 @@ ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_directory()
     char pattern[] = "/tmp/tmp.XXXXXX";
 
     auto path = TRY(Core::System::mkdtemp(pattern));
-    auto string = TRY(String::from_byte_string(path));
-    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::Directory, string));
+    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::Directory, move(path)));
 }
 
 ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_file()
@@ -37,8 +36,8 @@ ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_file()
     char file_path[] = "/tmp/tmp.XXXXXX";
     TRY(Core::System::mkstemp(file_path));
 
-    auto string = TRY(String::from_utf8({ file_path, strlen(file_path) }));
-    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::File, string));
+    auto path = ByteString(file_path, strlen(file_path));
+    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::File, move(path)));
 }
 
 }
