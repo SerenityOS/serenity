@@ -106,8 +106,15 @@ ErrorOr<void> Server::handle_stat(FixedMemoryStream& stream, StatType type)
     }();
 
     if (maybe_stat.is_error()) {
-        // FIXME: Send SSH_FXP_STATUS.
-        return maybe_stat.release_error();
+        auto const& error = maybe_stat.error();
+        VERIFY(error.is_errno());
+        if (error.code() == ENOENT)
+            TRY(send_status_message(id, FXStatus::NO_SUCH_FILE));
+        else if (error.code() == EACCES)
+            TRY(send_status_message(id, FXStatus::PERMISSION_DENIED));
+        else
+            TRY(send_status_message(id, FXStatus::FAILURE));
+        return {};
     }
 
     auto stat = maybe_stat.release_value();

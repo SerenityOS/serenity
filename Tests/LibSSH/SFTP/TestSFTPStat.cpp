@@ -67,6 +67,13 @@ ErrorOr<ByteBuffer> make_stat_packet(StringView path, bool use_lstat = false)
     return TRY(packet.read_until_eof());
 }
 
+ErrorOr<void> run_server_with_callback(auto callback, StringView path, bool use_lstat)
+{
+    auto server = make_initialized_server(move(callback));
+    auto request = TRY(make_stat_packet(path, use_lstat));
+    return server_process_data(server, request);
+}
+
 ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, Attributes const& expected)
 {
     auto callback = [=](Message message) -> ErrorOr<void> {
@@ -77,10 +84,29 @@ ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, Attributes cons
         EXPECT_EQ(attributes, expected);
         return {};
     };
-    auto server = make_initialized_server(move(callback));
 
-    auto request = TRY(make_stat_packet(path, use_lstat));
-    return server_process_data(server, request);
+    return run_server_with_callback(move(callback), path, use_lstat);
+}
+
+ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, SSH::SFTP::FXStatus expected_status)
+{
+    auto callback = [=](Message message) -> ErrorOr<void> {
+        EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::STATUS);
+        FixedMemoryStream stream { message.payload };
+        EXPECT_EQ(TRY(stream.read_value<NetworkOrdered<u32>>()), 42u);
+        u32 raw_status_code = TRY(stream.read_value<NetworkOrdered<u32>>());
+        auto status_code = static_cast<SSH::SFTP::FXStatus>(raw_status_code);
+        EXPECT_EQ(status_code, expected_status);
+
+        // `error message` and `language tag`
+        TRY(SSH::decode_string(stream));
+        TRY(SSH::decode_string(stream));
+
+        EXPECT(stream.remaining() == 0);
+        return {};
+    };
+
+    return run_server_with_callback(move(callback), path, use_lstat);
 }
 
 ErrorOr<void> run_for_path(StringView path)
@@ -90,9 +116,10 @@ ErrorOr<void> run_for_path(StringView path)
     return {};
 }
 
-ErrorOr<void> run_for_path_with_expected_stat_failure(StringView path)
+ErrorOr<void> run_for_path_with_expected_stat_failure(StringView path, SSH::SFTP::FXStatus error_status)
 {
     EXPECT(Core::System::stat(path).is_error());
+    TRY(run_for_path_impl(path, false, error_status));
     TRY(run_for_path_impl(path, true, Attributes::from_stat(TRY(Core::System::lstat(path)))));
     return {};
 }
@@ -129,9 +156,21 @@ TEST_CASE(symlink)
 
     unlink("/tmp/b");
     TRY_OR_FAIL(Core::System::symlink("/tmp/b"sv, "/tmp/b"sv));
-    TRY_OR_FAIL(run_for_path_with_expected_stat_failure("/tmp/b"sv));
+    TRY_OR_FAIL(run_for_path_with_expected_stat_failure("/tmp/b"sv, SSH::SFTP::FXStatus::FAILURE));
 
     unlink("/tmp/c");
     TRY_OR_FAIL(Core::System::symlink("/i/dont/exist"sv, "/tmp/c"sv));
-    TRY_OR_FAIL(run_for_path_with_expected_stat_failure("/tmp/c"sv));
+    TRY_OR_FAIL(run_for_path_with_expected_stat_failure("/tmp/c"sv, SSH::SFTP::FXStatus::NO_SUCH_FILE));
+}
+
+TEST_CASE(no_permission)
+{
+    auto tmp_dir = TRY_OR_FAIL(FileSystem::TempFile::create_temp_directory());
+    // The directory is created with 0700, remove the executable bit to make inner files inaccessible.
+    TRY_OR_FAIL(Core::System::chmod(tmp_dir->path(), 0600));
+
+    auto unauthorized_path = ByteString::formatted("{}/i/dont/exist", tmp_dir->path());
+
+    TRY_OR_FAIL(run_for_path_impl(unauthorized_path, true, SSH::SFTP::FXStatus::PERMISSION_DENIED));
+    TRY_OR_FAIL(run_for_path_impl(unauthorized_path, false, SSH::SFTP::FXStatus::PERMISSION_DENIED));
 }
