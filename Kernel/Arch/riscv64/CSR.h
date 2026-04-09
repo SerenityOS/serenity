@@ -28,6 +28,9 @@ enum class Address : u16 {
     VTYPE = 0xc21,
     VLENB = 0xc22,
 
+    // Unprivileged Entropy Source Extension CSR
+    SEED = 0x015,
+
     // Unprivileged Counters/Timers
     CYCLE = 0xc00,
     TIME = 0xc01,
@@ -234,6 +237,37 @@ struct SSTATUS {
     }
 };
 static_assert(AssertSize<SSTATUS, 8>());
+
+// https://docs.riscv.org/reference/isa/unpriv/scalar-crypto.html#crypto_scalar_es
+struct SEED {
+    enum class Status : u64 {
+        BIST = 0b00,
+        WAIT = 0b01,
+        ES16 = 0b10,
+        DEAD = 0b11,
+    };
+
+    u64 entropy : 16;
+    u64 : 8;
+    u64 : 6;
+    Status OPST : 2;
+    u64 : 32;
+
+    static ALWAYS_INLINE SEED read()
+    {
+        // "Attempts to access the seed CSR using a read-only CSR-access instruction (CSRRS/CSRRC with rs1=x0 or CSRRSI/CSRRCI with uimm=0)
+        //  raise an illegal-instruction exception; any other CSR-access instruction may be used to access seed.
+        //  The write value (in rs1 or uimm) must be ignored by implementations. The purpose of the write is to signal polling and flushing.
+        //
+        //  Software normally uses the instruction csrrw rd, seed, x0 to read the seed CSR."
+
+        FlatPtr value { 0 };
+        asm volatile("csrrw %0, seed, x0" : "=r"(value));
+
+        return bit_cast<SEED>(value);
+    }
+};
+static_assert(AssertSize<SEED, 8>());
 
 // 4.1.8 Supervisor Cause Register (scause)
 constexpr u64 SCAUSE_INTERRUPT_MASK = 1LU << 63;
