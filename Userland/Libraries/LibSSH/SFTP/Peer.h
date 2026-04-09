@@ -61,12 +61,12 @@ enum class FXStatus : u8 {
 // 5. File Attributes
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-5
 struct Attributes {
-    Optional<u64> size;
-    Optional<u32> uid;
-    Optional<u32> gid;
-    Optional<u32> mode;
-    Optional<u32> atim;
-    Optional<u32> mtim;
+    Optional<u64> size {};
+    Optional<u32> uid {};
+    Optional<u32> gid {};
+    Optional<u32> mode {};
+    Optional<u32> atim {};
+    Optional<u32> mtim {};
 
     bool operator==(Attributes const&) const = default;
 
@@ -81,6 +81,9 @@ struct Attributes {
             .mtim = s.st_mtime,
         };
     }
+
+    static ErrorOr<Attributes> from_stream(FixedMemoryStream&);
+    ErrorOr<void> encode(AllocatingMemoryStream&);
 };
 
 // This class implement the SFTP protocol v3. Newer version exist, but they
