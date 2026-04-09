@@ -153,13 +153,10 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
         case 25:
             if (should_set) {
                 // Show cursor
-                m_cursor_shape = m_saved_cursor_shape;
-                m_client.set_cursor_shape(m_cursor_shape);
+                m_client.set_cursor_hidden(false);
             } else {
                 // Hide cursor
-                m_saved_cursor_shape = m_cursor_shape;
-                m_cursor_shape = VT::CursorShape::None;
-                m_client.set_cursor_shape(VT::CursorShape::None);
+                m_client.set_cursor_hidden(true);
             }
             break;
         case 1047:

@@ -493,6 +493,11 @@ void VirtualConsole::set_cursor_blinking(bool)
     // Do nothing
 }
 
+void VirtualConsole::set_cursor_hidden(bool)
+{
+    // Do nothing
+}
+
 void VirtualConsole::echo(u8 ch)
 {
     m_console_impl.on_input(ch);

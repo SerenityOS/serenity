@@ -107,6 +107,7 @@ private:
     virtual void emit(u8 const*, size_t) override;
     virtual void set_cursor_shape(VT::CursorShape) override;
     virtual void set_cursor_blinking(bool) override;
+    virtual void set_cursor_hidden(bool) override;
 
     // ^CharacterDevice
     virtual StringView class_name() const override { return "VirtualConsole"sv; }
