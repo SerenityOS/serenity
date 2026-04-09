@@ -14,22 +14,6 @@
 
 namespace {
 
-ErrorOr<SSH::SFTP::Attributes> decode_attribute_message(FixedMemoryStream& stream)
-{
-    u32 flags = TRY(stream.read_value<NetworkOrdered<u32>>());
-    // All flags, but EXTENDED set.
-    EXPECT_EQ(flags, 0b1111u);
-    SSH::SFTP::Attributes attributes;
-    attributes.size = TRY(stream.read_value<NetworkOrdered<u64>>());
-    attributes.uid = TRY(stream.read_value<NetworkOrdered<u32>>());
-    attributes.gid = TRY(stream.read_value<NetworkOrdered<u32>>());
-    attributes.mode = TRY(stream.read_value<NetworkOrdered<u32>>());
-    attributes.atim = TRY(stream.read_value<NetworkOrdered<u32>>());
-    attributes.mtim = TRY(stream.read_value<NetworkOrdered<u32>>());
-
-    return attributes;
-}
-
 ErrorOr<ByteBuffer> make_stat_packet(StringView path, bool use_lstat = false)
 {
     AllocatingMemoryStream inner;
@@ -57,7 +41,7 @@ ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, SSH::SFTP::Attr
         EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::ATTRS);
         FixedMemoryStream stream { message.payload };
         EXPECT_EQ(TRY(stream.read_value<NetworkOrdered<u32>>()), 42u);
-        auto attributes = TRY(decode_attribute_message(stream));
+        auto attributes = TRY(SSH::SFTP::Attributes::from_stream(stream));
         EXPECT_EQ(attributes, expected);
         return {};
     };

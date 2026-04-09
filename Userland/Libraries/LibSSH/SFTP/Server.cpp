@@ -122,49 +122,6 @@ ErrorOr<void> Server::handle_stat(FixedMemoryStream& stream, StatType type)
     return {};
 }
 
-// 5. File Attributes
-// https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-5
-namespace {
-
-#define SSH_FILEXFER_ATTR_SIZE 0x00000001
-#define SSH_FILEXFER_ATTR_UIDGID 0x00000002
-#define SSH_FILEXFER_ATTR_PERMISSIONS 0x00000004
-#define SSH_FILEXFER_ATTR_ACMODTIME 0x00000008
-#define SSH_FILEXFER_ATTR_EXTENDED 0x80000000
-
-ErrorOr<void> encode_file_attributes(AllocatingMemoryStream& stream, struct ::stat const& s)
-{
-    TRY(stream.write_value<NetworkOrdered<u32>>(
-        SSH_FILEXFER_ATTR_SIZE
-        | SSH_FILEXFER_ATTR_UIDGID
-        | SSH_FILEXFER_ATTR_PERMISSIONS
-        | SSH_FILEXFER_ATTR_ACMODTIME));
-
-    TRY(stream.write_value<NetworkOrdered<u64>>(s.st_size));
-
-    TRY(stream.write_value<NetworkOrdered<u32>>(s.st_uid));
-    TRY(stream.write_value<NetworkOrdered<u32>>(s.st_gid));
-
-    TRY(stream.write_value<NetworkOrdered<u32>>(s.st_mode));
-
-    TRY(stream.write_value<NetworkOrdered<u32>>(s.st_atime));
-    TRY(stream.write_value<NetworkOrdered<u32>>(s.st_mtime));
-
-    return {};
-}
-
-ErrorOr<Attributes> read_attributes(FixedMemoryStream& stream)
-{
-    u32 flags = TRY(stream.read_value<NetworkOrdered<u32>>());
-
-    if (flags != 0)
-        return Error::from_string_literal("Unsupported file attributes");
-
-    return Attributes {};
-}
-
-}
-
 // 7. Responses from the Server to the Client
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-7
 ErrorOr<void> Server::send_file_attribute_message(u32 id, struct stat const& s)
@@ -172,7 +129,7 @@ ErrorOr<void> Server::send_file_attribute_message(u32 id, struct stat const& s)
     AllocatingMemoryStream stream;
     TRY(stream.write_value(FXPMessageID::ATTRS));
     TRY(stream.write_value<NetworkOrdered<u32>>(id));
-    TRY(encode_file_attributes(stream, s));
+    TRY(Attributes::from_stat(s).encode(stream));
 
     auto packet = TRY(stream.read_until_eof());
     TRY(write_packet(packet));
@@ -194,7 +151,11 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
     u32 id = TRY(stream.read_value<NetworkOrdered<u32>>());
     auto filename = TRY(decode_string(stream));
     u32 pflags = TRY(stream.read_value<NetworkOrdered<u32>>());
-    [[maybe_unused]] auto attrs = TRY(read_attributes(stream));
+    auto attrs = TRY(Attributes::from_stream(stream));
+
+    if (attrs.size.has_value() || attrs.uid.has_value() || attrs.gid.has_value()
+        || attrs.mode.has_value() || attrs.atim.has_value() || attrs.mtim.has_value())
+        return Error::from_string_literal("Unsupported file attribute");
 
     // FIXME: Support relative path.
     if (filename.is_empty() || filename[0] != '/')

@@ -1,4 +1,5 @@
 set(TEST_SOURCES
+    SFTP/TestSFTPAttributes.cpp
     SFTP/TestSFTPPeer.cpp
     SFTP/TestSFTPServerBasic.cpp
     SFTP/TestSFTPStat.cpp
