@@ -5,3 +5,8 @@
 feat(vim.ui.open): support serenity "open" tool
 
 
+## `0002-feat-has-serenity.patch`
+
+feat: has('serenity')
+
+

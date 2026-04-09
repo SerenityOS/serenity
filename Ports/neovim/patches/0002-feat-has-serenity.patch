@@ -1,0 +1,83 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Thu, 9 Apr 2026 18:42:09 +0200
+Subject: [PATCH] feat: has('serenity')
+
+---
+ runtime/doc/vimfn.txt               | 1 +
+ runtime/lua/vim/_meta/vimfn.lua     | 1 +
+ src/nvim/eval.lua                   | 1 +
+ src/nvim/eval/funcs.c               | 3 +++
+ test/old/testdir/test_functions.vim | 2 ++
+ 5 files changed, 8 insertions(+)
+
+diff --git a/runtime/doc/vimfn.txt b/runtime/doc/vimfn.txt
+index afb253a4f3be78a174151c74fe4efbd968218005..68b3425ca37ab3a5d2f1ce10af72f94e09658f20 100644
+--- a/runtime/doc/vimfn.txt
++++ b/runtime/doc/vimfn.txt
+@@ -4702,6 +4702,7 @@ has({feature})                                                           *has()*
+ 			nvim		This is Nvim.
+ 			python3		Legacy Vim |python3| interface. |has-python|
+ 			pythonx		Legacy Vim |python_x| interface. |has-pythonx|
++			serenity	SerenityOS system.
+ 			sun		SunOS system.
+ 			*termux*	Termux, an |android| terminal app and packaging environment.
+ 			ttyin		input is a terminal (tty).
+diff --git a/runtime/lua/vim/_meta/vimfn.lua b/runtime/lua/vim/_meta/vimfn.lua
+index 347862e865ded433cbbe63060e69c010a17cbe71..b2b00825667b17fa11863e2405bc7838727e68c1 100644
+--- a/runtime/lua/vim/_meta/vimfn.lua
++++ b/runtime/lua/vim/_meta/vimfn.lua
+@@ -4249,6 +4249,7 @@ function vim.fn.globpath(path, expr, nosuf, list, allinks) end
+ ---   nvim    This is Nvim.
+ ---   python3    Legacy Vim |python3| interface. |has-python|
+ ---   pythonx    Legacy Vim |python_x| interface. |has-pythonx|
++---   serenity    SerenityOS system.
+ ---   sun    SunOS system.
+ ---   *termux*  Termux, an |android| terminal app and packaging environment.
+ ---   ttyin    input is a terminal (tty).
+diff --git a/src/nvim/eval.lua b/src/nvim/eval.lua
+index a52b0660214d5030aa5266687ec2fea19fe18e94..7e8cc65b2ffa0b4bc5b43278bc0875ba1ea29ff3 100644
+--- a/src/nvim/eval.lua
++++ b/src/nvim/eval.lua
+@@ -5234,6 +5234,7 @@ M.funcs = {
+       	nvim		This is Nvim.
+       	python3		Legacy Vim |python3| interface. |has-python|
+       	pythonx		Legacy Vim |python_x| interface. |has-pythonx|
++      	serenity	SerenityOS system.
+       	sun		SunOS system.
+       	*termux*	Termux, an |android| terminal app and packaging environment.
+       	ttyin		input is a terminal (tty).
+diff --git a/src/nvim/eval/funcs.c b/src/nvim/eval/funcs.c
+index 07361d820cb46af42608c836112027152565c413..8e2043f46906a080f1ceaf97cf81f67f1552804f 100644
+--- a/src/nvim/eval/funcs.c
++++ b/src/nvim/eval/funcs.c
+@@ -2666,6 +2666,9 @@ static void f_has(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
+ #ifdef __linux__
+     "linux",
+ #endif
++#ifdef __serenity__
++    "serenity",
++#endif
+ #ifdef SUN_SYSTEM
+     "sun",
+ #endif
+diff --git a/test/old/testdir/test_functions.vim b/test/old/testdir/test_functions.vim
+index cfb15b488915bcd270fe2e91ada54e4af8f11684..9e5db303e939954a5c65c5fbb5ad0aeb0295eb27 100644
+--- a/test/old/testdir/test_functions.vim
++++ b/test/old/testdir/test_functions.vim
+@@ -2743,6 +2743,7 @@ func Test_platform_name()
+   call assert_equal(has('linux'), has('linux') && has('unix'))
+   call assert_equal(has('mac'), has('mac') && has('unix'))
+   call assert_equal(has('qnx'), has('qnx') && has('unix'))
++  call assert_equal(has('serenity'), has('serenity') && has('unix'))
+   call assert_equal(has('sun'), has('sun') && has('unix'))
+   call assert_equal(has('win32'), has('win32') && !has('unix'))
+   call assert_equal(has('win32unix'), has('win32unix') && has('unix'))
+@@ -2758,6 +2759,7 @@ func Test_platform_name()
+     call assert_equal(uname =~? 'SunOS', has('sun'))
+     call assert_equal(uname =~? 'CYGWIN\|MSYS', has('win32unix'))
+     call assert_equal(uname =~? 'GNU', has('hurd'))
++    call assert_equal(uname =~? 'SerenityOS', has('serenity'))
+   endif
+ endfunc
+ 
