@@ -286,7 +286,7 @@ ErrorOr<void> Server::handle_read(FixedMemoryStream& stream)
     }
 
     if (should_send_eof)
-        TRY(send_eof(id));
+        TRY(send_status_message(id, FXStatus::FX_EOF));
     else
         TRY(send_data(id, buffer));
 
@@ -308,12 +308,12 @@ ErrorOr<void> Server::send_data(u32 id, ReadonlyBytes data)
 // 7. Responses from the Server to the Client
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-7
 
-ErrorOr<void> Server::send_eof(u32 id)
+ErrorOr<void> Server::send_status_message(u32 id, FXStatus status)
 {
     AllocatingMemoryStream stream;
     TRY(stream.write_value(FXPMessageID::STATUS));
     TRY(stream.write_value<NetworkOrdered<u32>>(id));
-    TRY(stream.write_value<NetworkOrdered<u32>>(to_underlying(FXStatus::FX_EOF)));
+    TRY(stream.write_value<NetworkOrdered<u32>>(to_underlying(status)));
 
     // error message and language tag
     TRY(encode_string(stream, ""sv));
