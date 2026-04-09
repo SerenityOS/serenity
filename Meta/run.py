@@ -785,7 +785,7 @@ def set_up_machine_devices(config: Configuration):
         config.cpu_count = None
         config.audio_devices = []
         config.kernel_cmdline.extend(["serial_debug"])
-        config.qemu_cpu = "max" if config.architecture == Arch.Aarch64 else None
+        config.qemu_cpu = "max"
 
         if config.machine_type != MachineType.CI:
             config.extra_arguments.extend(["-serial", "stdio"])
