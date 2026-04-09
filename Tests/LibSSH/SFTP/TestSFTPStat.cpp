@@ -14,35 +14,12 @@
 
 namespace {
 
-struct Attributes {
-    Optional<u64> size;
-    Optional<u32> uid;
-    Optional<u32> gid;
-    Optional<u32> mode;
-    Optional<u32> atim;
-    Optional<u32> mtim;
-
-    static Attributes from_stat(struct ::stat const& s)
-    {
-        return {
-            .size = s.st_size,
-            .uid = s.st_uid,
-            .gid = s.st_gid,
-            .mode = s.st_mode,
-            .atim = s.st_atime,
-            .mtim = s.st_mtime,
-        };
-    }
-
-    bool operator==(Attributes const&) const = default;
-};
-
-ErrorOr<Attributes> decode_attribute_message(FixedMemoryStream& stream)
+ErrorOr<SSH::SFTP::Attributes> decode_attribute_message(FixedMemoryStream& stream)
 {
     u32 flags = TRY(stream.read_value<NetworkOrdered<u32>>());
     // All flags, but EXTENDED set.
     EXPECT_EQ(flags, 0b1111u);
-    Attributes attributes;
+    SSH::SFTP::Attributes attributes;
     attributes.size = TRY(stream.read_value<NetworkOrdered<u64>>());
     attributes.uid = TRY(stream.read_value<NetworkOrdered<u32>>());
     attributes.gid = TRY(stream.read_value<NetworkOrdered<u32>>());
@@ -74,7 +51,7 @@ ErrorOr<void> run_server_with_callback(auto callback, StringView path, bool use_
     return server_process_data(server, request);
 }
 
-ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, Attributes const& expected)
+ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, SSH::SFTP::Attributes const& expected)
 {
     auto callback = [=](Message message) -> ErrorOr<void> {
         EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::ATTRS);
@@ -111,8 +88,8 @@ ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, SSH::SFTP::FXSt
 
 ErrorOr<void> run_for_path(StringView path)
 {
-    TRY(run_for_path_impl(path, false, Attributes::from_stat(TRY(Core::System::stat(path)))));
-    TRY(run_for_path_impl(path, true, Attributes::from_stat(TRY(Core::System::lstat(path)))));
+    TRY(run_for_path_impl(path, false, SSH::SFTP::Attributes::from_stat(TRY(Core::System::stat(path)))));
+    TRY(run_for_path_impl(path, true, SSH::SFTP::Attributes::from_stat(TRY(Core::System::lstat(path)))));
     return {};
 }
 
@@ -120,7 +97,7 @@ ErrorOr<void> run_for_path_with_expected_stat_failure(StringView path, SSH::SFTP
 {
     EXPECT(Core::System::stat(path).is_error());
     TRY(run_for_path_impl(path, false, error_status));
-    TRY(run_for_path_impl(path, true, Attributes::from_stat(TRY(Core::System::lstat(path)))));
+    TRY(run_for_path_impl(path, true, SSH::SFTP::Attributes::from_stat(TRY(Core::System::lstat(path)))));
     return {};
 }
 

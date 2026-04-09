@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <AK/MemoryStream.h>
+#include <sys/stat.h>
 
 namespace SSH::SFTP {
 
@@ -55,6 +56,31 @@ enum class FXStatus : u8 {
     NO_CONNECTION = 6,
     CONNECTION_LOST = 7,
     OP_UNSUPPORTED = 8,
+};
+
+// 5. File Attributes
+// https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-5
+struct Attributes {
+    Optional<u64> size;
+    Optional<u32> uid;
+    Optional<u32> gid;
+    Optional<u32> mode;
+    Optional<u32> atim;
+    Optional<u32> mtim;
+
+    bool operator==(Attributes const&) const = default;
+
+    static Attributes from_stat(struct ::stat const& s)
+    {
+        return {
+            .size = s.st_size,
+            .uid = s.st_uid,
+            .gid = s.st_gid,
+            .mode = s.st_mode,
+            .atim = s.st_atime,
+            .mtim = s.st_mtime,
+        };
+    }
 };
 
 // This class implement the SFTP protocol v3. Newer version exist, but they

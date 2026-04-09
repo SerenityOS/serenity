@@ -153,8 +153,6 @@ ErrorOr<void> encode_file_attributes(AllocatingMemoryStream& stream, struct ::st
     return {};
 }
 
-struct Attributes { };
-
 ErrorOr<Attributes> read_attributes(FixedMemoryStream& stream)
 {
     u32 flags = TRY(stream.read_value<NetworkOrdered<u32>>());
