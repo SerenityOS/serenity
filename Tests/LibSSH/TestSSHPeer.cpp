@@ -48,35 +48,12 @@ public:
         set_shared_secret(move(shared_secret));
     }
 
-    ErrorOr<void> handle_new_keys_message(ByteBuffer& data)
-    {
-        return SSH::Peer::handle_new_keys_message(data);
-    }
-
-    ErrorOr<void> send_new_keys_message()
-    {
-        return SSH::Peer::send_new_keys_message();
-    }
-
-    ErrorOr<ByteBuffer> read_packet(ByteBuffer& data)
-    {
-        return SSH::Peer::read_packet(data);
-    }
-
-    ErrorOr<void> handle_disconnect_message(ByteBuffer& data)
-    {
-        return SSH::Peer::handle_disconnect_message(data);
-    }
-
-    void set_hash(Crypto::Hash::Digest<256> hash)
-    {
-        SSH::Peer::set_hash(hash);
-    }
-
-    ReadonlyBytes session_id() const
-    {
-        return SSH::Peer::session_id();
-    }
+    using SSH::Peer::handle_disconnect_message;
+    using SSH::Peer::handle_new_keys_message;
+    using SSH::Peer::read_packet;
+    using SSH::Peer::send_new_keys_message;
+    using SSH::Peer::session_id;
+    using SSH::Peer::set_hash;
 };
 
 // Copied from wireshark, sniffed from a connection between an openssh server and client.
