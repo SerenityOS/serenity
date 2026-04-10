@@ -696,6 +696,17 @@ ErrorOr<ssize_t> write(int fd, ReadonlyBytes buffer)
     return rc;
 }
 
+ErrorOr<ssize_t> pwrite(int fd, ReadonlyBytes buffer, off_t offset)
+{
+    ssize_t rc;
+    do {
+        rc = ::pwrite(fd, buffer.data(), buffer.size(), offset);
+    } while (rc < 0 && errno == EINTR);
+    if (rc < 0)
+        return Error::from_syscall("pwrite"sv, -errno);
+    return rc;
+}
+
 ErrorOr<void> kill(pid_t pid, int signal)
 {
     if (::kill(pid, signal) < 0)
