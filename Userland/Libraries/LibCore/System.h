@@ -136,6 +136,7 @@ ErrorOr<struct stat> lstat(StringView path);
 ErrorOr<ssize_t> read(int fd, Bytes buffer);
 ErrorOr<ssize_t> pread(int fd, Bytes buffer, off_t offset);
 ErrorOr<ssize_t> write(int fd, ReadonlyBytes buffer);
+ErrorOr<ssize_t> pwrite(int fd, ReadonlyBytes buffer, off_t offset);
 ErrorOr<void> kill(pid_t, int signal);
 ErrorOr<void> killpg(int pgrp, int signal);
 ErrorOr<int> dup(int source_fd);
