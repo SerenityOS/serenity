@@ -197,7 +197,7 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
     auto attrs = TRY(Attributes::from_stream(stream));
 
     if (attrs.size.has_value() || attrs.uid.has_value() || attrs.gid.has_value()
-        || attrs.mode.has_value() || attrs.atim.has_value() || attrs.mtim.has_value())
+        || attrs.atim.has_value() || attrs.mtim.has_value())
         return Error::from_string_literal("Unsupported file attribute");
 
     // FIXME: Support relative path.
@@ -211,7 +211,7 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
     // matters when adopting).
     auto [open_mode, open_flags] = TRY(convert_pflags(pflags));
 
-    auto maybe_fd = Core::System::open(StringView { filename.bytes() }, open_flags);
+    auto maybe_fd = Core::System::open(StringView { filename.bytes() }, open_flags, attrs.mode.value_or(0644));
 
     // "The response to this message will be either SSH_FXP_HANDLE (if the
     //   operation is successful) or SSH_FXP_STATUS (if the operation fails)."
