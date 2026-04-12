@@ -12,6 +12,7 @@
 #include <AK/GenericAwaiter.h>
 #include <AK/MemMem.h>
 #include <AK/MemoryStream.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/StreamBuffer.h>
 #include <AK/Try.h>
 #include <LibCompress/Brotli.h>
@@ -528,13 +529,13 @@ void Job::on_socket_connected()
     if (m_socket->write_until_depleted(raw_request).is_error())
         return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
 
-    Core::EventLoop::current().adopt_coroutine([this] mutable -> Coroutine<void> {
-        auto result = co_await read_response();
+    Core::EventLoop::current().adopt_coroutine([](NonnullRefPtr<Job> strong_this) mutable -> Coroutine<void> {
+        auto result = co_await strong_this->read_response();
         if (result.is_error()) {
             dbgln("Job: Failed to read response: {}", result.error());
-            did_fail(Core::NetworkJob::Error::TransmissionFailed);
+            strong_this->did_fail(Core::NetworkJob::Error::TransmissionFailed);
         }
-    }());
+    }(NonnullRefPtr<Job>(*this)));
 }
 
 Coroutine<void> Job::finish_up()
