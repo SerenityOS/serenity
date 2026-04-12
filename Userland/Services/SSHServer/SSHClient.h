@@ -94,6 +94,7 @@ private:
     ErrorOr<void> send_channel_success_message(Session const&);
     ErrorOr<void> send_channel_data(Session const&, ReadonlyBytes);
     ErrorOr<void> send_channel_extended_data(Session const&, ReadonlyBytes);
+    ErrorOr<void> handle_channel_eof(GenericMessage&);
     ErrorOr<void> send_exit_status(Session const&, int);
     ErrorOr<void> handle_channel_close(GenericMessage&);
     ErrorOr<void> send_channel_close(Session&);

@@ -30,6 +30,10 @@ struct ExecData {
     NonnullOwnPtr<Core::File> stderr_;
 
     Coroutine<ErrorOr<void>> handle_channel_data(Session&);
+    void handle_channel_eof(Session const&);
+
+private:
+    void close_stdin_if_required(Session const&) const;
 };
 
 struct Session : public RefCounted<Session> {
@@ -46,6 +50,7 @@ struct Session : public RefCounted<Session> {
     Variant<Empty, ExecData> system {};
 
     bool is_closed { false };
+    bool has_received_eof { false };
 };
 
 }
