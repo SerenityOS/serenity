@@ -475,6 +475,9 @@ ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_generic_packet(GenericMes
     case MessageID::CHANNEL_DATA:
         TRY(handle_channel_data(message));
         break;
+    case MessageID::CHANNEL_EOF:
+        TRY(handle_channel_eof(message));
+        break;
     case MessageID::CHANNEL_CLOSE:
         TRY(handle_channel_close(message));
         break;
@@ -580,6 +583,9 @@ ErrorOr<void> SSHClient::handle_channel_data(GenericMessage& message)
 
     if (session.system.has<Empty>())
         return Error::from_string_literal("Received channel data while subsystem is unknown");
+
+    if (session.has_received_eof)
+        return Error::from_string_literal("Received channel data after EOF");
 
     session.channel_data.append(data);
 
@@ -757,6 +763,26 @@ ErrorOr<void> SSHClient::send_channel_extended_data(Session const& session, Read
     TRY(stream.write_value<NetworkOrdered<u32>>(EXTENDED_DATA_STDERR));
     TRY(encode_string(stream, data));
     TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+ErrorOr<void> SSHClient::handle_channel_eof(GenericMessage& message)
+{
+    auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto& session = *TRY(find_session(recipient_channel_id));
+
+    // "When a party will no longer send more data to a channel, it SHOULD send SSH_MSG_CHANNEL_EOF."
+    // "No explicit response is sent to this message.  However, the application may send EOF to
+    // whatever is at the other end of the channel.  Note that the channel remains open after this
+    // message, and more data may still be sent in the other direction.  This message does not
+    // consume window space and can be sent even if no window space is available."
+
+    session.has_received_eof = true;
+
+    session.system.visit(
+        [&](auto& system) { system.handle_channel_eof(session); },
+        [](Empty) {});
+
     return {};
 }
 

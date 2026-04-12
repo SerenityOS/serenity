@@ -14,7 +14,21 @@ Coroutine<ErrorOr<void>> ExecData::handle_channel_data(Session& session)
     auto& stream = session.channel_data;
     auto written = CO_TRY(stdin_->write_some(stream.data()));
     stream.dequeue(written);
+
+    close_stdin_if_required(session);
+
     co_return {};
+}
+
+void ExecData::handle_channel_eof(Session const& session)
+{
+    close_stdin_if_required(session);
+}
+
+void ExecData::close_stdin_if_required(Session const& session) const
+{
+    if (session.channel_data.is_empty() && session.has_received_eof)
+        stdin_->close();
 }
 
 ErrorOr<NonnullRefPtr<Session>> Session::create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size)
