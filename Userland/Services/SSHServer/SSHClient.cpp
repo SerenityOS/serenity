@@ -661,8 +661,8 @@ Coroutine<void> SSHClient::async_wait_for_child(u32 sender_channel_id)
 
         auto exited_with_code_0 = TRY(session.system.get<ExecData>().child.wait_for_termination());
 
-        if (!exited_with_code_0)
-            return Error::from_string_literal("Unable to run command");
+        // FIXME: Send the actual exit status.
+        TRY(send_exit_status(session, exited_with_code_0 ? 0 : -1));
 
         TRY(send_channel_close(session));
         return {};
@@ -738,6 +738,21 @@ ErrorOr<void> SSHClient::send_channel_close(Session& session)
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_CLOSE));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+// 6.10.  Returning Exit Status
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.10
+ErrorOr<void> SSHClient::send_exit_status(Session const& session, int status)
+{
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::CHANNEL_REQUEST));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.sender_channel_id));
+    TRY(encode_string(stream, "exit-status"sv));
+    TRY(stream.write_value(false));
+    TRY(stream.write_value<NetworkOrdered<u32>>(status));
+
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
 }
