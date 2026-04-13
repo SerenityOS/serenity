@@ -57,10 +57,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Optional<u32> port {};
     bool unsafe_stub_private_key { false };
     Optional<StringView> user_authorized_keys_file {};
+    Optional<StringView> keylog_file {};
 
     Core::ArgsParser parser;
     parser.add_option(port, "Port to listen on", "port", 'p', "port");
     parser.add_option(user_authorized_keys_file, "File to read the user's authorized keys from", "user-authorized-keys-file", 0, "FILE");
+    parser.add_option(keylog_file, "File to log the connections keys to - UNSAFE", "unsafe-keylog-file", 0, "FILE");
     parser.add_option(unsafe_stub_private_key, "Stub the server's private key - UNSAFE", "unsafe-stub-private-key");
 
     parser.parse(args);
@@ -73,6 +75,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     if (user_authorized_keys_file.has_value())
         SSH::Server::ServerConfiguration::the().set_user_authorized_keys_file(*user_authorized_keys_file);
+
+    if (keylog_file.has_value())
+        SSH::Server::ServerConfiguration::the().set_keylog_file(*keylog_file);
 
     Core::EventLoop loop;
 

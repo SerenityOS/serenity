@@ -31,6 +31,9 @@ public:
         m_user_authorized_keys_file = path;
     }
 
+    void set_keylog_file(StringView path) { m_keylog_file = path; }
+    Optional<ByteString> keylog_file() const { return m_keylog_file; }
+
     ErrorOr<Vector<TypedBlob>> get_authorized_keys_for_user() const;
 
 private:
@@ -43,6 +46,7 @@ private:
     bool m_use_unsafe_stubbed_private_key { false };
 
     ByteString m_user_authorized_keys_file;
+    Optional<ByteString> m_keylog_file;
 };
 
 }

@@ -129,9 +129,9 @@ ErrorOr<void> SSHClient::send_key_protocol_message()
 
     TRY(stream.write_value<u8>(to_underlying(MessageID::KEXINIT)));
 
-    auto cookie = TRY(ByteBuffer::create_uninitialized(16));
-    fill_with_random(cookie);
-    TRY(stream.write_until_depleted(cookie));
+    m_cookie = TRY(ByteBuffer::create_uninitialized(16));
+    fill_with_random(m_cookie);
+    TRY(stream.write_until_depleted(m_cookie));
 
     TRY(encode_name_list(stream, KEX_ALGORITHMS));
     TRY(encode_name_list(stream, SERVER_HOST_KEY_ALGORITHMS));
@@ -199,6 +199,15 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
     // "Compute shared secret."
     auto shared_secret = TRY(curve.compute_coordinate(private_key, client_public_key));
     m_key_exchange_data.shared_secret = shared_secret;
+
+    if (auto keylog_file = ServerConfiguration::the().keylog_file(); keylog_file.has_value()) {
+        auto file = TRY(Core::File::open(*keylog_file, Core::File::OpenMode::Write | Core::File::OpenMode::Append));
+        TRY(file->write_until_depleted(ByteString::formatted("{:hex-dump}"sv, m_cookie.bytes())));
+        TRY(file->write_until_depleted(" SHARED_SECRET "sv));
+        TRY(file->write_until_depleted(ByteString::formatted("{:hex-dump}\n"sv, shared_secret.bytes())));
+    }
+    m_cookie = {};
+
     set_shared_secret(move(shared_secret));
 
     // FIXME: Abort if shared_point is not valid (at least when it's all zero, maybe there are other cases too).
