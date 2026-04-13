@@ -51,7 +51,7 @@ ErrorOr<void> Group::sync()
     auto new_group_file_content = TRY(generate_group_file());
 
     char new_group_file[] = "/etc/group.XXXXXX";
-    auto new_group_file_view = StringView { new_group_file, sizeof(new_group_file) };
+    auto new_group_file_view = StringView { new_group_file, strlen(new_group_file) };
 
     {
         auto new_group_fd = TRY(Core::System::mkstemp(new_group_file));
