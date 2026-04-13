@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v6.0.2
 
       - name: Label pull request
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const script = require('./Meta/label-pull-requests.js')
