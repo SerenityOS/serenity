@@ -100,6 +100,7 @@ private:
     Core::TCPSocket& m_tcp_socket;
 
     KeyExchangeData m_key_exchange_data {};
+    ByteBuffer m_cookie {};
 
     Vector<Session> m_sessions;
 };
