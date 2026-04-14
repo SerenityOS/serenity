@@ -554,6 +554,8 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
     }
 
     if (request_type == "exec"sv.bytes()) {
+        if (!want_reply)
+            return Error::from_string_literal("Client requested exec but doesn't want a reply");
         TRY(handle_channel_exec(session, message));
         return {};
     }
