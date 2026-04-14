@@ -1440,12 +1440,13 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     unsigned modifier_mask = int(shift) + (int(alt) << 1) + (int(ctrl) << 2);
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
-        char escape_character = m_cursor_keys_mode == CursorKeysMode::Application ? 'O' : '[';
         StringBuilder builder;
-        if (modifier_mask)
-            MUST(builder.try_appendff("\e{}1;{}{:c}", escape_character, modifier_mask + 1, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
-        else
+        if (modifier_mask) {
+            MUST(builder.try_appendff("\e[1;{}{:c}", modifier_mask + 1, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        } else {
+            char escape_character = m_cursor_keys_mode == CursorKeysMode::Application ? 'O' : '[';
             MUST(builder.try_appendff("\e{}{:c}", escape_character, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        }
         emit_string(builder.string_view());
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
