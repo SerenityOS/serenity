@@ -12,8 +12,9 @@
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCore/Account.h>
-#include <LibCore/Command.h>
+#include <LibCore/Process.h>
 #include <LibCore/Socket.h>
+#include <LibCore/System.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/X25519.h>
 #include <LibSSH/DataTypes.h>
@@ -581,26 +582,44 @@ ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& m
 #endif
 
     Vector<ByteString> args;
-    args.append(shell);
     args.append("-c");
     args.append(ByteString(command.bytes()));
 
-    Vector<char const*> raw_args;
-    raw_args.ensure_capacity(args.size() + 1);
-    for (auto& arg : args)
-        raw_args.append(arg.characters());
+    // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
+    //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
+    auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
 
-    raw_args.append(nullptr);
+    auto child = TRY(Core::Process::spawn({
+        .executable = shell,
+        .arguments = args,
+        .file_actions = {
+            Core::FileAction::DuplicateFile { stdin_fds[0], STDIN_FILENO },
+            Core::FileAction::DuplicateFile { stdout_fds[1], STDOUT_FILENO },
+            Core::FileAction::DuplicateFile { stderr_fds[1], STDERR_FILENO },
+        },
+    }));
 
-    auto child = TRY(Core::Command::create(shell, raw_args.data()));
-    auto output = TRY(child->read_all());
-    auto status = TRY(child->status());
+    TRY(Core::System::close(stdin_fds[0]));
+    TRY(Core::System::close(stdout_fds[1]));
+    TRY(Core::System::close(stderr_fds[1]));
 
-    if (status != Core::Command::ProcessResult::DoneWithZeroExitCode)
+    session.system = ExecData {
+        .m_stdin = TRY(Core::File::adopt_fd(stdin_fds[1], Core::File::OpenMode::Write)),
+        .m_stdout = TRY(Core::File::adopt_fd(stdout_fds[0], Core::File::OpenMode::Read)),
+        .m_stderr = TRY(Core::File::adopt_fd(stderr_fds[0], Core::File::OpenMode::Read)),
+    };
+
+    auto output = TRY(session.system.get<ExecData>().m_stdout->read_until_eof());
+
+    auto exited_with_code_0 = TRY(child.wait_for_termination());
+
+    if (!exited_with_code_0)
         return Error::from_string_literal("Unable to run command");
 
     TRY(send_channel_success_message(session));
-    TRY(send_channel_data(session, output.standard_output));
+    TRY(send_channel_data(session, output));
     TRY(send_channel_close(session));
     return {};
 }

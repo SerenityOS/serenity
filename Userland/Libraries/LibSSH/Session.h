@@ -8,11 +8,21 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Variant.h>
+#include <LibCore/File.h>
 
 namespace SSH {
 
 // 6.1.  Opening a Session
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.1
+
+struct ExecData {
+    NonnullOwnPtr<Core::File> m_stdin;
+    NonnullOwnPtr<Core::File> m_stdout;
+    NonnullOwnPtr<Core::File> m_stderr;
+};
+
 struct Session {
     static ErrorOr<Session> create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size);
 
@@ -20,6 +30,8 @@ struct Session {
     u32 sender_channel_id {};
     u32 maximum_packet_size {};
     ByteBuffer window {};
+
+    Variant<Empty, ExecData> system {};
 
     bool is_closed { false };
 };
