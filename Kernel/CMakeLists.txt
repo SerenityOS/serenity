@@ -592,6 +592,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/SBI.cpp
         Arch/riscv64/SmapDisabler.cpp
         Arch/riscv64/Timer.cpp
+        Arch/riscv64/GoldfishRTC.cpp
         Arch/riscv64/trap_handler.S
 
         Bus/PCI/Controller/GenericECAMHostController.cpp

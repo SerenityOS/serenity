@@ -23,6 +23,7 @@
 #    include <Kernel/Arch/aarch64/Time/PL031.h>
 #elif ARCH(RISCV64)
 #    include <Kernel/Arch/riscv64/Timer.h>
+#    include <Kernel/Arch/riscv64/GoldfishRTC.h>
 #else
 #    error Unknown architecture
 #endif
@@ -38,6 +39,7 @@
 #include <Kernel/Time/HardwareTimer.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/Time/TimerQueue.h>
+
 
 namespace Kernel {
 
@@ -232,7 +234,13 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
     }
 #elif ARCH(RISCV64)
     if (cpu == 0) {
-        VERIFY(!s_the.is_initialized());
+        auto rtc_or_error = GoldfishRTC::initialize(PhysicalAddress(0x101000));
+        if (rtc_or_error.is_error()) {
+            dmesgln("GoldfishRTC: Failed to initialize at 0x101000: {}", rtc_or_error.error());
+        } else {
+            dmesgln("GoldfishRTC: Successfully initialized!");
+        }
+
         s_the.ensure_instance();
     }
 #else
@@ -269,8 +277,7 @@ UnixDateTime TimeManagement::boot_time()
         return UnixDateTime::epoch();
     return rtc->boot_time();
 #elif ARCH(RISCV64)
-    // FIXME: Return correct boot time
-    return UnixDateTime::epoch();
+    return GoldfishRTC::the().boot_time();
 #else
 #    error Unknown architecture
 #endif
@@ -312,6 +319,7 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
         m_epoch_time += boot_time().offset_to_epoch();
     probe_and_set_aarch64_hardware_timers();
 #elif ARCH(RISCV64)
+    m_epoch_time += boot_time().offset_to_epoch();
     probe_and_set_riscv64_hardware_timers();
 #else
 #    error Unknown architecture
