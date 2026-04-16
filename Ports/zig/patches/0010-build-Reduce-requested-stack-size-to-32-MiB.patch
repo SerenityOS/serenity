@@ -9,15 +9,15 @@ See: https://github.com/SerenityOS/serenity/issues/25790
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/zig/build.zig b/zig/build.zig
-index c57c3e713ad186ed5e72dd641b386f2109affda1..1717f4e683461d946b2a628f33770d17c111bbad 100644
+index 83aacca3406f69c28ce9f1666358042fee5eedac..c3d999de6aa951e4803336829fa63dac92e9ff65 100644
 --- a/zig/build.zig
 +++ b/zig/build.zig
-@@ -11,7 +11,7 @@ const DevEnv = @import("src/dev.zig").Env;
- const ValueInterpretMode = enum { direct, by_name };
+@@ -11,7 +11,7 @@ const tests = @import("test/tests.zig");
+ const DevEnv = @import("src/dev.zig").Env;
  
  const zig_version: std.SemanticVersion = .{ .major = 0, .minor = 16, .patch = 0 };
 -const stack_size = 46 * 1024 * 1024;
 +const stack_size = 32 * 1024 * 1024;
  
- pub fn build(b: *std.Build) !void {
-     const only_c = b.option(bool, "only-c", "Translate the Zig compiler to C code, with only the C backend enabled") orelse false;
+ const IoMode = enum { threaded, evented };
+ const ValueInterpretMode = enum { direct, by_name };

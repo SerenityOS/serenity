@@ -8,18 +8,18 @@ Subject: [PATCH] build: Adjust build process for SerenityOS
  1 file changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/build b/build
-index f5ec57529f689fe4848592c7a5b35b221a83cf6a..b472795f3f21c3da866822185c1b5a26f878284a 100755
+index 8c06f3b0e5c9315e87490ee4a961834c48d28c82..4a0312c0717e6874acceb92f526367d745462390 100755
 --- a/build
 +++ b/build
-@@ -19,6 +19,7 @@ case $TARGET_OS_CMAKE in
-   netbsd*) TARGET_OS_CMAKE="NetBSD";;
+@@ -20,6 +20,7 @@ case $TARGET_OS_CMAKE in
+   openbsd*) TARGET_OS_CMAKE="OpenBSD";;
    windows*) TARGET_OS_CMAKE="Windows";;
    linux*) TARGET_OS_CMAKE="Linux";;
 +  serenity*) TARGET_OS_CMAKE="Serenity";;
    native) TARGET_OS_CMAKE="";;
  esac
  
-@@ -66,6 +67,36 @@ cmake "$ROOTDIR/zig" \
+@@ -68,6 +69,36 @@ cmake "$ROOTDIR/zig" \
    -DCMAKE_BUILD_TYPE=Release \
    -DZIG_VERSION="$ZIG_VERSION"
  cmake --build . --target install
@@ -56,7 +56,7 @@ index f5ec57529f689fe4848592c7a5b35b221a83cf6a..b472795f3f21c3da866822185c1b5a26
  
  # Now we have Zig as a cross compiler.
  ZIG="$ROOTDIR/out/host/bin/zig"
-@@ -86,7 +117,8 @@ cmake "$ROOTDIR/zlib" \
+@@ -88,7 +119,8 @@ cmake "$ROOTDIR/zlib" \
    -DCMAKE_LINK_DEPENDS_USE_LINKER=OFF \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
@@ -66,11 +66,11 @@ index f5ec57529f689fe4848592c7a5b35b221a83cf6a..b472795f3f21c3da866822185c1b5a26
  cmake --build . --target install
  
  # Same deal for zstd.
-@@ -150,6 +182,7 @@ cmake "$ROOTDIR/llvm" \
+@@ -152,6 +184,7 @@ cmake "$ROOTDIR/llvm" \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
    -DCMAKE_RANLIB="$ROOTDIR/out/host/bin/llvm-ranlib" \
 +  -DCMAKE_TOOLCHAIN_FILE="$ROOTDIR/out/CMakeToolchain.txt" \
+   -DLLVM_APPEND_VC_REV=OFF \
    -DLLVM_ENABLE_BACKTRACES=OFF \
    -DLLVM_ENABLE_BINDINGS=OFF \
-   -DLLVM_ENABLE_CRASH_OVERRIDES=OFF \

@@ -86,15 +86,7 @@ doctest: Filter ZIG_LIBC from the environment
 This environment variable can leak into the doctest builds and cause
 them to look for the host libraries in the target libc locations.
 
-## `0010-build-Set-correct-Zig-version.patch`
-
-build: Set correct Zig version
-
-The build script contains the version of zig-bootstrap's infrequently
-updated vendored Zig. Since we overwrite it with Zig master we have to
-patch the version too.
-
-## `0011-build-Reduce-requested-stack-size-to-32-MiB.patch`
+## `0010-build-Reduce-requested-stack-size-to-32-MiB.patch`
 
 build: Reduce requested stack size to 32 MiB
 
