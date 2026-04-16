@@ -5,107 +5,144 @@ Subject: [PATCH] Extend support for SerenityOS target
 
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
- zig/lib/std/fs/Dir.zig               | 73 ++++++++++++++++++++++++++++
- zig/lib/std/zig/LibCInstallation.zig | 26 ++++++++--
- zig/src/Compilation/Config.zig       |  1 +
- 3 files changed, 95 insertions(+), 5 deletions(-)
+ zig/lib/std/Io/Threaded.zig          | 50 +++++++++++++++++++++++++---
+ zig/lib/std/c.zig                    |  3 +-
+ zig/lib/std/c/serenity.zig           |  4 +--
+ zig/lib/std/zig/LibCInstallation.zig | 27 ++++++++++++---
+ zig/src/target.zig                   |  2 +-
+ 5 files changed, 71 insertions(+), 15 deletions(-)
 
-diff --git a/zig/lib/std/fs/Dir.zig b/zig/lib/std/fs/Dir.zig
-index d097573122eb9d9ae0e6e78936bb8720d3a9bc91..a2baf34716f5fb8b79a6ec7d93ef579d8a42d4b5 100644
---- a/zig/lib/std/fs/Dir.zig
-+++ b/zig/lib/std/fs/Dir.zig
-@@ -239,6 +239,74 @@ pub const Iterator = switch (native_os) {
-             self.first_iter = true;
-         }
-     },
-+    .serenity => struct {
-+        dir: Dir,
-+        dir_ptr: *posix.system.DIR,
-+
-+        const Self = @This();
-+
-+        pub const Error = IteratorError;
-+
-+        pub fn next(self: *Self) Error!?Entry {
-+            const errno_location = posix.system._errno();
-+            start_over: while (true) {
-+                // HACK: readdir_r currently doesn't work properly on
-+                //       SerenityOS. Until it does, we need to rely on
-+                //       readdir which has legacy errno behavior.
-+                const saved_errno = errno_location.*;
-+                errno_location.* = 0;
-+                const entry = posix.system.readdir(self.dir_ptr);
-+                if (entry == null) {
-+                    if (errno_location.* != 0) {
-+                        switch (posix.errno(-1)) {
-+                            .OVERFLOW => unreachable,
-+                            .BADF => unreachable,
-+                            .NOENT => unreachable,
-+                            else => |err| return posix.unexpectedErrno(err),
-+                        }
-+                    }
-+
-+                    // No error, just end of directory.
-+                    errno_location.* = saved_errno;
-+                    return null;
+diff --git a/zig/lib/std/Io/Threaded.zig b/zig/lib/std/Io/Threaded.zig
+index f004a56ca91155cca0ae69dfdf4575678f81979c..475d97ddeab3c14150ba8b59791b3350b299a1b2 100644
+--- a/zig/lib/std/Io/Threaded.zig
++++ b/zig/lib/std/Io/Threaded.zig
+@@ -1098,6 +1098,31 @@ const Thread = struct {
+                     else => unreachable,
+                 };
+             },
++            .serenity => {
++                var tm: std.c.timespec = undefined;
++                var tm_ptr: ?*const std.c.timespec = null;
++                if (timeout_ns) |ns| {
++                    tm_ptr = &tm;
++                    tm = timestampToPosix(ns);
 +                }
-+
-+                const name = mem.sliceTo(@as([*:0]u8, @ptrCast(&entry.?.name)), 0);
-+                if (mem.eql(u8, name, ".") or mem.eql(u8, name, ".."))
-+                    continue :start_over;
-+
-+                const stat_info = posix.fstatat(
-+                    self.dir.fd,
-+                    name,
-+                    posix.AT.SYMLINK_NOFOLLOW,
-+                ) catch |err| switch (err) {
-+                    error.NameTooLong => unreachable,
-+                    error.SymLinkLoop => unreachable,
-+                    error.FileNotFound => unreachable, // lost the race
-+                    else => |e| return e,
++                const syscall: Syscall = if (uncancelable) .{ .thread = null } else try .start();
++                const rc = std.c.futex(
++                    @constCast(ptr),
++                    std.c.FUTEX.WAIT | std.c.FUTEX.PRIVATE_FLAG,
++                    expect,
++                    tm_ptr,
++                    null,
++                    0,
++                );
++                syscall.finish();
++                if (is_debug) switch (posix.errno(rc)) {
++                    .SUCCESS => {},
++                    .AGAIN => {}, // ptr != expect
++                    .TIMEDOUT => {}, // timeout
++                    .FAULT => unreachable, // ptr was invalid
++                    else => unreachable,
 +                };
-+                const entry_kind: Entry.Kind = switch (stat_info.mode & posix.S.IFMT) {
-+                    posix.S.IFIFO => .named_pipe,
-+                    posix.S.IFCHR => .character_device,
-+                    posix.S.IFDIR => .directory,
-+                    posix.S.IFBLK => .block_device,
-+                    posix.S.IFREG => .file,
-+                    posix.S.IFLNK => .sym_link,
-+                    posix.S.IFSOCK => .unix_domain_socket,
-+                    else => .unknown,
-+                };
-+                return Entry{
-+                    .name = name,
-+                    .kind = entry_kind,
-+                };
-+            }
-+        }
-+
-+        pub fn reset(self: *Self) void {
-+            // FIXME: Very small chance this may fail.
-+            self.dir_ptr = posix.system.fdopendir(self.dir.fd).?;
-+        }
-+    },
-     .haiku => struct {
-         dir: Dir,
-         buf: [@sizeOf(DirEnt) + posix.PATH_MAX]u8 align(@alignOf(DirEnt)),
-@@ -636,6 +704,11 @@ fn iterateImpl(self: Dir, first_iter_start_value: bool) Iterator {
-             .buf = undefined,
-             .first_iter = first_iter_start_value,
++            },
+             else => @compileError("unimplemented: futexWait"),
+         }
+     }
+@@ -1187,6 +1212,22 @@ const Thread = struct {
+                     @min(max_waiters, std.math.maxInt(c_int)),
+                 );
+             },
++            .serenity => {
++                const rc = std.c.futex(
++                    @constCast(ptr),
++                    std.c.FUTEX.WAKE | std.c.FUTEX.PRIVATE_FLAG,
++                    max_waiters,
++                    null,
++                    null,
++                    0,
++                );
++                switch (posix.errno(rc)) {
++                    .SUCCESS => {},
++                    .FAULT => {}, // it's ok if the ptr doesn't point to valid memory
++                    .INVAL => unreachable, // arguments should be correct
++                    else => unreachable,
++                }
++            },
+             else => @compileError("unimplemented: futexWake"),
+         }
+     }
+@@ -2009,7 +2050,7 @@ const have_waitid = switch (native_os) {
+ 
+ const have_wait4 = switch (native_os) {
+     .linux => @hasField(std.os.linux.SYS, "wait4"),
+-    .dragonfly, .freebsd, .netbsd, .openbsd, .illumos, .serenity, .driverkit, .ios, .maccatalyst, .macos, .tvos, .visionos, .watchos => true,
++    .dragonfly, .freebsd, .netbsd, .openbsd, .illumos, .driverkit, .ios, .maccatalyst, .macos, .tvos, .visionos, .watchos => true,
+     else => false,
+ };
+ 
+@@ -9506,7 +9547,8 @@ fn dirHardLink(
+     new_sub_path: []const u8,
+     options: Dir.HardLinkOptions,
+ ) Dir.HardLinkError!void {
+-    if (is_windows) return error.OperationUnsupported;
++    // No linkat(), no SYMLINK_FOLLOW
++    if (is_windows or native_os == .serenity) return error.OperationUnsupported;
+     const t: *Threaded = @ptrCast(@alignCast(userdata));
+     _ = t;
+ 
+@@ -14103,8 +14145,8 @@ pub fn clockToPosix(clock: Io.Clock) posix.clockid_t {
+             // ticks while suspended.
+             else => posix.CLOCK.MONOTONIC,
          },
-+        .serenity => return Iterator{
-+            .dir = self,
-+            // FIXME: Very small chance this may fail.
-+            .dir_ptr = posix.system.fdopendir(self.fd).?,
-+        },
-         .haiku => return Iterator{
-             .dir = self,
-             .offset = 0,
+-        .cpu_process => posix.CLOCK.PROCESS_CPUTIME_ID,
+-        .cpu_thread => posix.CLOCK.THREAD_CPUTIME_ID,
++        .cpu_process => @panic("unsupported"),
++        .cpu_thread => @panic("unsupported"),
+     };
+ }
+ 
+diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
+index f0b03917855a2261fad5352220329c6904f922dc..c7f8f9cca378e9cd7e4d2ecc97884795d89d6c2d 100644
+--- a/zig/lib/std/c.zig
++++ b/zig/lib/std/c.zig
+@@ -11449,8 +11449,7 @@ pub const disown = serenity.disown;
+ pub const profiling_enable = serenity.profiling_enable;
+ pub const profiling_disable = serenity.profiling_disable;
+ pub const profiling_free_buffer = serenity.profiling_free_buffer;
+-pub const futex_wait = serenity.futex_wait;
+-pub const futex_wake = serenity.futex_wake;
++
+ pub const purge = serenity.purge;
+ pub const perf_event = serenity.perf_event;
+ pub const perf_register_string = serenity.perf_register_string;
+diff --git a/zig/lib/std/c/serenity.zig b/zig/lib/std/c/serenity.zig
+index b69eb602991c5d871b2c9eb05e4ca30548c059fd..4a0aa97cfa48f6b9b068d8ec58a6fd71edff49fb 100644
+--- a/zig/lib/std/c/serenity.zig
++++ b/zig/lib/std/c/serenity.zig
+@@ -53,9 +53,7 @@ pub extern "c" fn profiling_enable(pid: pid_t, event_mask: PERF_EVENT) c_int;
+ pub extern "c" fn profiling_disable(pid: pid_t) c_int;
+ pub extern "c" fn profiling_free_buffer(pid: pid_t) c_int;
+ 
+-pub extern "c" fn futex(userspace_address: *u32, futex_op: c_int, value: u32, timeout: *const timespec, userspace_address2: *u32, value3: u32) c_int;
+-pub extern "c" fn futex_wait(userspace_address: *u32, value: u32, abstime: *const timespec, clockid: clockid_t, process_shared: c_int) c_int;
+-pub extern "c" fn futex_wake(userspace_address: *u32, count: u32, process_shared: c_int) c_int;
++pub extern "c" fn futex(userspace_address: *u32, futex_op: c_int, value: u32, timeout: ?*const timespec, userspace_address2: ?*u32, value3: u32) c_int;
+ 
+ pub extern "c" fn purge(mode: c_int) c_int;
+ 
 diff --git a/zig/lib/std/zig/LibCInstallation.zig b/zig/lib/std/zig/LibCInstallation.zig
-index 0414d32ee7d661c9202ad90a47c9adca637aa563..ae0cadf537cbe2bf3e48fea26b5ef4a87f4d1af5 100644
+index 6a3f4b4813aa84dd89e2e214c36273442f9a024c..0adb38859af48d6fc70f486d2d3d3451dafdb46e 100644
 --- a/zig/lib/std/zig/LibCInstallation.zig
 +++ b/zig/lib/std/zig/LibCInstallation.zig
-@@ -101,7 +101,7 @@ pub fn parse(
+@@ -5,6 +5,7 @@ const builtin = @import("builtin");
+ const is_darwin = builtin.target.os.tag.isDarwin();
+ const is_windows = builtin.target.os.tag == .windows;
+ const is_haiku = builtin.target.os.tag == .haiku;
++const is_serenity = builtin.target.os.tag == .serenity;
+ 
+ const std = @import("std");
+ const Io = std.Io;
+@@ -112,7 +113,7 @@ pub fn parse(allocator: Allocator, io: Io, libc_file: []const u8, target: *const
          return error.ParseError;
      }
  
@@ -114,21 +151,21 @@ index 0414d32ee7d661c9202ad90a47c9adca637aa563..ae0cadf537cbe2bf3e48fea26b5ef4a8
          log.err("gcc_dir may not be empty for {s}", .{@tagName(os_tag)});
          return error.ParseError;
      }
-@@ -196,8 +196,12 @@ pub fn findNative(args: FindNativeOptions) FindError!LibCInstallation {
-         try self.findNativeCrtDirWindows(args, sdk);
+@@ -207,8 +208,12 @@ pub fn findNative(gpa: Allocator, io: Io, args: FindNativeOptions) FindError!Lib
+         try self.findNativeCrtDirWindows(gpa, io, args.target, sdk);
      } else if (is_haiku) {
-         try self.findNativeIncludeDirPosix(args);
--        try self.findNativeGccDirHaiku(args);
-+        try self.findNativeGccDirPosix(args);
-         self.crt_dir = try args.allocator.dupeZ(u8, "/system/develop/lib");
+         try self.findNativeIncludeDirPosix(gpa, io, args);
+-        try self.findNativeGccDirHaiku(gpa, io, args);
++        try self.findNativeGccDirPosix(gpa, io, args);
+         self.crt_dir = try gpa.dupe(u8, "/system/develop/lib");
 +    } else if (is_serenity) {
-+        try self.findNativeIncludeDirPosix(args);
-+        try self.findNativeGccDirPosix(args);
-+        self.crt_dir = try args.allocator.dupeZ(u8, "/usr/lib");
-     } else if (builtin.target.os.tag.isSolarish()) {
++        try self.findNativeIncludeDirPosix(gpa, io, args);
++        try self.findNativeGccDirPosix(gpa, io, args);
++        self.crt_dir = try gpa.dupe(u8, "/usr/lib");
+     } else if (builtin.target.os.tag == .illumos) {
          // There is only one libc, and its headers/libraries are always in the same spot.
-         self.include_dir = try args.allocator.dupeZ(u8, "/usr/include");
-@@ -308,7 +312,7 @@ fn findNativeIncludeDirPosix(self: *LibCInstallation, args: FindNativeOptions) F
+         self.include_dir = try gpa.dupe(u8, "/usr/include");
+@@ -314,7 +319,7 @@ fn findNativeIncludeDirPosix(self: *LibCInstallation, gpa: Allocator, io: Io, ar
      const include_dir_example_file = if (is_haiku) "posix/stdlib.h" else "stdlib.h";
      const sys_include_dir_example_file = if (is_windows)
          "sys\\types.h"
@@ -137,16 +174,18 @@ index 0414d32ee7d661c9202ad90a47c9adca637aa563..ae0cadf537cbe2bf3e48fea26b5ef4a8
          "errno.h"
      else
          "sys/errno.h";
-@@ -452,7 +456,7 @@ fn findNativeCrtDirPosix(self: *LibCInstallation, args: FindNativeOptions) FindE
+@@ -457,8 +462,9 @@ fn findNativeCrtDirPosix(self: *LibCInstallation, gpa: Allocator, io: Io, args:
      });
  }
  
--fn findNativeGccDirHaiku(self: *LibCInstallation, args: FindNativeOptions) FindError!void {
-+fn findNativeGccDirPosix(self: *LibCInstallation, args: FindNativeOptions) FindError!void {
-     self.gcc_dir = try ccPrintFileName(.{
-         .allocator = args.allocator,
+-fn findNativeGccDirHaiku(self: *LibCInstallation, gpa: Allocator, io: Io, args: FindNativeOptions) FindError!void {
++fn findNativeGccDirPosix(self: *LibCInstallation, gpa: Allocator, io: Io, args: FindNativeOptions) FindError!void {
+     self.gcc_dir = try ccPrintFileName(gpa, io, .{
++        .environ_map = args.environ_map,
          .search_basename = "crtbeginS.o",
-@@ -947,6 +951,17 @@ pub const CrtBasenames = struct {
+         .want_dirname = .only_dir,
+         .verbose = args.verbose,
+@@ -948,6 +954,17 @@ pub const CrtBasenames = struct {
                  },
                  .static_exe, .static_pie => .{},
              },
@@ -164,7 +203,7 @@ index 0414d32ee7d661c9202ad90a47c9adca637aa563..ae0cadf537cbe2bf3e48fea26b5ef4a8
              else => .{},
          };
      }
-@@ -991,7 +1006,7 @@ pub fn resolveCrtPaths(
+@@ -992,7 +1009,7 @@ pub fn resolveCrtPaths(
                  .crtn = if (crt_basenames.crtn) |basename| try crt_dir_path.join(arena, basename) else null,
              };
          },
@@ -173,22 +212,16 @@ index 0414d32ee7d661c9202ad90a47c9adca637aa563..ae0cadf537cbe2bf3e48fea26b5ef4a8
              const gcc_dir_path: Path = .{
                  .root_dir = std.Build.Cache.Directory.cwd(),
                  .sub_path = lci.gcc_dir orelse return error.LibCInstallationMissingCrtDir,
-@@ -1027,5 +1042,6 @@ const Path = std.Build.Cache.Path;
- const is_darwin = builtin.target.os.tag.isDarwin();
- const is_windows = builtin.target.os.tag == .windows;
- const is_haiku = builtin.target.os.tag == .haiku;
-+const is_serenity = builtin.target.os.tag == .serenity;
+diff --git a/zig/src/target.zig b/zig/src/target.zig
+index 3d04c06f5e5d1da0fe5e61ed693cf32651055e85..1ceff6e39a48e3171f71ab4239177fdc36c31d83 100644
+--- a/zig/src/target.zig
++++ b/zig/src/target.zig
+@@ -85,7 +85,7 @@ pub fn supports_fpic(target: *const std.Target) bool {
  
- const log = std.log.scoped(.libc_installation);
-diff --git a/zig/src/Compilation/Config.zig b/zig/src/Compilation/Config.zig
-index a4f8eefab7a376797bc71487f212505e5b488ced..2bc983bb28e3f8c29fe373a59ffb363aa3a2ec4c 100644
---- a/zig/src/Compilation/Config.zig
-+++ b/zig/src/Compilation/Config.zig
-@@ -463,6 +463,7 @@ pub fn resolve(options: Options) ResolveError!Config {
-         break :b if (options.output_mode == .Exe) switch (target.os.tag) {
-             .fuchsia,
-             .openbsd,
-+            .serenity,
-             => true,
-             else => target.os.tag.isDarwin(),
-         } else false;
+ pub fn defaultPie(target: *const std.Target) bool {
+     return switch (target.os.tag) {
+-        .openbsd => true,
++        .openbsd, .serenity => true,
+         else => target.os.tag.isDarwin(),
+     };
+ }
