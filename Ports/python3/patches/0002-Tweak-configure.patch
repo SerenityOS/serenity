@@ -17,7 +17,7 @@ Co-Authored-By: Oskar Skog <oskar@oskog97.com>
  1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/configure b/configure
-index 645628fecf2df75fd652a33b4214b444efe85a72..64f386cf8f8b104cfa08326ed39d7e1df2037aa4 100755
+index 8cfdda5a29b00da362abad11b90767480388aa27..13873c817d5b093c346148a176fc4803c902eb9b 100755
 --- a/configure
 +++ b/configure
 @@ -4105,6 +4105,9 @@ then
@@ -57,7 +57,7 @@ index 645628fecf2df75fd652a33b4214b444efe85a72..64f386cf8f8b104cfa08326ed39d7e1d
        LDLIBRARY='libpython$(LDVERSION).so'
        BLDLIBRARY='-L. -lpython$(LDVERSION)'
        RUNSHARED=LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-@@ -13676,7 +13683,7 @@ then
+@@ -13716,7 +13723,7 @@ then
  		 then CCSHARED="-fPIC";
  		 else CCSHARED="+z";
  		 fi;;
@@ -66,7 +66,7 @@ index 645628fecf2df75fd652a33b4214b444efe85a72..64f386cf8f8b104cfa08326ed39d7e1d
  	Emscripten*|WASI*)
  		if test "x$enable_wasm_dynamic_linking" = xyes
  then :
-@@ -13714,7 +13721,7 @@ then
+@@ -13754,7 +13761,7 @@ then
  	    LINKFORSHARED="-Wl,-E -Wl,+s";;
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
