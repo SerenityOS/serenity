@@ -146,6 +146,8 @@ class Configuration:
     virtualization_support: bool = False
     qemu_binary: Path | None = None
     qemu_kind: QEMUKind | None = None
+    qemu_major_version: int | None = None
+    qemu_minor_version: int | None = None
     kvm_usable: bool | None = None
     architecture: Arch | None = None
     serenity_src: Path | None = None
@@ -417,8 +419,8 @@ def check_qemu_version(config: Configuration):
     version_groups = qemu_version_regex.search(version_information)
     if version_groups is None:
         raise RunError(f'QEMU seems to be defective, its version information is "{version_information}"')
-    major = int(version_groups.group(1))
-    minor = int(version_groups.group(2))
+    major = config.qemu_major_version = int(version_groups.group(1))
+    minor = config.qemu_minor_version = int(version_groups.group(2))
 
     if major < QEMU_MINIMUM_REQUIRED_MAJOR_VERSION or (
         major == QEMU_MINIMUM_REQUIRED_MAJOR_VERSION and minor < QEMU_MINIMUM_REQUIRED_MINOR_VERSION
@@ -509,8 +511,14 @@ def set_up_cpu_count(config: Configuration):
 
 
 def set_up_spice(config: Configuration):
-    # FIXME: Re-enable SPICE by default once #26210 is fixed.
-    if environ.get("SERENITY_QEMU_SPICE") != "1":
+    # QEMU 10.1 changed the vdagent to reset the connection whenever guest
+    # capabilities are sent. This is not handled in SerenityOS, resulting in a
+    # kernel panic. In QEMU 10.2, this was changed to occur only if the spice
+    # agent advertises ClipboardGrabSerial (which we don't support), to fix a
+    # regression in the Windows agent, and this also fixes things for SerenityOS.
+    # See: https://github.com/qemu/qemu/commit/4be62d311791bf9d318f5139439d170ad5112279
+    # FIXME: Handle the resets correctly for QEMU 10.1.
+    if (config.qemu_major_version, config.qemu_minor_version) == (10, 1):
         return
 
     # Only the default machine has virtio-serial (required for the spice agent).
