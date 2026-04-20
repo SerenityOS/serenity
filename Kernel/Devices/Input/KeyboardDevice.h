@@ -49,6 +49,9 @@ public:
 
     void handle_input_event(KeyEvent);
     bool num_lock_on() const { return m_num_lock_on; }
+    bool caps_lock_on() const { return m_caps_lock_on; }
+    bool scroll_lock_on() const { return m_scroll_lock_on; }
+    
 
 protected:
     KeyboardDevice();
@@ -61,7 +64,7 @@ protected:
     bool m_caps_lock_to_ctrl_pressed { false };
     bool m_caps_lock_on { false };
     bool m_num_lock_on { false };
-
+    bool m_scroll_lock_on { false };
     void key_state_changed(u8 raw, bool pressed);
 };
 }

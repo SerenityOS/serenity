@@ -13,8 +13,13 @@
 #include <Kernel/Devices/Input/Definitions.h>
 #include <Kernel/Devices/Input/KeyboardDevice.h>
 #include <Kernel/Security/Random.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
+
+static constexpr u8 LED_SCROLL_LOCK = 0x01;
+static constexpr u8 LED_NUM_LOCK = 0x02;
+static constexpr u8 LED_CAPS_LOCK = 0x04;
 
 class PS2KeyboardDevice final : public SerialIODevice {
     friend class Device;
@@ -26,8 +31,11 @@ public:
 
     // ^SerialIODevice
     virtual void handle_byte_read_from_serial_input(u8 byte) override;
-
+    ErrorOr<void> update_leds(u8 led_mask);
+    
 private:
+    u8 m_keyboard_leds { 0 };
+    
     PS2KeyboardDevice(SerialIOController const&, SerialIOController::PortIndex port_index, ScanCodeSet scan_code_set, KeyboardDevice const&);
 
     RawKeyEvent generate_raw_key_event_input_from_set1(ScanCodeEvent);
