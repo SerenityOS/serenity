@@ -65,17 +65,14 @@ ErrorOr<void> MainWidget::setup()
 
     m_beep_bell_radio->on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::AudibleBeep;
-        Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, VT::TerminalWidget::stringify_bell(m_bell_mode));
         set_modified(true);
     };
     m_visual_bell_radio->on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::Visible;
-        Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, VT::TerminalWidget::stringify_bell(m_bell_mode));
         set_modified(true);
     };
     m_no_bell_radio->on_checked = [this](bool) {
         m_bell_mode = VT::TerminalWidget::BellMode::Disabled;
-        Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, VT::TerminalWidget::stringify_bell(m_bell_mode));
         set_modified(true);
     };
 
@@ -90,12 +87,10 @@ ErrorOr<void> MainWidget::setup()
 
     m_automark_off_radio->on_checked = [this](bool) {
         m_automark_mode = VT::TerminalWidget::AutoMarkMode::MarkNothing;
-        Config::write_string("Terminal"sv, "Terminal"sv, "AutoMark"sv, VT::TerminalWidget::stringify_automark_mode(m_automark_mode));
         set_modified(true);
     };
     m_automark_on_interactive_prompt_radio->on_checked = [this](bool) {
         m_automark_mode = VT::TerminalWidget::AutoMarkMode::MarkInteractiveShellPrompt;
-        Config::write_string("Terminal"sv, "Terminal"sv, "AutoMark"sv, VT::TerminalWidget::stringify_automark_mode(m_automark_mode));
         set_modified(true);
     };
 
@@ -104,7 +99,6 @@ ErrorOr<void> MainWidget::setup()
     m_confirm_close_checkbox->set_checked(m_confirm_close);
     m_confirm_close_checkbox->on_checked = [this](bool confirm_close) {
         m_confirm_close = confirm_close;
-        Config::write_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, confirm_close);
         set_modified(true);
     };
     return {};
