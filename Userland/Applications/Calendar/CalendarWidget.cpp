@@ -70,6 +70,7 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
     toolbar->add_separator();
     toolbar->add_action(view_month_action);
     toolbar->add_action(view_year_action);
+    toolbar->add_separator();
     toolbar->add_action(open_settings_action);
 
     widget->create_on_tile_doubleclick();
@@ -85,11 +86,14 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
     auto save_action = widget->create_save_action(save_as_action);
 
     auto file_menu = parent_window->add_menu("&File"_string);
-    file_menu->add_action(open_settings_action);
     file_menu->add_action(new_calendar_action);
     file_menu->add_action(open_calendar_action);
     file_menu->add_action(save_as_action);
     file_menu->add_action(save_action);
+
+    file_menu->add_separator();
+
+    file_menu->add_action(open_settings_action);
 
     file_menu->add_separator();
 
@@ -294,8 +298,8 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_view_year_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_open_settings_action()
 {
-    return GUI::Action::create("Calendar &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
-        GUI::Process::spawn_or_show_error(window(), "/bin/CalendarSettings"sv);
+    return GUI::CommonActions::make_settings_action([&](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/bin/CalendarSettings"sv));
     });
 }
 
