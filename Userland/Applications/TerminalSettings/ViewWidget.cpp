@@ -55,7 +55,6 @@ ErrorOr<void> ViewWidget::setup()
     m_opacity_slider->set_value(m_opacity);
     m_opacity_slider->on_change = [this](int value) {
         m_opacity = value;
-        Config::write_i32("Terminal"sv, "Window"sv, "Opacity"sv, static_cast<i32>(m_opacity));
         set_modified(true);
     };
 
@@ -73,7 +72,6 @@ ErrorOr<void> ViewWidget::setup()
             m_font = picker->font();
             m_font_label->set_text(m_font->human_readable_name());
             m_font_label->set_font(m_font);
-            Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
             set_modified(true);
         }
     };
@@ -87,13 +85,11 @@ ErrorOr<void> ViewWidget::setup()
             m_font = Gfx::FontDatabase::the().default_fixed_width_font();
             m_font_label->set_text(m_font->human_readable_name());
             m_font_label->set_font(m_font);
-            Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
         } else {
             m_font_selection->set_enabled(true);
             m_font = initial_font_name.is_empty()
                 ? Gfx::FontDatabase::the().default_fixed_width_font()
                 : Gfx::FontDatabase::the().get_by_name(initial_font_name);
-            Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
         }
         set_modified(true);
     };
@@ -120,23 +116,19 @@ ErrorOr<void> ViewWidget::setup()
     m_cursor_blinking_checkbox->on_checked = [this](bool is_checked) {
         set_modified(true);
         m_cursor_is_blinking_set = is_checked;
-        Config::write_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, is_checked);
     };
 
     m_cursor_block_radio->on_checked = [this](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Block;
-        Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Block"sv);
     };
     m_cursor_underline_radio->on_checked = [this](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Underline;
-        Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Underline"sv);
     };
     m_cursor_bar_radio->on_checked = [this](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Bar;
-        Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Bar"sv);
     };
 
     m_max_history_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, Terminal::Defaults::MAX_HISTORY_SIZE);
@@ -144,7 +136,6 @@ ErrorOr<void> ViewWidget::setup()
     m_history_size_spinbox->set_value(m_max_history_size);
     m_history_size_spinbox->on_change = [this](int value) {
         m_max_history_size = value;
-        Config::write_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, static_cast<i32>(m_max_history_size));
         set_modified(true);
     };
 
@@ -153,7 +144,6 @@ ErrorOr<void> ViewWidget::setup()
     m_show_scrollbar_checkbox->set_checked(m_show_scrollbar);
     m_show_scrollbar_checkbox->on_checked = [this](bool show_scrollbar) {
         m_show_scrollbar = show_scrollbar;
-        Config::write_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, show_scrollbar);
         set_modified(true);
     };
     return {};
