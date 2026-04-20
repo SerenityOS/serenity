@@ -26,14 +26,14 @@
             "target": "/usr/lib/"
         },
         {
-            "type": "copy_executable",
-            "source": "/bin/BuggieBox",
-            "target": "/bin/BuggieBox"
+            "type": "bindmount",
+            "source": "/usr/lib",
+            "target": "/usr/lib"
         },
         {
             "type": "copy_original",
             "sources": [
-                "/usr/lib/Loader.so"
+                "/bin/BuggieBox"
             ]
         },
         {
