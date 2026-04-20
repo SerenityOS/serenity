@@ -6,6 +6,7 @@
  */
 
 #include <AK/Types.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Bus/SerialIO/PS2Definitions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/Device.h>
@@ -17,6 +18,10 @@
 #include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
+
+constexpr u8 LED_SCROLL_LOCK = 1 << 0;
+constexpr u8 LED_NUM_LOCK = 1 << 1;
+constexpr u8 LED_CAPS_LOCK = 1 << 2;
 
 // clang-format off
 static constexpr KeyCodeEntry unshifted_scan_code_set1_key_map[0x80] = {
@@ -546,6 +551,26 @@ void PS2KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
     }
 
     m_keyboard_device->handle_input_event(queued_event);
+
+    if (raw_event.is_press()) {
+        if (queued_event.key == Key_CapsLock || queued_event.key == Key_NumLock || queued_event.key == Key_ScrollLock) {
+            bool caps_lock = m_keyboard_device->caps_lock_on();
+            bool num_lock = m_keyboard_device->num_lock_on();
+            bool scroll_lock = m_keyboard_device->scroll_lock_on();
+            u8 leds = 0;
+
+            if (caps_lock)
+                leds |= LED_CAPS_LOCK;
+            if (num_lock)
+                leds |= LED_NUM_LOCK;
+            if (scroll_lock)
+                leds |= LED_SCROLL_LOCK;
+
+            (void)g_io_work->try_queue([this, leds] {
+                (void)update_leds(leds);
+            });
+        }
+    }
 }
 
 void PS2KeyboardDevice::handle_byte_read_for_scan_code_set1(u8 byte)
@@ -750,8 +775,12 @@ UNMAP_AFTER_INIT ErrorOr<void> PS2KeyboardDevice::initialize()
             // NMB SGI keyboard, raw and translated
         case 0x60:
         case 0x47:
+            (void)update_leds(0);
             return {};
         }
+    } else {
+        // Clear all LEDs on startup to ensure a known state.
+        (void)update_leds(0);
     }
 
     return err;
@@ -769,5 +798,12 @@ UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(SerialIOController const& 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
 // are hot pluggable.
 UNMAP_AFTER_INIT PS2KeyboardDevice::~PS2KeyboardDevice() = default;
+
+ErrorOr<void> PS2KeyboardDevice::update_leds(u8 led_mask)
+{
+    led_mask &= (LED_SCROLL_LOCK | LED_NUM_LOCK | LED_CAPS_LOCK);
+    TRY(attached_controller().send_command(attached_port_index(), SerialIOController::DeviceCommand::SetLeds, led_mask));
+    return {};
+}
 
 }
