@@ -28,7 +28,7 @@ class TerminalWidget final
     C_OBJECT(TerminalWidget);
 
 public:
-    virtual ~TerminalWidget() override = default;
+    virtual ~TerminalWidget() override;
 
     void set_pty_master_fd(int fd);
     void inject_string(StringView string)
