@@ -169,7 +169,7 @@ cleanup() {
 trap cleanup EXIT
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-"$script_path/build-root-filesystem.sh"
+SERENITY_USE_GENEXT2FS=$use_genext2fs "$script_path/build-root-filesystem.sh"
 
 if [ $use_genext2fs = 1 ]; then
     genext2fs -B 4096 -b $((DISK_SIZE_BYTES / 4096)) -i "${BYTES_PER_INODE}" -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
