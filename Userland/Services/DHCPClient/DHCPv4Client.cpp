@@ -80,7 +80,7 @@ static void set_params(InterfaceDescriptor const& iface, IPv4Address const& ipv4
         dbgln("ERROR: socket :: {}", strerror(errno));
         return;
     }
-
+    ScopeGuard socket_close_guard = [&] { close(fd); };
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
 
