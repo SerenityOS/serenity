@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='nano'
-version='8.5'
+version='9.0'
 files=(
-    "https://www.nano-editor.org/dist/v8/nano-${version}.tar.xz#000b011d339c141af9646d43288f54325ff5c6e8d39d6e482b787bbc6654c26a"
+    "https://www.nano-editor.org/dist/v9/nano-${version}.tar.xz#9f384374b496110a25b73ad5a5febb384783c6e3188b37063f677ac908013fde"
 )
 useconfigure='true'
 use_fresh_config_sub='true'
