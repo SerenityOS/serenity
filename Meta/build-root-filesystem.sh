@@ -23,14 +23,29 @@ if ! command -v rsync >/dev/null; then
     die "Please install rsync."
 fi
 
+# On macOS, APFS returns filenames as NFC bytes, but fuse2fs via macFUSE only
+# accepts file creation with NFD-encoded names. Use --iconv=UTF-8,UTF-8-MAC to
+# convert sender filenames from NFC (UTF-8) to NFD (UTF-8-MAC) so that
+# non-ASCII filenames can be written to the ext2 disk image.
+RSYNC_ICONV=""
+if [ "$(uname -s)" = "Darwin" ] && rsync --help 2>&1 | grep -q iconv; then
+    RSYNC_ICONV="--iconv=UTF-8,UTF-8-MAC"
+fi
+
 if rsync --chown 2>&1 | grep "missing argument" >/dev/null; then
-    rsync -aH --chown=0:0 --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
-    rsync -aH --chown=0:0 --exclude="/usr/include" --inplace --update Root/ mnt/
-    rsync -aHL --chown=0:0 --inplace --update Root/usr/include/ mnt/usr/include/
+    # shellcheck disable=SC2086
+    rsync -aH $RSYNC_ICONV --chown=0:0 --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
+    # shellcheck disable=SC2086
+    rsync -aH $RSYNC_ICONV --chown=0:0 --exclude="/usr/include" --inplace --update Root/ mnt/
+    # shellcheck disable=SC2086
+    rsync -aHL $RSYNC_ICONV --chown=0:0 --inplace --update Root/usr/include/ mnt/usr/include/
 else
-    rsync -aH --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
-    rsync -aH --inplace --exclude="/usr/include" --update Root/ mnt/
-    rsync -aHL --inplace --update Root/usr/include/ mnt/usr/include/
+    # shellcheck disable=SC2086
+    rsync -aH $RSYNC_ICONV --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
+    # shellcheck disable=SC2086
+    rsync -aH $RSYNC_ICONV --inplace --exclude="/usr/include" --update Root/ mnt/
+    # shellcheck disable=SC2086
+    rsync -aHL $RSYNC_ICONV --inplace --update Root/usr/include/ mnt/usr/include/
     chown -R 0:0 mnt/
 fi
 
