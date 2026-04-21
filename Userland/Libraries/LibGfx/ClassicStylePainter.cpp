@@ -88,7 +88,8 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         // If the tab is active, draw the accent line
         if (active && accented) {
             painter.fill_rect_with_gradient({ 1, 1, 2, rect.height() - 2 }, accent, accent.lightened(1.5f));
-            painter.draw_line({ 0, 2 }, { 0, rect.height() - 3 }, accent.darkened());
+            painter.draw_line({ 0, 3 }, { 0, rect.height() - 3 }, accent.darkened());
+            painter.set_pixel({ 0, 2 }, highlight_color2);
         } else {
             painter.draw_line({ 0, 2 }, { 0, rect.height() - 3 }, highlight_color2);
             painter.draw_line({ rect.width(), 1 }, { rect.width(), rect.height() - 1 }, shadow_color1);
@@ -107,7 +108,8 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         // If the tab is active, draw the accent line
         if (active && accented) {
             painter.fill_rect_with_gradient({ rect.width() - 2, 1, 2, rect.height() - 2 }, accent.lightened(1.5f), accent);
-            painter.draw_line({ rect.width(), 2 }, { rect.width(), rect.height() - 3 }, accent.darkened());
+            painter.draw_line({ rect.width(), 3 }, { rect.width(), rect.height() - 3 }, accent.darkened());
+            painter.set_pixel({ rect.width() - 1, 2 }, shadow_color1);
         } else {
             painter.draw_line({ rect.width(), 2 }, { rect.width(), rect.height() - 3 }, shadow_color2);
             painter.draw_line({ 0, 0 }, { 0, rect.height() - 1 }, shadow_color1);
