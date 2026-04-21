@@ -8,11 +8,13 @@
 #pragma once
 
 #include <AK/ByteString.h>
+#include <AK/Vector.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/Action.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/SeparatorWidget.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/Font.h>
 #include <LibVT/TerminalWidget.h>
@@ -30,8 +32,22 @@ public:
 private:
     TerminalWindow();
 
+    struct TabData {
+        int ptm_fd;
+        pid_t shell_pid;
+        ByteString ptsname;
+        ByteString title;
+        RefPtr<VT::TerminalWidget> terminal;
+        RefPtr<GUI::Window> find_window;
+    };
+
     ErrorOr<void> build_menus(GUI::Icon const& app_icon);
+    VT::TerminalWidget& active_terminal();
+    ErrorOr<void> create_terminal_tab(int ptm_fd, pid_t shell_pid, ByteString ptsname);
+    void close_terminal_tab(VT::TerminalWidget&);
+    ErrorOr<void> open_new_terminal_tab(StringView cmd = {}, bool keep_open = false);
     GUI::Dialog::ExecResult check_terminal_quit();
+    GUI::Dialog::ExecResult check_tab_quit(VT::TerminalWidget&);
     void adjust_font_size(float adjustment, Gfx::Font::AllowInexactSizeMatch);
 
     // ^Config::Listener
@@ -39,14 +55,12 @@ private:
     virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
     virtual void config_i32_did_change(StringView domain, StringView group, StringView key, i32 value) override;
 
-    RefPtr<VT::TerminalWidget> m_terminal;
-    RefPtr<GUI::Window> m_find_window;
+    RefPtr<GUI::TabWidget> m_tab_widget;
+    RefPtr<GUI::HorizontalSeparator> m_top_line;
     RefPtr<GUI::Action> m_open_settings_action;
-    RefPtr<Core::Timer> m_modified_state_check_timer;
-    int m_ptm_fd { -1 };
-    pid_t m_shell_pid { -1 };
-    ByteString m_ptsname;
+    Vector<TabData> m_tab_data_list;
     bool m_should_confirm_close { true };
+    RefPtr<Core::Timer> m_modified_state_check_timer;
 
     // Cached config values
     VT::TerminalWidget::BellMode m_bell;
