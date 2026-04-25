@@ -18,7 +18,6 @@ int main()
     @autoreleasepool {
         NSArray* top_level_objects;
         [[NSBundle mainBundle] loadNibNamed:@"MainMenu" owner:[NSApplication sharedApplication] topLevelObjects:&top_level_objects];
-        [NSApp finishLaunching];
     }
 
     return event_loop.exec();
