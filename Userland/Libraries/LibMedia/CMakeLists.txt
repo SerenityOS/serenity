@@ -6,6 +6,7 @@ set(SOURCES
     Containers/Matroska/Reader.cpp
     PlaybackManager.cpp
     VideoFrame.cpp
+    Video/VP8/Decoder.cpp
     Video/VP9/Decoder.cpp
     Video/VP9/Parser.cpp
     Video/VP9/ProbabilityTables.cpp
