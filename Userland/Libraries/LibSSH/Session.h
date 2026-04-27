@@ -8,6 +8,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
+#include <LibSSH/SFTP/Server.h>
 
 namespace SSH {
 
@@ -22,6 +23,7 @@ struct Session {
     ByteBuffer window {};
 
     bool is_closed { false };
+    Optional<SFTP::Server> subsystem {};
 };
 
 }

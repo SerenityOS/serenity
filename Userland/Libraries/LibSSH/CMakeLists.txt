@@ -5,7 +5,9 @@ set(SOURCES
     KeyExchangeData.cpp
     Peer.cpp
     Session.cpp
+    SFTP/Peer.cpp
+    SFTP/Server.cpp
 )
 
 serenity_lib(LibSSH ssh)
-target_link_libraries(LibSSH PRIVATE LibCrypto)
+target_link_libraries(LibSSH PRIVATE LibCore LibCrypto)

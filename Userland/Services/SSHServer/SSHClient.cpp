@@ -469,6 +469,9 @@ ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_generic_packet(GenericMes
     case MessageID::CHANNEL_REQUEST:
         TRY(handle_channel_request(message));
         break;
+    case MessageID::CHANNEL_DATA:
+        TRY(handle_channel_data(message));
+        break;
     case MessageID::CHANNEL_CLOSE:
         TRY(handle_channel_close(message));
         break;
@@ -558,6 +561,11 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
         return {};
     }
 
+    if (request_type == "subsystem"sv.bytes()) {
+        TRY(handle_channel_subsystem(session, message));
+        return {};
+    }
+
     return Error::from_string_literal("Unsupported channel request");
 }
 
@@ -601,6 +609,43 @@ ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& m
     TRY(send_channel_data(session, output.standard_output));
     TRY(send_channel_close(session));
     return {};
+}
+
+// 6.5.  Starting a Shell or a Command
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
+ErrorOr<void> SSHClient::handle_channel_subsystem(Session& session, GenericMessage& message)
+{
+    auto subsystem = TRY(decode_string(message.payload));
+    dbgln_if(SSH_DEBUG, "Subsystem requested: {:s}", subsystem.bytes());
+
+    if (subsystem == "sftp"sv.bytes()) {
+        // 2. Use with the SSH Connection Protocol
+        // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-2
+
+        session.subsystem = SFTP::Server { [this, identifier = session.local_channel_id](ReadonlyBytes bytes) -> ErrorOr<void> {
+            auto& session = *TRY(find_session(identifier));
+            return send_channel_data(session, bytes);
+        } };
+        return TRY(send_channel_success_message(session));
+    }
+
+    return Error::from_string_literal("Unsupported subsystem");
+}
+
+// 5.2.  Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
+ErrorOr<void> SSHClient::handle_channel_data(GenericMessage& message)
+{
+    u32 recipient_channel = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto& session = *TRY(find_session(recipient_channel));
+
+    auto message_data = TRY(decode_string(message.payload));
+    FixedMemoryStream message_data_stream { message_data.bytes() };
+
+    if (session.subsystem.has_value())
+        return TRY(session.subsystem->handle_data(message_data_stream));
+
+    return Error::from_string_literal("Unexpected CHANNEL_DATA message");
 }
 
 ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
