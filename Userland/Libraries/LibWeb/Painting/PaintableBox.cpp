@@ -7,6 +7,7 @@
 
 #include <AK/GenericShorthands.h>
 #include <LibGfx/Font/ScaledFont.h>
+#include <LibGfx/Orientation.h>
 #include <LibGfx/Painter.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/CSS/SystemColor.h>
@@ -224,9 +225,9 @@ Optional<CSSPixelRect> PaintableBox::get_clip_rect() const
 
 bool PaintableBox::wants_mouse_events() const
 {
-    if (scroll_thumb_rect(ScrollDirection::Vertical).has_value())
+    if (scrollbar_rect(ScrollDirection::Vertical).has_value())
         return true;
-    if (scroll_thumb_rect(ScrollDirection::Horizontal).has_value())
+    if (scrollbar_rect(ScrollDirection::Horizontal).has_value())
         return true;
     return false;
 }
@@ -259,7 +260,51 @@ bool PaintableBox::is_scrollable(ScrollDirection direction) const
     return overflow == CSS::Overflow::Scroll;
 }
 
-static constexpr CSSPixels scrollbar_thumb_thickness = 8;
+#if defined(AK_OS_SERENITY)
+static constexpr CSSPixels scrollbar_size = 16;
+#else
+static constexpr CSSPixels scrollbar_size = 8;
+#endif
+
+Optional<CSSPixelRect> PaintableBox::scrollbar_rect(ScrollDirection direction) const
+{
+    if (!is_scrollable(direction))
+        return {};
+    auto padding_rect = absolute_padding_box_rect();
+    CSSPixelRect bar_rect;
+#if defined(AK_OS_SERENITY)
+    // When both scrollbars are present, each is shortened by scrollbar_size to make room
+    // for the corner square and to avoid hiding the other bar's dec/inc buttons.
+    bool other_scrollable = is_scrollable(direction == ScrollDirection::Horizontal ? ScrollDirection::Vertical : ScrollDirection::Horizontal);
+    auto shortened = other_scrollable ? scrollbar_size : CSSPixels(0);
+#endif
+    if (direction == ScrollDirection::Horizontal) {
+        bar_rect = {
+            padding_rect.left(),
+            padding_rect.bottom() - scrollbar_size,
+#if defined(AK_OS_SERENITY)
+            padding_rect.width() - shortened,
+#else
+            padding_rect.width(),
+#endif
+            scrollbar_size
+        };
+    } else {
+        bar_rect = {
+            padding_rect.right() - scrollbar_size,
+            padding_rect.top(),
+            scrollbar_size,
+#if defined(AK_OS_SERENITY)
+            padding_rect.height() - shortened
+#else
+            padding_rect.height()
+#endif
+        };
+    }
+    if (is_viewport())
+        bar_rect.translate_by(scroll_offset());
+    return bar_rect;
+}
 
 Optional<CSSPixelRect> PaintableBox::scroll_thumb_rect(ScrollDirection direction) const
 {
@@ -274,7 +319,38 @@ Optional<CSSPixelRect> PaintableBox::scroll_thumb_rect(ScrollDirection direction
     if (scroll_overflow_size == 0)
         return {};
 
-    auto thumb_size = scrollport_size * (scrollport_size / scroll_overflow_size);
+#if defined(AK_OS_SERENITY)
+    // Thumb travels in the track between the two buttons.
+    // Use the actual bar length (which is shortened when both scrollbars are present).
+    bool other_scrollable = is_scrollable(direction == ScrollDirection::Horizontal ? ScrollDirection::Vertical : ScrollDirection::Horizontal);
+    auto bar_length = scrollport_size - (other_scrollable ? scrollbar_size : CSSPixels(0));
+    auto track_size = bar_length - scrollbar_size * 2;
+    if (track_size <= 0)
+        return {};
+    auto thumb_size = max(scrollbar_size, track_size * (scrollport_size / scroll_overflow_size));
+    CSSPixels thumb_position = 0;
+    if (scroll_overflow_size > scrollport_size)
+        thumb_position = scroll_offset * (track_size - thumb_size) / (scroll_overflow_size - scrollport_size);
+
+    CSSPixelRect thumb_rect;
+    if (direction == ScrollDirection::Horizontal) {
+        thumb_rect = {
+            padding_rect.left() + scrollbar_size + thumb_position,
+            padding_rect.bottom() - scrollbar_size,
+            thumb_size,
+            scrollbar_size
+        };
+    } else {
+        thumb_rect = {
+            padding_rect.right() - scrollbar_size,
+            padding_rect.top() + scrollbar_size + thumb_position,
+            scrollbar_size,
+            thumb_size
+        };
+    }
+#else
+    // Thumb uses the full track (overlay style, no buttons).
+    auto thumb_size = max(scrollbar_size, scrollport_size * (scrollport_size / scroll_overflow_size));
     CSSPixels thumb_position = 0;
     if (scroll_overflow_size > scrollport_size)
         thumb_position = scroll_offset * (scrollport_size - thumb_size) / (scroll_overflow_size - scrollport_size);
@@ -283,24 +359,101 @@ Optional<CSSPixelRect> PaintableBox::scroll_thumb_rect(ScrollDirection direction
     if (direction == ScrollDirection::Horizontal) {
         thumb_rect = {
             padding_rect.left() + thumb_position,
-            padding_rect.bottom() - scrollbar_thumb_thickness,
+            padding_rect.bottom() - scrollbar_size,
             thumb_size,
-            scrollbar_thumb_thickness
+            scrollbar_size
         };
     } else {
         thumb_rect = {
-            padding_rect.right() - scrollbar_thumb_thickness,
+            padding_rect.right() - scrollbar_size,
             padding_rect.top() + thumb_position,
-            scrollbar_thumb_thickness,
+            scrollbar_size,
             thumb_size
         };
     }
+#endif
 
     if (is_viewport())
         thumb_rect.translate_by(this->scroll_offset());
 
     return thumb_rect;
 }
+
+#if defined(AK_OS_SERENITY)
+PaintableBox::ScrollbarComponent PaintableBox::scrollbar_component_at(CSSPixelPoint position, ScrollDirection direction) const
+{
+    auto bar_rect = scrollbar_rect(direction);
+    if (!bar_rect.has_value() || !bar_rect->contains(position))
+        return ScrollbarComponent::None;
+
+    bool is_vertical = direction == ScrollDirection::Vertical;
+    // Match ClassicStylePainter: shrink buttons when the scrollbar is too short to fit two full-size buttons.
+    auto scrollbar_length = is_vertical ? bar_rect->height() : bar_rect->width();
+    auto button_size = scrollbar_length <= scrollbar_size * 2 ? scrollbar_length / 2 : scrollbar_size;
+
+    CSSPixelRect dec_button = is_vertical
+        ? CSSPixelRect { bar_rect->x(), bar_rect->y(), bar_rect->width(), button_size }
+        : CSSPixelRect { bar_rect->x(), bar_rect->y(), button_size, bar_rect->height() };
+    CSSPixelRect inc_button = is_vertical
+        ? CSSPixelRect { bar_rect->x(), bar_rect->bottom() - button_size, bar_rect->width(), button_size }
+        : CSSPixelRect { bar_rect->right() - button_size, bar_rect->y(), button_size, bar_rect->height() };
+
+    if (dec_button.contains(position))
+        return ScrollbarComponent::DecrementButton;
+    if (inc_button.contains(position))
+        return ScrollbarComponent::IncrementButton;
+    auto thumb = scroll_thumb_rect(direction);
+    if (thumb.has_value() && thumb->contains(position))
+        return ScrollbarComponent::Thumb;
+    if (thumb.has_value()) {
+        bool before = is_vertical ? position.y() < thumb->y() : position.x() < thumb->x();
+        return before ? ScrollbarComponent::GutterBeforeScrubber : ScrollbarComponent::GutterAfterScrubber;
+    }
+    return ScrollbarComponent::GutterBeforeScrubber;
+}
+
+Gfx::ScrollbarState PaintableBox::compute_scrollbar_state(ScrollDirection direction) const
+{
+    auto padding_rect = absolute_padding_box_rect();
+    bool is_horizontal = direction == ScrollDirection::Horizontal;
+    auto scrollable_overflow = scrollable_overflow_rect().value_or(CSSPixelRect {});
+    auto overflow_size = is_horizontal ? scrollable_overflow.width() : scrollable_overflow.height();
+    auto scrollport_size = is_horizontal ? padding_rect.width() : padding_rect.height();
+    auto scroll_pos = is_horizontal ? scroll_offset().x() : scroll_offset().y();
+
+    bool is_at_min = scroll_pos <= 0;
+    bool is_at_max = (overflow_size - scrollport_size) <= 0 || scroll_pos >= (overflow_size - scrollport_size);
+
+    bool dir_matches_hover = m_hovered_scrollbar_direction == direction;
+    bool dir_matches_press = m_pressed_scrollbar_direction == direction;
+    auto hovered = dir_matches_hover ? m_hovered_scrollbar_component : ScrollbarComponent::None;
+    auto pressed = dir_matches_press ? m_pressed_scrollbar_component : ScrollbarComponent::None;
+
+    bool has_scrubber = scroll_thumb_rect(direction).has_value();
+    // Suppress hover when no scrubber, or when a component is pressed but the cursor has moved off it.
+    // This matches LibGUI::Scrollbar's hovered_component_for_painting logic.
+    if (!has_scrubber || (pressed != ScrollbarComponent::None && hovered != pressed))
+        hovered = ScrollbarComponent::None;
+
+    return Gfx::ScrollbarState {
+        .decrement_pressed = pressed == ScrollbarComponent::DecrementButton && hovered == ScrollbarComponent::DecrementButton && !is_at_min,
+        .decrement_hovered = hovered == ScrollbarComponent::DecrementButton,
+        .increment_pressed = pressed == ScrollbarComponent::IncrementButton && hovered == ScrollbarComponent::IncrementButton && !is_at_max,
+        .increment_hovered = hovered == ScrollbarComponent::IncrementButton,
+        .thumb_hovered = hovered == ScrollbarComponent::Thumb || pressed == ScrollbarComponent::Thumb,
+        .gutter_hovered = hovered == ScrollbarComponent::GutterBeforeScrubber || hovered == ScrollbarComponent::GutterAfterScrubber,
+        .has_scrubber = has_scrubber,
+        .enabled = true,
+        .is_at_min = is_at_min,
+        .is_at_max = is_at_max,
+        .gutter_click_state = pressed == ScrollbarComponent::GutterBeforeScrubber
+            ? Gfx::ScrollbarGutterClickState::BeforeScrubber
+            : pressed == ScrollbarComponent::GutterAfterScrubber
+            ? Gfx::ScrollbarGutterClickState::AfterScrubber
+            : Gfx::ScrollbarGutterClickState::NotPressed,
+    };
+}
+#endif
 
 void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
 {
@@ -351,6 +504,40 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
 
     auto scrollbar_width = computed_values().scrollbar_width();
     if (phase == PaintPhase::Overlay && scrollbar_width != CSS::ScrollbarWidth::None) {
+#if defined(AK_OS_SERENITY)
+        if (auto bar_rect = scrollbar_rect(ScrollDirection::Horizontal); bar_rect.has_value()) {
+            auto thumb_rect = scroll_thumb_rect(ScrollDirection::Horizontal).value_or(CSSPixelRect {});
+            context.display_list_recorder().paint_scrollbar(
+                context.enclosing_device_rect(bar_rect.value()).to_type<int>(),
+                context.enclosing_device_rect(thumb_rect).to_type<int>(),
+                context.palette(),
+                Orientation::Horizontal,
+                compute_scrollbar_state(ScrollDirection::Horizontal));
+        }
+        if (auto bar_rect = scrollbar_rect(ScrollDirection::Vertical); bar_rect.has_value()) {
+            auto thumb_rect = scroll_thumb_rect(ScrollDirection::Vertical).value_or(CSSPixelRect {});
+            context.display_list_recorder().paint_scrollbar(
+                context.enclosing_device_rect(bar_rect.value()).to_type<int>(),
+                context.enclosing_device_rect(thumb_rect).to_type<int>(),
+                context.palette(),
+                Orientation::Vertical,
+                compute_scrollbar_state(ScrollDirection::Vertical));
+        }
+        // Corner fill between both scrollbars.
+        if (scrollbar_rect(ScrollDirection::Horizontal).has_value() && scrollbar_rect(ScrollDirection::Vertical).has_value()) {
+            auto padding_rect = absolute_padding_box_rect();
+            if (is_viewport())
+                padding_rect.translate_by(scroll_offset());
+            CSSPixelRect corner_rect {
+                padding_rect.right() - scrollbar_size,
+                padding_rect.bottom() - scrollbar_size,
+                scrollbar_size,
+                scrollbar_size
+            };
+            auto corner_device_rect = context.enclosing_device_rect(corner_rect).to_type<int>();
+            context.display_list_recorder().fill_rect(corner_device_rect, context.palette().button());
+        }
+#else
         auto color = Color(Color::NamedColor::DarkGray).with_alpha(128);
         auto border_color = Color(Color::NamedColor::LightGray).with_alpha(128);
         auto borders_data = BordersDataDevicePixels {
@@ -359,7 +546,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
             .bottom = BorderDataDevicePixels { border_color, CSS::LineStyle::Solid, 1 },
             .left = BorderDataDevicePixels { border_color, CSS::LineStyle::Solid, 1 },
         };
-        int thumb_corner_radius = static_cast<int>(context.rounded_device_pixels(scrollbar_thumb_thickness / 2));
+        int thumb_corner_radius = static_cast<int>(context.rounded_device_pixels(scrollbar_size / 2));
         CornerRadii corner_radii = {
             .top_left = Gfx::CornerRadius { thumb_corner_radius, thumb_corner_radius },
             .top_right = Gfx::CornerRadius { thumb_corner_radius, thumb_corner_radius },
@@ -376,6 +563,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
             paint_all_borders(context.display_list_recorder(), thumb_device_rect, corner_radii, borders_data);
             context.display_list_recorder().fill_rect_with_rounded_corners(thumb_device_rect.to_type<int>(), color, thumb_corner_radius);
         }
+#endif
     }
 
     if (phase == PaintPhase::Overlay && layout_box().document().inspected_layout_node() == &layout_box()) {
@@ -793,31 +981,82 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
 Paintable::DispatchEventOfSameName PaintableBox::handle_mousedown(Badge<EventHandler>, CSSPixelPoint position, unsigned, unsigned)
 {
-    auto vertical_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Vertical);
-    auto horizontal_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Horizontal);
-    if (vertical_scroll_thumb_rect.has_value() && vertical_scroll_thumb_rect.value().contains(position)) {
-        if (is_viewport())
-            position.translate_by(-scroll_offset());
-        m_last_mouse_tracking_position = position;
-        m_scroll_thumb_dragging_direction = ScrollDirection::Vertical;
+    auto handle_direction = [&](ScrollDirection direction) -> bool {
+        auto bar_rect = scrollbar_rect(direction);
+        if (!bar_rect.has_value() || !bar_rect->contains(position))
+            return false;
+
+        auto thumb_rect = scroll_thumb_rect(direction);
+        if (thumb_rect.has_value() && thumb_rect->contains(position)) {
+            auto adjusted = position;
+            if (is_viewport())
+                adjusted.translate_by(-scroll_offset());
+            m_last_mouse_tracking_position = adjusted;
+            m_scroll_thumb_dragging_direction = direction;
+            const_cast<HTML::Navigable&>(*navigable()).event_handler().set_mouse_event_tracking_paintable(this);
+#if defined(AK_OS_SERENITY)
+            m_pressed_scrollbar_component = ScrollbarComponent::Thumb;
+            m_pressed_scrollbar_direction = direction;
+            set_needs_display();
+#endif
+            return true;
+        }
+
+#if defined(AK_OS_SERENITY)
+        bool is_vertical = direction == ScrollDirection::Vertical;
+        auto component = scrollbar_component_at(position, direction);
+        m_pressed_scrollbar_component = component;
+        m_pressed_scrollbar_direction = direction;
         const_cast<HTML::Navigable&>(*navigable()).event_handler().set_mouse_event_tracking_paintable(this);
-    } else if (horizontal_scroll_thumb_rect.has_value() && horizontal_scroll_thumb_rect.value().contains(position)) {
-        if (is_viewport())
-            position.translate_by(-scroll_offset());
-        m_last_mouse_tracking_position = position;
-        m_scroll_thumb_dragging_direction = ScrollDirection::Horizontal;
-        const_cast<HTML::Navigable&>(*navigable()).event_handler().set_mouse_event_tracking_paintable(this);
-    }
+        set_needs_display();
+
+        static constexpr int scroll_button_step = 4;
+        auto do_scroll = [&](int delta) {
+            if (is_viewport())
+                document().window()->scroll_by(is_vertical ? 0 : delta, is_vertical ? delta : 0);
+            else
+                scroll_by(is_vertical ? 0 : delta, is_vertical ? delta : 0);
+        };
+
+        if (component == ScrollbarComponent::DecrementButton) {
+            do_scroll(-scroll_button_step);
+            return true;
+        }
+        if (component == ScrollbarComponent::IncrementButton) {
+            do_scroll(scroll_button_step);
+            return true;
+        }
+        if (component == ScrollbarComponent::GutterBeforeScrubber || component == ScrollbarComponent::GutterAfterScrubber) {
+            auto padding_rect = absolute_padding_box_rect();
+            int page_step = (is_vertical ? padding_rect.height() : padding_rect.width()).to_int();
+            do_scroll(component == ScrollbarComponent::GutterBeforeScrubber ? -page_step : page_step);
+            return true;
+        }
+#endif
+        return false;
+    };
+
+    if (!handle_direction(ScrollDirection::Vertical))
+        handle_direction(ScrollDirection::Horizontal);
     return Paintable::DispatchEventOfSameName::Yes;
 }
 
 Paintable::DispatchEventOfSameName PaintableBox::handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)
 {
-    if (m_last_mouse_tracking_position.has_value()) {
-        m_last_mouse_tracking_position.clear();
-        m_scroll_thumb_dragging_direction.clear();
+    bool was_active = m_last_mouse_tracking_position.has_value();
+    m_last_mouse_tracking_position.clear();
+    m_scroll_thumb_dragging_direction.clear();
+
+#if defined(AK_OS_SERENITY)
+    was_active |= m_pressed_scrollbar_component != ScrollbarComponent::None;
+    m_pressed_scrollbar_component = ScrollbarComponent::None;
+    m_pressed_scrollbar_direction.clear();
+    if (was_active)
+        set_needs_display();
+#endif
+
+    if (was_active)
         const_cast<HTML::Navigable&>(*navigable()).event_handler().set_mouse_event_tracking_paintable(nullptr);
-    }
     return Paintable::DispatchEventOfSameName::Yes;
 }
 
@@ -849,7 +1088,36 @@ Paintable::DispatchEventOfSameName PaintableBox::handle_mousemove(Badge<EventHan
         m_last_mouse_tracking_position = position;
         return Paintable::DispatchEventOfSameName::No;
     }
+
+#if defined(AK_OS_SERENITY)
+    auto new_hovered_component = scrollbar_component_at(position, ScrollDirection::Vertical);
+    auto new_hovered_direction = new_hovered_component != ScrollbarComponent::None
+        ? Optional<ScrollDirection> { ScrollDirection::Vertical }
+        : Optional<ScrollDirection> {};
+    if (new_hovered_component == ScrollbarComponent::None) {
+        new_hovered_component = scrollbar_component_at(position, ScrollDirection::Horizontal);
+        if (new_hovered_component != ScrollbarComponent::None)
+            new_hovered_direction = ScrollDirection::Horizontal;
+    }
+    if (m_hovered_scrollbar_component != new_hovered_component || m_hovered_scrollbar_direction != new_hovered_direction) {
+        m_hovered_scrollbar_component = new_hovered_component;
+        m_hovered_scrollbar_direction = new_hovered_direction;
+        set_needs_display();
+    }
+#endif
+
     return Paintable::DispatchEventOfSameName::Yes;
+}
+
+void PaintableBox::handle_mouseleave(Badge<EventHandler>)
+{
+#if defined(AK_OS_SERENITY)
+    if (m_hovered_scrollbar_component != ScrollbarComponent::None) {
+        m_hovered_scrollbar_component = ScrollbarComponent::None;
+        m_hovered_scrollbar_direction.clear();
+        set_needs_display();
+    }
+#endif
 }
 
 bool PaintableBox::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
@@ -877,11 +1145,9 @@ Layout::BlockContainer& PaintableWithLines::layout_box()
 
 TraversalDecision PaintableBox::hit_test_scrollbars(CSSPixelPoint position, Function<TraversalDecision(HitTestResult)> const& callback) const
 {
-    auto vertical_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Vertical);
-    if (vertical_scroll_thumb_rect.has_value() && vertical_scroll_thumb_rect.value().contains(position))
+    if (auto bar_rect = scrollbar_rect(ScrollDirection::Vertical); bar_rect.has_value() && bar_rect->contains(position))
         return callback(HitTestResult { const_cast<PaintableBox&>(*this) });
-    auto horizontal_scroll_thumb_rect = scroll_thumb_rect(ScrollDirection::Horizontal);
-    if (horizontal_scroll_thumb_rect.has_value() && horizontal_scroll_thumb_rect.value().contains(position))
+    if (auto bar_rect = scrollbar_rect(ScrollDirection::Horizontal); bar_rect.has_value() && bar_rect->contains(position))
         return callback(HitTestResult { const_cast<PaintableBox&>(*this) });
     return TraversalDecision::Continue;
 }

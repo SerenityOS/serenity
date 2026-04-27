@@ -17,6 +17,7 @@
 #include <LibGfx/Gradients.h>
 #include <LibGfx/GrayscaleBitmap.h>
 #include <LibGfx/ImmutableBitmap.h>
+#include <LibGfx/Orientation.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Point.h>
@@ -145,6 +146,8 @@ public:
     void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius, RefPtr<DisplayList> text_clip = {});
 
     void draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2, Color color, int amplitude, int thickness);
+
+    void paint_scrollbar(Gfx::IntRect rect, Gfx::IntRect thumb_rect, Gfx::Palette const& palette, Orientation orientation, Gfx::ScrollbarState const& state = {});
 
     DisplayListRecorder(DisplayList&);
     ~DisplayListRecorder();

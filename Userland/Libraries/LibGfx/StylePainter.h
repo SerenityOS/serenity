@@ -32,6 +32,26 @@ enum class FrameStyle {
     SunkenPanel,
 };
 
+enum class ScrollbarGutterClickState {
+    NotPressed,
+    BeforeScrubber,
+    AfterScrubber,
+};
+
+struct ScrollbarState {
+    bool decrement_pressed = false;
+    bool decrement_hovered = false;
+    bool increment_pressed = false;
+    bool increment_hovered = false;
+    bool thumb_hovered = false;
+    bool gutter_hovered = false;
+    bool has_scrubber = true;
+    bool enabled = true;
+    bool is_at_min = false;
+    bool is_at_max = false;
+    ScrollbarGutterClickState gutter_click_state = ScrollbarGutterClickState::NotPressed;
+};
+
 // FIXME: should this be in its own header?
 class BaseStylePainter {
 public:
@@ -46,6 +66,7 @@ public:
     virtual void paint_check_box(Painter&, IntRect const&, Palette const&, bool is_enabled, bool is_checked, bool is_being_pressed) = 0;
     virtual void paint_transparency_grid(Painter&, IntRect const&, Palette const&) = 0;
     virtual void paint_simple_rect_shadow(Painter&, IntRect const&, Bitmap const& shadow_bitmap, bool shadow_includes_frame = false, bool fill_content = false) = 0;
+    virtual void paint_scrollbar(Painter&, IntRect scrollbar_rect, IntRect thumb_rect, Palette const&, Orientation, ScrollbarState const&) = 0;
 
 protected:
     BaseStylePainter() = default;
@@ -65,6 +86,7 @@ public:
     static void paint_check_box(Painter&, IntRect const&, Palette const&, bool is_enabled, bool is_checked, bool is_being_pressed);
     static void paint_transparency_grid(Painter&, IntRect const&, Palette const&);
     static void paint_simple_rect_shadow(Painter&, IntRect const&, Bitmap const& shadow_bitmap, bool shadow_includes_frame = false, bool fill_content = false);
+    static void paint_scrollbar(Painter&, IntRect scrollbar_rect, IntRect thumb_rect, Palette const&, Orientation, ScrollbarState const&);
 };
 
 }
