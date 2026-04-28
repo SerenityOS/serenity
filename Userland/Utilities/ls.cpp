@@ -86,7 +86,6 @@ static bool flag_disable_hyperlinks = false;
 static bool flag_recursive = false;
 static bool flag_force_newline = false;
 
-static size_t terminal_rows = 0;
 static size_t terminal_columns = 0;
 static bool output_is_terminal = false;
 
@@ -102,7 +101,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     struct winsize ws;
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
     if (rc == 0) {
-        terminal_rows = ws.ws_row;
         terminal_columns = ws.ws_col;
         output_is_terminal = true;
     }
