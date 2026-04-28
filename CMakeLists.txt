@@ -18,14 +18,23 @@ endif()
 
 # Check for toolchain mismatch, user might need to rebuild toolchain
 set(GCC_VERSION "15.2.0")
-set(LLVM_VERSION "22.1.0")
+set(LLVM_VERSION "23.0.0git (9edf0e73b59540ccec25b355268ebff6d3bba4ef)")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
     set(EXPECTED_COMPILER_VERSION "${GCC_VERSION}")
 else()
+    execute_process(
+            COMMAND ${CMAKE_CXX_COMPILER} --version
+            OUTPUT_VARIABLE COMPILER_VERSION_OUTPUT
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    string(REGEX MATCH "^[^\n]*" COMPILER_VERSION "${COMPILER_VERSION_OUTPUT}")
+    string(REGEX REPLACE "clang version " "" COMPILER_VERSION "${COMPILER_VERSION}")
+
     set(EXPECTED_COMPILER_VERSION "${LLVM_VERSION}")
 endif()
-if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "${EXPECTED_COMPILER_VERSION}")
-    message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} version (${CMAKE_CXX_COMPILER_VERSION}) does not match "
+if (NOT ${COMPILER_VERSION} STREQUAL "${EXPECTED_COMPILER_VERSION}")
+    message(FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} version (${COMPILER_VERSION}) does not match "
             "expected compiler version (${EXPECTED_COMPILER_VERSION}).\n"
             "Please rebuild the ${CMAKE_CXX_COMPILER_ID} Toolchain\n")
 endif()
