@@ -15,7 +15,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/Process.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
@@ -24,12 +23,11 @@ static int constexpr MAP_ZOOM_DEFAULT = 3;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix proc exec"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix"));
 
     auto app = TRY(GUI::Application::create(arguments));
 
     Config::pledge_domain("Maps");
-    TRY(Core::System::unveil("/bin/MapsSettings", "x"));
     TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
@@ -144,8 +142,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Main menu actions
     auto file_menu = window->add_menu("&File"_string);
-    auto open_settings_action = GUI::Action::create("Maps &Settings", { Mod_Ctrl, Key_Comma }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [window](GUI::Action const&) {
-        GUI::Process::spawn_or_show_error(window, "/bin/MapsSettings"sv);
+    auto open_settings_action = GUI::CommonActions::make_settings_action([window](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/bin/MapsSettings"sv));
     });
     file_menu->add_action(open_settings_action);
     file_menu->add_separator();

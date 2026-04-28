@@ -63,10 +63,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Optional<ByteString> path = GUI::FilePicker::get_open_filepath(window);
         if (path.has_value()) {
             player->play_file_path(path.value());
+            GUI::Application::the()->set_most_recently_open_file(path.value());
         }
     }));
-
     file_menu->add_separator();
+    file_menu->add_recent_files_list([&](auto& action) {
+        player->play_file_path(action.text());
+        GUI::Application::the()->set_most_recently_open_file(action.text());
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
