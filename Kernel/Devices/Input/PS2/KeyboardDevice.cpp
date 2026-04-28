@@ -6,6 +6,7 @@
  */
 
 #include <AK/Types.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Bus/SerialIO/PS2Definitions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/Device.h>
@@ -544,6 +545,39 @@ void PS2KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
             }
         }
     }
+    // NOTE: Update keyboard LEDs when lock keys are pressed.
+    if (raw_event.is_press()) {
+        bool leds_changed = false;
+        if (queued_event.key == Key_CapsLock) {
+            if (m_keyboard_device->caps_lock_on())
+                m_keyboard_leds &= ~LED_CAPS_LOCK;
+            else
+                m_keyboard_leds |= LED_CAPS_LOCK;
+            leds_changed = true;
+        } else if (queued_event.key == Key_NumLock) {
+            if (m_keyboard_device->num_lock_on())
+                m_keyboard_leds &= ~LED_NUM_LOCK;
+            else
+                m_keyboard_leds |= LED_NUM_LOCK;
+            leds_changed = true;
+        } else if (queued_event.key == Key_ScrollLock) {
+            if (m_keyboard_device->scroll_lock_on())
+                m_keyboard_leds &= ~LED_SCROLL_LOCK;
+            else
+                m_keyboard_leds |= LED_SCROLL_LOCK;
+            leds_changed = true;
+        }
+        // NOTE: We check the *current* state before handle_input_event flips it,
+        // so we set the LED to the opposite of the current state.
+        if (leds_changed) {
+            u8 leds_to_set = m_keyboard_leds;
+            // NOTE: If we fail to queue the LED update, we simply skip it.
+            // The LED state will be corrected on the next key press.
+            (void)g_io_work->try_queue([this, leds_to_set] {
+                (void)update_leds(leds_to_set);
+            });
+        }
+    }
 
     m_keyboard_device->handle_input_event(queued_event);
 }
@@ -750,8 +784,12 @@ UNMAP_AFTER_INIT ErrorOr<void> PS2KeyboardDevice::initialize()
             // NMB SGI keyboard, raw and translated
         case 0x60:
         case 0x47:
+            (void)update_leds(0);
             return {};
         }
+    } else {
+        // Clear all LEDs on startup to ensure a known state.
+        (void)update_leds(0);
     }
 
     return err;
@@ -769,5 +807,12 @@ UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(SerialIOController const& 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
 // are hot pluggable.
 UNMAP_AFTER_INIT PS2KeyboardDevice::~PS2KeyboardDevice() = default;
+
+ErrorOr<void> PS2KeyboardDevice::update_leds(u8 led_mask) 
+{
+    led_mask &= (LED_SCROLL_LOCK | LED_NUM_LOCK | LED_CAPS_LOCK);
+    TRY(attached_controller().send_command(attached_port_index(), SerialIOController::DeviceCommand::SetLeds, led_mask));
+    return {};
+}
 
 }
