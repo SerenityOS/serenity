@@ -167,6 +167,18 @@ void SoundPlayerWidget::drop_event(GUI::DropEvent& event)
 
 void SoundPlayerWidget::keydown_event(GUI::KeyEvent& event)
 {
+    if (event.key() == Key_PlayPause && m_play_action->is_enabled())
+        m_play_action->activate();
+
+    if (event.key() == Key_Stop && m_stop_action->is_enabled())
+        m_stop_action->activate();
+
+    if (event.key() == Key_NextTrack && m_next_action->is_enabled())
+        m_next_action->activate();
+
+    if (event.key() == Key_PreviousTrack && m_back_action->is_enabled())
+        m_back_action->activate();
+
     if (event.key() == Key_Up)
         m_volume_slider->increase_slider_by_page_steps(1);
 

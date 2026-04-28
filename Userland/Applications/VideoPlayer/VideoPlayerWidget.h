@@ -54,6 +54,7 @@ private:
 
     void toggle_fullscreen();
 
+    virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     String m_path;

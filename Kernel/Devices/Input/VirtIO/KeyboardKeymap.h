@@ -67,6 +67,18 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
     { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
     { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
     { Key_Calculator, 0xff },        { Key_Invalid, 0xff },           { Key_Sleep, 0xff },             { Key_Wake, 0xff },
+
+    // 0x90-0x9f
+    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
+    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
+    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
+    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
+
+    // 0xa0-0xaf
+    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_NextTrack, 0xff },
+    { Key_PlayPause, 0xff },         { Key_PreviousTrack, 0xff },     { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
+    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
+    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
 });
 // clang-format on
 

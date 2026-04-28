@@ -49,6 +49,8 @@ private:
         mode_t permissions;
         /// Set to true if the socket file was successfully created.
         bool was_created;
+        /// Optional group name to set as socket file group owner.
+        ByteString group;
     };
 
     // Path to the executable. By default this is /bin/{m_name}.

@@ -271,6 +271,51 @@ static constexpr KeyCodeEntry unshifted_scan_code_set2_e0_key_map[0x80] = {
 };
 // clang-format on
 
+// clang-format off
+static constexpr KeyCodeEntry unshifted_scan_code_set1_e0_key_map[0x80] = {
+    // 0x00-0x0f
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    // 0x10-0x1f
+    { Key_PreviousTrack, 0xFF }, { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_NextTrack, 0xFF },    { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Return, 0x1C },        { Key_RightControl, 0xFF }, { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    // 0x20-0x2f
+    { Key_Mute, 0xFF },          { Key_Invalid, 0xFF },      { Key_PlayPause, 0xFF },   { Key_Invalid, 0xFF },
+    { Key_Stop, 0xFF },          { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_VolumeDown, 0xFF },  { Key_Invalid, 0xFF },
+    // 0x30-0x3f
+    { Key_VolumeUp, 0xFF },      { Key_Invalid, 0xFF },      { Key_BrowserHome, 0xFF }, { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Slash, 0x35 },        { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_RightAlt, 0xFF },      { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    // 0x40-0x4f
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Home, 0xFF },
+    { Key_Up, 0xFF },            { Key_PageUp, 0xFF },       { Key_Invalid, 0xFF },     { Key_Left, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Right, 0xFF },        { Key_Invalid, 0xFF },     { Key_End, 0xFF },
+    // 0x50-0x5f
+    { Key_Down, 0xFF },          { Key_PageDown, 0xFF },     { Key_Insert, 0xFF },      { Key_Delete, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_LeftSuper, 0xFF },
+    { Key_RightSuper, 0xFF },    { Key_Apps, 0xFF },         { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    // 0x60-0x6f
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    // 0x70-0x7f
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },       { Key_Invalid, 0xFF },      { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },
+};
+// clang-format on
+
 RawKeyEvent PS2KeyboardDevice::generate_raw_key_event_input_from_set1(ScanCodeEvent event)
 {
     RawKeyEvent key_event {};
@@ -339,7 +384,10 @@ RawKeyEvent PS2KeyboardDevice::generate_raw_key_event_input_from_set1(ScanCodeEv
         break;
     }
 
-    key_event.code_entry = (m_keyboard_device->modifiers() & Mod_Shift) ? shifted_scan_code_set1_key_map[ch] : unshifted_scan_code_set1_key_map[ch];
+    if (has_e0_prefix)
+        key_event.code_entry = unshifted_scan_code_set1_e0_key_map[ch];
+    else
+        key_event.code_entry = (m_keyboard_device->modifiers() & Mod_Shift) ? shifted_scan_code_set1_key_map[ch] : unshifted_scan_code_set1_key_map[ch];
     key_event.scancode = has_e0_prefix ? 0xe000 + ch : ch;
     return key_event;
 }

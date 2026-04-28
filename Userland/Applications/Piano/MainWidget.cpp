@@ -178,6 +178,7 @@ bool MainWidget::special_key_action(int key_code)
         change_octave_via_keys(DSP::Keyboard::Direction::Up);
         return true;
     case Key_Space:
+    case Key_PlayPause:
         m_player_widget->toggle_paused();
         return true;
     }

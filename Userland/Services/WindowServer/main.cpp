@@ -151,6 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto mm = WindowServer::MenuManager::construct();
 
     TRY(Core::System::unveil("/tmp", ""));
+    TRY(Core::System::unveil("/tmp/session", "rw"));
 
     TRY(Core::System::unveil(nullptr, nullptr));
 
