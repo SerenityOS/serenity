@@ -13,10 +13,10 @@ namespace Kernel::USB::xHCI {
 
 class DeviceTreexHCIController final : public xHCIController {
 public:
-    static ErrorOr<NonnullLockRefPtr<DeviceTreexHCIController>> try_to_initialize(DeviceTree::Device::Resource, StringView node_name, size_t interrupt_number);
+    static ErrorOr<NonnullLockRefPtr<DeviceTreexHCIController>> try_to_initialize(DeviceTree::Device::Resource, StringView node_name, InterruptNumber interrupt_number);
 
 private:
-    DeviceTreexHCIController(Memory::TypedMapping<u8> registers_mapping, StringView node_name, size_t interrupt_number);
+    DeviceTreexHCIController(Memory::TypedMapping<u8> registers_mapping, StringView node_name, InterruptNumber interrupt_number);
 
     // ^xHCIController
     virtual bool using_message_signalled_interrupts() const override { return m_using_message_signalled_interrupts; }
@@ -28,7 +28,7 @@ private:
     }
 
     StringView m_node_name;
-    size_t m_interrupt_number { 0 };
+    InterruptNumber m_interrupt_number { 0 };
     bool m_using_message_signalled_interrupts { false };
 };
 

@@ -35,7 +35,7 @@ public:
     void set_shared_with_others(bool status) { m_shared_with_others = status; }
 
 protected:
-    IRQHandler(PCI::Device& device, u8 irq);
+    IRQHandler(PCI::Device& device, InterruptNumber irq);
 
 private:
     bool m_shared_with_others { false };

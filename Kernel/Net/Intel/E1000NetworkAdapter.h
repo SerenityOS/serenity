@@ -64,7 +64,7 @@ protected:
     void setup_interrupts();
     void setup_link();
 
-    E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq,
+    E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, InterruptNumber irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region,
         Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,

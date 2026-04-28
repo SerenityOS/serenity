@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-IRQHandler::IRQHandler(u8 irq)
+IRQHandler::IRQHandler(InterruptNumber irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
@@ -49,7 +49,7 @@ void IRQHandler::disable_irq()
         m_responsible_irq_controller->disable(*this);
 }
 
-void IRQHandler::change_irq_number(u8 irq)
+void IRQHandler::change_irq_number(InterruptNumber irq)
 {
     InterruptDisabler disabler;
     change_interrupt_number(irq);

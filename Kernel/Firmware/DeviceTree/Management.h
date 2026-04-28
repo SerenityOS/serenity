@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/Firmware/DeviceTree/Driver.h>
 #include <Kernel/Firmware/DeviceTree/InterruptController.h>
+#include <Kernel/Interrupts/Interrupts.h>
 #include <Libraries/LibDeviceTree/DeviceTree.h>
 
 namespace Kernel::I2C {
@@ -34,7 +35,7 @@ public:
 
     static ErrorOr<I2C::Controller*> i2c_controller_for(::DeviceTree::Node const&);
 
-    ErrorOr<size_t> resolve_interrupt_number(::DeviceTree::Interrupt) const;
+    ErrorOr<InterruptNumber> resolve_interrupt_number(::DeviceTree::Interrupt) const;
 
     ErrorOr<void> scan_node_for_devices(::DeviceTree::Node const& node, ShouldProbeImmediately);
 

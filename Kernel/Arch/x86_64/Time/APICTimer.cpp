@@ -14,7 +14,7 @@ namespace Kernel {
 
 #define APIC_TIMER_MEASURE_CPU_CLOCK
 
-UNMAP_AFTER_INIT APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareTimerBase& calibration_source)
+UNMAP_AFTER_INIT APICTimer* APICTimer::initialize(InterruptNumber interrupt_number, HardwareTimerBase& calibration_source)
 {
     auto timer = adopt_lock_ref(*new APICTimer(interrupt_number, nullptr));
     timer->register_interrupt_handler();
@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareT
     return &timer.leak_ref();
 }
 
-UNMAP_AFTER_INIT APICTimer::APICTimer(u8 interrupt_number, Function<void()> callback)
+UNMAP_AFTER_INIT APICTimer::APICTimer(InterruptNumber interrupt_number, Function<void()> callback)
     : HardwareTimer<GenericInterruptHandler>(interrupt_number, move(callback))
 {
     disable_remap();

@@ -301,7 +301,7 @@ void handle_interrupt(TrapFrame* trap)
     // reserved for when the PIC is disabled, so we can still route spurious
     // IRQs to a different interrupt handlers at different location.
     if (regs.isr_number >= pic_disabled_vector_base && regs.isr_number <= pic_disabled_vector_end) {
-        u8 irq = (u8)(regs.isr_number - pic_disabled_vector_base);
+        InterruptNumber irq = (InterruptNumber)(regs.isr_number - pic_disabled_vector_base);
         if (irq == 7) {
             handler = s_disabled_interrupt_handler[0];
         } else if (irq == 15) {
@@ -309,9 +309,9 @@ void handle_interrupt(TrapFrame* trap)
         }
     } else {
         VERIFY(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
-        u8 irq = (u8)(regs.isr_number - IRQ_VECTOR_BASE);
+        InterruptNumber irq = (InterruptNumber)(regs.isr_number - IRQ_VECTOR_BASE);
         s_entropy_source_interrupts.add_random_event(irq);
-        handler = s_interrupt_handler[irq];
+        handler = s_interrupt_handler[irq.value()];
     }
     VERIFY(handler);
     handler->increment_call_count();
@@ -329,14 +329,14 @@ static void unimp_trap()
     PANIC("Unhandled IRQ");
 }
 
-GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)
+GenericInterruptHandler& get_interrupt_handler(InterruptNumber interrupt_number)
 {
-    auto*& handler_slot = s_interrupt_handler[interrupt_number];
+    auto*& handler_slot = s_interrupt_handler[interrupt_number.value()];
     VERIFY(handler_slot != nullptr);
     return *handler_slot;
 }
 
-static void revert_to_unused_handler(u8 interrupt_number)
+static void revert_to_unused_handler(InterruptNumber interrupt_number)
 {
     auto handler = new UnhandledInterruptHandler(interrupt_number);
     handler->register_interrupt_handler();
@@ -349,10 +349,10 @@ static bool is_unused_handler(GenericInterruptHandler* handler_slot)
 
 // Sets the reserved flag on `number_of_irqs` if it finds unused interrupt handler on
 // a contiguous range.
-ErrorOr<u8> reserve_interrupt_handlers(u8 number_of_irqs)
+ErrorOr<InterruptNumber> reserve_interrupt_handlers(size_t number_of_irqs)
 {
     bool found_range = false;
-    u8 first_irq = 0;
+    InterruptNumber first_irq = 0;
     SpinlockLocker locker(s_interrupt_handler_lock);
     for (int start_irq = 0; start_irq < GENERIC_INTERRUPT_HANDLERS_COUNT; start_irq++) {
         auto*& handler_slot = s_interrupt_handler[start_irq];
@@ -362,7 +362,7 @@ ErrorOr<u8> reserve_interrupt_handlers(u8 number_of_irqs)
             continue;
 
         found_range = true;
-        for (auto off = 1; off < number_of_irqs; off++) {
+        for (size_t off = 1; off < number_of_irqs; off++) {
             auto*& handler = s_interrupt_handler[start_irq + off];
             VERIFY(handler_slot != nullptr);
 
@@ -382,14 +382,14 @@ ErrorOr<u8> reserve_interrupt_handlers(u8 number_of_irqs)
         return Error::from_errno(EAGAIN);
 
     for (auto irq = first_irq; irq < number_of_irqs; irq++) {
-        auto*& handler_slot = s_interrupt_handler[irq];
+        auto*& handler_slot = s_interrupt_handler[irq.value()];
         handler_slot->set_reserved();
     }
 
     return first_irq;
 }
 
-void register_disabled_interrupt_handler(u8 number, GenericInterruptHandler& handler)
+void register_disabled_interrupt_handler(InterruptNumber number, GenericInterruptHandler& handler)
 {
     if (number == 15) {
         s_disabled_interrupt_handler[0] = &handler;
@@ -401,10 +401,10 @@ void register_disabled_interrupt_handler(u8 number, GenericInterruptHandler& han
     VERIFY_NOT_REACHED();
 }
 
-void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
+void register_generic_interrupt_handler(InterruptNumber interrupt_number, GenericInterruptHandler& handler)
 {
     VERIFY(interrupt_number < GENERIC_INTERRUPT_HANDLERS_COUNT);
-    auto*& handler_slot = s_interrupt_handler[interrupt_number];
+    auto*& handler_slot = s_interrupt_handler[interrupt_number.value()];
     if (handler_slot == nullptr) {
         handler_slot = &handler;
         return;
@@ -439,9 +439,9 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
     VERIFY_NOT_REACHED();
 }
 
-void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
+void unregister_generic_interrupt_handler(InterruptNumber interrupt_number, GenericInterruptHandler& handler)
 {
-    auto*& handler_slot = s_interrupt_handler[interrupt_number];
+    auto*& handler_slot = s_interrupt_handler[interrupt_number.value()];
     VERIFY(handler_slot != nullptr);
     if (handler_slot->type() == HandlerType::UnhandledInterruptHandler)
         return;
@@ -465,14 +465,14 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*handler)())
+UNMAP_AFTER_INIT void register_interrupt_handler(InterruptNumber index, void (*handler)())
 {
-    s_idt[index] = IDTEntry((FlatPtr)handler, GDT_SELECTOR_CODE0, IDTEntryType::InterruptGate32, 0);
+    s_idt[index.value()] = IDTEntry((FlatPtr)handler, GDT_SELECTOR_CODE0, IDTEntryType::InterruptGate32, 0);
 }
 
-UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*handler)())
+UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(InterruptNumber index, void (*handler)())
 {
-    s_idt[index] = IDTEntry((FlatPtr)handler, GDT_SELECTOR_CODE0, IDTEntryType::TrapGate32, 3);
+    s_idt[index.value()] = IDTEntry((FlatPtr)handler, GDT_SELECTOR_CODE0, IDTEntryType::TrapGate32, 3);
 }
 
 UNMAP_AFTER_INIT void flush_idt()

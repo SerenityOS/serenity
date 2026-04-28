@@ -50,20 +50,20 @@ void PIC::disable(GenericInterruptHandler const& handler)
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
     VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
-    u8 irq = handler.interrupt_number();
-    if (m_cached_irq_mask & (1 << irq))
+    auto irq = handler.interrupt_number();
+    if (m_cached_irq_mask & (1 << irq.value()))
         return;
     u8 imr;
-    if (irq & 8) {
+    if (irq.value() & 8) {
         imr = IO::in8(PIC1_CMD);
-        imr |= 1 << (irq & 7);
+        imr |= 1 << (irq.value() & 7);
         IO::out8(PIC1_CMD, imr);
     } else {
         imr = IO::in8(PIC0_CMD);
-        imr |= 1 << irq;
+        imr |= 1 << irq.value();
         IO::out8(PIC0_CMD, imr);
     }
-    m_cached_irq_mask |= 1 << irq;
+    m_cached_irq_mask |= 1 << irq.value();
 }
 
 UNMAP_AFTER_INIT PIC::PIC()
@@ -82,9 +82,9 @@ void PIC::spurious_eoi(GenericInterruptHandler const& handler) const
     }
 }
 
-bool PIC::is_vector_enabled(u8 irq) const
+bool PIC::is_vector_enabled(InterruptNumber irq) const
 {
-    return m_cached_irq_mask & (1 << irq);
+    return m_cached_irq_mask & (1 << irq.value());
 }
 
 void PIC::enable(GenericInterruptHandler const& handler)
@@ -95,48 +95,48 @@ void PIC::enable(GenericInterruptHandler const& handler)
     enable_vector(handler.interrupt_number());
 }
 
-void PIC::enable_vector(u8 irq)
+void PIC::enable_vector(InterruptNumber irq)
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
-    if (!(m_cached_irq_mask & (1 << irq)))
+    if (!(m_cached_irq_mask & (1 << irq.value())))
         return;
     u8 imr;
-    if (irq & 8) {
+    if (irq.value() & 8) {
         imr = IO::in8(PIC1_CMD);
-        imr &= ~(1 << (irq & 7));
+        imr &= ~(1 << (irq.value() & 7));
         IO::out8(PIC1_CMD, imr);
     } else {
         imr = IO::in8(PIC0_CMD);
-        imr &= ~(1 << irq);
+        imr &= ~(1 << irq.value());
         IO::out8(PIC0_CMD, imr);
     }
-    m_cached_irq_mask &= ~(1 << irq);
+    m_cached_irq_mask &= ~(1 << irq.value());
 }
 
 void PIC::eoi(GenericInterruptHandler const& handler) const
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
-    u8 irq = handler.interrupt_number();
+    auto irq = handler.interrupt_number();
     VERIFY(irq >= gsi_base() && irq < interrupt_vectors_count());
-    if ((1 << irq) & m_cached_irq_mask) {
+    if ((1 << irq.value()) & m_cached_irq_mask) {
         spurious_eoi(handler);
         return;
     }
     eoi_interrupt(irq);
 }
 
-void PIC::eoi_interrupt(u8 irq) const
+void PIC::eoi_interrupt(InterruptNumber irq) const
 {
-    if (irq & 8) {
+    if (irq.value() & 8) {
         IO::in8(PIC1_CMD); /* dummy read */
-        IO::out8(PIC1_CTL, 0x60 | (irq & 7));
+        IO::out8(PIC1_CTL, 0x60 | (irq.value() & 7));
         IO::out8(PIC0_CTL, 0x60 | (2));
         return;
     }
     IO::in8(PIC0_CMD); /* dummy read */
-    IO::out8(PIC0_CTL, 0x60 | irq);
+    IO::out8(PIC0_CTL, 0x60 | irq.value());
 }
 
 void PIC::complete_eoi() const

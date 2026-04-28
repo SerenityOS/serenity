@@ -18,7 +18,7 @@ struct [[gnu::packed]] ioapic_mmio_regs {
 
 class PCIInterruptOverrideMetadata {
 public:
-    PCIInterruptOverrideMetadata(u8 bus_id, u8 polarity, u8 trigger_mode, u8 source_irq, u32 ioapic_id, u16 ioapic_int_pin);
+    PCIInterruptOverrideMetadata(u8 bus_id, u8 polarity, u8 trigger_mode, InterruptNumber source_irq, u32 ioapic_id, u16 ioapic_int_pin);
     u8 bus() const { return m_bus_id; }
     u8 polarity() const { return m_polarity; }
     u8 trigger_mode() const { return m_trigger_mode; }
@@ -45,7 +45,7 @@ public:
     virtual void hard_disable() override;
     virtual void eoi(GenericInterruptHandler const&) const override;
     virtual void spurious_eoi(GenericInterruptHandler const&) const override;
-    virtual bool is_vector_enabled(u8 number) const override;
+    virtual bool is_vector_enabled(InterruptNumber number) const override;
     virtual bool is_enabled() const override;
     virtual u16 get_isr() const override;
     virtual u16 get_irr() const override;
@@ -55,9 +55,9 @@ public:
     virtual IRQControllerType type() const override { return IRQControllerType::i82093AA; }
 
 private:
-    void configure_redirection_entry(size_t index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const;
+    void configure_redirection_entry(size_t index, InterruptNumber interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const;
     void reset_redirection_entry(size_t index) const;
-    void map_interrupt_redirection(u8 interrupt_vector);
+    void map_interrupt_redirection(InterruptNumber interrupt_vector);
     void reset_all_redirection_entries() const;
 
     void mask_all_redirection_entries() const;
@@ -66,7 +66,7 @@ private:
     bool is_redirection_entry_masked(u8 index) const;
 
     u8 read_redirection_entry_vector(u8 index) const;
-    Optional<int> find_redirection_entry_by_vector(u8 vector) const;
+    Optional<int> find_redirection_entry_by_vector(InterruptNumber vector) const;
 
     void write_register(u32 index, u32 value) const;
     u32 read_register(u32 index) const;

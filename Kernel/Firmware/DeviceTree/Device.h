@@ -9,6 +9,7 @@
 #include <AK/Badge.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
+#include <Kernel/Interrupts/Interrupts.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <LibDeviceTree/DeviceTree.h>
 
@@ -45,7 +46,7 @@ public:
     ErrorOr<Resource> get_resource(size_t index) const;
 
     // FIXME: Add support for the "interrupt-names" property to resolve interrupts by name.
-    ErrorOr<size_t> get_interrupt_number(size_t index) const;
+    ErrorOr<InterruptNumber> get_interrupt_number(size_t index) const;
 
 private:
     ::DeviceTree::Node const& m_node;
