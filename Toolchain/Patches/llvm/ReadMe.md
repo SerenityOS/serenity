@@ -1,20 +1,6 @@
 # Patches for llvm on SerenityOS
 
-## `0001-clang-Add-support-for-SerenityOS.patch`
-
-Add support for SerenityOS
-
-Adds support for the `$arch-pc-serenity` target to the Clang front end.
-This makes the compiler look for libraries and headers in the right
-places, and enables some security mitigations like stack-smashing
-protection and position-independent code by default.
-
-Co-authored-by: kleines Filmröllchen <filmroellchen@serenityos.org>
-Co-authored-by: Andrew Kaster <akaster@serenityos.org>
-Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
-Co-authored-by: Dan Klishch <danilklishch@gmail.com>
-
-## `0002-llvm-Add-support-for-building-LLVM-on-SerenityOS.patch`
+## `0001-llvm-Add-support-for-building-LLVM-on-SerenityOS.patch`
 
 Add support for building LLVM on SerenityOS
 
@@ -29,7 +15,7 @@ Serenity gives each thread a default of 1MiB of stack. Increase the
 default stack size for llvm applications when running on SerenityOS.
 
 
-## `0003-tools-Support-building-shared-libLLVM-and-libClang-f.patch`
+## `0002-tools-Support-building-shared-libLLVM-and-libClang-f.patch`
 
 Support building shared libLLVM and libClang for SerenityOS
 
@@ -40,14 +26,14 @@ shared libraries.
 Symbol versioning is disabled, as the SerenityOS loader doesn't support
 it, and the ELF sections that store version data would just waste space.
 
-## `0004-compiler-rt-Enable-profile-instrumentation-for-Seren.patch`
+## `0003-compiler-rt-Enable-profile-instrumentation-for-Seren.patch`
 
 Enable profile instrumentation for SerenityOS
 
 Treat SerenityOS the same as other *NIX platforms that behave close
 enough to linux to use the pre-canned InstrProfiling implementation.
 
-## `0005-libcxx-Add-support-for-SerenityOS.patch`
+## `0004-libcxx-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
@@ -62,7 +48,7 @@ LibC, namely:
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
 
-## `0006-RISCV-Implement-__init_riscv_feature_bits-for-Sereni.patch`
+## `0005-RISCV-Implement-__init_riscv_feature_bits-for-Sereni.patch`
 
 Implement __init_riscv_feature_bits for SerenityOS
 
@@ -70,7 +56,7 @@ The SerenityOS dynamic linker provides a magic function
 "__get_riscv_feature_bits" that populates __riscv_feature_bits
 and __riscv_cpu_model.
 
-## `0007-libcxxabi-Define-__cxa_thread_atexit-on-serenity.patch`
+## `0006-libcxxabi-Define-__cxa_thread_atexit-on-serenity.patch`
 
 Define __cxa_thread_atexit on serenity
 

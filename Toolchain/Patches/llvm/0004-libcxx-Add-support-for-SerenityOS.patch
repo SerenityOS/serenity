@@ -28,10 +28,10 @@ LibC, namely:
  create mode 100644 libcxx/include/__locale_dir/locale_base_api/serenity.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index 787cfffa5019553895a14ae9ba49498725333192..5abbeabe3588b385d442be40e34763ae1a11ab1a 100644
+index 69a6590d18f859babf3c2bcc195987ce0eb10df5..82b71ab9285a37918bf4a989cb4d848d03cc0b63 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -525,6 +525,7 @@ set(files
+@@ -532,6 +532,7 @@ set(files
    __locale_dir/locale_base_api/bsd_locale_fallbacks.h
    __locale_dir/locale_base_api/ibm.h
    __locale_dir/locale_base_api/openbsd.h
@@ -40,10 +40,10 @@ index 787cfffa5019553895a14ae9ba49498725333192..5abbeabe3588b385d442be40e34763ae
    __locale_dir/money.h
    __locale_dir/num.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 30bc8c808fce3b7ab577d4cf2f495d5ea8ef4af1..2c66a9f153079c0661e8087a48e34980aabbc240 100644
+index 6cf96523272366d8d847f68af64b375808ef3f30..e74a23d0eafb3ab250d522ef2f879c6c13eb69b6 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -631,7 +631,8 @@ typedef __char32_t char32_t;
+@@ -301,7 +301,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -53,12 +53,12 @@ index 30bc8c808fce3b7ab577d4cf2f495d5ea8ef4af1..2c66a9f153079c0661e8087a48e34980
  // clang-format on
  #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
-@@ -706,7 +707,7 @@ typedef __char32_t char32_t;
+@@ -380,7 +381,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
--      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || defined(__LLVM_LIBC__)
-+      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || defined(__LLVM_LIBC__) || defined(__serenity__)
+-      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || _LIBCPP_LIBC_LLVM_LIBC
++      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || _LIBCPP_LIBC_LLVM_LIBC || defined(__serenity__)
  #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
  #  endif
  
@@ -76,7 +76,7 @@ index 9fa8f8c9088e1fc42408dca5b8d046668a0fc101..2a9cbec71ea6e6692152cf787891762c
  #  include <__cxx03/string>
  
 diff --git a/libcxx/include/__locale_dir/locale_base_api.h b/libcxx/include/__locale_dir/locale_base_api.h
-index 0474c1db359dea406b4313e22fe12daaf6c61aad..f9a48197ae60e75818dc000295135806d9e6734b 100644
+index 26a6069315b33ecdcfaebd9b11ca0d23fd14e021..bd5aa72488c758bcdf6332b0d4a751cdf90c6e41 100644
 --- a/libcxx/include/__locale_dir/locale_base_api.h
 +++ b/libcxx/include/__locale_dir/locale_base_api.h
 @@ -132,6 +132,8 @@
@@ -143,10 +143,10 @@ index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d146
  #  include <string>
  
 diff --git a/libcxx/src/CMakeLists.txt b/libcxx/src/CMakeLists.txt
-index 2c04cbd1b2729bfa13f6041d833c2962e0a36578..dca7e8fff21eca508388c79fe5593d1206deeb9e 100644
+index de7817ad69f265f9e2b27b87c4110b6ad7cf5ed5..687d22519537991f2560256a5b17d03fcc5c9b5e 100644
 --- a/libcxx/src/CMakeLists.txt
 +++ b/libcxx/src/CMakeLists.txt
-@@ -113,6 +113,10 @@ elseif(ZOS)
+@@ -112,6 +112,10 @@ elseif(ZOS)
      support/ibm/wcsnrtombs.cpp
      support/ibm/xlocale_zos.cpp
      )
@@ -158,7 +158,7 @@ index 2c04cbd1b2729bfa13f6041d833c2962e0a36578..dca7e8fff21eca508388c79fe5593d12
  
  if (LIBCXX_ENABLE_FILESYSTEM)
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
-index be665a97bf91b5ade7d97b64f6a6b371514260b3..d0919e270d92e283aa6a1ba0a666c1e75d7f929a 100644
+index daec2429de8eb5953ac48425dd0a8568bb2cb2ea..53f461303b337f45f5c774668b1a87125836cb0f 100644
 --- a/libcxx/src/include/config_elast.h
 +++ b/libcxx/src/include/config_elast.h
 @@ -37,6 +37,8 @@
