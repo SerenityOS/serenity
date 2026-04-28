@@ -36,3 +36,8 @@ set(SOURCES
 
 serenity_lib(LibCrypto crypto)
 target_link_libraries(LibCrypto PRIVATE LibCore)
+
+if(NOT EMSCRIPTEN)
+    # This should prevent sensitive data from leaking through registers.
+    target_compile_options(LibCrypto PRIVATE -fzero-call-used-regs=used)
+endif ()
