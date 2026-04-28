@@ -33,7 +33,7 @@ ErrorOr<void> SysFSInterrupts::try_generate(KBufferBuilder& builder)
         result = ([&]() -> ErrorOr<void> {
             auto obj = TRY(array.add_object());
             TRY(obj.add("purpose"sv, handler.purpose()));
-            TRY(obj.add("interrupt_line"sv, handler.interrupt_number()));
+            TRY(obj.add("interrupt_line"sv, handler.interrupt_number().value()));
             TRY(obj.add("controller"sv, handler.controller()));
             TRY(obj.add("device_sharing"sv, (unsigned)handler.sharing_devices_count()));
             auto per_cpu_call_counts = TRY(obj.add_array("per_cpu_call_counts"sv));

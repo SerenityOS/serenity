@@ -11,7 +11,7 @@
 
 namespace Kernel::PCI {
 
-IRQHandler::IRQHandler(PCI::Device& device, u8 irq)
+IRQHandler::IRQHandler(PCI::Device& device, InterruptNumber irq)
     : GenericInterruptHandler(irq)
     , device(device)
 {

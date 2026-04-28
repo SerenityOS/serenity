@@ -43,7 +43,7 @@ UNMAP_AFTER_INIT void IOAPIC::initialize()
 {
 }
 
-void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
+void IOAPIC::map_interrupt_redirection(InterruptNumber interrupt_vector)
 {
     InterruptDisabler disabler;
     for (auto redirection_override : InterruptManagement::the().isa_overrides()) {
@@ -85,7 +85,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
         configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, active_low, trigger_level_mode, true, Processor::by_id(0).info().apic_id());
         return;
     }
-    isa_identity_map(interrupt_vector);
+    isa_identity_map(interrupt_vector.value());
 }
 
 void IOAPIC::isa_identity_map(size_t index)
@@ -127,11 +127,11 @@ void IOAPIC::reset_redirection_entry(size_t index) const
     configure_redirection_entry(index, 0, 0, false, false, false, true, Processor::by_id(0).info().apic_id());
 }
 
-void IOAPIC::configure_redirection_entry(size_t index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
+void IOAPIC::configure_redirection_entry(size_t index, InterruptNumber interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
 {
     InterruptDisabler disabler;
     VERIFY(index < m_redirection_entries_count);
-    u32 redirection_entry1 = interrupt_vector | (delivery_mode & 0b111) << 8 | logical_destination << 11 | active_low << 13 | trigger_level_mode << 15 | masked << 16;
+    u32 redirection_entry1 = interrupt_vector.value() | (delivery_mode & 0b111) << 8 | logical_destination << 11 | active_low << 13 | trigger_level_mode << 15 | masked << 16;
     u32 redirection_entry2 = destination << 24;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry1);
 
@@ -175,10 +175,10 @@ void IOAPIC::unmask_redirection_entry(u8 index) const
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry & ~(1 << 16));
 }
 
-bool IOAPIC::is_vector_enabled(u8 interrupt_vector) const
+bool IOAPIC::is_vector_enabled(InterruptNumber interrupt_vector) const
 {
     InterruptDisabler disabler;
-    return is_redirection_entry_masked(interrupt_vector);
+    return is_redirection_entry_masked(interrupt_vector.value());
 }
 
 u8 IOAPIC::read_redirection_entry_vector(u8 index) const
@@ -187,7 +187,7 @@ u8 IOAPIC::read_redirection_entry_vector(u8 index) const
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & 0xFF);
 }
 
-Optional<int> IOAPIC::find_redirection_entry_by_vector(u8 vector) const
+Optional<int> IOAPIC::find_redirection_entry_by_vector(InterruptNumber vector) const
 {
     InterruptDisabler disabler;
     for (size_t index = 0; index < m_redirection_entries_count; index++) {
@@ -201,7 +201,7 @@ void IOAPIC::disable(GenericInterruptHandler const& handler)
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
-    u8 interrupt_vector = handler.interrupt_number();
+    InterruptNumber interrupt_vector = handler.interrupt_number();
     VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {
@@ -216,7 +216,7 @@ void IOAPIC::enable(GenericInterruptHandler const& handler)
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
-    u8 interrupt_vector = handler.interrupt_number();
+    InterruptNumber interrupt_vector = handler.interrupt_number();
     VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {

@@ -23,10 +23,10 @@ public:
 
     static ErrorOr<void> register_interrupt_controller(NonnullLockRefPtr<IRQController>);
 
-    static u8 acquire_mapped_interrupt_number(u8 original_irq);
+    static InterruptNumber acquire_mapped_interrupt_number(InterruptNumber original_irq);
 
     Vector<NonnullLockRefPtr<IRQController>> const& controllers();
-    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(size_t irq_number);
+    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(InterruptNumber irq_number);
 
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
 

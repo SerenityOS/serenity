@@ -22,7 +22,7 @@ public:
     virtual StringView purpose() const override { return "xHCI Interrupter"sv; }
 
 private:
-    xHCIPCIInterrupter(PCIxHCIController& controller, u16 interrupter_id, u16 irq);
+    xHCIPCIInterrupter(PCIxHCIController& controller, u16 interrupter_id, InterruptNumber irq);
 
     virtual bool handle_irq() override;
 
@@ -32,12 +32,12 @@ private:
 
 class xHCIDeviceTreeInterrupter final : public IRQHandler {
 public:
-    static ErrorOr<NonnullOwnPtr<xHCIDeviceTreeInterrupter>> create(DeviceTreexHCIController&, size_t irq, u16 interrupter_id);
+    static ErrorOr<NonnullOwnPtr<xHCIDeviceTreeInterrupter>> create(DeviceTreexHCIController&, InterruptNumber irq, u16 interrupter_id);
 
     virtual StringView purpose() const override { return "xHCI Interrupter"sv; }
 
 private:
-    xHCIDeviceTreeInterrupter(DeviceTreexHCIController& controller, u16 interrupter_id, size_t irq);
+    xHCIDeviceTreeInterrupter(DeviceTreexHCIController& controller, u16 interrupter_id, InterruptNumber irq);
 
     virtual bool handle_irq() override;
 

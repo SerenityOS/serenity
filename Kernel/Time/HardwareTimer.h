@@ -91,7 +91,7 @@ public:
     virtual size_t ticks_per_second() const override { return m_frequency; }
 
 protected:
-    HardwareTimer(u8 irq_number, Function<void()> callback = nullptr)
+    HardwareTimer(InterruptNumber irq_number, Function<void()> callback = nullptr)
         : IRQHandler(irq_number)
         , m_callback(move(callback))
     {
@@ -143,7 +143,7 @@ public:
     virtual size_t ticks_per_second() const override { return m_frequency; }
 
 protected:
-    HardwareTimer(u8 irq_number, Function<void()> callback = nullptr)
+    HardwareTimer(InterruptNumber irq_number, Function<void()> callback = nullptr)
         : GenericInterruptHandler(irq_number)
         , m_callback(move(callback))
     {

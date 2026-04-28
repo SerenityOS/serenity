@@ -45,19 +45,19 @@ public:
     static InterruptManagement& the();
     static void initialize();
     static bool initialized();
-    static u8 acquire_mapped_interrupt_number(u8 original_irq);
-    static u8 acquire_irq_number(u8 mapped_interrupt_vector);
+    static InterruptNumber acquire_mapped_interrupt_number(InterruptNumber original_irq);
+    static InterruptNumber acquire_irq_number(InterruptNumber mapped_interrupt_vector);
 
     void switch_to_pic_mode();
     void switch_to_ioapic_mode();
 
-    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
-    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector);
+    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(InterruptNumber interrupt_vector);
+    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, InterruptNumber interrupt_vector);
 
     Vector<ISAInterruptOverrideMetadata> const& isa_overrides() const { return m_isa_interrupt_overrides; }
 
-    u8 get_mapped_interrupt_vector(u8 original_irq);
-    u8 get_irq_vector(u8 mapped_interrupt_vector);
+    InterruptNumber get_mapped_interrupt_vector(InterruptNumber original_irq);
+    InterruptNumber get_irq_vector(InterruptNumber mapped_interrupt_vector);
 
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
     IRQController& get_interrupt_controller(size_t index);

@@ -33,7 +33,7 @@ public:
     void init_finished(u32 cpu);
     void broadcast_ipi();
     void send_ipi(u32 cpu);
-    static u8 spurious_interrupt_vector();
+    static InterruptNumber spurious_interrupt_vector();
     Thread* get_idle_thread(u32 cpu) const;
     u32 enabled_processor_count() const { return m_processor_enabled_cnt; }
 
@@ -106,8 +106,8 @@ private:
     void set_base(PhysicalAddress const& base);
     void write_register(u32 offset, u32 value);
     u32 read_register(u32 offset);
-    void set_lvt(u32 offset, u8 interrupt);
-    void set_siv(u32 offset, u8 interrupt);
+    void set_lvt(u32 offset, InterruptNumber interrupt);
+    void set_siv(u32 offset, InterruptNumber interrupt);
     void wait_for_pending_icr();
     void write_icr(ICRReg const& icr);
     void do_boot_aps();
