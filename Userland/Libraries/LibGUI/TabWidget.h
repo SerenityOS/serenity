@@ -92,15 +92,18 @@ public:
     void set_close_button_enabled(bool close_button_enabled) { m_close_button_enabled = close_button_enabled; }
     bool close_button_enabled() const { return m_close_button_enabled; }
 
+    void set_add_tab_button_enabled(bool add_tab_button_enabled);
+    bool add_tab_button_enabled() const { return m_add_tab_button_enabled; }
+
     void set_reorder_allowed(bool reorder_allowed) { m_reorder_allowed = reorder_allowed; }
     bool reorder_allowed() const { return m_reorder_allowed; }
 
     Function<void(size_t)> on_tab_count_change;
     Function<void(Widget&)> on_change;
-    Function<void(Widget&)> on_middle_click;
     Function<void(Widget&)> on_tab_close_click;
     Function<void(Widget&, ContextMenuEvent const&)> on_context_menu_request;
     Function<void(Widget&)> on_double_click;
+    Function<void()> on_add_tab_button_click;
 
 protected:
     TabWidget();
@@ -123,8 +126,10 @@ private:
     Gfx::IntRect vertical_button_rect(size_t index) const;
     Gfx::IntRect horizontal_button_rect(size_t index) const;
     Gfx::IntRect close_button_rect(size_t index) const;
+    Gfx::IntRect add_button_rect() const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect container_rect() const;
+    int compute_tab_width(size_t index) const;
     void update_bar();
     void update_focus_policy();
     int bar_margin() const { return 2; }
@@ -149,7 +154,9 @@ private:
     bool m_uniform_tabs { false };
     bool m_bar_visible { true };
     bool m_close_button_enabled { false };
-
+    bool m_add_tab_button_enabled { false };
+    bool m_hovered_add_button { false };
+    bool m_pressed_add_button { false };
     int m_max_tab_width { 160 };
     int m_min_tab_width { 24 };
 

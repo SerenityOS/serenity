@@ -30,6 +30,7 @@ TabWidget::TabWidget()
 
     REGISTER_MARGINS_PROPERTY("container_margins", container_margins, set_container_margins);
     REGISTER_BOOL_PROPERTY("show_close_buttons", close_button_enabled, set_close_button_enabled);
+    REGISTER_BOOL_PROPERTY("show_add_tab_button", add_tab_button_enabled, set_add_tab_button_enabled);
     REGISTER_BOOL_PROPERTY("show_tab_bar", is_bar_visible, set_bar_visible);
     REGISTER_BOOL_PROPERTY("reorder_allowed", reorder_allowed, set_reorder_allowed);
     REGISTER_BOOL_PROPERTY("uniform_tabs", uniform_tabs, set_uniform_tabs);
@@ -298,6 +299,15 @@ void TabWidget::paint_event(PaintEvent& event)
         }
     }
 
+    if (m_add_tab_button_enabled) {
+        auto add_rect = add_button_rect();
+        if (m_hovered_add_button)
+            Gfx::StylePainter::paint_frame(painter, add_rect, palette(), m_pressed_add_button ? Gfx::FrameStyle::SunkenPanel : Gfx::FrameStyle::RaisedPanel);
+        auto center = add_rect.center().translated(-1, -1);
+        painter.draw_line({ center.x() - 3, center.y() }, { center.x() + 3, center.y() }, palette().button_text());
+        painter.draw_line({ center.x(), center.y() - 3 }, { center.x(), center.y() + 3 }, palette().button_text());
+    }
+
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget != m_active_widget)
             continue;
@@ -384,7 +394,13 @@ int TabWidget::uniform_tab_width() const
         return tab_width;
 
     int available_width = width() - bar_margin() * 2;
-    if (total_tab_width > available_width)
+    if (m_add_tab_button_enabled) {
+        int gap = m_tabs.is_empty() ? 0 : bar_margin();
+        // The active last tab is drawn 2 px past its logical right edge
+        int trailing_overhang = !m_tabs.is_empty() && m_tabs.last().widget == m_active_widget ? 2 : 0;
+        available_width -= gap + (bar_height() - bar_margin() * 2) + trailing_overhang;
+    }
+    if (total_tab_width > available_width && !m_tabs.is_empty())
         tab_width = available_width / m_tabs.size();
     return max(tab_width, m_min_tab_width);
 }
@@ -395,6 +411,35 @@ void TabWidget::set_bar_visible(bool bar_visible)
     if (m_active_widget)
         m_active_widget->set_relative_rect(child_rect_for_size(size()));
     update_bar();
+}
+
+void TabWidget::set_add_tab_button_enabled(bool enabled)
+{
+    m_add_tab_button_enabled = enabled;
+    update_bar();
+}
+
+int TabWidget::compute_tab_width(size_t index) const
+{
+    int close_button_offset = m_close_button_enabled ? 16 : 0;
+    if (m_uniform_tabs)
+        return uniform_tab_width();
+    if (has_vertical_tabs())
+        return m_tabs[index].width(font()) + close_button_offset;
+    // Auto-shrink all tabs evenly when total natural width overflows available bar space.
+    int total = 0;
+    for (auto& tab : m_tabs)
+        total += tab.width(font()) + close_button_offset;
+    int available = width() - bar_margin() * 2;
+    if (m_add_tab_button_enabled) {
+        int gap = m_tabs.is_empty() ? 0 : bar_margin();
+        // The active last tab is drawn 2 px past its logical right edge
+        int trailing_overhang = !m_tabs.is_empty() && m_tabs.last().widget == m_active_widget ? 2 : 0;
+        available -= gap + (bar_height() - bar_margin() * 2) + trailing_overhang;
+    }
+    if (total > available && !m_tabs.is_empty())
+        return max(available / (int)m_tabs.size(), m_min_tab_width);
+    return m_tabs[index].width(font()) + close_button_offset;
 }
 
 Gfx::IntRect TabWidget::button_rect(size_t index) const
@@ -424,13 +469,10 @@ Gfx::IntRect TabWidget::vertical_button_rect(size_t index) const
 Gfx::IntRect TabWidget::horizontal_button_rect(size_t index) const
 {
     int x_offset = bar_margin();
-    int close_button_offset = m_close_button_enabled ? 16 : 0;
-
     for (size_t i = 0; i < index; ++i) {
-        auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font()) + close_button_offset;
-        x_offset += tab_width;
+        x_offset += compute_tab_width(i);
     }
-    Gfx::IntRect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()) + close_button_offset, bar_height() };
+    Gfx::IntRect rect { x_offset, 0, compute_tab_width(index), bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
         rect.translate_by(0, m_tab_position == TabPosition::Top ? 2 : 0);
         rect.set_height(rect.height() - 2);
@@ -453,6 +495,62 @@ Gfx::IntRect TabWidget::close_button_rect(size_t index) const
     return close_button_rect;
 }
 
+Gfx::IntRect TabWidget::add_button_rect() const
+{
+    auto bar = bar_rect();
+    int size = bar_height() - bar_margin() * 2;
+    bool vertical_tabs = has_vertical_tabs();
+    int button_width = vertical_tabs ? bar.width() - 1 : size;
+
+    // Vertical tabs use a full-width add button to match the tab column. Horizontal tabs keep the square button.
+    int button_x = vertical_tabs ? 0 : bar_margin();
+    int button_y = bar_margin();
+    if (!m_tabs.is_empty()) {
+        if (vertical_tabs) {
+            int total_tab_height = m_tabs.size() * bar_height();
+            int gap = bar_margin();
+            // Place the button after the last tab when there is room, otherwise pin it to the bottom of the bar.
+            int trailing_overhang = m_tabs.last().widget == m_active_widget ? 2 : 0;
+            int aligned_button_y = bar.height() - bar_margin() - size;
+            int available_height = bar.height() - bar_margin() * 2 - gap - size - trailing_overhang;
+            if (total_tab_height > available_height) {
+                button_y = aligned_button_y;
+            } else {
+                auto last_tab_rect = button_rect(m_tabs.size() - 1);
+                int desired_button_y = last_tab_rect.bottom() - bar.y() + 1 + bar_margin();
+                button_y = min(desired_button_y, aligned_button_y);
+            }
+        } else {
+            // Place the button after the last tab when there is room, otherwise pin it to the end of the bar.
+            int aligned_button_x = bar.width() - bar_margin() - size;
+            int close_button_offset = m_close_button_enabled ? 16 : 0;
+            int total_tab_width = 0;
+            if (m_uniform_tabs) {
+                total_tab_width = m_tabs.size() * uniform_tab_width();
+            } else {
+                for (auto& tab : m_tabs)
+                    total_tab_width += tab.width(font()) + close_button_offset;
+            }
+
+            int gap = bar_margin();
+            // The active last tab is drawn 2 px past its logical right edge
+            int trailing_overhang = m_tabs.last().widget == m_active_widget ? 2 : 0;
+            int available_width = width() - bar_margin() * 2 - gap - size - trailing_overhang;
+            if (total_tab_width > available_width) {
+                button_x = aligned_button_x;
+            } else {
+                auto last_tab_rect = button_rect(m_tabs.size() - 1);
+                int desired_button_x = last_tab_rect.right() - bar.x() + 1 + bar_margin();
+                button_x = min(desired_button_x, aligned_button_x);
+            }
+        }
+    }
+
+    Gfx::IntRect rect { button_x, button_y, button_width, size };
+    rect.translate_by(bar.location());
+    return rect;
+}
+
 int TabWidget::TabData::width(Gfx::Font const& font) const
 {
     auto width = 16 + font.width_rounded_up(title) + (icon ? (16 + 4) : 0);
@@ -470,6 +568,14 @@ int TabWidget::TabData::width(Gfx::Font const& font) const
 
 void TabWidget::mousedown_event(MouseEvent& event)
 {
+    if (m_add_tab_button_enabled && event.button() == MouseButton::Primary) {
+        if (add_button_rect().contains(event.position())) {
+            m_pressed_add_button = true;
+            update_bar();
+            return;
+        }
+    }
+
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
         auto close_button_rect = this->close_button_rect(i);
@@ -488,8 +594,8 @@ void TabWidget::mousedown_event(MouseEvent& event)
         } else if (event.button() == MouseButton::Middle) {
             auto* widget = m_tabs[i].widget;
             deferred_invoke([this, widget] {
-                if (on_middle_click && widget)
-                    on_middle_click(*widget);
+                if (on_tab_close_click && widget)
+                    on_tab_close_click(*widget);
             });
         }
         return;
@@ -500,6 +606,14 @@ void TabWidget::mouseup_event(MouseEvent& event)
 {
     if (event.button() != MouseButton::Primary)
         return;
+
+    if (m_pressed_add_button) {
+        m_pressed_add_button = false;
+        update_bar();
+        if (add_button_rect().contains(event.position()) && on_add_tab_button_click)
+            on_add_tab_button_click();
+        return;
+    }
 
     if (m_dragging_active_tab) {
         m_dragging_active_tab = false;
@@ -532,6 +646,14 @@ void TabWidget::mousemove_event(MouseEvent& event)
         recalculate_tab_order();
         update_bar();
         return;
+    }
+
+    if (m_add_tab_button_enabled) {
+        bool hovered = add_button_rect().contains(event.position());
+        if (hovered != m_hovered_add_button) {
+            m_hovered_add_button = hovered;
+            update_bar();
+        }
     }
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
@@ -568,9 +690,10 @@ void TabWidget::mousewheel_event(MouseEvent& event)
 
 void TabWidget::leave_event(Core::Event&)
 {
-    if (m_hovered_tab_index.has_value() || m_hovered_close_button_index.has_value()) {
+    if (m_hovered_tab_index.has_value() || m_hovered_close_button_index.has_value() || m_hovered_add_button) {
         m_hovered_tab_index = {};
         m_hovered_close_button_index = {};
+        m_hovered_add_button = false;
         update_bar();
     }
 }
