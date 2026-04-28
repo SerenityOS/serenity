@@ -74,10 +74,10 @@ class I8042Controller;
 class I8042ControllerIRQHandler final
     : public IRQHandler {
 public:
-    static ErrorOr<NonnullOwnPtr<I8042ControllerIRQHandler>> try_create(I8042Controller const&, u8 irq_number);
+    static ErrorOr<NonnullOwnPtr<I8042ControllerIRQHandler>> try_create(I8042Controller const&, InterruptNumber irq_number);
 
 private:
-    I8042ControllerIRQHandler(I8042Controller const& controller, u8 irq_number);
+    I8042ControllerIRQHandler(I8042Controller const& controller, InterruptNumber irq_number);
 
     // ^IRQHandler
     virtual bool handle_irq() override;
@@ -118,7 +118,7 @@ public:
     // Note: This function exists only for the initialization process of the controller
     bool check_existence_via_probing(Badge<InputManagement>);
 
-    bool handle_irq(Badge<I8042ControllerIRQHandler>, u8 irq_number);
+    bool handle_irq(Badge<I8042ControllerIRQHandler>, InterruptNumber irq_number);
 
 private:
     I8042Controller();

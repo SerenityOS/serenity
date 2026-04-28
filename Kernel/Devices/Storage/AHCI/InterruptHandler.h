@@ -28,7 +28,7 @@ class AHCIInterruptHandler final : public PCI::IRQHandler {
     friend class AHCIController;
 
 public:
-    static ErrorOr<NonnullOwnPtr<AHCIInterruptHandler>> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    static ErrorOr<NonnullOwnPtr<AHCIInterruptHandler>> create(AHCIController&, InterruptNumber irq, AHCI::MaskedBitField taken_ports);
     virtual ~AHCIInterruptHandler() override;
 
     virtual StringView purpose() const override { return "SATA IRQ Handler"sv; }
@@ -36,7 +36,7 @@ public:
     bool is_responsible_for_port_index(u32 port_index) const { return m_taken_ports.is_set_at(port_index); }
 
 private:
-    AHCIInterruptHandler(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    AHCIInterruptHandler(AHCIController&, InterruptNumber irq, AHCI::MaskedBitField taken_ports);
 
     void allocate_resources_and_initialize_ports();
 

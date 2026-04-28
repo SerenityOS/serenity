@@ -17,7 +17,7 @@ namespace Kernel {
 class IRQHandler;
 class SharedIRQHandler final : public GenericInterruptHandler {
 public:
-    static void initialize(u8 interrupt_number);
+    static void initialize(InterruptNumber interrupt_number);
     virtual ~SharedIRQHandler();
     virtual bool handle_interrupt() override;
 
@@ -41,7 +41,7 @@ public:
 private:
     void enable_interrupt_vector();
     void disable_interrupt_vector();
-    explicit SharedIRQHandler(u8 interrupt_number);
+    explicit SharedIRQHandler(InterruptNumber interrupt_number);
     bool m_enabled { true };
     RecursiveSpinlockProtected<GenericInterruptHandler::List, LockRank::None> m_handlers;
     NonnullLockRefPtr<IRQController> m_responsible_irq_controller;

@@ -34,8 +34,8 @@ public:
     void set_shared_with_others(bool status) { m_shared_with_others = status; }
 
 protected:
-    void change_irq_number(u8 irq);
-    explicit IRQHandler(u8 irq);
+    void change_irq_number(InterruptNumber irq);
+    explicit IRQHandler(InterruptNumber irq);
 
 private:
     bool m_shared_with_others { false };

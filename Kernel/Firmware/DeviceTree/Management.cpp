@@ -45,7 +45,7 @@ ErrorOr<void> Management::register_interrupt_controller(DeviceTree::Device const
     return {};
 }
 
-ErrorOr<size_t> Management::resolve_interrupt_number(::DeviceTree::Interrupt interrupt) const
+ErrorOr<InterruptNumber> Management::resolve_interrupt_number(::DeviceTree::Interrupt interrupt) const
 {
     auto maybe_interrupt_controller = m_interrupt_controllers.get(interrupt.domain_root);
     if (!maybe_interrupt_controller.has_value())

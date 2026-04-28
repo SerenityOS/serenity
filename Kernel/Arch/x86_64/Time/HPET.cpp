@@ -359,11 +359,11 @@ Vector<unsigned> HPET::capable_interrupt_numbers(u8 comparator_number)
     return capable_interrupts;
 }
 
-void HPET::set_comparator_irq_vector(u8 comparator_number, u8 irq_vector)
+void HPET::set_comparator_irq_vector(u8 comparator_number, InterruptNumber irq_vector)
 {
     VERIFY(comparator_number <= m_comparators.size());
     auto& comparator_registers = registers().timers[comparator_number];
-    comparator_registers.capabilities = comparator_registers.capabilities | (irq_vector << 9);
+    comparator_registers.capabilities = comparator_registers.capabilities | (irq_vector.value() << 9);
 }
 
 bool HPET::is_periodic_capable(u8 comparator_number) const

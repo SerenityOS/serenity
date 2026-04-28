@@ -22,7 +22,7 @@ class TransportInterface final
     : public HID::TransportInterface
     , public IRQHandler {
 public:
-    static ErrorOr<NonnullOwnPtr<TransportInterface>> create(I2C::Controller& i2c_controller, I2C::Address i2c_address, HIDDescriptor const& hid_descriptor, size_t interrupt_number)
+    static ErrorOr<NonnullOwnPtr<TransportInterface>> create(I2C::Controller& i2c_controller, I2C::Address i2c_address, HIDDescriptor const& hid_descriptor, InterruptNumber interrupt_number)
     {
         auto input_report_buffer = TRY(ByteBuffer::create_zeroed(hid_descriptor.max_input_length));
         return TRY(adopt_nonnull_own_or_enomem(new (nothrow) TransportInterface(i2c_controller, i2c_address, hid_descriptor.input_register, interrupt_number, move(input_report_buffer))));
@@ -91,7 +91,7 @@ public:
     }
 
 private:
-    TransportInterface(I2C::Controller& i2c_controller, I2C::Address i2c_address, u16 input_register_index, size_t interrupt_number, ByteBuffer input_report_buffer)
+    TransportInterface(I2C::Controller& i2c_controller, I2C::Address i2c_address, u16 input_register_index, InterruptNumber interrupt_number, ByteBuffer input_report_buffer)
         : IRQHandler(interrupt_number)
         , m_i2c_controller(i2c_controller)
         , m_i2c_address(i2c_address)
