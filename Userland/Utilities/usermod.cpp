@@ -188,19 +188,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (append_extra_gids) {
-        for (auto gid : target_account.extra_gids())
-            extra_gids.append(gid);
-    }
-
-    if (remove_extra_gids) {
-        Vector<gid_t> current_extra_gids = target_account.extra_gids();
         for (auto gid : extra_gids)
-            current_extra_gids.remove_all_matching([gid](auto current_gid) { return current_gid == gid; });
-
-        extra_gids = move(current_extra_gids);
-    }
-
-    if (!extra_gids.is_empty() || remove_extra_gids) {
+            target_account.add_extra_gid(gid);
+    } else if (remove_extra_gids) {
+        for (auto gid : extra_gids)
+            target_account.remove_extra_gid(gid);
+    } else {
         target_account.set_extra_gids(extra_gids);
     }
 
