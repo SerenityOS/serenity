@@ -61,7 +61,7 @@ static Singleton<APIC> s_apic;
 
 class APICIPIInterruptHandler final : public GenericInterruptHandler {
 public:
-    explicit APICIPIInterruptHandler(u8 interrupt_vector)
+    explicit APICIPIInterruptHandler(InterruptNumber interrupt_vector)
         : GenericInterruptHandler(interrupt_vector, true)
     {
     }
@@ -69,7 +69,7 @@ public:
     {
     }
 
-    static void initialize(u8 interrupt_number)
+    static void initialize(InterruptNumber interrupt_number)
     {
         auto* handler = new APICIPIInterruptHandler(interrupt_number);
         handler->register_interrupt_handler();
@@ -91,7 +91,7 @@ private:
 
 class APICErrInterruptHandler final : public GenericInterruptHandler {
 public:
-    explicit APICErrInterruptHandler(u8 interrupt_vector)
+    explicit APICErrInterruptHandler(InterruptNumber interrupt_vector)
         : GenericInterruptHandler(interrupt_vector, true)
     {
     }
@@ -99,7 +99,7 @@ public:
     {
     }
 
-    static void initialize(u8 interrupt_number)
+    static void initialize(InterruptNumber interrupt_number)
     {
         auto* handler = new APICErrInterruptHandler(interrupt_number);
         handler->register_interrupt_handler();
@@ -171,14 +171,14 @@ u32 APIC::read_register(u32 offset)
     return *reinterpret_cast<u32 volatile*>(m_apic_base->vaddr().offset(offset).as_ptr());
 }
 
-void APIC::set_lvt(u32 offset, u8 interrupt)
+void APIC::set_lvt(u32 offset, InterruptNumber interrupt)
 {
-    write_register(offset, read_register(offset) | interrupt);
+    write_register(offset, read_register(offset) | interrupt.value());
 }
 
-void APIC::set_siv(u32 offset, u8 interrupt)
+void APIC::set_siv(u32 offset, InterruptNumber interrupt)
 {
-    write_register(offset, read_register(offset) | interrupt | APIC_ENABLED);
+    write_register(offset, read_register(offset) | interrupt.value() | APIC_ENABLED);
 }
 
 void APIC::wait_for_pending_icr()
@@ -226,7 +226,7 @@ void APIC::eoi()
     write_register(APIC_REG_EOI, 0x0);
 }
 
-u8 APIC::spurious_interrupt_vector()
+InterruptNumber APIC::spurious_interrupt_vector()
 {
     return IRQ_APIC_SPURIOUS;
 }

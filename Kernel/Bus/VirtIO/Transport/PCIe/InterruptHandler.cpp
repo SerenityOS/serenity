@@ -8,12 +8,12 @@
 
 namespace Kernel::VirtIO {
 
-ErrorOr<NonnullOwnPtr<PCIeTransportInterruptHandler>> PCIeTransportInterruptHandler::create(PCIeTransportLink& transport_link, VirtIO::Device& parent_device, u8 irq)
+ErrorOr<NonnullOwnPtr<PCIeTransportInterruptHandler>> PCIeTransportInterruptHandler::create(PCIeTransportLink& transport_link, VirtIO::Device& parent_device, InterruptNumber irq)
 {
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) PCIeTransportInterruptHandler(transport_link, parent_device, irq)));
 }
 
-PCIeTransportInterruptHandler::PCIeTransportInterruptHandler(PCIeTransportLink& transport_link, VirtIO::Device& parent_device, u8 irq)
+PCIeTransportInterruptHandler::PCIeTransportInterruptHandler(PCIeTransportLink& transport_link, VirtIO::Device& parent_device, InterruptNumber irq)
     : TransportInterruptHandler(parent_device)
     , PCI::IRQHandler(transport_link, irq)
 {

@@ -37,12 +37,12 @@ public:
 
     virtual void eoi(GenericInterruptHandler const&) override;
 
-    virtual u8 pending_interrupt() const override;
+    virtual Optional<InterruptNumber> pending_interrupt() const override;
 
     virtual StringView model() const override { return "PLIC"sv; }
 
     // ^DeviceTree::InterruptController
-    virtual ErrorOr<size_t> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
+    virtual ErrorOr<InterruptNumber> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
 
 private:
     void initialize();

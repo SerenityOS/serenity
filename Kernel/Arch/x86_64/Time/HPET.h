@@ -9,6 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/Interrupts/Interrupts.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/Region.h>
 
@@ -35,7 +36,7 @@ public:
     void update_periodic_comparator_value();
     void update_non_periodic_comparator_value(HPETComparator const& comparator);
 
-    void set_comparator_irq_vector(u8 comparator_number, u8 irq_vector);
+    void set_comparator_irq_vector(u8 comparator_number, InterruptNumber irq_vector);
 
     void enable_periodic_interrupt(HPETComparator const& comparator);
     void disable_periodic_interrupt(HPETComparator const& comparator);

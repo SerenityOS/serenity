@@ -71,9 +71,12 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             RISCV64::Timer::the().handle_interrupt();
         } else if (scause == RISCV64::CSR::SCAUSE::SupervisorExternalInterrupt) {
             for (auto& interrupt_controller : InterruptManagement::the().controllers()) {
-                u8 pending_interrupt = 0;
-                while ((pending_interrupt = interrupt_controller->pending_interrupt())) {
-                    auto* handler = s_interrupt_handlers[pending_interrupt];
+                for (;;) {
+                    auto maybe_interrupt_number = interrupt_controller->pending_interrupt();
+                    if (!maybe_interrupt_number.has_value())
+                        break;
+
+                    auto* handler = s_interrupt_handlers[maybe_interrupt_number.value().value()];
                     VERIFY(handler);
                     handler->increment_call_count();
                     handler->handle_interrupt();
@@ -166,30 +169,30 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
 
 // FIXME: Share the code below with Arch/x86_64/Interrupts.cpp
 //        While refactoring, the interrupt handlers can also be moved into the InterruptManagement class.
-GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)
+GenericInterruptHandler& get_interrupt_handler(InterruptNumber interrupt_number)
 {
-    auto*& handler_slot = s_interrupt_handlers[interrupt_number];
+    auto*& handler_slot = s_interrupt_handlers[interrupt_number.value()];
     VERIFY(handler_slot != nullptr);
     return *handler_slot;
 }
 
 // Sets the reserved flag on `number_of_irqs` if it finds unused interrupt handler on
 // a contiguous range.
-ErrorOr<u8> reserve_interrupt_handlers(u8)
+ErrorOr<InterruptNumber> reserve_interrupt_handlers(size_t)
 {
     TODO_RISCV64();
 }
 
-static void revert_to_unused_handler(u8 interrupt_number)
+static void revert_to_unused_handler(InterruptNumber interrupt_number)
 {
     auto* handler = new UnhandledInterruptHandler(interrupt_number);
     handler->register_interrupt_handler();
 }
 
 // FIXME: Share the code below with Arch/{x86_64,aarch64}/Interrupts.cpp
-void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
+void register_generic_interrupt_handler(InterruptNumber interrupt_number, GenericInterruptHandler& handler)
 {
-    auto*& handler_slot = s_interrupt_handlers[interrupt_number];
+    auto*& handler_slot = s_interrupt_handlers[interrupt_number.value()];
     if (handler_slot == nullptr) {
         handler_slot = &handler;
         return;
@@ -224,9 +227,9 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
 }
 
 // FIXME: Share the code below with Arch/{x86_64,aarch64}/Interrupts.cpp
-void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
+void unregister_generic_interrupt_handler(InterruptNumber interrupt_number, GenericInterruptHandler& handler)
 {
-    auto*& handler_slot = s_interrupt_handlers[interrupt_number];
+    auto*& handler_slot = s_interrupt_handlers[interrupt_number.value()];
     VERIFY(handler_slot != nullptr);
     if (handler_slot->type() == HandlerType::UnhandledInterruptHandler)
         return;

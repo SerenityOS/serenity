@@ -67,7 +67,7 @@ IRQController& InterruptManagement::get_interrupt_controller(size_t index)
     return *m_interrupt_controllers[index];
 }
 
-u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
+InterruptNumber InterruptManagement::acquire_mapped_interrupt_number(InterruptNumber original_irq)
 {
     if (!InterruptManagement::initialized()) {
         // This is necessary, because we install UnhandledInterruptHandlers before we actually initialize the Interrupt Management object...
@@ -76,25 +76,25 @@ u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
     return InterruptManagement::the().get_mapped_interrupt_vector(original_irq);
 }
 
-u8 InterruptManagement::acquire_irq_number(u8 mapped_interrupt_vector)
+InterruptNumber InterruptManagement::acquire_irq_number(InterruptNumber mapped_interrupt_vector)
 {
     VERIFY(InterruptManagement::initialized());
     return InterruptManagement::the().get_irq_vector(mapped_interrupt_vector);
 }
 
-u8 InterruptManagement::get_mapped_interrupt_vector(u8 original_irq)
+InterruptNumber InterruptManagement::get_mapped_interrupt_vector(InterruptNumber original_irq)
 {
     // FIXME: For SMP configuration (with IOAPICs) use a better routing scheme to make redirections more efficient.
     return original_irq;
 }
 
-u8 InterruptManagement::get_irq_vector(u8 mapped_interrupt_vector)
+InterruptNumber InterruptManagement::get_irq_vector(InterruptNumber mapped_interrupt_vector)
 {
     // FIXME: For SMP configuration (with IOAPICs) use a better routing scheme to make redirections more efficient.
     return mapped_interrupt_vector;
 }
 
-NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector)
+NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, InterruptNumber interrupt_vector)
 {
     for (auto& irq_controller : m_interrupt_controllers) {
         if (irq_controller->gsi_base() <= interrupt_vector && irq_controller->type() == controller_type)
@@ -103,7 +103,7 @@ NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_contro
     VERIFY_NOT_REACHED();
 }
 
-NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
+NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(InterruptNumber interrupt_vector)
 {
     if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
         return m_interrupt_controllers[0];

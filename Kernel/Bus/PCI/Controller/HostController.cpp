@@ -350,7 +350,7 @@ void HostController::configure_attached_devices(PCIConfiguration& config)
 
         auto interrupt_number = config.masked_interrupt_mapping.get(masked_identifier);
         if (interrupt_number.has_value())
-            write8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_LINE, interrupt_number.value());
+            write8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_LINE, interrupt_number.value().value());
 
         if (read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::CLASS) != PCI::ClassID::Bridge)
             return;

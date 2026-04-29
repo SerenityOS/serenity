@@ -14,7 +14,7 @@ namespace Kernel {
 
 static ARMv8Timer* s_the = nullptr;
 
-ARMv8Timer::ARMv8Timer(u8 interrupt_number, u32 frequency)
+ARMv8Timer::ARMv8Timer(InterruptNumber interrupt_number, u32 frequency)
     : HardwareTimer(interrupt_number)
     , m_frequency(frequency)
 {
@@ -23,7 +23,7 @@ ARMv8Timer::ARMv8Timer(u8 interrupt_number, u32 frequency)
     start_timer(m_interrupt_interval);
 }
 
-ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(u8 interrupt_number, u32 frequency)
+ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(InterruptNumber interrupt_number, u32 frequency)
 {
     auto timer = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ARMv8Timer(interrupt_number, frequency)));
 

@@ -8,6 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Arch/x86_64/IRQController.h>
+#include <Kernel/Interrupts/Interrupts.h>
 
 namespace Kernel {
 
@@ -21,7 +22,7 @@ public:
     virtual void disable(GenericInterruptHandler const&) override;
     virtual void hard_disable() override;
     virtual void eoi(GenericInterruptHandler const&) const override;
-    virtual bool is_vector_enabled(u8 number) const override;
+    virtual bool is_vector_enabled(InterruptNumber number) const override;
     virtual bool is_enabled() const override;
     virtual void spurious_eoi(GenericInterruptHandler const&) const override;
     virtual u16 get_isr() const override;
@@ -33,8 +34,8 @@ public:
 
 private:
     u16 m_cached_irq_mask { 0xffff };
-    void eoi_interrupt(u8 irq) const;
-    void enable_vector(u8 number);
+    void eoi_interrupt(InterruptNumber irq) const;
+    void enable_vector(InterruptNumber number);
     void remap(u8 offset);
     void complete_eoi() const;
     virtual void initialize() override;
