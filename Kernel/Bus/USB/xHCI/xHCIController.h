@@ -119,6 +119,12 @@ private:
         u8 producer_cycle_state { 1 };
         IntrusiveList<&PendingTransfer::endpoint_list_node> pending_transfers;
 
+        struct LastShortTransfer {
+            size_t start_transfer_trb_index;
+            size_t end_transfer_trb_index;
+        };
+        Optional<LastShortTransfer> last_short_transfer;
+
         TransferRequestBlock* ring_vaddr() const { return reinterpret_cast<TransferRequestBlock*>(region->vaddr().as_ptr()); }
         PhysicalPtr ring_paddr() const { return region->physical_page(0)->paddr().get(); }
 
