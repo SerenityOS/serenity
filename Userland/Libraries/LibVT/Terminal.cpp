@@ -1547,6 +1547,42 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     case KeyCode::Key_PageDown:
         emit_tilde_with_modifier(6);
         return;
+    case KeyCode::Key_F1:
+        emit_tilde_with_modifier(11);
+        return;
+    case KeyCode::Key_F2:
+        emit_tilde_with_modifier(12);
+        return;
+    case KeyCode::Key_F3:
+        emit_tilde_with_modifier(13);
+        return;
+    case KeyCode::Key_F4:
+        emit_tilde_with_modifier(14);
+        return;
+    case KeyCode::Key_F5:
+        emit_tilde_with_modifier(15);
+        return;
+    case KeyCode::Key_F6:
+        emit_tilde_with_modifier(17);
+        return;
+    case KeyCode::Key_F7:
+        emit_tilde_with_modifier(18);
+        return;
+    case KeyCode::Key_F8:
+        emit_tilde_with_modifier(19);
+        return;
+    case KeyCode::Key_F9:
+        emit_tilde_with_modifier(20);
+        return;
+    case KeyCode::Key_F10:
+        emit_tilde_with_modifier(21);
+        return;
+    case KeyCode::Key_F11:
+        emit_tilde_with_modifier(23);
+        return;
+    case KeyCode::Key_F12:
+        emit_tilde_with_modifier(24);
+        return;
     case KeyCode::Key_Backspace:
         if (ctrl) {
             // This is an extension that allows Editor.cpp to delete whole words when

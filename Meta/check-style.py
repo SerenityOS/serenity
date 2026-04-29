@@ -27,7 +27,8 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
     'Userland/Libraries/LibELF/ELFABI.h',
     'Userland/Libraries/LibCodeComprehension/Cpp/Tests/',
     'Userland/Libraries/LibCpp/Tests/parser/',
-    'Userland/Libraries/LibCpp/Tests/preprocessor/'
+    'Userland/Libraries/LibCpp/Tests/preprocessor/',
+    'Ports/'
 }
 
 # We check that "#pragma once" is present
@@ -36,6 +37,7 @@ PRAGMA_ONCE_CHECK_EXCLUDES = {
     'Userland/Libraries/LibC/assert.h',
     'Ladybird/AppKit/System/Detail/Header.h',
     'Ladybird/AppKit/System/Detail/Footer.h',
+    'Ports/'
 }
 
 # We make sure that there's a blank line before and after pragma once
@@ -56,6 +58,7 @@ INCLUDE_CHECK_EXCLUDES = {
     "Userland/Libraries/LibCodeComprehension/Cpp/Tests/",
     "Userland/Libraries/LibCpp/Tests/parser/",
     "Userland/Libraries/LibCpp/Tests/preprocessor/",
+    "Ports/"
 }
 
 LOCAL_INCLUDE_SUFFIX_EXCLUDES = [

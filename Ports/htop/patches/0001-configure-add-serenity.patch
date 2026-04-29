@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
+Date: Mon, 21 Apr 2026 00:00:00 +0200
+Subject: [PATCH 1/2] configure.ac: add SerenityOS platform detection
+
+diff --git a/configure.ac b/configure.ac
+--- a/configure.ac
++++ b/configure.ac
+@@ -59,6 +59,10 @@ solaris*)
+    my_htop_platform=solaris
+    AC_DEFINE([HTOP_SOLARIS], [], [Building for Solaris.])
+    ;;
++serenity*)
++   my_htop_platform=serenity
++   AC_DEFINE([HTOP_SERENITY], [], [Building for SerenityOS.])
++   ;;
+ *)
+    my_htop_platform=unsupported
+    AC_DEFINE([HTOP_UNSUPPORTED], [], [Building for an unsupported platform.])
+@@ -98,6 +102,7 @@ AC_DEFINE([HTOP_UNSUPPORTED], [], [Building for an unsupported platform.])
+ 
+ AC_PROG_CC
+ AM_PROG_CC_C_O
++AC_PROG_CXX
+ m4_version_prereq([2.70], [], [AC_PROG_CC_C99])
+ AS_IF([test "x$ac_cv_prog_cc_c99" = xno], [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
+ AM_CFLAGS="-std=c99 -pedantic"
+@@ -1841,6 +1846,7 @@ AM_CONDITIONAL([HTOP_DRAGONFLYBSD], [test "$my_htop_platform" = dragonflybsd])
+ AM_CONDITIONAL([HTOP_NETBSD], [test "$my_htop_platform" = netbsd])
+ AM_CONDITIONAL([HTOP_OPENBSD], [test "$my_htop_platform" = openbsd])
+ AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
+ AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
++AM_CONDITIONAL([HTOP_SERENITY], [test "$my_htop_platform" = serenity])
+ AM_CONDITIONAL([HTOP_PCP], [test "$my_htop_platform" = pcp])
+ AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
