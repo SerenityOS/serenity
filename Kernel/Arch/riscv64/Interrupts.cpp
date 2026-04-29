@@ -71,9 +71,12 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             RISCV64::Timer::the().handle_interrupt();
         } else if (scause == RISCV64::CSR::SCAUSE::SupervisorExternalInterrupt) {
             for (auto& interrupt_controller : InterruptManagement::the().controllers()) {
-                u8 pending_interrupt = 0;
-                while ((pending_interrupt = interrupt_controller->pending_interrupt())) {
-                    auto* handler = s_interrupt_handlers[pending_interrupt];
+                for (;;) {
+                    auto maybe_interrupt_number = interrupt_controller->pending_interrupt();
+                    if (!maybe_interrupt_number.has_value())
+                        break;
+
+                    auto* handler = s_interrupt_handlers[maybe_interrupt_number.value()];
                     VERIFY(handler);
                     handler->increment_call_count();
                     handler->handle_interrupt();

@@ -37,7 +37,7 @@ public:
 
     virtual void eoi(GenericInterruptHandler const&) override;
 
-    virtual u8 pending_interrupt() const override;
+    virtual Optional<u8> pending_interrupt() const override;
 
     virtual StringView model() const override { return "PLIC"sv; }
 

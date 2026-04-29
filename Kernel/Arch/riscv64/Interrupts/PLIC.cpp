@@ -57,9 +57,15 @@ void PLIC::eoi(GenericInterruptHandler const& handler)
     m_registers->contexts[m_boot_hart_supervisor_mode_context_id].claim_complete = handler.interrupt_number();
 }
 
-u8 PLIC::pending_interrupt() const
+Optional<u8> PLIC::pending_interrupt() const
 {
-    return m_registers->contexts[m_boot_hart_supervisor_mode_context_id].claim_complete;
+    auto interrupt_number = m_registers->contexts[m_boot_hart_supervisor_mode_context_id].claim_complete;
+
+    // 0 means no pending interrupt.
+    if (interrupt_number == 0)
+        return {};
+
+    return interrupt_number;
 }
 
 ErrorOr<size_t> PLIC::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
