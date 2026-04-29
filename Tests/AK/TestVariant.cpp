@@ -74,8 +74,8 @@ TEST_CASE(visit_const)
 
     the_value.visit(
         [&](ByteString const&) { correct = true; },
-        [&](auto&) {},
-        [&](auto const&) {});
+        [&](auto&) { },
+        [&](auto const&) { });
 
     EXPECT(correct);
 
@@ -83,7 +83,7 @@ TEST_CASE(visit_const)
     auto the_value_but_not_const = the_value;
     the_value_but_not_const.visit(
         [&](ByteString const&) { correct = true; },
-        [&](auto&) {});
+        [&](auto&) { });
 
     EXPECT(correct);
 
@@ -332,3 +332,79 @@ TEST_CASE(variant_equality)
         EXPECT_EQ(variant1, variant2);
     }
 }
+
+static_assert(([]() consteval -> bool {
+    Variant<float, int> my_var { 1337 };
+
+    if (!my_var.has<int>())
+        return false;
+    if (my_var.get<int>() != 1337)
+        return false;
+    my_var = 3.141f;
+    if (!my_var.has<float>())
+        return false;
+    if (my_var.get<float>() != 3.141f)
+        return false;
+
+    Variant<float, int> my_var2 = 1337;
+    if (!my_var2.has<int>())
+        return false;
+    my_var2 = my_var;
+    if (!my_var.has<float>() || my_var.get<float>() != 3.141f)
+        return false;
+    if (!my_var2.has<float>())
+        return false;
+    if (my_var2.get<float>() != 3.141f)
+        return false;
+
+    return true;
+})());
+
+static_assert(([]() consteval -> bool {
+    struct CopyAble {
+        constexpr CopyAble(int a)
+            : v(a)
+        {
+        }
+        constexpr CopyAble(CopyAble const&) = default;
+        int v;
+    };
+
+    Variant<float, int, CopyAble> my_var { CopyAble { 1337 } };
+
+    Variant<float, int, CopyAble> my_var2 = 5;
+    my_var2 = my_var;
+    my_var = 1;
+    if (!my_var.has<int>() || !my_var2.has<CopyAble>())
+        return false;
+
+    my_var = my_var2;
+
+    return (
+        my_var.get<CopyAble>().v == 1337 && my_var2.get<CopyAble>().v == 1337);
+})());
+
+static_assert(([]() consteval -> bool {
+    struct NonTrivial {
+        constexpr NonTrivial() { }
+        constexpr NonTrivial(NonTrivial const&) { }
+        constexpr NonTrivial(NonTrivial&&) { }
+        constexpr ~NonTrivial() { }
+    };
+    struct NonTrivial2 {
+        constexpr NonTrivial2() { }
+        constexpr NonTrivial2(NonTrivial2 const&) { }
+        constexpr NonTrivial2(NonTrivial2&&) { }
+        constexpr ~NonTrivial2() { }
+    };
+    Variant<NonTrivial, NonTrivial2, int> a = NonTrivial {};
+    Variant<NonTrivial, NonTrivial2, int> b = NonTrivial2 {};
+    auto c = a;
+    c = b;
+    b = move(a);
+    a = 2;
+
+    a.visit([](auto&&) { });
+
+    return true;
+})());
