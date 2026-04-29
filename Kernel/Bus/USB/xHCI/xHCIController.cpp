@@ -917,10 +917,18 @@ ErrorOr<Vector<TransferRequestBlock>> xHCIController::prepare_normal_transfer(Tr
         transfer_request_block.normal.transfer_descriptor_size = min(transfer_request_blocks_count - i - 1, 31);
         transfer_request_block.normal.interrupter_target = 0;
 
-        if (i != (transfer_request_blocks_count - 1))
+        // 4.10.1.1.2 Short Transfers when not using Event Data TRBs
+        // If software is not using Event Data TRBs, but it wants to flag the completion of a
+        // TD that may receive a Short Packet, then:
+        // • The ISP flag shall be set (‘1’) in all Transfer TRBs of the TD except the last Transfer
+        //   TRB and may be set in the last Transfer TRB, and
+        // • The IOC flag shall be set (‘1’) in the last Transfer TRB of the TD.
+        if (i != (transfer_request_blocks_count - 1)) {
             transfer_request_block.normal.chain_bit = 1;
-        else
+            transfer_request_block.normal.interrupt_on_short_packet = 1;
+        } else {
             transfer_request_block.normal.interrupt_on_completion = 1;
+        }
 
         transfer_request_block.normal.transfer_request_block_type = TransferRequestBlock::TRBType::Normal;
     }
@@ -1345,21 +1353,77 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
     // value of the Transfer Event TRB Pointer field.
     endpoint_ring.dequeue_index = transfer_request_block_index;
 
+    auto is_trb_in_transfer = [](size_t start_index, size_t end_index, size_t trb_index) {
+        auto transfer_wraps_around = start_index > end_index;
+
+        if (!transfer_wraps_around)
+            return trb_index >= start_index && trb_index <= end_index;
+
+        return trb_index >= start_index || trb_index <= end_index;
+    };
+
     for (auto& pending_transfer : endpoint_ring.pending_transfers) {
-        if (pending_transfer.start_index <= pending_transfer.end_index) {
-            if (pending_transfer.start_index > transfer_request_block_index || transfer_request_block_index > pending_transfer.end_index)
-                continue;
-        } else {
-            if (pending_transfer.start_index > transfer_request_block_index && transfer_request_block_index > pending_transfer.end_index)
-                continue;
-        }
+        if (!is_trb_in_transfer(pending_transfer.start_index, pending_transfer.end_index, transfer_request_block_index))
+            continue;
+
+        // NOTE: Per the xHCI spec, a Transfer Event with Completion Code = Short Packet doesn't always signal completion of a transfer:
+        //
+        // > If the Short Packet occurred while processing a Transfer TRB with only an ISP
+        // > flag set, then two events shall be generated for the transfer; one for the Transfer
+        // > TRB that the Short Packet occurred on, and a second for the last TRB with the
+        // > IOC flag set. [...]
+        // >
+        // > Software shall not interpret a Short Packet Event as indicating that the TD that it
+        // > is associated with is “complete”, unless the TRB Pointer field of the Transfer
+        // > Event references the last TRB of the TD.
+        // (4.10.1.1.2 Short Transfers when not using Event Data TRBs)
+        //
+        // However, some host controllers, like the qemu-xhci device from QEMU don't implement this behavior
+        // correctly and only send one event if the Short Packet occurred on a Transfer TRB that isn't the last one in
+        // a transfer. This means we can't use the second Transfer Event to signal completion of the transfer.
+        // Instead, we always treat a transfer as "complete" when we receive any transfer event for it.
+        //
+        // This requires that we ignore the second Short Packet Event on correctly behaving host controllers.
+        // We do this by saving the start and end transfer TRB indices of the previous transfer, if it was completed
+        // with Completion Code = Short Packet. If we receive a transfer event for an unknown transfer, we compare
+        // it with those saved indices. If it is inside this transfer, we simply ignore the Transfer Event silently.
 
         pending_transfer.endpoint_list_node.remove();
 
         if (endpoint_ring.type == Pipe::Type::Control || endpoint_ring.type == Pipe::Type::Bulk) {
             auto& sync_pending_transfer = static_cast<SyncPendingTransfer&>(pending_transfer);
             sync_pending_transfer.completion_code = transfer_request_block.transfer_event.completion_code;
-            sync_pending_transfer.remainder = transfer_request_block.transfer_event.transfer_request_block_transfer_length;
+
+            auto* ring_memory = endpoint_ring.ring_vaddr();
+
+            if (transfer_request_block.transfer_event.completion_code == TransferRequestBlock::CompletionCode::Short_Packet) {
+                // 4.10.1.1.2 Short Transfers when not using Event Data TRBs
+                // If Event Data TRBs are not used, then the total number of received bytes for a
+                // Short Packet TD is the sum of the TRB Transfer Length fields in all Transfer TRBs
+                // up to and including the one that generated the Short Packet Event, minus the
+                // residue value of the TRB Transfer Length field in the Short Packet Event.
+
+                // Instead of calculating the total number of transferred bytes, sum up the number of untransmitted bytes.
+
+                sync_pending_transfer.remainder = transfer_request_block.transfer_event.transfer_request_block_transfer_length;
+
+                if (transfer_request_block_index != sync_pending_transfer.end_index) {
+                    for (size_t i = transfer_request_block_index + 1;; i++) {
+                        if (i == endpoint_ring_size - 1) {
+                            // This assumes we don't use segmented Rings, i.e. the final Link TRB always points to the first TRB in the same Ring.
+                            i = 0;
+                        }
+
+                        sync_pending_transfer.remainder += ring_memory[i].normal.transfer_request_block_transfer_length;
+
+                        if (i == sync_pending_transfer.end_index)
+                            break;
+                    }
+                }
+            } else {
+                sync_pending_transfer.remainder = transfer_request_block.transfer_event.transfer_request_block_transfer_length;
+            }
+
             full_memory_fence();
             sync_pending_transfer.wait_queue.wake_all();
         } else {
@@ -1368,9 +1432,26 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
             // Reschedule the periodic transfer (NOTE: We MUST() here since a re-enqueue should never fail)
             MUST(enqueue_transfer(slot, periodic_pending_transfer.original_transfer->pipe().endpoint_number(), periodic_pending_transfer.original_transfer->pipe().direction(), periodic_pending_transfer.transfer_request_blocks, periodic_pending_transfer));
         }
+
+        if (transfer_request_block.transfer_event.completion_code == TransferRequestBlock::CompletionCode::Short_Packet) {
+            endpoint_ring.last_short_transfer = EndpointRing::LastShortTransfer {
+                .start_transfer_trb_index = pending_transfer.start_index,
+                .end_transfer_trb_index = pending_transfer.end_index,
+            };
+        } else {
+            endpoint_ring.last_short_transfer.clear();
+        }
+
         return;
     }
-    dmesgln_xhci("Transfer event on slot {} endpoint {} points to unowned TRB", slot, endpoint);
+
+    bool should_ignore = endpoint_ring.last_short_transfer.has_value()
+        && is_trb_in_transfer(endpoint_ring.last_short_transfer->start_transfer_trb_index, endpoint_ring.last_short_transfer->end_transfer_trb_index, transfer_request_block_index);
+
+    if (!should_ignore)
+        dmesgln_xhci("Transfer event on slot {} endpoint {} points to unowned TRB", slot, endpoint);
+
+    endpoint_ring.last_short_transfer.clear();
 }
 
 void xHCIController::event_handling_thread()
