@@ -732,8 +732,6 @@ def set_up_network_hardware(config: Configuration):
     provided_ethernet_device_type = environ.get("SERENITY_ETHERNET_DEVICE_TYPE")
     if provided_ethernet_device_type is not None:
         config.ethernet_device_type = provided_ethernet_device_type
-    elif config.architecture in [Arch.Aarch64, Arch.RISCV64] and not config.machine_type.is_raspberry_pi():
-        config.ethernet_device_type = "virtio-net-pci"
 
     if config.machine_type.is_raspberry_pi():
         config.network_backend = None
