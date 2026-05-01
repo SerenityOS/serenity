@@ -67,8 +67,9 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
-BINUTILS_VERSION="2.44"
-BINUTILS_MD5SUM="49912ce774666a30806141f106124294"
+# FIXME: When updating this version to the next release, remove the 'development=false' workaround patch.
+BINUTILS_VERSION="2.46.0"
+BINUTILS_MD5SUM="81bb6810bcd1119819dc0804956e1c92"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
 BINUTILS_BASE_URL="https://ftpmirror.gnu.org/gnu/binutils"
