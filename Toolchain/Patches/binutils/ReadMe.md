@@ -41,3 +41,14 @@ ld/
     * testsuite/ld-elf/symbolic-non-weak-func-a.rd: Likewise.
     * testsuite/ld-elf/symbolic-non-weak-func-b.rd: Likewise.
 
+## `0003-Set-development-to-false.patch`
+
+Set "development" to "false"
+
+FIXME: Remove this patch when updating to the next release.
+
+Binutils 2.46 was accidentally packaged with this variable set to true,
+which leads to build errors because this enables -Werror.
+
+https://sourceware.org/pipermail/binutils/2026-May/149177.html
+

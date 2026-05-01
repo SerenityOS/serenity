@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='binutils'
-version='2.44'
+version='2.46.0'
 useconfigure='true'
 use_fresh_config_sub='true'
 configopts=(
@@ -13,7 +13,7 @@ configopts=(
     "--enable-libiberty"
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/binutils/binutils-${version}.tar.xz#ce2017e059d63e67ddb9240e9d4ec49c2893605035cd60e92ad53177f4377237"
+    "https://ftpmirror.gnu.org/gnu/binutils/binutils-${version}.tar.xz#d75a94f4d73e7a4086f7513e67e439e8fcdcbb726ffe63f4661744e6256b2cf2"
 )
 depends=(
     'zlib'
