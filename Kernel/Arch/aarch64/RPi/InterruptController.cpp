@@ -42,9 +42,9 @@ void InterruptController::enable(GenericInterruptHandler const& handler)
     VERIFY(interrupt_number < 64);
 
     if (interrupt_number < 32)
-        m_registers->enable_irqs_1 = m_registers->enable_irqs_1 | (1 << interrupt_number.value());
+        m_registers->enable_irqs_1 = 1 << interrupt_number.value();
     else
-        m_registers->enable_irqs_2 = m_registers->enable_irqs_2 | (1 << (interrupt_number.value() - 32));
+        m_registers->enable_irqs_2 = 1 << (interrupt_number.value() - 32);
 }
 
 void InterruptController::disable(GenericInterruptHandler const& handler)
@@ -53,9 +53,9 @@ void InterruptController::disable(GenericInterruptHandler const& handler)
     VERIFY(interrupt_number < 64);
 
     if (interrupt_number < 32)
-        m_registers->disable_irqs_1 = m_registers->disable_irqs_1 | (1 << interrupt_number.value());
+        m_registers->disable_irqs_1 = 1 << interrupt_number.value();
     else
-        m_registers->disable_irqs_2 = m_registers->disable_irqs_2 | (1 << (interrupt_number.value() - 32));
+        m_registers->disable_irqs_2 = 1 << (interrupt_number.value() - 32);
 }
 
 void InterruptController::eoi(GenericInterruptHandler const&)
