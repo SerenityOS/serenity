@@ -11,7 +11,7 @@ and __riscv_cpu_model.
  1 file changed, 25 insertions(+), 2 deletions(-)
 
 diff --git a/libgcc/config/riscv/feature_bits.c b/libgcc/config/riscv/feature_bits.c
-index 157bcdcad69a939037f6faca3a90c2598dd61f89..8b3f45ffda99f3931ca86b0623283cf029918489 100644
+index dd297b1be5c07cc0577a490b33399b6e1827df00..9fef4cb6bda68ccde77bd5e3073f2be7a3bfdd0e 100644
 --- a/libgcc/config/riscv/feature_bits.c
 +++ b/libgcc/config/riscv/feature_bits.c
 @@ -145,7 +145,7 @@ struct {

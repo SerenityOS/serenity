@@ -1,0 +1,58 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jakub Jelinek <jakub@redhat.com>
+Date: Tue, 5 May 2026 10:44:25 +0200
+Subject: [PATCH] i386: Avoid splitting 16/32-bit volatile mem test into 8-bit
+ test [PR125180]
+
+With -ffuse-ops-with-volatile-access which is now even on by default
+thie splitter can split a 16 or 32-bit volatile memory test into
+an 8-bit volatile memory test, which is undesirable and e.g. when
+it refers to some memory mapped hw registers it could misbehave.
+
+2026-05-05  Jakub Jelinek  <jakub@redhat.com>
+
+	PR target/125180
+	* config/i386/i386.md (HI/SI test -> QI test splitter): Punt if
+	operands[2] is a volatile MEM.
+
+	* gcc.target/i386/pr125180.c: New test.
+
+Reviewed-by: Uros Bizjak <ubizjak@gmail.com>
+---
+ gcc/config/i386/i386.md                  |  1 +
+ gcc/testsuite/gcc.target/i386/pr125180.c | 14 ++++++++++++++
+ 2 files changed, 15 insertions(+)
+ create mode 100644 gcc/testsuite/gcc.target/i386/pr125180.c
+
+diff --git a/gcc/config/i386/i386.md b/gcc/config/i386/i386.md
+index 648b9b1b9518b0f9e2df7f43fde686952ea1e2ee..9c777375c0337be8f05526fcfd92f4265c258f5a 100644
+--- a/gcc/config/i386/i386.md
++++ b/gcc/config/i386/i386.md
+@@ -12727,6 +12727,7 @@
+    "reload_completed
+     && GET_MODE (operands[2]) != QImode
+     && (!REG_P (operands[2]) || ANY_QI_REG_P (operands[2]))
++    && !(MEM_P (operands[2]) && MEM_VOLATILE_P (operands[2]))
+     && ((ix86_match_ccmode (insn, CCZmode)
+ 	 && !(INTVAL (operands[3]) & ~255))
+ 	|| (ix86_match_ccmode (insn, CCNOmode)
+diff --git a/gcc/testsuite/gcc.target/i386/pr125180.c b/gcc/testsuite/gcc.target/i386/pr125180.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..fa5d5fcf11607aacf1bfca4dff61cced1d863fe9
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/i386/pr125180.c
+@@ -0,0 +1,14 @@
++/* PR target/125180 */
++/* { dg-do compile } */
++/* { dg-options "-O2 -masm=att" } */
++/* { dg-final { scan-assembler "\ttestl\t\\\$1, \\\(" } } */
++/* { dg-final { scan-assembler-not "\ttestb\t\\\$1, \\\(" } } */
++
++void foo (void);
++
++void
++bar (unsigned volatile *x)
++{
++  if (*x & 1)
++    foo ();
++}
