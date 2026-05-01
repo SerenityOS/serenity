@@ -11,10 +11,10 @@ has the effect of setting -fno-math-errno by default.
  1 file changed, 4 insertions(+)
 
 diff --git a/gcc/common/config/i386/i386-common.cc b/gcc/common/config/i386/i386-common.cc
-index 4815fbc4d3593c60585fdcc4ec90aeda025f848a..8e42b5a3acf330a17eeacfdcf369ba8e5187293e 100644
+index 4b924e09b2af334497657ae75270aedc9afbe630..a6ad2c7fcff4573ff2dcd6465fead10480da8e19 100644
 --- a/gcc/common/config/i386/i386-common.cc
 +++ b/gcc/common/config/i386/i386-common.cc
-@@ -2072,6 +2072,10 @@ ix86_option_init_struct (struct gcc_options *opts)
+@@ -2068,6 +2068,10 @@ ix86_option_init_struct (struct gcc_options *opts)
         avoid calling them when that's the only reason we would.  */
      opts->x_flag_errno_math = 0;
  

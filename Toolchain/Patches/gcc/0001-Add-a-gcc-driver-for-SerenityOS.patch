@@ -32,10 +32,10 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  create mode 100644 gcc/config/serenity.opt.urls
 
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 40b50dc969ede4418b305ca01869ec157e054283..550573f66da4982f21334a16157220c6b3bca81f 100644
+index 8fe99616f82556490bb5edf2240ee8af35d40f91..066066542b602140e32783ec554ec69994f5dba8 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -723,6 +723,18 @@ x86_cpus="generic intel"
+@@ -776,6 +776,18 @@ x86_cpus="generic intel"
  
  # Common parts for widely ported systems.
  case ${target} in
@@ -54,7 +54,7 @@ index 40b50dc969ede4418b305ca01869ec157e054283..550573f66da4982f21334a16157220c6
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1186,6 +1198,17 @@ case ${target} in
+@@ -1236,6 +1248,17 @@ case ${target} in
  esac
  
  case ${target} in
@@ -73,7 +73,7 @@ index 40b50dc969ede4418b305ca01869ec157e054283..550573f66da4982f21334a16157220c6
  	tm_file="${tm_file} elfos.h newlib-stdint.h"
  	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-errata.h aarch64/aarch64-elf-raw.h"
 diff --git a/gcc/config.host b/gcc/config.host
-index 4c1a5e9910c8181a7dce9159da43139ec9accc8a..49128b1e2e791bdb810c74e9f6f5fd082f82e997 100644
+index 8b809a8d5ddc78ad08e69ccc47eaa56755df8179..e1eae2ffd5496cfcd06f405cb0d3762e42ca1aaf 100644
 --- a/gcc/config.host
 +++ b/gcc/config.host
 @@ -100,7 +100,7 @@ esac
