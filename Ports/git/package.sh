@@ -18,7 +18,7 @@ build() {
     run make \
         "${makeopts[@]}" \
         CURL_LDFLAGS='-lcurl -lssl -lcrypto -lz'
-    run make strip
+    run make strip STRIP="${STRIP}"
 }
 
 post_install() {
