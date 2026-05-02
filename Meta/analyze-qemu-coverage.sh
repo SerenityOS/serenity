@@ -35,7 +35,7 @@ echo "[ELEVATED] Making sure profile data files are owned by the current user, t
 
 echo "Discovering all binaries and shared libraries in $BUILD_DIR/Root"
 # shellcheck disable=SC2156 # The recommended fix on the Shellcheck github page for this warning causes the script to not find any files at all
-all_binaries=$(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -printf "-object %p\n" | grep -Ev '(usr\/Tests|usr\/local|boot\/|Loader.so)')
+all_binaries=$(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -printf "-object %p\n" | grep -Ev '(usr\/local|boot\/|Loader.so)')
 
 CLANG_BINDIR="${SERENITY_ROOT}/Toolchain/Local/clang/bin"
 LLVM_PROFDATA="$CLANG_BINDIR/llvm-profdata"
