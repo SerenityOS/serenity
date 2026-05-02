@@ -32,11 +32,6 @@ echo "[ELEVATED] Unmounting _disk_image, this requires elevated privileges..."
 echo "[ELEVATED] Making sure profile data files are owned by the current user, this requires elevated privileges..."
 "$ELEVATE" chown -R "$(id -u)":"$(id -g)" "$TEMP_PROFDATA/"
 
-
-echo "Discovering all binaries and shared libraries in $BUILD_DIR/Root"
-# shellcheck disable=SC2156 # The recommended fix on the Shellcheck github page for this warning causes the script to not find any files at all
-all_binaries=$(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -printf "-object %p\n" | grep -Ev '(usr\/local|boot\/|Loader.so)')
-
 CLANG_BINDIR="${SERENITY_ROOT}/Toolchain/Local/clang/bin"
 LLVM_PROFDATA="$CLANG_BINDIR/llvm-profdata"
 PROFDATA_INVOCATION="$LLVM_PROFDATA merge -sparse"
@@ -58,6 +53,10 @@ GLOBAL_PROFILE="$TEMP_PROFDATA/global_coverage.profdata"
 PROF_DATA_FILES=$(find "$TEMP_PROFDATA/profiles/" -name "*.profdata")
 # shellcheck disable=SC2086
 $PROFDATA_INVOCATION $PROF_DATA_FILES -o "$GLOBAL_PROFILE"
+
+echo "Discovering all binaries and shared libraries in $BUILD_DIR/Root"
+# shellcheck disable=SC2156 # The recommended fix on the Shellcheck github page for this warning causes the script to not find any files at all
+all_binaries=$(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -printf "-object %p\n" | grep -Ev '(usr\/local|boot\/|Loader.so)')
 
 echo "Generating global html report"
 # shellcheck disable=SC2086
