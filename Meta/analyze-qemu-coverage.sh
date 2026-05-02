@@ -54,16 +54,31 @@ PROF_DATA_FILES=$(find "$TEMP_PROFDATA/profiles/" -name "*.profdata")
 # shellcheck disable=SC2086
 $PROFDATA_INVOCATION $PROF_DATA_FILES -o "$GLOBAL_PROFILE"
 
+# Generate reports
 echo "Discovering all binaries and shared libraries in $BUILD_DIR/Root"
 # shellcheck disable=SC2156 # The recommended fix on the Shellcheck github page for this warning causes the script to not find any files at all
 all_binaries=$(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -printf "-object %p\n" | grep -Ev '(usr\/local|boot\/|Loader.so)')
 
-echo "Generating global html report"
-# shellcheck disable=SC2086
-$LLVM_COV show $all_binaries \
-          -format html \
-          -instr-profile "$GLOBAL_PROFILE" \
-          -o "$BUILD_DIR/reports" \
-          -show-line-counts-or-regions -show-directory-coverage \
-          -Xdemangler "$CLANG_BINDIR/llvm-cxxfilt" -Xdemangler -n \
-          -compilation-dir="${SERENITY_ROOT}"
+
+LLVM_COV_INVOCATION="$LLVM_COV show $all_binaries"
+LLVM_COV_INVOCATION+=" -format html "
+LLVM_COV_INVOCATION+=" -show-line-counts-or-regions -show-directory-coverage "
+LLVM_COV_INVOCATION+=" -Xdemangler $CLANG_BINDIR/llvm-cxxfilt -Xdemangler -n "
+LLVM_COV_INVOCATION+=" -compilation-dir=$SERENITY_ROOT "
+LLVM_COV_INVOCATION+=" -ignore-filename-regex=(Meta|Tests|Build|Kernel) "
+
+for dir in $LIBRARY_DIRS;
+do
+    library=$(basename "$dir")
+    echo "Generating report for $library"
+    # FIXME: Filtering out useless binaries would speed-up these calls.
+    $LLVM_COV_INVOCATION \
+        -instr-profile "$TEMP_PROFDATA/profiles/$library/$library.profdata" \
+        -o "$BUILD_DIR/reports/$library" \
+        -include-filename-regex="\/$library\/"
+done
+
+echo "Generating global report"
+$LLVM_COV_INVOCATION \
+        -instr-profile "$GLOBAL_PROFILE" \
+        -o "$BUILD_DIR/reports/global/"
