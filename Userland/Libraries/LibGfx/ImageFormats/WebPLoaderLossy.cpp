@@ -92,9 +92,9 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
         u16 width = width_and_horizontal_scale & 0x3fff;
         u8 horizontal_scale = width_and_horizontal_scale >> 14;
 
-        u16 heigth_and_vertical_scale = data[8] | (data[9] << 8);
-        u16 height = heigth_and_vertical_scale & 0x3fff;
-        u8 vertical_scale = heigth_and_vertical_scale >> 14;
+        u16 height_and_vertical_scale = data[8] | (data[9] << 8);
+        u16 height = height_and_vertical_scale & 0x3fff;
+        u8 vertical_scale = height_and_vertical_scale >> 14;
 
         dbgln_if(WEBP_DEBUG, "version {}, show_frame {}, size_of_first_partition {}, width {}, horizontal_scale {}, height {}, vertical_scale {}",
             version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale);
