@@ -7,7 +7,9 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/Directory.h>
 #include <LibCore/Environment.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibFileSystem/FileSystem.h>
@@ -269,10 +271,23 @@ FileResult TestRunner::run_test_file(ByteString const& test_path)
     argv.append(nullptr);
 
     pid_t child_pid = -1;
-    // FIXME: Do we really want to copy test runner's entire env?
+    bool is_coverage_run = Core::Environment::has("COVERAGE_RUN"sv);
+    if (is_coverage_run) {
+        // We are modifying the current environment before passing it to the child as it is easier
+        // than recreating one from scratch.
+        auto home = Core::StandardPaths::home_directory();
+        ByteString library_name = path_for_test.parent().basename();
+        auto profile_directory = ByteString::formatted("{}/profiles/{}", home, library_name);
+        MUST(Core::Directory::create(profile_directory, Core::Directory::CreateDirectories::Yes));
+        auto profile_path = ByteString::formatted("{}/%p-profile.profraw", profile_directory);
+        MUST(Core::Environment::set("LLVM_PROFILE_FILE"sv, profile_path, Core::Environment::Overwrite::No));
+    }
+
     int ret = posix_spawn(&child_pid, test_path.characters(), &file_actions, nullptr, const_cast<char* const*>(argv.data()), environ);
     VERIFY(ret == 0);
     VERIFY(child_pid > 0);
+    if (is_coverage_run)
+        MUST(Core::Environment::unset("LLVM_PROFILE_FILE"sv));
 
     int wstatus;
 

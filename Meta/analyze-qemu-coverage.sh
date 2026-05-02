@@ -33,43 +33,38 @@ echo "[ELEVATED] Making sure profile data files are owned by the current user, t
 "$ELEVATE" chown -R "$(id -u)":"$(id -g)" "$TEMP_PROFDATA/"
 
 
-echo "Moving profile data into $TEMP_PROFDATA directly..."
-mv "$TEMP_PROFDATA"/profiles/* "$TEMP_PROFDATA/"
-
 echo "Discovering all binaries and shared libraries in $BUILD_DIR/Root"
 # shellcheck disable=SC2156 # The recommended fix on the Shellcheck github page for this warning causes the script to not find any files at all
-mapfile -d '\n' all_binaries < <(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -print | grep -Ev '(usr\/Tests|usr\/local|boot\/|Loader.so)')
-
-# FIXME: Come up with our own coverage prep script instead of using llvm's
-COVERAGE_PREPARE="$BUILD_DIR/prepare-code-coverage-artifact.py"
-if [ ! -f "$COVERAGE_PREPARE" ]; then
-    # Download coverage prep script from github
-    LLVM_GIT_VERSION=9decb102d9a1e7dc55883a633789cb2563de2b25
-    SHA256_SUM=df159c0c9d8129505688ccb42d6066fa36e1bab6e3233417d6c3d26d21d40a5f
-    URL=https://raw.githubusercontent.com/llvm/llvm-project/${LLVM_GIT_VERSION}/llvm/utils/prepare-code-coverage-artifact.py
-
-    echo "Downloading prepare-code-coverage-artifact.py from ${URL}"
-    wget "$URL" -P "$BUILD_DIR"
-
-    # Verify hash matches for integrity
-    echo "Expecting sha256sum: $SHA256_SUM"
-    CALC_SUM="$(sha256sum "${COVERAGE_PREPARE}" | cut -f1 -d' ')"
-    echo "sha256sum($COVERAGE_PREPARE) = '$CALC_SUM'"
-    if [ "$CALC_SUM" != "$SHA256_SUM" ]; then
-        # remove downloaded file to re-download on next run
-        rm -f "$COVERAGE_PREPARE"
-        echo "sha256sums mismatching, removed erroneous download. Please re-try."
-        exit 1
-    fi
-fi
+all_binaries=$(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -printf "-object %p\n" | grep -Ev '(usr\/Tests|usr\/local|boot\/|Loader.so)')
 
 CLANG_BINDIR="${SERENITY_ROOT}/Toolchain/Local/clang/bin"
+LLVM_PROFDATA="$CLANG_BINDIR/llvm-profdata"
+PROFDATA_INVOCATION="$LLVM_PROFDATA merge -sparse"
+LLVM_COV="$CLANG_BINDIR/llvm-cov"
 
-# shellcheck disable=SC2128,SC2086 # all_binaries variable needs expanded to space separated string, not newline separated string
-python3 "$COVERAGE_PREPARE" \
-    --unified-report \
-    -C "${SERENITY_ROOT}" \
-    "$CLANG_BINDIR/llvm-profdata" "$CLANG_BINDIR/llvm-cov" \
-    "$TEMP_PROFDATA/" \
-    "$BUILD_DIR/reports/" \
-    $all_binaries
+# Merge profiles
+LIBRARY_DIRS=$(find "$TEMP_PROFDATA/profiles/" -mindepth 1 -type d)
+for dir in $LIBRARY_DIRS;
+do
+    library=$(basename "$dir")
+    echo "Merging profiles for $library"
+    prof_raws=$(find "$dir" -name "*.profraw")
+    # shellcheck disable=SC2086 # The solution would be to use a bash array but it's just easier to omit the quotes.
+    $PROFDATA_INVOCATION $prof_raws -o "$dir/$library.profdata"
+done
+
+echo "Merging all profiles"
+GLOBAL_PROFILE="$TEMP_PROFDATA/global_coverage.profdata"
+PROF_DATA_FILES=$(find "$TEMP_PROFDATA/profiles/" -name "*.profdata")
+# shellcheck disable=SC2086
+$PROFDATA_INVOCATION $PROF_DATA_FILES -o "$GLOBAL_PROFILE"
+
+echo "Generating global html report"
+# shellcheck disable=SC2086
+$LLVM_COV show $all_binaries \
+          -format html \
+          -instr-profile "$GLOBAL_PROFILE" \
+          -o "$BUILD_DIR/reports" \
+          -show-line-counts-or-regions -show-directory-coverage \
+          -Xdemangler "$CLANG_BINDIR/llvm-cxxfilt" -Xdemangler -n \
+          -compilation-dir="${SERENITY_ROOT}"
