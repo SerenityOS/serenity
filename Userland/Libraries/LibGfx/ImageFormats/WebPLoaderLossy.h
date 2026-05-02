@@ -15,7 +15,6 @@ namespace Gfx {
 struct VP8Header {
     u8 version;
     bool show_frame;
-    u32 size_of_first_partition;
     u32 width;
     u8 horizontal_scale;
     u32 height;
