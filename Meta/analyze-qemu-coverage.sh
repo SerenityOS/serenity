@@ -38,7 +38,7 @@ mv "$TEMP_PROFDATA"/profiles/* "$TEMP_PROFDATA/"
 
 echo "Discovering all binaries and shared libraries in $BUILD_DIR/Root"
 # shellcheck disable=SC2156 # The recommended fix on the Shellcheck github page for this warning causes the script to not find any files at all
-mapfile -d '\n' all_binaries < <(find "$BUILD_DIR"/Root -type f -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -print | grep -Ev '(usr\/Tests|usr\/local|boot\/|Loader.so)')
+mapfile -d '\n' all_binaries < <(find "$BUILD_DIR"/Root -type f -executable -exec sh -c "file {} | grep -vi relocatable | grep -Eiq ': elf (32|64)-bit'" \; -print | grep -Ev '(usr\/Tests|usr\/local|boot\/|Loader.so)')
 
 # FIXME: Come up with our own coverage prep script instead of using llvm's
 COVERAGE_PREPARE="$BUILD_DIR/prepare-code-coverage-artifact.py"
