@@ -17,7 +17,7 @@ fi
 BUILD_DIR="${SERENITY_ROOT}/Build/${SERENITY_ARCH}${toolchain_suffix}"
 TEMP_PROFDATA="$BUILD_DIR/tmp_profile_data"
 
-mkdir -p "$TEMP_PROFDATA"
+mkdir "$TEMP_PROFDATA"
 mkdir -p "$BUILD_DIR/mnt"
 
 [ -z "${ELEVATE+x}" ] && ELEVATE="sudo"
