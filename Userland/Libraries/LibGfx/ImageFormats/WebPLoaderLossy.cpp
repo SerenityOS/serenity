@@ -101,7 +101,7 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
     if (vp8_data.size() < 10 + size_of_first_partition)
         return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk too small for full first partition");
 
-    return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale, vp8_data.slice(10, size_of_first_partition), vp8_data.slice(10 + size_of_first_partition) };
+    return VP8Header { version, show_frame, width, horizontal_scale, height, vertical_scale, vp8_data.slice(10, size_of_first_partition), vp8_data.slice(10 + size_of_first_partition) };
 }
 
 namespace {
