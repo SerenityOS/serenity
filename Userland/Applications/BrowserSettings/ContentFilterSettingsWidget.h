@@ -38,13 +38,13 @@ class ContentFilterSettingsWidget : public GUI::SettingsWindow::Tab {
 
 public:
     static ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
     ContentFilterSettingsWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     void set_domain_list_model(NonnullRefPtr<DomainListModel>);
 

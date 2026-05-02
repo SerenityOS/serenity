@@ -27,7 +27,7 @@ public:
 
 private:
     UsersTab() = default;
-    ErrorOr<void> initialize();
+    virtual ErrorOr<void> initialize() override;
 
     ErrorOr<void> refresh_users();
     ErrorOr<void> add_user();

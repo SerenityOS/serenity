@@ -21,7 +21,6 @@ class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
     static ErrorOr<NonnullRefPtr<CalculatorWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual ~CalculatorWidget() override = default;
     String get_entry();
@@ -36,6 +35,7 @@ public:
 
 private:
     CalculatorWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     void add_operation_button(GUI::Button&, Calculator::Operation);
     void add_digit_button(GUI::Button&, int digit);

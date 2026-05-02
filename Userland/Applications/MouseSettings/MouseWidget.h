@@ -16,7 +16,6 @@ class MouseWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(MouseWidget)
 public:
     static ErrorOr<NonnullRefPtr<MouseWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual ~MouseWidget() override = default;
 
@@ -25,6 +24,7 @@ public:
 
 private:
     MouseWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     void update_speed_label();
     void update_double_click_speed_label();

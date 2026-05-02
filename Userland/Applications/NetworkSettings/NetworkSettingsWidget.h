@@ -17,13 +17,13 @@ class NetworkSettingsWidget : public GUI::SettingsWindow::Tab {
 
 public:
     static ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     void switch_adapter(ByteString const& adapter);
 
 private:
     NetworkSettingsWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     struct NetworkAdapterData {
         bool enabled = false;

@@ -23,7 +23,6 @@ class SearchPanel final : public GUI::Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<SearchPanel>> try_create();
-    ErrorOr<void> initialize();
 
     void search(StringView query);
     void reset();
@@ -38,6 +37,7 @@ public:
 
 private:
     SearchPanel() = default;
+    virtual ErrorOr<void> initialize() override;
 
     RefPtr<Protocol::RequestClient> m_request_client;
     RefPtr<Protocol::Request> m_request;

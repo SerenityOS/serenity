@@ -20,6 +20,7 @@ class GlyphMapWidget final : public AbstractScrollableWidget {
 public:
     virtual ~GlyphMapWidget() override = default;
 
+    using AbstractScrollableWidget::initialize;
     ErrorOr<void> initialize(Gfx::Font const*);
 
     class Selection {

@@ -17,7 +17,6 @@ class FavoritesPanel final : public GUI::StackWidget {
 
 public:
     static ErrorOr<NonnullRefPtr<FavoritesPanel>> try_create();
-    ErrorOr<void> initialize();
 
     void load_favorites();
     void reset();
@@ -29,6 +28,7 @@ public:
 
 private:
     FavoritesPanel() = default;
+    virtual ErrorOr<void> initialize() override;
 
     ErrorOr<void> edit_favorite(GUI::ModelIndex const& index);
     void favorites_changed();

@@ -23,9 +23,9 @@ public:
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
-    ErrorOr<void> initialize();
-
 private:
+    virtual ErrorOr<void> initialize() override;
+
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
     RefPtr<GUI::TextBox> m_new_tab_url_textbox;
     void set_color_scheme(StringView);

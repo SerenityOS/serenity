@@ -18,7 +18,6 @@ class ChessSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(ChessSettingsWidget)
 public:
     static ErrorOr<NonnullRefPtr<ChessSettingsWidget>> try_create();
-    ErrorOr<void> initialize();
     virtual ~ChessSettingsWidget() override = default;
 
     virtual void apply_settings() override;
@@ -26,6 +25,7 @@ public:
 
 private:
     ChessSettingsWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     Vector<ByteString> m_piece_sets;
 

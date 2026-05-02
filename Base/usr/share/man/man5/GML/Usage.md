@@ -57,9 +57,10 @@ Initialization, like adding models, attaching callbacks, etc., should be done in
 
 ```cpp
 // MyApp::Widget
-ErrorOr<void> initialize();
+private:
+    virtual ErrorOr<void> initialize() override;
 ```
 
-This initializer function, if it exists, will automatically be called after the structure of your widget was set up by the auto-generated GML code.
+This initializer function will automatically be called after the structure of your widget was set up by the auto-generated GML code.
 
 The only case where this function cannot be used is when your initialization requires additional parameters, like a GUI window. You may still consider moving as much initialization to the canonical function as possible.

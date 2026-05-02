@@ -16,13 +16,13 @@ class CalendarSettingsWidget final : public GUI::SettingsWindow::Tab {
 
 public:
     static ErrorOr<NonnullRefPtr<CalendarSettingsWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
     CalendarSettingsWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     static constexpr Array<StringView, 2> const m_view_modes = { "Month"sv, "Year"sv };
 

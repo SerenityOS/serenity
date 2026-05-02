@@ -111,7 +111,7 @@ public:
 private:
     Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button);
 
-    void initialize();
+    virtual ErrorOr<void> initialize() override;
 
     virtual void paint_event(GUI::PaintEvent&) override;
 

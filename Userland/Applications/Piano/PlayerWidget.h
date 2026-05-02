@@ -26,7 +26,7 @@ public:
 private:
     explicit PlayerWidget(TrackManager&, MainWidget&, AudioPlayerLoop&);
 
-    ErrorOr<void> initialize();
+    virtual ErrorOr<void> initialize() override;
 
     TrackManager& m_track_manager;
     MainWidget& m_main_widget;

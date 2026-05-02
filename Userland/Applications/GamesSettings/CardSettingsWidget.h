@@ -21,7 +21,6 @@ class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(CardSettingsWidget)
 public:
     static ErrorOr<NonnullRefPtr<CardSettingsWidget>> try_create();
-    ErrorOr<void> initialize();
     virtual ~CardSettingsWidget() override = default;
 
     virtual void apply_settings() override;
@@ -29,6 +28,7 @@ public:
 
 private:
     CardSettingsWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     bool set_card_back_image_path(StringView);
     String card_back_image_path() const;

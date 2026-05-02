@@ -24,7 +24,6 @@ class MainWidget : public GUI::Widget {
 public:
     virtual ~MainWidget() = default;
     static ErrorOr<NonnullRefPtr<MainWidget>> try_create();
-    ErrorOr<void> initialize();
 
     ErrorOr<void> initialize_menu(GUI::Window*);
     void open_new_script();
@@ -33,6 +32,8 @@ public:
     bool request_close();
 
 private:
+    virtual ErrorOr<void> initialize() override;
+
     ScriptEditor* active_editor();
 
     void update_title();

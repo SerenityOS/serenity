@@ -39,7 +39,7 @@ public:
 private:
     explicit MainWidget(TrackManager&, AudioPlayerLoop&);
 
-    ErrorOr<void> initialize();
+    virtual ErrorOr<void> initialize() override;
 
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
