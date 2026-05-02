@@ -167,7 +167,7 @@ jobs:
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
-          SERENITY_KERNEL_CMDLINE: "graphics_subsystem_mode=off panic=shutdown system_mode=self-test"
+          SERENITY_KERNEL_CMDLINE: "graphics_subsystem_mode=off panic=shutdown system_mode=self-test${{ inputs.coverage == 'ON' && '-coverage' || '' }}"
           SERENITY_RUN: "ci"
         run: |
           echo "::group::ninja run # Qemu output"
