@@ -34,17 +34,16 @@ Decoder::~Decoder()
 DecoderErrorOr<void> Decoder::receive_sample(Duration timestamp, ReadonlyBytes data)
 {
     NonnullRefPtr<Gfx::Bitmap> bitmap = DECODER_TRY(DecoderErrorCategory::Invalid, [&] -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
-        auto maybe_header = Gfx::decode_webp_chunk_VP8_header(data);
-        if (maybe_header.is_error()) {
+        auto header = TRY(Gfx::decode_webp_chunk_VP8_header(data));
+        if (!header.keyframe_data.has_value()) {
             if (!m_last_keyframe)
-                return maybe_header.release_error();
+                return Error::from_string_literal("VP8: non-keyframe without previous keyframe");
 
             // For now, replace non-keyframes with the last keyframe.
             // FIXME: Add support for decoding non-keyframes.
             return *m_last_keyframe;
         }
 
-        auto header = maybe_header.release_value();
         auto bitmap = TRY(Gfx::decode_webp_chunk_VP8_contents(header, false));
         m_last_keyframe = bitmap;
         return bitmap;
