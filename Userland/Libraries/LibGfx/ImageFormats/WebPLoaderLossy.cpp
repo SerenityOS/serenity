@@ -1078,8 +1078,8 @@ void process_macroblock(Bytes output, IntraMacroblockMode mode, int mb_x, int mb
 void process_subblocks(Bytes y_output, MacroblockMetadata const& metadata, int mb_x, ReadonlyBytes predicted_y_left, ReadonlyBytes predicted_y_above, u8 y_truemotion_corner, Coefficients coefficients_array[], int macroblock_width)
 {
     // Loop over the 4x4 subblocks
-    for (int y = 0, i = 0; y < 4; ++y) {
-        for (int x = 0; x < 4; ++x, ++i) {
+    for (int y = 0; y < 4; ++y) {
+        for (int x = 0; x < 4; ++x) {
             u8 corner = y_truemotion_corner;
             if (x > 0 && y == 0)
                 corner = predicted_y_above[mb_x * 16 + 4 * x - 1];
