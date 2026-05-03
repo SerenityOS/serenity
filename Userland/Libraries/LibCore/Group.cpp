@@ -42,7 +42,7 @@ ErrorOr<ByteString> Group::generate_group_file() const
         if (!group.has_value())
             break;
 
-        if (group->gr_name == m_name)
+        if (group->gr_name == m_original_name)
             builder.appendff("{}:x:{}:{}\n", m_name, m_id, ByteString::join(',', m_members));
         else {
             Vector<ByteString> members;
@@ -58,11 +58,9 @@ ErrorOr<ByteString> Group::generate_group_file() const
     return builder.to_byte_string();
 }
 
-ErrorOr<void> Group::sync()
+static ErrorOr<void> write_group_file(ByteString const& content)
 {
     Core::UmaskScope umask_scope(0777);
-
-    auto new_group_file_content = TRY(generate_group_file());
 
     char new_group_file[] = "/etc/group.XXXXXX";
     auto new_group_file_view = StringView { new_group_file, strlen(new_group_file) };
@@ -72,12 +70,19 @@ ErrorOr<void> Group::sync()
         ScopeGuard new_group_fd_guard([new_group_fd] { close(new_group_fd); });
         TRY(Core::System::fchmod(new_group_fd, 0664));
 
-        auto nwritten = TRY(Core::System::write(new_group_fd, new_group_file_content.bytes()));
-        VERIFY(static_cast<size_t>(nwritten) == new_group_file_content.length());
+        auto nwritten = TRY(Core::System::write(new_group_fd, content.bytes()));
+        VERIFY(static_cast<size_t>(nwritten) == content.length());
     }
 
     TRY(Core::System::rename(new_group_file_view, "/etc/group"sv));
+    return {};
+}
 
+ErrorOr<void> Group::sync()
+{
+    auto new_group_file_content = TRY(generate_group_file());
+    TRY(write_group_file(new_group_file_content));
+    m_original_name = m_name;
     return {};
 }
 
@@ -119,6 +124,40 @@ ErrorOr<void> Group::add_group(Group& group)
 
     return {};
 }
+
+ErrorOr<void> Group::delete_group(StringView name)
+{
+    StringBuilder builder;
+    char buffer[1024] = { 0 };
+    bool found_group = false;
+
+    ScopeGuard grent_guard([] { endgrent(); });
+    setgrent();
+
+    while (true) {
+        auto group = TRY(Core::System::getgrent({ buffer, sizeof(buffer) }));
+        if (!group.has_value())
+            break;
+
+        if (name == group->gr_name) {
+            found_group = true;
+            continue;
+        }
+
+        Vector<char const*> members;
+        if (group->gr_mem) {
+            for (size_t i = 0; group->gr_mem[i]; ++i)
+                members.append(group->gr_mem[i]);
+        }
+
+        builder.appendff("{}:{}:{}:{}\n", group->gr_name, group->gr_passwd, group->gr_gid, ByteString::join(","sv, members));
+    }
+
+    if (!found_group)
+        return Error::from_string_literal("Group does not exist.");
+
+    return write_group_file(builder.to_byte_string());
+}
 #endif
 
 ErrorOr<Vector<Group>> Group::all()
@@ -148,6 +187,7 @@ ErrorOr<Vector<Group>> Group::all()
 
 Group::Group(ByteString name, gid_t id, Vector<ByteString> members)
     : m_name(move(name))
+    , m_original_name(m_name)
     , m_id(id)
     , m_members(move(members))
 {

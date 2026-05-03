@@ -19,6 +19,7 @@ public:
 
 #if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_HAIKU)
     static ErrorOr<void> add_group(Group& group);
+    static ErrorOr<void> delete_group(StringView name);
 #endif
 
     static ErrorOr<Vector<Group>> all();
@@ -46,6 +47,7 @@ private:
     ErrorOr<ByteString> generate_group_file() const;
 
     ByteString m_name;
+    ByteString m_original_name;
     gid_t m_id { 0 };
     Vector<ByteString> m_members;
 };
