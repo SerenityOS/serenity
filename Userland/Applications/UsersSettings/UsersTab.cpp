@@ -30,16 +30,21 @@ ErrorOr<void> UsersTab::initialize()
     m_no_selection_label->set_text_alignment(Gfx::TextAlignment::Center);
     m_details_container->add_child(*m_no_selection_label);
 
+    m_delete_button->set_enabled(false);
+
     TRY(refresh_users());
 
     m_users_list->on_selection_change = [this]() {
+        auto index = m_users_list->selection().first();
+        m_delete_button->set_enabled(index.is_valid());
+
         m_details_container->remove_all_children();
         m_user_details_widget = nullptr;
+        set_modified(false);
         ArmedScopeGuard on_error_path = [this]() {
             m_details_container->add_child(*m_no_selection_label);
         };
 
-        auto index = m_users_list->selection().first();
         if (!index.is_valid())
             return;
 
