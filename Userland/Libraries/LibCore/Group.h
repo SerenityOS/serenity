@@ -15,6 +15,8 @@ namespace Core {
 
 class Group {
 public:
+    static ErrorOr<void> validate_name(StringView name);
+
 #if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_HAIKU)
     static ErrorOr<void> add_group(Group& group);
 #endif

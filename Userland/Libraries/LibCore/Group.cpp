@@ -15,6 +15,20 @@
 
 namespace Core {
 
+ErrorOr<void> Group::validate_name(StringView name)
+{
+    if (name.is_empty())
+        return Error::from_string_literal("Group name cannot be empty.");
+
+    if (name.find_any_of("\\/!@#$%^&*()~+=`:\n"sv, StringView::SearchDirection::Forward).has_value())
+        return Error::from_string_literal("Group name contains invalid characters.");
+
+    if (name.starts_with('_') || name.starts_with('-') || !is_ascii_alpha(name[0]))
+        return Error::from_string_literal("Group name must start with a letter.");
+
+    return {};
+}
+
 ErrorOr<ByteString> Group::generate_group_file() const
 {
     StringBuilder builder;
@@ -70,16 +84,7 @@ ErrorOr<void> Group::sync()
 #if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_HAIKU)
 ErrorOr<void> Group::add_group(Group& group)
 {
-    if (group.name().is_empty())
-        return Error::from_string_literal("Group name can not be empty.");
-
-    // A quick sanity check on group name
-    if (group.name().find_any_of("\\/!@#$%^&*()~+=`:\n"sv, ByteString::SearchDirection::Forward).has_value())
-        return Error::from_string_literal("Group name has invalid characters.");
-
-    // Disallow names starting with '_', '-' or other non-alpha characters.
-    if (group.name().starts_with('_') || group.name().starts_with('-') || !is_ascii_alpha(group.name().characters()[0]))
-        return Error::from_string_literal("Group name has invalid characters.");
+    TRY(validate_name(group.name()));
 
     // Verify group name does not already exist
     if (TRY(name_exists(group.name())))
