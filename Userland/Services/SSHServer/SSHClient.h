@@ -96,6 +96,9 @@ private:
     ErrorOr<void> send_channel_close(Session&);
     ErrorOr<Session*> find_session(u32 sender_channel_id);
 
+    Coroutine<void> async_stream_channel_data(u32 sender_channel_id);
+    Coroutine<void> async_wait_for_child(u32 sender_channel_id);
+
     State m_state { State::Constructed };
     Core::TCPSocket& m_tcp_socket;
 

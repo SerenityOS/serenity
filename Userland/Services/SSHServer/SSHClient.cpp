@@ -12,6 +12,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCore/Account.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/Process.h>
 #include <LibCore/Socket.h>
 #include <LibCore/System.h>
@@ -606,22 +607,73 @@ ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& m
     TRY(Core::System::close(stderr_fds[1]));
 
     session.system = ExecData {
-        .m_stdin = TRY(Core::File::adopt_fd(stdin_fds[1], Core::File::OpenMode::Write)),
-        .m_stdout = TRY(Core::File::adopt_fd(stdout_fds[0], Core::File::OpenMode::Read)),
-        .m_stderr = TRY(Core::File::adopt_fd(stderr_fds[0], Core::File::OpenMode::Read)),
+        .child = move(child),
+        ._stdin = TRY(Core::File::adopt_fd(stdin_fds[1], Core::File::OpenMode::Write)),
+        ._stdout = TRY(Core::File::adopt_fd(stdout_fds[0], Core::File::OpenMode::Read)),
+        ._stderr = TRY(Core::File::adopt_fd(stderr_fds[0], Core::File::OpenMode::Read)),
     };
 
-    auto output = TRY(session.system.get<ExecData>().m_stdout->read_until_eof());
-
-    auto exited_with_code_0 = TRY(child.wait_for_termination());
-
-    if (!exited_with_code_0)
-        return Error::from_string_literal("Unable to run command");
-
     TRY(send_channel_success_message(session));
-    TRY(send_channel_data(session, output));
-    TRY(send_channel_close(session));
+
+    // FIXME: Make sure to cancel these coroutines if anything goes wrong.
+    Core::EventLoop::adopt_coroutine(async_stream_channel_data(session.sender_channel_id));
+    Core::EventLoop::adopt_coroutine(async_wait_for_child(session.sender_channel_id));
+
     return {};
+}
+
+Coroutine<void> SSHClient::async_stream_channel_data(u32 sender_channel_id)
+{
+    auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
+        while (true) {
+            auto& session = *CO_TRY(find_session(sender_channel_id));
+
+            auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
+            auto output = CO_TRY(co_await session.system.get<ExecData>()._stdout->async_read_some(output_buffer));
+
+            if (output.is_empty())
+                break;
+
+            CO_TRY(send_channel_data(session, output));
+        }
+        co_return {};
+    }();
+
+    if (maybe_error.is_error()) {
+        dbgln("Unable to read stdout from process: {}", maybe_error.error());
+        // FIXME: Think about what we should do with this error.
+    }
+    co_return;
+}
+
+Coroutine<void> SSHClient::async_wait_for_child(u32 sender_channel_id)
+{
+    auto maybe_error = [&]() -> ErrorOr<void> {
+        auto& session = *TRY(find_session(sender_channel_id));
+
+        // FIXME: Is the child closes STDOUT, we will block the server in
+        //        wait_for_termination() bellow. We should implement a way to
+        //        wake the event loop on the child death.
+        Core::EventLoop::current().spin_until([this, sender_channel_id]() {
+            auto& session = *MUST(find_session(sender_channel_id));
+            auto& exec_data = session.system.get<ExecData>();
+            return exec_data._stdout->is_eof();
+        });
+
+        auto exited_with_code_0 = TRY(session.system.get<ExecData>().child.wait_for_termination());
+
+        if (!exited_with_code_0)
+            return Error::from_string_literal("Unable to run command");
+
+        TRY(send_channel_close(session));
+        return {};
+    }();
+
+    if (maybe_error.is_error()) {
+        dbgln("Error while waiting for the child: {}", maybe_error.error());
+        // FIXME: Think about what we should do with this error.
+    }
+    co_return;
 }
 
 ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
