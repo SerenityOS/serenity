@@ -86,6 +86,14 @@ public:
         co_return co_await GenericAwaiter([&](auto ready) { notifier->on_activation = move(ready); });
     }
 
+    // When using this API, ensure that `bytes` are still valid after the
+    // coroutine resumes.
+    Coroutine<ErrorOr<Bytes>> async_read_some(Bytes bytes)
+    {
+        CO_TRY(co_await wait_for_state(Core::Notifier::Type::Read));
+        co_return read_some(bytes);
+    }
+
     template<OneOf<::IPC::File, ::Core::MappedFile> VIP>
     int leak_fd(Badge<VIP>)
     {
