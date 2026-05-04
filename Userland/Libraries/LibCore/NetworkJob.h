@@ -61,8 +61,7 @@ protected:
 
     Coroutine<ErrorOr<size_t>> do_write(ReadonlyBytes bytes)
     {
-        CO_TRY(co_await m_output_stream.wait_for_state(Core::Notifier::Type::Write));
-        co_return m_output_stream.write_some(bytes);
+        co_return co_await m_output_stream.async_write_some(bytes);
     }
 
 private:
