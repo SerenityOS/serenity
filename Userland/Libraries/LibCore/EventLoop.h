@@ -73,7 +73,7 @@ public:
 
     void wake();
 
-    void adopt_coroutine(Coroutine<void>&&);
+    static void adopt_coroutine(Coroutine<void>&&);
 
     void quit(int);
     void unquit();
