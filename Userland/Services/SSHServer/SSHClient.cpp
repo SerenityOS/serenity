@@ -616,25 +616,27 @@ ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& m
     TRY(send_channel_success_message(session));
 
     // FIXME: Make sure to cancel these coroutines if anything goes wrong.
-    Core::EventLoop::adopt_coroutine(async_stream_channel_data(session.sender_channel_id));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session.sender_channel_id, [](ExecData& exec_data) -> Core::File& { return *exec_data._stdout; }, [this](auto&... args) { return send_channel_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session.sender_channel_id, [](ExecData& exec_data) -> Core::File& { return *exec_data._stderr; }, [this](auto&... args) { return send_channel_extended_data(args...); }));
     Core::EventLoop::adopt_coroutine(async_wait_for_child(session.sender_channel_id));
 
     return {};
 }
 
-Coroutine<void> SSHClient::async_stream_channel_data(u32 sender_channel_id)
+template<typename F, typename F2>
+Coroutine<void> SSHClient::async_stream_std_data(u32 sender_channel_id, F&& file_extractor, F2&& sender)
 {
     auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
         while (true) {
             auto& session = *CO_TRY(find_session(sender_channel_id));
 
             auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
-            auto output = CO_TRY(co_await session.system.get<ExecData>()._stdout->async_read_some(output_buffer));
+            auto output = CO_TRY(co_await file_extractor(session.system.template get<ExecData>()).async_read_some(output_buffer));
 
             if (output.is_empty())
                 break;
 
-            CO_TRY(send_channel_data(session, output));
+            CO_TRY(sender(session, output));
         }
         co_return {};
     }();
@@ -685,11 +687,35 @@ ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
     return {};
 }
 
+// 5.2. Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
 ErrorOr<void> SSHClient::send_channel_data(Session const& session, ReadonlyBytes data)
 {
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_DATA));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    TRY(encode_string(stream, data));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+// 5.2. Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
+ErrorOr<void> SSHClient::send_channel_extended_data(Session const& session, ReadonlyBytes data)
+{
+    // This only supports sending stderr data.
+
+    // "Additionally, some channels can transfer several types of data.  An
+    //   example of this is stderr data from interactive sessions.  Such data
+    //   can be passed with SSH_MSG_CHANNEL_EXTENDED_DATA messages, where a
+    //   separate integer specifies the type of data."
+
+    static constexpr u32 EXTENDED_DATA_STDERR = 1;
+
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::CHANNEL_EXTENDED_DATA));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    TRY(stream.write_value<NetworkOrdered<u32>>(EXTENDED_DATA_STDERR));
     TRY(encode_string(stream, data));
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
