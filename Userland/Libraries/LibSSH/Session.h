@@ -11,6 +11,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Variant.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 
 namespace SSH {
 
@@ -18,6 +19,8 @@ namespace SSH {
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.1
 
 struct ExecData {
+    Core::Process child;
+
     NonnullOwnPtr<Core::File> stdin_;
     NonnullOwnPtr<Core::File> stdout_;
     NonnullOwnPtr<Core::File> stderr_;
