@@ -97,14 +97,12 @@ union VariantStorage<CurrentIndex, F, Ts...> {
     }
 
     template<size_t I, typename Self>
-    constexpr auto&& get(this Self& self)
+    constexpr auto&& get(this Self&& self)
     {
-        // FIXME: Allow perfect forwarding using Self&& and forward_like
-        //        Getting type deduction right is a bit hard
         if constexpr (I == CurrentIndex) {
-            return self.value;
+            return forward_like<Self>(self.value);
         } else {
-            return self.rest.template get<I>();
+            return forward_like<Self>(self.rest).template get<I>();
         }
     }
 
@@ -165,10 +163,10 @@ union VariantStorage<CurrentIndex, F> {
     }
 
     template<size_t I, typename Self>
-    constexpr auto& get(this Self&& self)
+    constexpr auto&& get(this Self&& self)
     {
         static_assert(I == CurrentIndex);
-        return self.value;
+        return forward_like<Self>(self.value);
     }
 
     char __dummy;
@@ -488,26 +486,48 @@ public:
     ALWAYS_INLINE constexpr Variant& operator=(Variant const& other)
     requires(!(IsTriviallyCopyConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
     {
-        if (this != &other) {
+        if (this == &other)
+            return *this;
+        // FIXME: Use copy assign if appropriate
             if constexpr (!(IsTriviallyDestructible<Ts> && ...)) {
                 Helper::delete_(m_data, m_index);
             }
             m_index = other.m_index;
             Helper::copy_to(other.m_data, other.m_index, m_data);
+        return *this;
+    }
+
+    template<typename T>
+    requires(!IsSame<RemoveCVReference<T>, Variant>
+        && (IsConstructible<Ts, T> || ...))
+    ALWAYS_INLINE constexpr Variant& operator=(T&& value)
+    {
+        // FIXME: Use move/copy assign if appropriate
+        if constexpr (!(IsTriviallyDestructible<Ts> && ...)) {
+            Helper::delete_(m_data, m_index);
         }
+        using BestOverload = BestMatch<T>;
+        // FIXME: Can we get the index directly from the resolution?
+        constexpr IndexType BestOverloadIndex = index_of<BestOverload>();
+
+        Helper::construct<BestOverloadIndex>(m_data, forward<T>(value));
+        m_index = BestOverloadIndex;
+
         return *this;
     }
 
     ALWAYS_INLINE constexpr Variant& operator=(Variant&& other)
     requires(!(IsTriviallyMoveConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
     {
-        if (this != &other) {
+        if (this == &other)
+            return *this;
+        // FIXME: Use move assignment if appropriate
             if constexpr (!(IsTriviallyDestructible<Ts> && ...)) {
                 Helper::delete_(m_data, m_index);
             }
             m_index = other.m_index;
             Helper::move_to(other.m_data, other.m_index, m_data);
-        }
+
         return *this;
     }
 
@@ -540,13 +560,13 @@ public:
         return nullptr;
     }
 
-    template<typename T>
-    constexpr T& get()
+    template<typename T, typename Self>
+    constexpr LikeT<Self, T> get(this Self&& self)
     requires(can_contain<T>())
     {
-        VERIFY(has<T>());
+        VERIFY(self.template has<T>());
         constexpr IndexType I = index_of<T>();
-        return m_data.template get<I>();
+        return forward_like<Self>(self.m_data).template get<I>();
     }
 
     template<typename T>
@@ -557,15 +577,6 @@ public:
         if (I == m_index)
             return &m_data.template get<I>();
         return nullptr;
-    }
-
-    template<typename T>
-    constexpr T const& get() const
-    requires(can_contain<T>())
-    {
-        VERIFY(has<T>());
-        constexpr IndexType I = index_of<T>();
-        return m_data.template get<I>();
     }
 
     template<typename T>
