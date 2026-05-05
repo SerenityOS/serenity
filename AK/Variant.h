@@ -550,13 +550,13 @@ public:
         Helper::template construct<new_index>(m_data, forward<T>(t));
     }
 
-    template<typename T>
-    constexpr T* get_pointer()
+    template<typename T, typename Self>
+    constexpr ApplyConstFrom<Self, T>* get_pointer(this Self& self)
     requires(can_contain<T>())
     {
         constexpr IndexType I = index_of<T>();
-        if (I == m_index)
-            return &m_data.template get<I>();
+        if (I == self.m_index)
+            return &self.m_data.template get<I>();
         return nullptr;
     }
 
@@ -567,16 +567,6 @@ public:
         VERIFY(self.template has<T>());
         constexpr IndexType I = index_of<T>();
         return forward_like<Self>(self.m_data).template get<I>();
-    }
-
-    template<typename T>
-    constexpr T const* get_pointer() const
-    requires(can_contain<T>())
-    {
-        constexpr IndexType I = index_of<T>();
-        if (I == m_index)
-            return &m_data.template get<I>();
-        return nullptr;
     }
 
     template<typename T>

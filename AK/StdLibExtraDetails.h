@@ -359,6 +359,9 @@ inline constexpr bool IsFloatingPoint = __IsFloatingPoint<RemoveCV<T>>;
 template<typename ReferenceType, typename T>
 using CopyConst = Conditional<IsConst<ReferenceType>, AddConst<T>, RemoveConst<T>>;
 
+template<typename ReferenceType, typename T>
+using ApplyConstFrom = Conditional<IsConst<ReferenceType>, AddConst<T>, T>;
+
 template<typename... Ts>
 using Void = void;
 
@@ -647,6 +650,7 @@ using AK::Detail::AddConst;
 using AK::Detail::AddConstToReferencedType;
 using AK::Detail::AddLvalueReference;
 using AK::Detail::AddRvalueReference;
+using AK::Detail::ApplyConstFrom;
 using AK::Detail::AssertSize;
 using AK::Detail::CommonType;
 using AK::Detail::Conditional;
