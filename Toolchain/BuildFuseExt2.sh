@@ -8,7 +8,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 exit_if_running_as_root "Do not run BuildFuseExt2.sh as root, parts of your Toolchain directory will become root-owned"
 
-export PATH="/usr/local/opt/m4/bin:$PATH"
+m4_prefix="$(brew --prefix m4)"
+export PATH="${m4_prefix}/bin:$PATH"
 
 die() {
     echo "die: $*"
@@ -19,16 +20,34 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
     die "This script makes sense to be run only on macOS"
 fi
 
+SOURCE_DIR="$DIR/Tarballs/fuse-ext2"
+PATCH_DIR="$DIR/Patches/fuse-ext2"
+E2FSPROGS_PREFIX="$(brew --prefix e2fsprogs)"
+MACFUSE_FRAMEWORK_DIR="/Library/Filesystems/macfuse.fs/Contents/Frameworks"
+
 mkdir -p "$DIR"/Tarballs
 pushd "$DIR"/Tarballs
 
-if [ ! -d fuse-ext2 ]; then
-    git clone https://github.com/alperakcan/fuse-ext2.git	
+if [ -d "$SOURCE_DIR" ]; then
+    rm -rf "$SOURCE_DIR"
 fi
 
-cd fuse-ext2
+git clone --depth 1 https://github.com/alperakcan/fuse-ext2.git "$SOURCE_DIR"
+
+cd "$SOURCE_DIR"
+for patch in "$PATCH_DIR"/*.patch; do
+    patch -p1 < "$patch" > /dev/null
+done
+
 ./autogen.sh
-CFLAGS="-I/usr/local/include/osxfuse/ -I/$(brew --prefix e2fsprogs)/include" LDFLAGS="-L$(brew --prefix e2fsprogs)/lib" ./configure
-make
+LDFLAGS="-L${E2FSPROGS_PREFIX}/lib"
+if [ -d "${MACFUSE_FRAMEWORK_DIR}/MFMount.framework" ]; then
+    LDFLAGS="${LDFLAGS} -F${MACFUSE_FRAMEWORK_DIR}"
+fi
+CFLAGS="-I/usr/local/include/osxfuse/ -I${E2FSPROGS_PREFIX}/include" LDFLAGS="${LDFLAGS}" ./configure
+make \
+    "fuse_ext2_wait_LINK=\$(OBJC) \$(OBJCFLAGS) \$(AM_OBJCFLAGS) \$(AM_LDFLAGS) \$(LDFLAGS) \$(fuse_ext2_wait_LDFLAGS) -o \$@" \
+    "fuse_ext2_install_LINK=\$(OBJC) \$(OBJCFLAGS) \$(AM_OBJCFLAGS) \$(AM_LDFLAGS) \$(LDFLAGS) \$(fuse_ext2_install_LDFLAGS) -o \$@" \
+    "OBJCLINK=\$(OBJC) \$(OBJCFLAGS) \$(AM_OBJCFLAGS) \$(AM_LDFLAGS) \$(LDFLAGS) -o \$@"
 sudo make install
 popd
