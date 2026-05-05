@@ -54,7 +54,7 @@ IntersectionObserver::IntersectionObserver(JS::Realm& realm, JS::GCPtr<WebIDL::C
     , m_thresholds(move(thresholds))
 {
     m_root = root.has_value() ? root->visit([](auto& value) -> JS::GCPtr<DOM::Node> { return *value; }) : nullptr;
-    intersection_root().visit([this](auto& node) {
+    intersection_root().visit([this](auto&& node) {
         m_document = node->document();
     });
     m_document->register_intersection_observer({}, *this);
