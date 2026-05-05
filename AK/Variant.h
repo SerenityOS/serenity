@@ -63,7 +63,7 @@ union VariantStorage<CurrentIndex, F, Ts...> {
     template<size_t Idx, typename... Us>
     requires(Idx > CurrentIndex)
     constexpr VariantStorage(VariantIndex<Idx>, Us&&... args)
-        : rest(VariantIndex<Idx> {}, forward<Us>(args)...)
+        : rest(VariantIndex<Idx> { }, forward<Us>(args)...)
     {
     }
 
@@ -97,12 +97,12 @@ union VariantStorage<CurrentIndex, F, Ts...> {
     }
 
     template<size_t I, typename Self>
-    constexpr auto& get(this Self& self)
+    constexpr auto&& get(this Self&& self)
     {
         if constexpr (I == CurrentIndex) {
-            return self.value;
+            return forward_like<Self>(self.value);
         } else {
-            return self.rest.template get<I>();
+            return forward_like<Self>(self.rest).template get<I>();
         }
     }
 
@@ -162,10 +162,10 @@ union VariantStorage<CurrentIndex, F> {
     }
 
     template<size_t I, typename Self>
-    constexpr auto& get(this Self& self)
+    constexpr auto&& get(this Self&& self)
     {
         static_assert(I == CurrentIndex);
-        return self.value;
+        return forward_like<Self>(self.value);
     }
 
     F value;
@@ -175,7 +175,7 @@ struct VariantHelper {
     template<size_t TargetIndex, typename Variant, typename... Us>
     static constexpr void construct(Variant& variant, Us&&... args)
     {
-        construct_at<Variant>(&variant, VariantIndex<TargetIndex> {}, forward<Us>(args)...);
+        construct_at<Variant>(&variant, VariantIndex<TargetIndex> { }, forward<Us>(args)...);
     }
 
     template<typename Variant>
@@ -385,7 +385,7 @@ public:
 
     constexpr Variant(Variant const& old)
     requires(!(IsTriviallyCopyConstructible<Ts> && ...))
-        : m_data {}
+        : m_data { }
         , m_index(old.m_index)
     {
         Helper::copy_to(old.m_data, old.m_index, m_data);
@@ -482,13 +482,13 @@ public:
         return nullptr;
     }
 
-    template<typename T>
-    constexpr T& get()
+    template<typename T, typename Self>
+    constexpr LikeT<Self, T> get(this Self&& self)
     requires(can_contain<T>())
     {
-        VERIFY(has<T>());
+        VERIFY(self.template has<T>());
         constexpr IndexType I = index_of<T>();
-        return m_data.template get<I>();
+        return forward_like<Self>(self.m_data).template get<I>();
     }
 
     template<typename T>
@@ -499,15 +499,6 @@ public:
         if (I == m_index)
             return &m_data.template get<I>();
         return nullptr;
-    }
-
-    template<typename T>
-    constexpr T const& get() const
-    requires(can_contain<T>())
-    {
-        VERIFY(has<T>());
-        constexpr IndexType I = index_of<T>();
-        return m_data.template get<I>();
     }
 
     template<typename T>
@@ -546,10 +537,10 @@ public:
         if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
             return move(*this).template downcast_variant<NewTs...>();
         } else {
-            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
+            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag { } };
             visit([&](auto& value) {
                 if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                    instance.set(move(value), Detail::VariantNoClearTag {});
+                    instance.set(move(value), Detail::VariantNoClearTag { });
             });
             VERIFY(instance.m_index != instance.invalid_index);
             return instance;
@@ -560,12 +551,12 @@ public:
     constexpr decltype(auto) downcast() const&
     {
         if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
-            return (*this).downcast_variant(TypeWrapper<NewTs...> {});
+            return (*this).downcast_variant(TypeWrapper<NewTs...> { });
         } else {
-            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
+            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag { } };
             visit([&](auto const& value) {
                 if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                    instance.set(value, Detail::VariantNoClearTag {});
+                    instance.set(value, Detail::VariantNoClearTag { });
             });
             VERIFY(instance.m_index != instance.invalid_index);
             return instance;

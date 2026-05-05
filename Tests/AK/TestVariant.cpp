@@ -350,6 +350,39 @@ TEST_CASE(index_order)
     EXPECT_EQ(var.index(), 2);
 }
 
+static size_t move_count = 0;
+static size_t copy_count = 0;
+TEST_CASE(forwarding)
+{
+    struct Observer {
+        Observer() = default;
+        Observer(Observer const&) { copy_count++; }
+        Observer(Observer&&) { move_count++; }
+        Observer& operator=(Observer const&) = delete;
+        Observer& operator=(Observer&&) = delete;
+    };
+
+    Variant<int, Observer> a = Observer { };
+    // FIXME: The above ideally should act as an inplace construction.
+    //  Note: The counts we currently achieve are the same as the STL
+    EXPECT_EQ(move_count, 1uz);
+    EXPECT_EQ(copy_count, 0uz);
+
+    a = 0;
+    a = Observer { };
+    EXPECT_EQ(move_count, 2uz);
+    EXPECT_EQ(copy_count, 0uz);
+
+    Variant<int, Observer> b = move(a).get<Observer>();
+    EXPECT_EQ(move_count, 3uz);
+    EXPECT_EQ(copy_count, 0uz);
+
+    // FIXME: This should ideally cause at least one less move
+    auto c = Variant<Observer>(Observer { }).get<Observer>();
+    EXPECT_EQ(move_count, 5uz);
+    EXPECT_EQ(copy_count, 0uz);
+}
+
 static_assert(([]() consteval -> bool {
     Variant<float, int> my_var { 1337 };
 
