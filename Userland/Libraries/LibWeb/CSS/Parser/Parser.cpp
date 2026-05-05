@@ -408,7 +408,7 @@ Vector<Rule> Parser::consume_a_stylesheets_contents(TokenStream<T>& input)
             // Consume a qualified rule from input. If a rule is returned, append it to rules.
             consume_a_qualified_rule(input).visit(
                 [&](QualifiedRule qualified_rule) { rules.append(move(qualified_rule)); },
-                [](auto&) {});
+                [](auto&&) { });
         }
     }
 }
@@ -652,11 +652,11 @@ Vector<RuleOrListOfDeclarations> Parser::consume_a_blocks_contents(TokenStream<T
                 input.restore_a_mark();
                 consume_a_qualified_rule(input, Token::Type::Semicolon, Nested::Yes).visit(
                     // -> If nothing was returned
-                    [](Empty&) {
+                    [](Empty) {
                         // Do nothing
                     },
                     // -> If an invalid rule error was returned
-                    [&](InvalidRuleError&) {
+                    [&](InvalidRuleError) {
                         // If decls is not empty, append decls to rules, and set decls to a fresh empty list of declarations. (Otherwise, do nothing.)
                         if (!declarations.is_empty()) {
                             rules.append(move(declarations));
@@ -1171,7 +1171,7 @@ Optional<Rule> Parser::parse_a_rule(TokenStream<T>& input)
     else {
         consume_a_qualified_rule(input).visit(
             [&](QualifiedRule qualified_rule) { rule = move(qualified_rule); },
-            [](auto&) {});
+            [](auto&&) { });
 
         if (!rule.has_value())
             return {};
@@ -8944,7 +8944,7 @@ OwnPtr<CalculationNode> Parser::parse_a_calculation(Vector<ComponentValue> const
                     if (node->type() == CalculationNode::Type::Product)
                         single_value = move(node);
                 },
-                [](auto&) {});
+                [](auto&) { });
         }
         //    Otherwise, replace values with a Sum node containing the value items of values as its children.
         if (!single_value.has_value()) {

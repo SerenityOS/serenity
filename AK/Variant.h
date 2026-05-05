@@ -220,7 +220,7 @@ struct VariantHelper {
 
 template<typename IndexType, typename... Ts>
 struct VisitImpl {
-    template<typename RT, typename T, size_t I, typename Fn>
+    template<typename T, size_t I, typename Fn>
     static constexpr bool has_explicitly_named_overload()
     {
         // If we're not allowed to make a member function pointer and call it directly (without explicitly resolving it),
@@ -229,33 +229,35 @@ struct VisitImpl {
         return requires { (declval<Fn>().*(&Fn::operator()))(declval<T>()); };
     }
 
-    template<typename ReturnType, typename T, typename Visitor, auto... Is>
+    template<typename T, typename Visitor, auto... Is>
     static constexpr bool should_invoke_const_overload(IndexSequence<Is...>)
     {
         // Scan over all the different visitor functions, if none of them are suitable for calling with `T const&`, avoid calling that first.
-        return ((has_explicitly_named_overload<ReturnType, T, Is, typename Visitor::Types::template Type<Is>>()) || ...);
+        return ((has_explicitly_named_overload<T, Is, typename Visitor::Types::template Type<Is>>()) || ...);
     }
 
     template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, Visitor&& visitor)
+    ALWAYS_INLINE static constexpr decltype(auto) visit(Self&& self, Visitor&& visitor)
     requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
         if (self.index() == CurrentIndex) {
-            // Check if Visitor::operator() is an explicitly typed function (as opposed to a templated function)
+            // Check if any Visitor::operator() is an explicitly typed function (as opposed to a templated function)
+            if constexpr (IsRvalueReference<Self&&> && should_invoke_const_overload<T&&, Visitor>(MakeIndexSequence<Visitor::Types::size>()))
+                return visitor(forward<Self>(self).template get<T>());
             // if so, try to call that with `T const&` first before copying the Variant's const-ness.
             // This emulates normal C++ call semantics where templated functions are considered last, after all non-templated overloads
             // are checked and found to be unusable.
-            using ReturnType = decltype(visitor(declval<T&>()));
-            if constexpr (should_invoke_const_overload<ReturnType, T, Visitor>(MakeIndexSequence<Visitor::Types::size>()))
-                return visitor(AddConstToReferencedType<Self&>(self).template get<T>());
+            // FIXME: This now prefers the const& overload, even if a non const one is present
+            if constexpr (should_invoke_const_overload<T, Visitor>(MakeIndexSequence<Visitor::Types::size>()))
+                return visitor(static_cast<T const&>(forward<Self>(self).template get<T>()));
 
-            return visitor(self.template get<T>());
+            return visitor(forward<Self>(self).template get<T>());
         }
 
         if constexpr ((CurrentIndex + 1) < sizeof...(Ts))
-            return visit<Self, Visitor, CurrentIndex + 1>(self, forward<Visitor>(visitor));
+            return visit<Self, Visitor, CurrentIndex + 1>(forward<Self>(self), forward<Visitor>(visitor));
         else
             VERIFY_NOT_REACHED();
     }
@@ -595,18 +597,11 @@ public:
         });
     }
 
-    template<typename... Fs>
-    constexpr decltype(auto) visit(Fs&&... functions)
+    template<typename... Fs, typename Self>
+    constexpr decltype(auto) visit(this Self&& self, Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(*this, move(visitor));
-    }
-
-    template<typename... Fs>
-    constexpr decltype(auto) visit(Fs&&... functions) const
-    {
-        Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(*this, move(visitor));
+        return VisitHelper::visit(forward<Self>(self), move(visitor));
     }
 
     template<typename... NewTs>
