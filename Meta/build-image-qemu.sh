@@ -148,12 +148,12 @@ fi
 
 cleanup() {
     if [ -d mnt ]; then
-        if [ $use_genext2fs = 0 ] ; then
+        if [ $use_genext2fs = 0 ]; then
             printf "unmounting filesystem... "
-            if [ $USE_FUSE2FS -eq 1 ]; then
+            if [ $USE_FUSE2FS -eq 1 ] && command -v fusermount >/dev/null 2>&1; then
                 fusermount -u mnt || (sleep 1 && sync && fusermount -u mnt)
             else
-                umount mnt || ( sleep 1 && sync && umount mnt )
+                umount mnt || (sleep 1 && sync && umount mnt)
             fi
         fi
         rm -rf mnt
