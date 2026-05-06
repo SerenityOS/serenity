@@ -478,6 +478,9 @@ ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_generic_packet(GenericMes
     case MessageID::CHANNEL_EOF:
         TRY(handle_channel_eof(message));
         break;
+    case MessageID::CHANNEL_WINDOW_ADJUST:
+        TRY(handle_channel_window_adjust_message(message));
+        break;
     case MessageID::CHANNEL_CLOSE:
         TRY(handle_channel_close(message));
         break;
@@ -778,6 +781,13 @@ ErrorOr<void> SSHClient::handle_channel_eof(GenericMessage& message)
         [&](auto& system) { system.handle_channel_eof(session); },
         [](Empty) {});
 
+    return {};
+}
+
+ErrorOr<void> SSHClient::handle_channel_window_adjust_message(GenericMessage&)
+{
+    // FIXME: Actually support this packet and don't spam the client without
+    //        respecting its window size.
     return {};
 }
 
