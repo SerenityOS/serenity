@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(RunContainer ICON app-assistant)
-target_link_libraries(RunContainer PRIVATE LibCore LibMain LibFileSystem)
+target_link_libraries(RunContainer PRIVATE LibCore LibMain LibFileSystem LibELF)

@@ -11,6 +11,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteString.h>
 #include <AK/Concepts.h>
+#include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <LibELF/Arch/GenericDynamicRelocationType.h>
@@ -309,6 +310,9 @@ public:
 
     template<typename F>
     void for_each_relr_relocation(F) const;
+
+    using DynamicDependecyPath = ByteString;
+    ErrorOr<void> recusively_resolve_dynamic_dependency_paths(Vector<DynamicDependecyPath>&, size_t recursive_iteration_max, size_t recursive_iteration, Function<ErrorOr<void>(ByteString, DynamicDependecyPath)> const& callback) const;
 
     struct SymbolLookupResult {
         FlatPtr value { 0 };
