@@ -30,6 +30,7 @@ public:
 private:
     UserDetailsWidget() = default;
 
+    using GUI::Widget::initialize;
     ErrorOr<void> initialize(Core::Account const& account);
     ErrorOr<void> change_password();
 

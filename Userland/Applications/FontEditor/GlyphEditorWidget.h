@@ -33,6 +33,7 @@ public:
     int preferred_width() const;
     int preferred_height() const;
 
+    using GUI::Frame::initialize;
     void initialize(Gfx::BitmapFont*);
 
     int scale() const { return m_scale; }

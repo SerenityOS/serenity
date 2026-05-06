@@ -17,7 +17,6 @@ class HighlightWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(HighlightWidget)
 public:
     static ErrorOr<NonnullRefPtr<HighlightWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual ~HighlightWidget() override = default;
 
@@ -26,6 +25,7 @@ public:
 
 private:
     HighlightWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     Gfx::Color highlight_color();
 

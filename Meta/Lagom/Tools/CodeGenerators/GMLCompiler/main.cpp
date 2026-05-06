@@ -373,7 +373,9 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         return {};
     }));
 
-    TRY(append(generator, "TRY(::GUI::initialize(*@object_name@));"));
+    if (gml_object.layout_object() != nullptr) {
+        TRY(append(generator, "TRY(@object_name@->initialize());"));
+    }
 
     generator.append(TRY(String::repeated(' ', (indentation - 1) * 4)));
     generator.appendln("}");

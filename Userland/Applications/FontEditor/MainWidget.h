@@ -32,6 +32,7 @@ public:
     void show_error(Error, StringView action, StringView filename = {});
     void reset();
 
+    using GUI::Widget::initialize;
     ErrorOr<void> initialize(StringView path, RefPtr<Gfx::BitmapFont>&&);
     ErrorOr<void> initialize_menubar(GUI::Window&);
 

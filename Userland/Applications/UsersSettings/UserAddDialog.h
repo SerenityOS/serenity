@@ -18,13 +18,12 @@ namespace UsersSettings {
 class UserAddDialog final : public GUI::Widget {
     C_OBJECT(UserAddDialog)
 public:
-    static ErrorOr<NonnullRefPtr<UserAddDialog>> try_create();
-    ErrorOr<void> initialize();
-
     static ErrorOr<Optional<String>> show(GUI::Window* parent_window);
 
 private:
     UserAddDialog() = default;
+    static ErrorOr<NonnullRefPtr<UserAddDialog>> try_create();
+    virtual ErrorOr<void> initialize() override;
 
     ErrorOr<void> add_user();
 

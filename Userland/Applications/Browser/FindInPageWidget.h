@@ -24,6 +24,7 @@ class FindInPageWidget final
 public:
     virtual ~FindInPageWidget() override = default;
 
+    using GUI::Widget::initialize;
     void initialize(WebView::OutOfProcessWebView& web_view);
     void show(String const& global_term);
 

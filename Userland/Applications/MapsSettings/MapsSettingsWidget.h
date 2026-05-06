@@ -15,13 +15,13 @@ class MapsSettingsWidget final : public GUI::SettingsWindow::Tab {
 
 public:
     static ErrorOr<NonnullRefPtr<MapsSettingsWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
     MapsSettingsWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     void set_tile_provider(StringView tile_provider_url_format);
 

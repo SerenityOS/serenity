@@ -29,7 +29,7 @@ public:
 private:
     explicit GitWidget();
 
-    bool initialize();
+    bool initialize_impl();
     bool initialize_if_needed();
     void stage_file(ByteString const&);
     void unstage_file(ByteString const&);

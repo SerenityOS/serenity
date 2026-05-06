@@ -68,7 +68,6 @@ class ThemeWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(ThemeWidget)
 public:
     static ErrorOr<NonnullRefPtr<ThemeWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual ~ThemeWidget() override = default;
 
@@ -77,6 +76,7 @@ public:
 
 private:
     ThemeWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     RefPtr<GUI::TableView> m_cursors_tableview;
     RefPtr<GUI::ComboBox> m_theme_name_box;

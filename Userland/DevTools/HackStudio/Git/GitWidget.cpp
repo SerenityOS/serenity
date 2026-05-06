@@ -75,7 +75,7 @@ GitWidget::GitWidget()
     m_staged_files->set_foreground_role(Gfx::ColorRole::Green);
 }
 
-bool GitWidget::initialize()
+bool GitWidget::initialize_impl()
 {
     auto result = GitRepo::try_to_create(m_repo_root);
     switch (result.type) {
@@ -102,7 +102,7 @@ bool GitWidget::initialize_if_needed()
     if (initialized())
         return true;
 
-    return initialize();
+    return initialize_impl();
 }
 
 void GitWidget::refresh()

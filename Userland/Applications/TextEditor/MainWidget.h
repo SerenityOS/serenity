@@ -25,7 +25,6 @@ class MainWidget final : public GUI::Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<MainWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual ~MainWidget() override = default;
     ErrorOr<void> read_file(ByteString const& filename, Core::File&);
@@ -50,6 +49,8 @@ public:
 
 private:
     MainWidget() = default;
+    virtual ErrorOr<void> initialize() override;
+
     void set_path(StringView);
     void update_preview();
     void update_markdown_preview();

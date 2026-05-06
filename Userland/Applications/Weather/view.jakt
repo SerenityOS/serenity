@@ -50,7 +50,7 @@ namespace Weather {
         public extern fn try_create() throws -> SearchView
         public fn construct() => must try_create()
 
-        public fn initialize(mut this) throws {
+        public override fn initialize(mut this) throws {
             .content = must_be<GUI::Widget>("content", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Widget>>("content"))
         }
     }
@@ -68,7 +68,7 @@ namespace Weather {
 
         public extern fn try_create() throws -> View
         public fn construct() =>  must try_create()
-        public fn initialize(mut this) throws {
+        public override fn initialize(mut this) throws {
             .content = must_be<GUI::Widget>("content", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Widget>>("content"))
             .searchbox = must_be<GUI::TextBox>("searchbox", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::TextBox>>("searchbox"))
         }
@@ -114,7 +114,7 @@ namespace Weather {
 
         public fn construct() -> IndividualEntryWidget => must try_create()
         public extern fn try_create() throws -> IndividualEntryWidget
-        public fn initialize(mut this) throws {
+        public override fn initialize(mut this) throws {
             .description = must_be<GUI::Label>(
                 "description"
                 .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("description")

@@ -16,7 +16,7 @@ class IncrementalSearchBanner final : public Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<IncrementalSearchBanner>> try_create(TextEditor& editor);
-    ErrorOr<void> initialize();
+    virtual ErrorOr<void> initialize() override;
 
     virtual ~IncrementalSearchBanner() override = default;
 

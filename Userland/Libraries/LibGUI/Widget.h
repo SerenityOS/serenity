@@ -71,19 +71,13 @@ enum class AllowCallback {
     Yes
 };
 
-template<typename T>
-ALWAYS_INLINE ErrorOr<void> initialize(T& object)
-{
-    if constexpr (requires { { object.initialize() } -> SameAs<ErrorOr<void>>; })
-        return object.initialize();
-    else
-        return {};
-}
-
 class Widget : public GUI::Object {
     C_OBJECT(Widget)
 public:
     virtual ~Widget() override;
+
+    // This is intended to be used for custom initialization of GML-compiled Widgets.
+    virtual ErrorOr<void> initialize() { return {}; }
 
     Layout* layout() { return m_layout.ptr(); }
     Layout const* layout() const { return m_layout.ptr(); }

@@ -17,13 +17,13 @@ class MailSettingsWidget final : public GUI::SettingsWindow::Tab {
 
 public:
     static ErrorOr<NonnullRefPtr<MailSettingsWidget>> try_create();
-    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
     MailSettingsWidget() = default;
+    virtual ErrorOr<void> initialize() override;
 
     ByteString m_server;
     ByteString m_port;

@@ -121,7 +121,7 @@ ErrorOr<NonnullRefPtr<Field>> Field::create(GUI::Label& flag_label, GUI::Label& 
     field->m_bad_face_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/minesweeper/face-bad.png"sv));
     for (int i = 0; i < 8; ++i)
         field->m_number_bitmap[i] = TRY(Gfx::Bitmap::load_from_file(ByteString::formatted("/res/graphics/minesweeper/{}.png", i + 1)));
-    field->initialize();
+    MUST(field->initialize());
     return field;
 }
 
@@ -133,7 +133,7 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
 {
 }
 
-void Field::initialize()
+ErrorOr<void> Field::initialize()
 {
     m_timer = Core::Timer::create_repeating(
         1000, [this] {
@@ -168,6 +168,8 @@ void Field::initialize()
 
         set_single_chording(single_chording);
     }
+
+    return {};
 }
 
 void Field::set_face(Face face)
