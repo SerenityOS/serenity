@@ -92,9 +92,14 @@ private:
     ErrorOr<void> handle_channel_exec(Session&, GenericMessage&);
     ErrorOr<void> send_channel_success_message(Session const&);
     ErrorOr<void> send_channel_data(Session const&, ReadonlyBytes);
+    ErrorOr<void> send_channel_extended_data(Session const&, ReadonlyBytes);
     ErrorOr<void> handle_channel_close(GenericMessage&);
     ErrorOr<void> send_channel_close(Session&);
     ErrorOr<Session*> find_session(u32 sender_channel_id);
+
+    template<typename F, typename F2>
+    Coroutine<void> async_stream_std_data(u32 sender_channel_id, F&& file_extractor, F2&& sender);
+    Coroutine<void> async_wait_for_child(u32 sender_channel_id);
 
     State m_state { State::Constructed };
     Core::TCPSocket& m_tcp_socket;

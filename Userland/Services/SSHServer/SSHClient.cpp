@@ -12,8 +12,10 @@
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCore/Account.h>
-#include <LibCore/Command.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Process.h>
 #include <LibCore/Socket.h>
+#include <LibCore/System.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/X25519.h>
 #include <LibSSH/DataTypes.h>
@@ -554,6 +556,8 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
     }
 
     if (request_type == "exec"sv.bytes()) {
+        if (!want_reply)
+            return Error::from_string_literal("Client requested exec but doesn't want a reply");
         TRY(handle_channel_exec(session, message));
         return {};
     }
@@ -579,28 +583,99 @@ ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& m
 #endif
 
     Vector<ByteString> args;
-    args.append(shell);
     args.append("-c");
     args.append(ByteString(command.bytes()));
 
-    Vector<char const*> raw_args;
-    raw_args.ensure_capacity(args.size() + 1);
-    for (auto& arg : args)
-        raw_args.append(arg.characters());
+    // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
+    //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
+    auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
 
-    raw_args.append(nullptr);
+    auto child = TRY(Core::Process::spawn({
+        .executable = shell,
+        .arguments = args,
+        .file_actions = {
+            Core::FileAction::DuplicateFile { stdin_fds[0], STDIN_FILENO },
+            Core::FileAction::DuplicateFile { stdout_fds[1], STDOUT_FILENO },
+            Core::FileAction::DuplicateFile { stderr_fds[1], STDERR_FILENO },
+        },
+    }));
 
-    auto child = TRY(Core::Command::create(shell, raw_args.data()));
-    auto output = TRY(child->read_all());
-    auto status = TRY(child->status());
+    TRY(Core::System::close(stdin_fds[0]));
+    TRY(Core::System::close(stdout_fds[1]));
+    TRY(Core::System::close(stderr_fds[1]));
 
-    if (status != Core::Command::ProcessResult::DoneWithZeroExitCode)
-        return Error::from_string_literal("Unable to run command");
+    session.system = ExecData {
+        .child = move(child),
+        ._stdin = TRY(Core::File::adopt_fd(stdin_fds[1], Core::File::OpenMode::Write)),
+        ._stdout = TRY(Core::File::adopt_fd(stdout_fds[0], Core::File::OpenMode::Read)),
+        ._stderr = TRY(Core::File::adopt_fd(stderr_fds[0], Core::File::OpenMode::Read)),
+    };
 
     TRY(send_channel_success_message(session));
-    TRY(send_channel_data(session, output.standard_output));
-    TRY(send_channel_close(session));
+
+    // FIXME: Make sure to cancel these coroutines if anything goes wrong.
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session.sender_channel_id, [](ExecData& exec_data) -> Core::File& { return *exec_data._stdout; }, [this](auto&... args) { return send_channel_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session.sender_channel_id, [](ExecData& exec_data) -> Core::File& { return *exec_data._stderr; }, [this](auto&... args) { return send_channel_extended_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_wait_for_child(session.sender_channel_id));
+
     return {};
+}
+
+template<typename F, typename F2>
+Coroutine<void> SSHClient::async_stream_std_data(u32 sender_channel_id, F&& file_extractor, F2&& sender)
+{
+    auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
+        while (true) {
+            auto& session = *CO_TRY(find_session(sender_channel_id));
+
+            auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
+            auto output = CO_TRY(co_await file_extractor(session.system.template get<ExecData>()).async_read_some(output_buffer));
+
+            if (output.is_empty())
+                break;
+
+            CO_TRY(sender(session, output));
+        }
+        co_return {};
+    }();
+
+    if (maybe_error.is_error()) {
+        dbgln("Unable to read stdout from process: {}", maybe_error.error());
+        // FIXME: Think about what we should do with this error.
+    }
+    co_return;
+}
+
+Coroutine<void> SSHClient::async_wait_for_child(u32 sender_channel_id)
+{
+    auto maybe_error = [&]() -> ErrorOr<void> {
+        auto& session = *TRY(find_session(sender_channel_id));
+
+        // FIXME: Is the child closes STDOUT, we will block the server in
+        //        wait_for_termination() bellow. We should implement a way to
+        //        wake the event loop on the child death.
+        Core::EventLoop::current().spin_until([this, sender_channel_id]() {
+            auto& session = *MUST(find_session(sender_channel_id));
+            auto& exec_data = session.system.get<ExecData>();
+            return exec_data._stdout->is_eof();
+        });
+
+        auto exited_with_code_0 = TRY(session.system.get<ExecData>().child.wait_for_termination());
+
+        if (!exited_with_code_0)
+            return Error::from_string_literal("Unable to run command");
+
+        TRY(send_channel_close(session));
+        return {};
+    }();
+
+    if (maybe_error.is_error()) {
+        dbgln("Error while waiting for the child: {}", maybe_error.error());
+        // FIXME: Think about what we should do with this error.
+    }
+    co_return;
 }
 
 ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
@@ -612,11 +687,35 @@ ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
     return {};
 }
 
+// 5.2. Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
 ErrorOr<void> SSHClient::send_channel_data(Session const& session, ReadonlyBytes data)
 {
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_DATA));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    TRY(encode_string(stream, data));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+// 5.2. Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
+ErrorOr<void> SSHClient::send_channel_extended_data(Session const& session, ReadonlyBytes data)
+{
+    // This only supports sending stderr data.
+
+    // "Additionally, some channels can transfer several types of data.  An
+    //   example of this is stderr data from interactive sessions.  Such data
+    //   can be passed with SSH_MSG_CHANNEL_EXTENDED_DATA messages, where a
+    //   separate integer specifies the type of data."
+
+    static constexpr u32 EXTENDED_DATA_STDERR = 1;
+
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::CHANNEL_EXTENDED_DATA));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    TRY(stream.write_value<NetworkOrdered<u32>>(EXTENDED_DATA_STDERR));
     TRY(encode_string(stream, data));
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
