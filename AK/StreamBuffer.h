@@ -70,7 +70,7 @@ public:
 
     void append(ReadonlyBytes bytes)
     {
-        if (m_peek_head + bytes.size() > m_capacity)
+        if (bytes.size() > m_capacity - m_peek_head)
             allocate_enough_space_for(bytes.size());
         memcpy(m_data + m_peek_head, bytes.data(), bytes.size());
         m_peek_head += bytes.size();
@@ -85,7 +85,7 @@ public:
 
     Bytes get_bytes_for_writing(size_t length)
     {
-        if (m_peek_head + length > m_capacity)
+        if (length > m_capacity - m_peek_head)
             allocate_enough_space_for(length);
         m_peek_head += length;
         return { m_data + m_peek_head - length, length };
