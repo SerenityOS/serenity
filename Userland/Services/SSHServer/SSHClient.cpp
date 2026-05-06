@@ -11,6 +11,7 @@
 #include <AK/Format.h>
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
+#include <AK/TemporaryChange.h>
 #include <LibCore/Account.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Process.h>
@@ -471,6 +472,9 @@ ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_generic_packet(GenericMes
     case MessageID::CHANNEL_REQUEST:
         TRY(handle_channel_request(message));
         break;
+    case MessageID::CHANNEL_DATA:
+        TRY(handle_channel_data(message));
+        break;
     case MessageID::CHANNEL_CLOSE:
         TRY(handle_channel_close(message));
         break;
@@ -522,7 +526,7 @@ ErrorOr<void> SSHClient::send_channel_open_confirmation(Session const& session)
     TRY(stream.write_value<NetworkOrdered<u32>>(session.sender_channel_id));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
 
-    TRY(stream.write_value<NetworkOrdered<u32>>(session.window.size()));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.window_size));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.maximum_packet_size));
 
     TRY(write_packet(TRY(stream.read_until_eof())));
@@ -563,6 +567,50 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
     }
 
     return Error::from_string_literal("Unsupported channel request");
+}
+
+// 5.2.  Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
+ErrorOr<void> SSHClient::handle_channel_data(GenericMessage& message)
+{
+    auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto data = TRY(decode_string(message.payload));
+
+    auto& session = *TRY(find_session(recipient_channel_id));
+
+    if (session.system.has<Empty>())
+        return Error::from_string_literal("Received channel data while subsystem is unknown");
+
+    session.channel_data.append(data);
+
+    // FIXME: Make sure to cancel this coroutine if anything goes wrong.
+    if (!session.has_streaming_coroutine)
+        Core::EventLoop::adopt_coroutine(async_stream_data_to_subsystem(session));
+
+    return {};
+}
+
+Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session> session)
+{
+    TemporaryChange t(session->has_streaming_coroutine, true);
+
+    auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
+        while (true) {
+            if (session->channel_data.data().is_empty())
+                break;
+
+            CO_TRY(co_await session->system.visit(
+                [&](auto& system) -> Coroutine<ErrorOr<void>> { return system.handle_channel_data(session); },
+                [](Empty) -> Coroutine<ErrorOr<void>> { VERIFY_NOT_REACHED(); }));
+        }
+        co_return {};
+    }();
+
+    if (maybe_error.is_error()) {
+        dbgln("Unable to process incoming channel data: {}", maybe_error.error());
+        // FIXME: Think about what we should do with this error.
+    }
+    co_return;
 }
 
 // 6.5.  Starting a Shell or a Command
