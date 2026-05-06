@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2026, Francis Ssessaazi <ceo@cognospheredynamics.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +12,28 @@
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Sections.h>
 
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Thread.h>
+
 namespace Kernel {
 
 #define REG_EECD 0x0010
 #define REG_EEPROM 0x0014
+
+#define REG_RAL0  0x5400   // Receive Address Low (first entry)
+#define REG_RAH0  0x5404   // Receive Address High (first entry)
+#define RAH_AV    (1u << 31) // Address Valid bit
+
+#define REG_INTERRUPT_MASK_CLEAR 0x00D8
+#define REG_STATUS  0x0008
+#define STATUS_LU   0x02
+
+#define REG_RXDESCTAIL 0x2818
+#define REG_TXDESCTAIL 0x3818
+
+#define CMD_EOP  (1 << 0)
+#define CMD_IFCS (1 << 1)
+#define CMD_RS   (1 << 3)
 
 // EECD Register
 
@@ -120,8 +139,10 @@ static bool is_valid_device_id(u16 device_id)
     case 0x10F5: // ICH9_IGP_M_AMT
     case 0x10F6: // 82574LA
     case 0x1501: // ICH8_82567V_3
-    case 0x1502: // PCH2_LV_LM
-    case 0x1503: // PCH2_LV_V
+        return false;
+    case 0x1502: // PCH2_LV_LM (82579LM -- Dell OptiPlex 7010 and similar)
+    case 0x1503: // PCH2_LV_V  (82579LM -- non-AMT variant)
+        return true;
     case 0x150A: // 82576_NS
     case 0x150C: // 82583V
     case 0x150D: // 82576_SERDES_QUAD
@@ -186,6 +207,95 @@ static bool is_valid_device_id(u16 device_id)
     }
 }
 
+void E1000ENetworkAdapter::rx_poll_thread_entry(void* self)
+{
+    static_cast<E1000ENetworkAdapter*>(self)->rx_poll_thread();
+}
+
+void E1000ENetworkAdapter::rx_poll_thread()
+{
+    for (;;) {
+        receive();
+        // Also refresh link state so userspace sees it correctly.
+        bool up = (in32(REG_STATUS) & STATUS_LU) != 0;
+        if (up != m_link_up) {
+            m_link_up = up;
+            dmesgln("E1000e: Link {}", up ? "up"sv : "down"sv);
+            if (up)
+                autoconfigure_link_local_ipv6();
+        }
+        (void)Thread::current()->sleep(Duration::from_milliseconds(10));
+    }
+}
+
+void E1000ENetworkAdapter::receive()
+{
+    for (;;) {
+        auto next = (m_rx_current + 1) % number_of_rx_descriptors;
+        if (!(m_rx_descriptors[next].status & 1))
+            break;
+        m_rx_current = next;
+        auto* buffer = m_rx_buffers[m_rx_current];
+        u16 length = m_rx_descriptors[m_rx_current].length;
+        VERIFY(length <= 8192);
+        did_receive({ buffer, length });
+        m_rx_descriptors[m_rx_current].status = 0;
+        out32(REG_RXDESCTAIL, m_rx_current);
+    }
+}
+
+void E1000ENetworkAdapter::send_raw(ReadonlyBytes payload)
+{
+    // Polled TX — never calls enable_irq() or disable_irq() since we have
+    // no interrupt handler registered.
+    size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
+    auto& descriptor = m_tx_descriptors[tx_current];
+    VERIFY(payload.size() <= 8192);
+    memcpy(m_tx_buffers[tx_current], payload.data(), payload.size());
+    descriptor.length = payload.size();
+    descriptor.status = 0;
+    descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
+    tx_current = (tx_current + 1) % number_of_tx_descriptors;
+    out32(REG_TXDESCTAIL, tx_current);
+
+    // Spin until the NIC marks the descriptor done.
+    while (!descriptor.status)
+        Processor::wait_check();
+
+    // Drain RX ring — replies (ARP, DHCP ack, etc.) may have arrived.
+    receive();
+}
+
+bool E1000ENetworkAdapter::link_up()
+{
+    // Without interrupts we must poll the STATUS register live.
+    // Also drain the RX ring here so the network task's 500ms wakeup
+    // sees queued packets.
+    bool up = (in32(REG_STATUS) & STATUS_LU) != 0;
+    if (up != m_link_up) {
+        m_link_up = up;
+        dmesgln("E1000e: Link {}", up ? "up" : "down");
+        if (up)
+            autoconfigure_link_local_ipv6();
+    }
+    // Always drain RX — packets may have arrived since the last poll.
+    receive();
+    return m_link_up;
+}
+
+UNMAP_AFTER_INIT void E1000ENetworkAdapter::setup_interrupts()
+{
+    // Mask all device-level interrupts. On PCH2 platforms (OptiPlex 7010)
+    // the NIC shares IOAPIC IRQ 20 with HDA. Since this kernel does not
+    // support shared INTx handlers, we suppress all NIC interrupts and
+    // rely on the TX polling path in send_raw() and the RX path being
+    // driven by the network task's wait queue timeout.
+    out32(REG_INTERRUPT_MASK_CLEAR, 0xFFFFFFFF);
+    // Deliberately do NOT call enable_irq() — that would attempt to
+    // register a second exclusive handler on IRQ 20 and panic the kernel.
+    dmesgln("E1000e: IRQ registration skipped (INTx conflict with HDA on IRQ {})", interrupt_number());
+}
+
 UNMAP_AFTER_INIT ErrorOr<bool> E1000ENetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Intel)
@@ -213,10 +323,81 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000ENetworkAdapter::cr
         move(tx_descriptors_region))));
 }
 
+UNMAP_AFTER_INIT void E1000ENetworkAdapter::read_mac_address()
+{
+    // On PCH2-integrated MACs (82579LM/V), the firmware pre-loads the MAC
+    // address into the Receive Address registers from NVM during early POST.
+    // Using EERD directly hangs because the NVM semaphore is owned by firmware.
+    // Read RAL0/RAH0 instead — this is reliable on bare metal PCH hardware.
+    u32 ral = in32(REG_RAL0);
+    u32 rah = in32(REG_RAH0);
+
+    if (!(rah & RAH_AV)) {
+        dmesgln("E1000e: RAH0 address-valid bit not set, MAC may be invalid");
+    }
+
+    MACAddress mac {};
+    mac[0] = (ral >>  0) & 0xff;
+    mac[1] = (ral >>  8) & 0xff;
+    mac[2] = (ral >> 16) & 0xff;
+    mac[3] = (ral >> 24) & 0xff;
+    mac[4] = (rah >>  0) & 0xff;
+    mac[5] = (rah >>  8) & 0xff;
+    set_mac_address(mac);
+}
+
+// Write value to a PHY register via the MDCI interface
+UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::mdic_write(u8 phyadd, u8 regadd, u16 data)
+{
+    u32 mdic = ((u32)data)
+             | ((u32)regadd << 16)
+             | ((u32)phyadd << 21)
+             | MDIC_OP_WRITE;
+    out32(REG_MDIC, mdic);
+    for (int i = 0; i < 10000; ++i) {
+        u32 val = in32(REG_MDIC);
+        if (val & MDIC_ERROR)
+            return Error::from_errno(EIO);
+        if (val & MDIC_READY)
+            return {};
+        Processor::wait_check();
+    }
+    return Error::from_errno(ETIMEDOUT);
+}
+
+UNMAP_AFTER_INIT void E1000ENetworkAdapter::setup_link()
+{
+    // PCH2-integrated MACs (82579LM/V): clear forced speed/duplex left by firmware,
+    // enable auto-speed detection, then assert SLU.
+    u32 ctrl = in32(REG_CTRL);
+    ctrl &= ~(CTRL_FRCSPD | CTRL_FRCDPLX);
+    ctrl |= CTRL_ASDE | ECTRL_SLU;
+    out32(REG_CTRL, ctrl);
+
+    // Restart PHY auto-negotiation via MDIC. PHY address 1 is standard for PCH PHY.
+    static constexpr u16 PHY_CTRL_ANEG_EN      = (1u << 12);
+    static constexpr u16 PHY_CTRL_RESTART_ANEG  = (1u << 9);
+    auto result = mdic_write(1, 0x00, PHY_CTRL_ANEG_EN | PHY_CTRL_RESTART_ANEG);
+    if (result.is_error())
+        dmesgln("E1000e: PHY auto-negotiation restart failed ({})", result.error());
+    else
+        dmesgln("E1000e: PHY auto-negotiation restarted");
+}
+
 UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
     dmesgln("E1000e: Found @ {}", device_identifier().address());
     enable_bus_mastering(device_identifier());
+
+    // Disable PCI INTx on the NIC before any IRQ registration.
+    // On PCH2 platforms (OptiPlex 7010) the NIC shares its IOAPIC input
+    // with HDA (both land on IRQ 20). Since this kernel does not support
+    // shared INTx handlers, we suppress the INTx pin entirely and rely on
+    // the in-device interrupt mask registers only.
+    // The device still fires its internal interrupt status bits; handle_irq()
+    // reads ICR which clears them, so TX/RX still work correctly.
+    disable_pin_based_interrupts();
+    dmesgln("E1000e: INTx disabled (IRQ shared with HDA on this platform)");
 
     dmesgln("E1000e: IO base: {}", m_registers_io_window);
     dmesgln("E1000e: Interrupt line: {}", interrupt_number());
@@ -227,11 +408,20 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<Networking
     dmesgln("E1000e: MAC address: {}", mac.to_string());
 
     initialize_rx_descriptors();
+    // initialize_rx_descriptors() writes (number_of_rx_descriptors - 1) to
+    // RXDESCTAIL, so start our software tracker at the same position.
+    m_rx_current = number_of_rx_descriptors - 1;
     initialize_tx_descriptors();
 
     setup_link();
     setup_interrupts();
     autoconfigure_link_local_ipv6();
+
+    // Spawn a polling thread to drain the RX ring since we have no IRQ.
+    auto [_, rx_thread] = MUST(Process::create_kernel_process(
+        "E1000e RX Poll"sv, rx_poll_thread_entry, this));
+    (void)rx_thread;
+
     return {};
 }
 
@@ -260,13 +450,14 @@ UNMAP_AFTER_INIT void E1000ENetworkAdapter::detect_eeprom()
 UNMAP_AFTER_INIT u32 E1000ENetworkAdapter::read_eeprom(u8 address)
 {
     VERIFY(m_has_eeprom.was_set());
-    u16 data = 0;
     u32 tmp = 0;
+    // PCH-integrated MACs use bit 1 to start, bit 1 as done on older parts,
+    // but PCH2 (82579LM) uses bit 4 as the done bit (same encoding as EERD on
+    // non-EEPROM path in the base driver). Poll both to be safe across variants.
     out32(REG_EEPROM, ((u32)address << 2) | 1);
-    while (!((tmp = in32(REG_EEPROM)) & (1 << 1)))
+    while (!((tmp = in32(REG_EEPROM)) & (1 << 4)))
         Processor::wait_check();
-    data = (tmp >> 16) & 0xffff;
-    return data;
+    return (tmp >> 16) & 0xffff;
 }
 
 }

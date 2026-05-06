@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- *
+ * Copyright (c) 2026, Francis Ssessaazi <ceo@cognospheredynamics.com>
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
@@ -61,8 +61,8 @@ protected:
     };
     static_assert(AssertSize<TxDescriptor, 16>());
 
-    void setup_interrupts();
-    void setup_link();
+    virtual void setup_interrupts();
+    virtual void setup_link();
 
     E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, InterruptNumber irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
@@ -75,7 +75,7 @@ protected:
 
     virtual void detect_eeprom();
     virtual u32 read_eeprom(u8 address);
-    void read_mac_address();
+    virtual void read_mac_address();
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
@@ -92,6 +92,22 @@ protected:
     static constexpr size_t number_of_rx_descriptors = 256;
     static constexpr size_t number_of_tx_descriptors = 256;
 
+    // Register offsets shared with subclasses
+    static constexpr u16 REG_CTRL     = 0x0000;
+    static constexpr u16 REG_MDIC     = 0x0020;
+
+    // CTRL register bits
+    static constexpr u32 CTRL_ASDE    = (1u << 5);
+    static constexpr u32 CTRL_FRCSPD  = (1u << 11);
+    static constexpr u32 CTRL_FRCDPLX = (1u << 12);
+    static constexpr u32 ECTRL_SLU    = (1u << 6);
+
+    // MDIC register bits
+    static constexpr u32 MDIC_READY   = (1u << 28);
+    static constexpr u32 MDIC_ERROR   = (1u << 30);
+    static constexpr u32 MDIC_OP_WRITE = (2u << 26);
+    static constexpr u32 MDIC_OP_READ  = (1u << 26);
+    
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
     Memory::TypedMapping<RxDescriptor volatile[]> m_rx_descriptors;
