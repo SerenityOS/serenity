@@ -27,6 +27,7 @@ public:
         EnablePacketStreaming,
         DisablePacketStreaming,
         SetDefaults,
+        SetLeds,
     };
 
     AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, PortIndex);

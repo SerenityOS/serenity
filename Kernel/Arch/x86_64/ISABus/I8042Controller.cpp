@@ -298,6 +298,10 @@ ErrorOr<void> I8042Controller::send_command(PortIndex port_index, DeviceCommand 
         SpinlockLocker lock(m_lock);
         return do_send_command(port_index, I8042Command::SetSampleRate, data);
     }
+    case DeviceCommand::SetLeds: {
+        SpinlockLocker lock(m_lock);
+        return do_send_command(port_index, I8042Command::KeyboardSetLEDs, data);
+    }
 
     case DeviceCommand::GetDeviceID:
         return EOPNOTSUPP;
