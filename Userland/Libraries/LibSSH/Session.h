@@ -10,11 +10,14 @@
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/StreamBuffer.h>
 #include <AK/Variant.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
 
 namespace SSH {
+
+struct Session;
 
 // 6.1.  Opening a Session
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.1
@@ -25,6 +28,8 @@ struct ExecData {
     NonnullOwnPtr<Core::File> stdin_;
     NonnullOwnPtr<Core::File> stdout_;
     NonnullOwnPtr<Core::File> stderr_;
+
+    Coroutine<ErrorOr<void>> handle_channel_data(Session&);
 };
 
 struct Session : public RefCounted<Session> {
@@ -33,7 +38,10 @@ struct Session : public RefCounted<Session> {
     u32 local_channel_id {};
     u32 sender_channel_id {};
     u32 maximum_packet_size {};
-    ByteBuffer window {};
+    u64 window_size {};
+
+    StreamBuffer channel_data {};
+    bool has_streaming_coroutine { false };
 
     Variant<Empty, ExecData> system {};
 
