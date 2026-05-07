@@ -231,10 +231,11 @@ static ErrorOr<String> generate_initializer_for(Optional<StringView> property_na
         return String::formatted("{}", value.as_bool());
     if (value.is_number()) {
         return value.as_number().visit(
-            // NOTE: Passing by mutable reference here in order to disallow implicit casts.
-            [](u64& value) { return String::formatted("static_cast<u64>({})", value); },
-            [](i64& value) { return String::formatted("static_cast<i64>({})", value); },
-            [](double& value) { return String::formatted("static_cast<double>({})", value); });
+            // NOTE: disallow implicit casts by pseudo templating this.
+            // NOTE: Variant should call the correct one either way
+            [](SameAs<u64> auto value) { return String::formatted("static_cast<u64>({})", value); },
+            [](SameAs<i64> auto value) { return String::formatted("static_cast<i64>({})", value); },
+            [](SameAs<double> auto value) { return String::formatted("static_cast<double>({})", value); });
     }
     if (value.is_array()) {
         auto const& array = value.as_array();

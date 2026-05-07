@@ -37,6 +37,47 @@ TEST_CASE(visit)
     EXPECT(correct);
 }
 
+TEST_CASE(visit_narrow_1)
+{
+    bool correct = false;
+    Variant<unsigned int, ByteString> the_value { 0 };
+    the_value.visit(
+        [&](unsigned int const&) { correct = true; },
+        [&](auto const&) { correct = false; });
+    EXPECT(correct);
+}
+
+TEST_CASE(visit_narrow_2)
+{
+    bool correct = false;
+    Variant<int, ByteString> the_value { 0u };
+    the_value.visit(
+        [&](int const&) { correct = true; },
+        [&](auto const&) { correct = false; });
+    EXPECT(correct);
+}
+
+TEST_CASE(visit_narrow_3)
+{
+    bool correct = false;
+    Variant<int, ByteString, unsigned int> the_value { 0u };
+    the_value.visit(
+        [&](unsigned int const&) { correct = true; },
+        [&](auto const&) { correct = false; });
+    EXPECT(correct);
+}
+
+TEST_CASE(visit_narrow_4)
+{
+    bool correct = false;
+    Variant<i8, i16> the_value { (i16)0 };
+    the_value.visit(
+        [&](i8) { },
+        [&](i16) { correct = true; },
+        [&](int) { });
+    EXPECT(correct);
+}
+
 TEST_CASE(visit_const)
 {
     bool correct = false;
@@ -44,23 +85,51 @@ TEST_CASE(visit_const)
 
     the_value.visit(
         [&](ByteString const&) { correct = true; },
-        [&](auto&) {},
-        [&](auto const&) {});
+        [&](auto&) { },
+        [&](auto const&) { });
 
     EXPECT(correct);
 
+    // FIXME: This  prefers the const& overload, even if a non const one is present
     correct = false;
     auto the_value_but_not_const = the_value;
     the_value_but_not_const.visit(
         [&](ByteString const&) { correct = true; },
-        [&](auto&) {});
+        [&](ByteString&) { }, // <- This one should actually be called
+        [&](auto&) { });
+    EXPECT(correct);
 
+    correct = false;
+    the_value_but_not_const.visit(
+        [&](ByteString&) { correct = true; },
+        [&](auto&) { });
     EXPECT(correct);
 
     correct = false;
     the_value_but_not_const.visit(
         [&]<typename T>(T&) { correct = !IsConst<T>; });
 
+    EXPECT(correct);
+}
+
+TEST_CASE(visit_move)
+{
+    bool correct = false;
+    Variant<int, ByteString> the_value { "42"sv };
+
+    the_value.visit(
+        [&](ByteString const&) { correct = true; },
+        [&](ByteString&&) { FAIL("visit called (ByteString&&)"); },
+        [&](auto&) { FAIL("visit called (auto&)"); },
+        [&](auto const&) { FAIL("visit called (auto const&)"); });
+
+    EXPECT(correct);
+
+    correct = false;
+    move(the_value).visit(
+        [&](ByteString const&) { FAIL("visit called (ByteString const&)"); },
+        [&](ByteString&&) { correct = true; },
+        [&](auto&&) { FAIL("visit called (auto&&)"); });
     EXPECT(correct);
 }
 
@@ -302,3 +371,136 @@ TEST_CASE(variant_equality)
         EXPECT_EQ(variant1, variant2);
     }
 }
+
+static size_t move_count = 0;
+static size_t copy_count = 0;
+TEST_CASE(forwarding)
+{
+    struct Observer {
+        Observer() = default;
+        Observer(Observer const&) { copy_count++; }
+        Observer(Observer&&) { move_count++; }
+        Observer& operator=(Observer const&) = delete;
+        Observer& operator=(Observer&&) = delete;
+    };
+    // Move/Copy counts:
+    {
+        Variant<int, Observer> a = Observer {};
+        // FIXME: The above ideally should act as an inplace construction,
+        //        but somehow we get a move
+        //  Note: The counts we currently achieve are the same as the STL
+        EXPECT_EQ(move_count, 1uz); // hence this should be 0
+        EXPECT_EQ(copy_count, 0uz); //
+
+        // FIXME: Similar to the above, this should perfectly forward
+        a = 0;
+        a = Observer {};
+        EXPECT_EQ(move_count, 2uz);
+        EXPECT_EQ(copy_count, 0uz);
+
+        // FIXME: Ideally we'd get an rvalue from a moved variant
+        Variant<int, Observer> b = move(a).get<Observer>();
+        EXPECT_EQ(move_count, 3uz);
+        EXPECT_EQ(copy_count, 0uz);
+
+        // FIXME: As above this should likely only cause one move,
+        //        or perfectly forward
+        auto c = Variant<Observer>(Observer {}).get<Observer>();
+        EXPECT_EQ(move_count, 5uz);
+        EXPECT_EQ(copy_count, 0uz);
+    }
+    // getter/visit types
+    {
+        Variant<Observer> the_value = Observer {};
+        auto const the_const_value = the_value;
+        EXPECT_EQ(move_count, 6uz);
+        EXPECT_EQ(copy_count, 1uz);
+
+        static_assert(SameAs<decltype(the_value.get<Observer>()), Observer&>);
+        static_assert(SameAs<decltype(the_const_value.get<Observer>()), Observer const&>);
+        static_assert(SameAs<decltype(move(the_value).get<Observer>()), Observer&&>);
+        // FIXME: Can we feasibly get these into static asserts?
+        EXPECT(the_value.visit([]<typename T>(T&&) { return SameAs<T, Observer&>; }));
+        EXPECT(the_const_value.visit([]<typename T>(T&&) { return SameAs<T, Observer const&>; }));
+        EXPECT(move(the_value).visit([]<typename T>(T&&) { return SameAs<T, Observer>; }));
+
+        EXPECT_EQ(move_count, 6uz); // FIXME: Shouldn't this be 7?
+        EXPECT_EQ(copy_count, 1uz);
+    }
+}
+
+static_assert(([]() consteval -> bool {
+    Variant<float, int> my_var { 1337 };
+
+    if (!my_var.has<int>())
+        return false;
+    if (my_var.get<int>() != 1337)
+        return false;
+    my_var = 3.141f;
+    if (!my_var.has<float>())
+        return false;
+    if (my_var.get<float>() != 3.141f)
+        return false;
+
+    Variant<float, int> my_var2 = 1337;
+    if (!my_var2.has<int>())
+        return false;
+    my_var2 = my_var;
+    if (!my_var.has<float>() || my_var.get<float>() != 3.141f)
+        return false;
+    if (!my_var2.has<float>())
+        return false;
+    if (my_var2.get<float>() != 3.141f)
+        return false;
+
+    return true;
+})());
+
+static_assert(([]() consteval -> bool {
+    struct CopyAble {
+        constexpr CopyAble(int a)
+            : v(a)
+        {
+        }
+        constexpr CopyAble(CopyAble const&) = default;
+        int v;
+    };
+
+    Variant<float, int, CopyAble> my_var { CopyAble { 1337 } };
+
+    Variant<float, int, CopyAble> my_var2 = 5;
+    my_var2 = my_var;
+    my_var = 1;
+    if (!my_var.has<int>() || !my_var2.has<CopyAble>())
+        return false;
+
+    my_var = my_var2;
+
+    return (
+        my_var.get<CopyAble>().v == 1337 && my_var2.get<CopyAble>().v == 1337);
+})());
+
+static_assert(([]() consteval -> bool {
+    struct NonTrivial {
+        constexpr NonTrivial() { }
+        constexpr NonTrivial(NonTrivial const&) { }
+        constexpr NonTrivial(NonTrivial&&) { }
+        constexpr ~NonTrivial() { }
+    };
+    struct NonTrivial2 {
+        constexpr NonTrivial2() { }
+        constexpr NonTrivial2(NonTrivial2 const&) { }
+        constexpr NonTrivial2(NonTrivial2&&) { }
+        constexpr ~NonTrivial2() { }
+    };
+    Variant<NonTrivial, NonTrivial2, int> a = NonTrivial {};
+    Variant<NonTrivial, NonTrivial2, int> b = NonTrivial2 {};
+    auto c = a;
+    c = b;
+    b = move(a);
+    a = 2;
+
+    a.visit([](auto&&) { });
+
+    return true;
+})());
