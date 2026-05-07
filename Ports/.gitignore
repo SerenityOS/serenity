@@ -2,5 +2,8 @@
 !*/package.sh
 !*/patches
 !*/patches/*
+!*/src
+!*/src/*
+!*/src/**
 !*/.gitignore
 !*/README.md

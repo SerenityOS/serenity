@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
+Date: Mon, 21 Apr 2026 00:00:00 +0200
+Subject: [PATCH 2/2] Makefile.am: add SerenityOS platform source files
+
+diff --git a/Makefile.am b/Makefile.am
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -439,5 +439,30 @@ if HTOP_SOLARIS
+ myhtopplatheaders = $(solaris_platform_headers)
+ myhtopplatsources = $(solaris_platform_sources)
+ endif
++
++# SerenityOS
++# ----------
++
++serenity_platform_headers = \
++	generic/gettime.h \
++	serenity/SerenityJSON.h \
++	serenity/SerenityMachine.h \
++	serenity/SerenityProcessTable.h \
++	serenity/SerenityProcess.h \
++	serenity/Platform.h \
++	serenity/ProcessField.h
++
++serenity_platform_sources = \
++	generic/gettime.c \
++	serenity/SerenityJSON.cpp \
++	serenity/SerenityMachine.c \
++	serenity/SerenityProcessTable.c \
++	serenity/SerenityProcess.c \
++	serenity/Platform.c
++
++if HTOP_SERENITY
++myhtopplatheaders = $(serenity_platform_headers)
++myhtopplatsources = $(serenity_platform_sources)
++endif

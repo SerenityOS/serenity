@@ -32,6 +32,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
@@ -403,9 +404,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }));
 
     auto view_menu = window->add_menu("&View"_string);
-    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+    auto fullscreen_action = GUI::Action::create("&Fullscreen", { Mod_Shift, Key_F11 }, [&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
-    }));
+    });
+    fullscreen_action->set_status_tip("Enter fullscreen mode"_string);
+    fullscreen_action->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv).release_value_but_fixme_should_propagate_errors());
+    view_menu->add_action(fullscreen_action);
     view_menu->add_action(terminal->clear_including_history_action());
     view_menu->add_action(terminal->clear_to_previous_mark_action());
 
@@ -429,9 +433,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
+    auto help_action = GUI::Action::create("&Manual", { Mod_Shift, Key_F1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Terminal.md"), "/bin/Help");
-    }));
+    });
+    help_action->set_status_tip("Show help contents"_string);
+    help_menu->add_action(help_action);
     help_menu->add_action(GUI::CommonActions::make_about_action("Terminal"_string, app_icon, window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
