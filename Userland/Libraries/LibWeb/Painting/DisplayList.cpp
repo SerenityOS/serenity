@@ -178,6 +178,7 @@ void DisplayListPlayer::execute(DisplayList& display_list)
         else HANDLE_COMMAND(DrawTriangleWave, draw_triangle_wave)
         else HANDLE_COMMAND(SampleUnderCorners, sample_under_corners)
         else HANDLE_COMMAND(BlitCornerClipping, blit_corner_clipping)
+        else HANDLE_COMMAND(PaintScrollbar, paint_scrollbar)
         else VERIFY_NOT_REACHED();
         // clang-format on
 

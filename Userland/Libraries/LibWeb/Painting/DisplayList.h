@@ -80,6 +80,7 @@ private:
     virtual CommandResult draw_triangle_wave(DrawTriangleWave const&) = 0;
     virtual CommandResult sample_under_corners(SampleUnderCorners const&) = 0;
     virtual CommandResult blit_corner_clipping(BlitCornerClipping const&) = 0;
+    virtual CommandResult paint_scrollbar(PaintScrollbar const&) = 0;
     virtual bool would_be_fully_clipped_by_painter(Gfx::IntRect) const = 0;
     virtual bool needs_prepare_glyphs_texture() const { return false; }
     virtual void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs) = 0;

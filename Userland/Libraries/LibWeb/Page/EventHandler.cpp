@@ -522,6 +522,15 @@ EventResult EventHandler::handle_mousemove(CSSPixelPoint viewport_position, CSSP
     }
 
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
+
+    // Fire mouseleave on the previously hovered scrollbar paintable if it changed.
+    auto new_hover_event_paintable = (paintable && paintable->wants_mouse_events()) ? paintable : nullptr;
+    if (m_hover_event_paintable != new_hover_event_paintable) {
+        if (m_hover_event_paintable)
+            m_hover_event_paintable->handle_mouseleave({});
+        m_hover_event_paintable = new_hover_event_paintable;
+    }
+
     if (paintable) {
         if (paintable->wants_mouse_events()) {
             document.set_hovered_node(paintable->dom_node());
@@ -1267,6 +1276,7 @@ void EventHandler::visit_edges(JS::Cell::Visitor& visitor) const
 {
     m_drag_and_drop_event_handler->visit_edges(visitor);
     visitor.visit(m_mouse_event_tracking_paintable);
+    visitor.visit(m_hover_event_paintable);
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#textFieldSelection:set-the-selection-range

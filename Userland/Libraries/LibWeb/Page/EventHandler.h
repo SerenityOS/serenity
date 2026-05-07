@@ -72,6 +72,7 @@ private:
     bool m_in_mouse_selection { false };
 
     JS::GCPtr<Painting::Paintable> m_mouse_event_tracking_paintable;
+    JS::GCPtr<Painting::Paintable> m_hover_event_paintable;
 
     NonnullOwnPtr<EditEventHandler> m_edit_event_handler;
     NonnullOwnPtr<DragAndDropEventHandler> m_drag_and_drop_event_handler;

@@ -359,4 +359,10 @@ bool AffineDisplayListPlayerCPU::would_be_fully_clipped_by_painter(Gfx::IntRect 
     return transformed_rect.intersected(current_stacking_context.clip.bounds).is_empty();
 }
 
+CommandResult AffineDisplayListPlayerCPU::paint_scrollbar(PaintScrollbar const&)
+{
+    // NOTE: Not used on non SerenityOS platforms.
+    return CommandResult::Continue;
+}
+
 }

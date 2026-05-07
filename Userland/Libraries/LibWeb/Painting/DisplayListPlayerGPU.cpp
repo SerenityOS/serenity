@@ -388,4 +388,10 @@ void DisplayListPlayerGPU::update_immutable_bitmap_texture_cache(HashMap<u32, Gf
     painter().update_immutable_bitmap_texture_cache(immutable_bitmaps);
 }
 
+CommandResult DisplayListPlayerGPU::paint_scrollbar(PaintScrollbar const&)
+{
+    // NOTE: Not used on non SerenityOS platforms.
+    return CommandResult::Continue;
+}
+
 }

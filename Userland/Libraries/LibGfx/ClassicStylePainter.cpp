@@ -668,4 +668,71 @@ void ClassicStylePainter::paint_simple_rect_shadow(Painter& painter, IntRect con
     }
 }
 
+void ClassicStylePainter::paint_scrollbar(Painter& painter, IntRect scrollbar_rect, IntRect thumb_rect, Palette const& palette, Orientation orientation, ScrollbarState const& state)
+{
+    static constexpr Array<IntPoint, 3> s_up_arrow_coords = { IntPoint { 4, 2 }, IntPoint { 1, 5 }, IntPoint { 7, 5 } };
+    static constexpr Array<IntPoint, 3> s_down_arrow_coords = { IntPoint { 1, 3 }, IntPoint { 7, 3 }, IntPoint { 4, 6 } };
+    static constexpr Array<IntPoint, 3> s_left_arrow_coords = { IntPoint { 5, 1 }, IntPoint { 2, 4 }, IntPoint { 5, 7 } };
+    static constexpr Array<IntPoint, 3> s_right_arrow_coords = { IntPoint { 3, 1 }, IntPoint { 6, 4 }, IntPoint { 3, 7 } };
+
+    bool is_vertical = orientation == Orientation::Vertical;
+    int scrollbar_length = is_vertical ? scrollbar_rect.height() : scrollbar_rect.width();
+    constexpr int default_button_size = 16;
+    int button_size = scrollbar_length <= (default_button_size * 2) ? scrollbar_length / 2 : default_button_size;
+
+    IntRect decrement_button_rect = is_vertical
+        ? IntRect { scrollbar_rect.x(), scrollbar_rect.y(), scrollbar_rect.width(), button_size }
+        : IntRect { scrollbar_rect.x(), scrollbar_rect.y(), button_size, scrollbar_rect.height() };
+    IntRect increment_button_rect = is_vertical
+        ? IntRect { scrollbar_rect.x(), scrollbar_rect.bottom() - button_size, scrollbar_rect.width(), button_size }
+        : IntRect { scrollbar_rect.right() - button_size, scrollbar_rect.y(), button_size, scrollbar_rect.height() };
+
+    painter.fill_rect_with_dither_pattern(scrollbar_rect, palette.button().lightened(1.3f), palette.button());
+    if (state.gutter_click_state != ScrollbarGutterClickState::NotPressed && state.has_scrubber && !thumb_rect.is_empty() && state.gutter_hovered) {
+        IntRect rect_to_fill = scrollbar_rect;
+        if (is_vertical) {
+            if (state.gutter_click_state == ScrollbarGutterClickState::BeforeScrubber) {
+                rect_to_fill.set_top(decrement_button_rect.bottom() - 1);
+                rect_to_fill.set_bottom(thumb_rect.top() + 1);
+            } else {
+                VERIFY(state.gutter_click_state == ScrollbarGutterClickState::AfterScrubber);
+                rect_to_fill.set_top(thumb_rect.bottom() - 1);
+                rect_to_fill.set_bottom(increment_button_rect.top() + 1);
+            }
+        } else {
+            if (state.gutter_click_state == ScrollbarGutterClickState::BeforeScrubber) {
+                rect_to_fill.set_left(decrement_button_rect.right() - 1);
+                rect_to_fill.set_right(thumb_rect.left() + 1);
+            } else {
+                VERIFY(state.gutter_click_state == ScrollbarGutterClickState::AfterScrubber);
+                rect_to_fill.set_left(thumb_rect.right() - 1);
+                rect_to_fill.set_right(increment_button_rect.left() + 1);
+            }
+        }
+        painter.fill_rect_with_dither_pattern(rect_to_fill, palette.button(), palette.button().lightened(0.77f));
+    }
+
+    paint_button(painter, decrement_button_rect, palette, ButtonStyle::ThickCap, state.decrement_pressed, state.decrement_hovered && !state.is_at_min);
+    paint_button(painter, increment_button_rect, palette, ButtonStyle::ThickCap, state.increment_pressed, state.increment_hovered && !state.is_at_max);
+
+    if (scrollbar_length >= default_button_size * 2) {
+        auto decrement_location = decrement_button_rect.location().translated(3, 3);
+        if (state.decrement_pressed)
+            decrement_location.translate_by(1, 1);
+        if (!state.has_scrubber || !state.enabled || state.is_at_min)
+            painter.draw_triangle(decrement_location + IntPoint { 1, 1 }, is_vertical ? s_up_arrow_coords : s_left_arrow_coords, palette.threed_highlight());
+        painter.draw_triangle(decrement_location, is_vertical ? s_up_arrow_coords : s_left_arrow_coords, (state.has_scrubber && state.enabled && !state.is_at_min) ? palette.button_text() : palette.threed_shadow1());
+
+        auto increment_location = increment_button_rect.location().translated(3, 3);
+        if (state.increment_pressed)
+            increment_location.translate_by(1, 1);
+        if (!state.has_scrubber || !state.enabled || state.is_at_max)
+            painter.draw_triangle(increment_location + IntPoint { 1, 1 }, is_vertical ? s_down_arrow_coords : s_right_arrow_coords, palette.threed_highlight());
+        painter.draw_triangle(increment_location, is_vertical ? s_down_arrow_coords : s_right_arrow_coords, (state.has_scrubber && state.enabled && !state.is_at_max) ? palette.button_text() : palette.threed_shadow1());
+    }
+
+    if (state.has_scrubber && !thumb_rect.is_empty())
+        paint_button(painter, thumb_rect, palette, ButtonStyle::ThickCap, false, state.thumb_hovered);
+}
+
 }

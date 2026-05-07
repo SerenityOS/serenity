@@ -426,4 +426,14 @@ void DisplayListRecorder::draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a
         .thickness = thickness });
 }
 
+void DisplayListRecorder::paint_scrollbar(Gfx::IntRect rect, Gfx::IntRect thumb_rect, Gfx::Palette const& palette, Orientation orientation, Gfx::ScrollbarState const& state)
+{
+    append(PaintScrollbar {
+        .rect = this->state().translation.map(rect),
+        .thumb_rect = this->state().translation.map(thumb_rect),
+        .palette = palette,
+        .orientation = orientation,
+        .state = state });
+}
+
 }
