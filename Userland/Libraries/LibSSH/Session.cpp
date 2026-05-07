@@ -17,6 +17,10 @@ ErrorOr<ExecData> ExecData::create(Core::Process&& process, int fd_stdin, int fd
         TRY(Core::File::adopt_fd(fd_stderr, Core::File::OpenMode::Read)),
     };
 
+    TRY(exec_data.stdin_->set_blocking(false));
+    TRY(exec_data.stdout_->set_blocking(false));
+    TRY(exec_data.stderr_->set_blocking(false));
+
     return exec_data;
 }
 
