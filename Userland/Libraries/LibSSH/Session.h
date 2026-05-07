@@ -23,6 +23,8 @@ struct Session;
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.1
 
 struct ExecData {
+    static ErrorOr<ExecData> create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr);
+
     Core::Process child;
 
     NonnullOwnPtr<Core::File> stdin_;

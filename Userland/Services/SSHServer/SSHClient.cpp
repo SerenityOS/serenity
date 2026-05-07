@@ -657,12 +657,7 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     TRY(Core::System::close(stdout_fds[1]));
     TRY(Core::System::close(stderr_fds[1]));
 
-    session->system = ExecData {
-        .child = move(child),
-        .stdin_ = TRY(Core::File::adopt_fd(stdin_fds[1], Core::File::OpenMode::Write)),
-        .stdout_ = TRY(Core::File::adopt_fd(stdout_fds[0], Core::File::OpenMode::Read)),
-        .stderr_ = TRY(Core::File::adopt_fd(stderr_fds[0], Core::File::OpenMode::Read)),
-    };
+    session->system = TRY(ExecData::create(move(child), stdin_fds[1], stdout_fds[0], stderr_fds[0]));
 
     TRY(send_channel_success_message(session));
 
