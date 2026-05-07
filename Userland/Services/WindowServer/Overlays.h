@@ -7,9 +7,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/IntrusiveList.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
 #include <WindowServer/MultiScaleBitmaps.h>
@@ -34,6 +37,7 @@ public:
         WindowGeometry,
         Dnd,
         WindowStackSwitch,
+        VolumeOverlay,
         ScreenNumber,
     };
     [[nodiscard]] virtual ZOrder zorder() const = 0;
@@ -218,6 +222,30 @@ private:
     int const m_columns;
     int const m_target_row;
     int const m_target_column;
+};
+
+class VolumeOverlay : public RectangularOverlay {
+public:
+    static constexpr int icon_size = 64;
+    static constexpr int bar_height = 10;
+    static constexpr int bar_margin = 12;
+    static constexpr int padding = 16;
+    static constexpr int content_width = icon_size + 2 * padding;
+    static constexpr int content_height = icon_size + bar_margin + bar_height + 2 * padding;
+
+    static ErrorOr<NonnullOwnPtr<VolumeOverlay>> create(Screen&, double volume, bool muted);
+
+    ErrorOr<void> update(double volume, bool muted);
+
+    virtual ZOrder zorder() const override { return ZOrder::VolumeOverlay; }
+    virtual void render_overlay_bitmap(Gfx::Painter&) override;
+
+private:
+    VolumeOverlay(double volume, bool muted);
+
+    double m_volume { 1.0 };
+    bool m_muted { false };
+    RefPtr<Gfx::Bitmap const> m_icon;
 };
 
 class TileWindowOverlay : public Overlay {

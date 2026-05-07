@@ -8,11 +8,14 @@
 #include "Compositor.h"
 #include "EventLoop.h"
 #include "Menu.h"
+#include "Overlays.h"
 #include "Screen.h"
 #include "Window.h"
 #include <AK/Debug.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
+#include <LibAudio/ConnectionToManagerServer.h>
+#include <LibCore/SessionManagement.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -54,6 +57,7 @@ WindowManager::WindowManager(Gfx::PaletteImpl& palette)
     }
 
     reload_config();
+    try_connect_audio_manager();
 
     m_keymap_switcher->on_keymap_change = [&](ByteString const& keymap) {
         for_each_window_manager([&keymap](WMConnectionFromClient& conn) {
@@ -1702,6 +1706,54 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
+    // Global media key handling: volume and mute keys are consumed here and forwarded to AudioServer
+    // regardless of which window is focused.
+    // Ctrl+Alt+Up/Down/M are provided as fallback shortcuts for keyboards without media keys.
+    if (event.type() == Event::KeyDown) {
+        bool const is_volume_up = event.key() == Key_VolumeUp || (event.modifiers() == (Mod_Ctrl | Mod_Alt) && event.key() == Key_Up);
+        bool const is_volume_down = event.key() == Key_VolumeDown || (event.modifiers() == (Mod_Ctrl | Mod_Alt) && event.key() == Key_Down);
+        bool const is_mute = event.key() == Key_Mute || (event.modifiers() == (Mod_Ctrl | Mod_Alt) && event.key() == Key_M);
+        if (is_volume_up || is_volume_down || is_mute) {
+            if (!m_audio_manager)
+                try_connect_audio_manager();
+            if (m_audio_manager) {
+                if (is_volume_up) {
+                    if (m_audio_muted) {
+                        (void)m_audio_manager->set_main_mix_muted(false);
+                        m_audio_muted = false;
+                    }
+                    auto new_volume = min(m_audio_volume + 0.05, 1.0);
+                    (void)m_audio_manager->set_main_mix_volume(new_volume);
+                    m_audio_volume = new_volume;
+                    if (auto result = show_volume_overlay(); result.is_error())
+                        dbgln("Failed to show volume overlay: {}", result.error());
+                    return;
+                }
+
+                if (is_volume_down) {
+                    if (m_audio_muted) {
+                        (void)m_audio_manager->set_main_mix_muted(false);
+                        m_audio_muted = false;
+                    }
+                    auto new_volume = max(m_audio_volume - 0.05, 0.0);
+                    (void)m_audio_manager->set_main_mix_volume(new_volume);
+                    m_audio_volume = new_volume;
+                    if (auto result = show_volume_overlay(); result.is_error())
+                        dbgln("Failed to show volume overlay: {}", result.error());
+                    return;
+                }
+
+                if (is_mute) {
+                    (void)m_audio_manager->set_main_mix_muted(!m_audio_muted);
+                    m_audio_muted = !m_audio_muted;
+                    if (auto result = show_volume_overlay(); result.is_error())
+                        dbgln("Failed to show volume overlay: {}", result.error());
+                    return;
+                }
+            }
+        }
+    }
+
     if (event.type() == Event::KeyDown && event.key() == Key_LeftSuper) {
         m_previous_event_was_super_keydown = true;
     } else if (m_previous_event_was_super_keydown) {
@@ -2499,6 +2551,67 @@ void WindowManager::request_close_fragile_windows(WindowStack& stack)
         return IterationDecision::Continue;
     },
         &stack);
+}
+
+void WindowManager::try_connect_audio_manager()
+{
+    // WindowServer runs at system level (session 0) while AudioServer runs in the user session.
+    // To resolve AudioServer's session-scoped socket path we need a PID from the user session.
+    // Use the first connected window client's PID for this purpose.
+    pid_t user_session_pid = -1;
+    ConnectionFromClient::for_each_client([&](ConnectionFromClient& client) {
+        if (user_session_pid != -1)
+            return;
+        auto pid_or_error = client.socket().peer_pid();
+        if (!pid_or_error.is_error())
+            user_session_pid = pid_or_error.release_value();
+    });
+
+    if (user_session_pid == -1)
+        return;
+
+    auto socket_path = Core::SessionManagement::parse_path_with_sid("/tmp/session/%sid/portal/audiomanager"sv, user_session_pid);
+    if (socket_path.is_error())
+        return;
+    auto socket = Core::LocalSocket::connect(socket_path.release_value());
+    if (socket.is_error())
+        return;
+    if (socket.value()->set_blocking(true).is_error())
+        return;
+    auto manager = adopt_nonnull_ref_or_enomem(new (nothrow) Audio::ConnectionToManagerServer(socket.release_value()));
+    if (manager.is_error())
+        return;
+    m_audio_manager = manager.release_value();
+    m_audio_volume = m_audio_manager->get_main_mix_volume();
+    m_audio_muted = m_audio_manager->is_main_mix_muted();
+    m_audio_manager->on_main_mix_volume_change = [this](double volume) {
+        m_audio_volume = volume;
+    };
+    m_audio_manager->on_main_mix_muted_state_change = [this](bool muted) {
+        m_audio_muted = muted;
+    };
+}
+
+ErrorOr<void> WindowManager::show_volume_overlay()
+{
+    auto& screen = Screen::main();
+    if (!m_volume_overlay) {
+        m_volume_overlay = TRY(VolumeOverlay::create(screen, m_audio_volume, m_audio_muted));
+        m_volume_overlay->set_enabled(true);
+    } else {
+        TRY(m_volume_overlay->update(m_audio_volume, m_audio_muted));
+    }
+
+    if (!m_volume_overlay_dismiss_timer) {
+        m_volume_overlay_dismiss_timer = Core::Timer::create_single_shot(2000, [this] {
+            if (m_volume_overlay)
+                m_volume_overlay->set_enabled(false);
+            m_volume_overlay = nullptr;
+            m_volume_overlay_dismiss_timer = nullptr;
+        });
+    }
+    m_volume_overlay_dismiss_timer->restart();
+    return {};
 }
 
 }

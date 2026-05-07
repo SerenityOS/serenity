@@ -271,6 +271,14 @@ void VideoPlayerWidget::set_time_label(Duration timestamp)
     m_timestamp_label->set_text(string_builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
+void VideoPlayerWidget::keydown_event(GUI::KeyEvent& event)
+{
+    if (event.key() == Key_PlayPause)
+        toggle_pause();
+
+    GUI::Widget::keydown_event(event);
+}
+
 void VideoPlayerWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();

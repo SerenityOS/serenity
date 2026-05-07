@@ -432,6 +432,77 @@ WindowStackSwitchOverlay::WindowStackSwitchOverlay(Screen& screen, WindowStack& 
     set_rect(calculate_frame_rect(Gfx::IntRect({}, m_content_size).inflated(2 * default_screen_rect_margin, 2 * default_screen_rect_margin)).centered_within(screen.rect()));
 }
 
+static ByteString volume_icon_path(StringView base_dir, double volume, bool muted)
+{
+    StringView icon_name;
+    if (muted)
+        icon_name = "audio-volume-muted.png"sv;
+    else if (volume > 0.66)
+        icon_name = "audio-volume-high.png"sv;
+    else if (volume > 0.33)
+        icon_name = "audio-volume-medium.png"sv;
+    else
+        icon_name = "audio-volume-low.png"sv;
+    return ByteString::formatted("{}{}", base_dir, icon_name);
+}
+
+VolumeOverlay::VolumeOverlay(double volume, bool muted)
+    : m_volume(volume)
+    , m_muted(muted)
+{
+}
+
+ErrorOr<NonnullOwnPtr<VolumeOverlay>> VolumeOverlay::create(Screen& screen, double volume, bool muted)
+{
+    auto overlay = TRY(adopt_nonnull_own_or_enomem(new (nothrow) VolumeOverlay(volume, muted)));
+    auto base_dir = WindowManager::the().palette().overlay_audio_volume_icons_path();
+    overlay->m_icon = TRY(Gfx::Bitmap::load_from_file(volume_icon_path(base_dir, volume, muted)));
+    overlay->set_rect(calculate_frame_rect(Gfx::IntRect({}, { content_width, content_height })).centered_within(screen.rect()));
+    return overlay;
+}
+
+ErrorOr<void> VolumeOverlay::update(double volume, bool muted)
+{
+    auto base_dir = WindowManager::the().palette().overlay_audio_volume_icons_path();
+    auto new_icon_path = volume_icon_path(base_dir, volume, muted);
+    auto old_icon_path = volume_icon_path(base_dir, m_volume, m_muted);
+    m_volume = volume;
+    m_muted = muted;
+    if (new_icon_path != old_icon_path)
+        m_icon = TRY(Gfx::Bitmap::load_from_file(new_icon_path));
+    invalidate_content();
+    return {};
+}
+
+void VolumeOverlay::render_overlay_bitmap(Gfx::Painter& painter)
+{
+    auto content_rect = Gfx::IntRect({}, { content_width, content_height }).centered_within({ {}, rect().size() });
+
+    Gfx::IntRect icon_dest {
+        content_rect.x() + padding,
+        content_rect.y() + padding,
+        icon_size,
+        icon_size,
+    };
+    if (m_icon)
+        painter.draw_scaled_bitmap(icon_dest, *m_icon, m_icon->rect(), 1.0f, Gfx::ScalingMode::NearestNeighbor);
+
+    auto text_color = WindowManager::the().palette().overlay_text();
+    int bar_x = content_rect.x() + padding;
+    int bar_y = content_rect.y() + padding + icon_size + bar_margin;
+    int bar_width = content_width - 2 * padding;
+    Gfx::IntRect bar_background { bar_x, bar_y, bar_width, bar_height };
+    Gfx::IntRect bar_fill { bar_x, bar_y, static_cast<int>(bar_width * (m_muted ? 0.0 : m_volume)), bar_height };
+    painter.fill_rect(bar_background, text_color.with_alpha(60));
+    if (bar_fill.width() > 0) {
+        auto fill_color = m_muted ? WindowManager::the().palette().disabled_text_front() : WindowManager::the().palette().selection();
+        if (text_color.luminosity() > 128)
+            fill_color = fill_color.lightened(1.6f);
+        painter.fill_rect(bar_fill, fill_color);
+    }
+    painter.draw_rect(bar_background, text_color.with_alpha(120));
+}
+
 TileWindowOverlay::TileWindowOverlay(Window& window, Gfx::IntRect const& tiled_frame_rect, Gfx::Palette&& palette)
     : m_window(window)
     , m_tiled_frame_rect(tiled_frame_rect)

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/NonnullOwnPtr.h>
+#include <LibCore/Socket.h>
 #include <LibIPC/ConnectionToServer.h>
 #include <Userland/Services/AudioServer/AudioManagerClientEndpoint.h>
 #include <Userland/Services/AudioServer/AudioManagerServerEndpoint.h>
@@ -18,6 +19,8 @@ class ConnectionToManagerServer final
     , public AudioManagerClientEndpoint {
     IPC_CLIENT_CONNECTION(ConnectionToManagerServer, "/tmp/session/%sid/portal/audiomanager"sv)
 public:
+    explicit ConnectionToManagerServer(NonnullOwnPtr<Core::LocalSocket>);
+
     virtual ~ConnectionToManagerServer() override;
     virtual void die() override;
 
@@ -28,9 +31,6 @@ public:
     Function<void(bool muted)> on_main_mix_muted_state_change;
     Function<void(double volume)> on_main_mix_volume_change;
     Function<void(u32 sample_rate)> on_device_sample_rate_change;
-
-private:
-    ConnectionToManagerServer(NonnullOwnPtr<Core::LocalSocket>);
 };
 
 }

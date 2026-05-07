@@ -194,6 +194,7 @@ public:
     ByteString tooltip_shadow_path() const { return path(PathRole::TooltipShadow); }
     ByteString color_scheme_path() const { return path(PathRole::ColorScheme); }
     ByteString overlay_rect_shadow_path() const { return path(PathRole::OverlayRectShadow); }
+    ByteString overlay_audio_volume_icons_path() const { return path(PathRole::OverlayAudioVolumeIcons); }
 
     Color color(ColorRole role) const { return m_impl->color(role); }
     Gfx::TextAlignment alignment(AlignmentRole role) const { return m_impl->alignment(role); }

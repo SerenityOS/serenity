@@ -90,7 +90,8 @@ static PropertyTab const window_tab {
         { "Overlays",
             { { Gfx::ColorRole::OverlayBackground },
                 { Gfx::ColorRole::OverlayText },
-                { Gfx::PathRole::OverlayRectShadow } } },
+                { Gfx::PathRole::OverlayRectShadow },
+                { Gfx::PathRole::OverlayAudioVolumeIcons } } },
 
         { "Desktop",
             { { Gfx::ColorRole::DesktopBackground },
@@ -460,6 +461,7 @@ ErrorOr<Core::AnonymousBuffer> MainWidget::encode()
     ENCODE_PATH(MenuShadow, true);
     ENCODE_PATH(TooltipShadow, true);
     ENCODE_PATH(OverlayRectShadow, true);
+    ENCODE_PATH(OverlayAudioVolumeIcons, true);
 
     return buffer;
 }

@@ -25,6 +25,7 @@ describing how to launch and manage this service.
 -   `KeepAlive` - whether the service should be restarted if it exits or crashes. For lazy services, this means the service will get respawned once a new connection is attempted on their socket after they exit or crash.
 -   `Lazy` - whether the service should only get spawned once a client attempts to connect to their socket.
 -   `Socket` - a comma-separated list of paths to sockets to create on behalf of the service. For lazy services, SystemServer will actually watch the socket for new connection attempts. See [socket takeover mechanism](#socket-takeover-mechanism) for details on how sockets are passed to services by SystemServer.
+-   `SocketGroup` - a name of the group to set as the group owner for the socket file. By default, the socket group owner is root or logged in user.
 -   `SocketPermissions` - comma-separated list of (octal) file system permissions for the socket file. The default permissions are 0600. If the number of socket permissions defined is less than the number of sockets defined, then the last defined permission will be used for the remainder of the items in `Socket`.
 -   `User` - a name of the user to run the service as. This impacts what UID, GID (and extra GIDs) the service processes have. By default, services are run as root.
 -   `WorkingDirectory` - the working directory in which the service is spawned. By default, services are spawned in the root (`"/"`) directory.
