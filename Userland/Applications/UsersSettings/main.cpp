@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "GroupsTab.h"
 #include "UsersTab.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -39,6 +40,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto users_tab = TRY(UsersSettings::UsersTab::try_create());
     TRY(window->add_tab(users_tab, "Users"_string, "users"sv));
+
+    auto groups_tab = TRY(UsersSettings::GroupsTab::try_create());
+    TRY(window->add_tab(groups_tab, "Groups"_string, "groups"sv));
 
     window->show();
     return app->exec();

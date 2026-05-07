@@ -61,6 +61,7 @@ set(CMD_SOURCES_CPP
     gron.cpp
     groupadd.cpp
     groupdel.cpp
+    groupmod.cpp
     groups.cpp
     gzip.cpp
     head.cpp

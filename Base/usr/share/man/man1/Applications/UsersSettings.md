@@ -12,7 +12,7 @@ $ UsersSettings
 
 ## Description
 
-`Users Settings` is an application for managing user accounts on the system.
+`Users Settings` is an application for managing user accounts and groups on the system.
 
 ### User List
 
@@ -46,3 +46,26 @@ Click the **Change Password...** button in the user details panel to open the _C
 ### Deleting a User
 
 Select a user from the list and click the **Delete** button. A confirmation dialog will appear before the account and its home directory are permanently removed.
+
+### Group List
+
+The **Groups** tab lists all groups present on the system. Selecting a group shows its name, GID, and members.
+
+The members list includes both:
+
+-   users explicitly listed in `/etc/group`
+-   users whose primary GID matches the selected group
+
+Primary-group members are shown for visibility, but they cannot be removed from the group from this dialog because that membership is controlled by the user account itself.
+
+### Adding a Group
+
+Click the **Add** button below the group list to open the _Add Group_ dialog, then enter the new group name.
+
+### Editing a Group
+
+Select a group to edit its name or manage explicit group members, then click **Apply Changes** to save the modifications.
+
+### Deleting a Group
+
+Select a group and click the **Delete** button to remove it. System groups cannot be deleted, and a group cannot be removed while it is still the primary group of any user.

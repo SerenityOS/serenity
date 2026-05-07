@@ -10,7 +10,7 @@ groupdel - delete a group
 
 ## Description
 
-This program deletes a group in the system.
+This program deletes a group from the system.
 
 This program must be run as root.
 
@@ -43,4 +43,5 @@ You should manually check all users to ensure that no user remain in this group.
 
 -   [`userdel`(8)](help://man/8/userdel)
 -   [`groupadd`(8)](help://man/8/groupadd)
+-   [`groupmod`(8)](help://man/8/groupmod)
 -   [`groups`(1)](help://man/1/groups)

@@ -33,5 +33,6 @@ This program must be run as root.
 ## See Also
 
 -   [`useradd`(8)](help://man/8/useradd)
+-   [`groupmod`(8)](help://man/8/groupmod)
 -   [`groupdel`(8)](help://man/8/groupdel)
 -   [`groups`(1)](help://man/1/groups)
