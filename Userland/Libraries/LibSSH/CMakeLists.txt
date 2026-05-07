@@ -5,6 +5,8 @@ set(SOURCES
     KeyExchangeData.cpp
     Peer.cpp
     Session.cpp
+    SFTP/Peer.cpp
+    SFTP/Server.cpp
 )
 
 serenity_lib(LibSSH ssh)
