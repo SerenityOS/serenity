@@ -428,7 +428,6 @@ constexpr T fmod(T x, T y)
     } while (fpu_status & 0x400);
     return x;
 #else
-#    if defined(AK_OS_SERENITY)
     // FIXME: This is a very naive implementation.
 
     if (__builtin_isnan(x))
@@ -515,9 +514,6 @@ constexpr T fmod(T x, T y)
     x_bits.exponent = x_exponent;
     x_bits.mantissa = x_mantissa;
     return x_bits.to_float();
-#    else
-    CALL_BUILTIN(fmod, x, y);
-#    endif
 #endif
 }
 
@@ -537,11 +533,8 @@ constexpr T remainder(T x, T y)
     } while (fpu_status & 0x400);
     return x;
 #else
-#    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
     TODO();
-#    endif
-    CALL_BUILTIN(remainder, x, y);
 #endif
 }
 }
@@ -594,11 +587,8 @@ constexpr T sqrt(T x)
     if constexpr (IsSame<T, long double>)
         TODO_RISCV64();
 #else
-#    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
     TODO();
-#    endif
-    CALL_BUILTIN(sqrt, x);
 #endif
 }
 
@@ -663,7 +653,6 @@ constexpr T sin(T angle)
         : "0"(angle));
     return ret;
 #else
-#    if defined(AK_OS_SERENITY)
     T sign = 1;
     if (angle < 0) {
         angle = -angle;
@@ -705,9 +694,6 @@ constexpr T sin(T angle)
     };
     T angle_squared = angle * angle;
     return sign * (angle + angle * angle_squared * f(angle_squared));
-#    else
-    CALL_BUILTIN(sin, angle);
-#    endif
 #endif
 }
 
@@ -724,7 +710,6 @@ constexpr T cos(T angle)
         : "0"(angle));
     return ret;
 #else
-#    if defined(AK_OS_SERENITY)
     if (angle < 0)
         angle = -angle;
 
@@ -768,9 +753,6 @@ constexpr T cos(T angle)
     };
     T angle_squared = angle * angle;
     return sign * (1 + angle_squared * f(angle_squared));
-#    else
-    CALL_BUILTIN(cos, angle);
-#    endif
 #endif
 }
 
@@ -807,11 +789,7 @@ constexpr T tan(T angle)
 
     return ret;
 #else
-#    if defined(AK_OS_SERENITY)
     return sin(angle) / cos(angle);
-#    else
-    CALL_BUILTIN(tan, angle);
-#    endif
 #endif
 }
 
@@ -877,7 +855,6 @@ constexpr T atan(T value)
         : "0"(value));
     return ret;
 #else
-#    if defined(AK_OS_SERENITY)
     if (value < 0)
         return -atan(-value);
 
@@ -922,8 +899,6 @@ constexpr T atan(T value)
     };
     T squared = value * value;
     return value + value * squared * f(squared);
-#    endif
-    CALL_BUILTIN(atan, value);
 #endif
 }
 
@@ -940,7 +915,6 @@ constexpr T atan2(T y, T x)
         : "st(1)");
     return ret;
 #else
-#    if defined(AK_OS_SERENITY)
     if (__builtin_isnan(y))
         return y;
     if (__builtin_isnan(x))
@@ -1000,9 +974,6 @@ constexpr T atan2(T y, T x)
         return atan(y / x) - Pi<T>;
     // y < 0 && x > 0
     return atan(y / x);
-#    else
-    CALL_BUILTIN(atan2, y, x);
-#    endif
 #endif
 }
 
@@ -1116,11 +1087,9 @@ constexpr T log(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
-#elif defined(AK_OS_SERENITY)
+#else
     // FIXME: Adjust the polynomial and formula in log2 to fit this
     return log2<T>(x) / L2_E<T>;
-#else
-    CALL_BUILTIN(log, x);
 #endif
 }
 
@@ -1138,11 +1107,9 @@ constexpr T log10(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
-#elif defined(AK_OS_SERENITY)
+#else
     // FIXME: Adjust the polynomial and formula in log2 to fit this
     return log2<T>(x) / L2_10<T>;
-#else
-    CALL_BUILTIN(log10, x);
 #endif
 }
 
