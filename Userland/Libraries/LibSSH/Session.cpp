@@ -8,6 +8,18 @@
 
 namespace SSH {
 
+ErrorOr<ExecData> ExecData::create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr)
+{
+    ExecData exec_data = {
+        move(process),
+        TRY(Core::File::adopt_fd(fd_stdin, Core::File::OpenMode::Write)),
+        TRY(Core::File::adopt_fd(fd_stdout, Core::File::OpenMode::Read)),
+        TRY(Core::File::adopt_fd(fd_stderr, Core::File::OpenMode::Read)),
+    };
+
+    return exec_data;
+}
+
 Coroutine<ErrorOr<void>> ExecData::handle_channel_data(Session& session)
 {
     CO_TRY(co_await stdin_->wait_for_state(Core::Notifier::Type::Write));
