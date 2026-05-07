@@ -58,6 +58,7 @@ NonnullRefPtr<Action> make_zoom_out_action(Function<void(Action&)>, Core::EventR
 NonnullRefPtr<Action> make_reset_zoom_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_rotate_clockwise_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_settings_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_command_palette_action(Window* window = nullptr);
 
 };

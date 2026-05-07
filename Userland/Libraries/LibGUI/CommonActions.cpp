@@ -205,6 +205,13 @@ NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)
     return GUI::Action::create("Rotate &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
 }
 
+NonnullRefPtr<Action> make_settings_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
+{
+    auto action = Action::create("&Settings", { Mod_Ctrl, Key_Comma }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    action->set_status_tip("Open application settings"_string);
+    return action;
+}
+
 NonnullRefPtr<Action> make_command_palette_action(Window* window)
 {
     auto action = Action::create("Find &Command...", { Mod_Ctrl | Mod_Shift, Key_A }, MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [=](auto&) {
