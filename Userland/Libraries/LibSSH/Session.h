@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Variant.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
@@ -26,8 +27,8 @@ struct ExecData {
     NonnullOwnPtr<Core::File> stderr_;
 };
 
-struct Session {
-    static ErrorOr<Session> create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size);
+struct Session : public RefCounted<Session> {
+    static ErrorOr<NonnullRefPtr<Session>> create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size);
 
     u32 local_channel_id {};
     u32 sender_channel_id {};

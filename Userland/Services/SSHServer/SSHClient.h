@@ -89,18 +89,18 @@ private:
     ErrorOr<void> handle_channel_open_message(GenericMessage&);
     ErrorOr<void> send_channel_open_confirmation(Session const&);
     ErrorOr<void> handle_channel_request(GenericMessage&);
-    ErrorOr<void> handle_channel_exec(Session&, GenericMessage&);
+    ErrorOr<void> handle_channel_exec(NonnullRefPtr<Session> const&, GenericMessage&);
     ErrorOr<void> send_channel_success_message(Session const&);
     ErrorOr<void> send_channel_data(Session const&, ReadonlyBytes);
     ErrorOr<void> send_channel_extended_data(Session const&, ReadonlyBytes);
     ErrorOr<void> send_exit_status(Session const&, int);
     ErrorOr<void> handle_channel_close(GenericMessage&);
     ErrorOr<void> send_channel_close(Session&);
-    ErrorOr<Session*> find_session(u32 sender_channel_id);
+    ErrorOr<NonnullRefPtr<Session>> find_session(u32 sender_channel_id);
 
     template<typename F, typename F2>
-    Coroutine<void> async_stream_std_data(u32 sender_channel_id, F&& file_extractor, F2&& sender);
-    Coroutine<void> async_wait_for_child(u32 sender_channel_id);
+    Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, F&& file_extractor, F2&& sender);
+    Coroutine<void> async_wait_for_child(NonnullRefPtr<Session>);
 
     State m_state { State::Constructed };
     Core::TCPSocket& m_tcp_socket;
@@ -108,7 +108,7 @@ private:
     KeyExchangeData m_key_exchange_data {};
     ByteBuffer m_cookie {};
 
-    Vector<Session> m_sessions;
+    Vector<NonnullRefPtr<Session>> m_sessions;
 };
 
 } // SSHServer
