@@ -529,11 +529,11 @@ ErrorOr<void> SSHClient::send_channel_open_confirmation(Session const& session)
     return {};
 }
 
-ErrorOr<Session*> SSHClient::find_session(u32 sender_channel_id)
+ErrorOr<NonnullRefPtr<Session>> SSHClient::find_session(u32 sender_channel_id)
 {
     for (auto& session : m_sessions) {
-        if (session.sender_channel_id == sender_channel_id)
-            return &session;
+        if (session->sender_channel_id == sender_channel_id)
+            return session;
     }
     return Error::from_string_literal("Session not found");
 }
@@ -567,7 +567,7 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
 
 // 6.5.  Starting a Shell or a Command
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
-ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& message)
+ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
 {
     auto command = TRY(decode_string(message.payload));
 
@@ -603,7 +603,7 @@ ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& m
     TRY(Core::System::close(stdout_fds[1]));
     TRY(Core::System::close(stderr_fds[1]));
 
-    session.system = ExecData {
+    session->system = ExecData {
         .child = move(child),
         .stdin_ = TRY(Core::File::adopt_fd(stdin_fds[1], Core::File::OpenMode::Write)),
         .stdout_ = TRY(Core::File::adopt_fd(stdout_fds[0], Core::File::OpenMode::Read)),
@@ -613,22 +613,20 @@ ErrorOr<void> SSHClient::handle_channel_exec(Session& session, GenericMessage& m
     TRY(send_channel_success_message(session));
 
     // FIXME: Make sure to cancel these coroutines if anything goes wrong.
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session.sender_channel_id, [](ExecData& exec_data) -> Core::File& { return *exec_data.stdout_; }, [this](auto&... args) { return send_channel_data(args...); }));
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session.sender_channel_id, [](ExecData& exec_data) -> Core::File& { return *exec_data.stderr_; }, [this](auto&... args) { return send_channel_extended_data(args...); }));
-    Core::EventLoop::adopt_coroutine(async_wait_for_child(session.sender_channel_id));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stdout_; }, [this](auto&... args) { return send_channel_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stderr_; }, [this](auto&... args) { return send_channel_extended_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_wait_for_child(session));
 
     return {};
 }
 
 template<typename F, typename F2>
-Coroutine<void> SSHClient::async_stream_std_data(u32 sender_channel_id, F&& file_extractor, F2&& sender)
+Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session, F&& file_extractor, F2&& sender)
 {
     auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
         while (true) {
-            auto& session = *CO_TRY(find_session(sender_channel_id));
-
             auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
-            auto output = CO_TRY(co_await file_extractor(session.system.template get<ExecData>()).async_read_some(output_buffer));
+            auto output = CO_TRY(co_await file_extractor(session->system.template get<ExecData>()).async_read_some(output_buffer));
 
             if (output.is_empty())
                 break;
@@ -645,21 +643,17 @@ Coroutine<void> SSHClient::async_stream_std_data(u32 sender_channel_id, F&& file
     co_return;
 }
 
-Coroutine<void> SSHClient::async_wait_for_child(u32 sender_channel_id)
+Coroutine<void> SSHClient::async_wait_for_child(NonnullRefPtr<Session> session)
 {
     auto maybe_error = [&]() -> ErrorOr<void> {
-        auto& session = *TRY(find_session(sender_channel_id));
-
         // FIXME: If the child closes STDOUT, we will block the server in
         //        wait_for_termination() bellow. We should implement a way to
         //        wake up the event loop on the child's death.
-        Core::EventLoop::current().spin_until([this, sender_channel_id]() {
-            auto& session = *MUST(find_session(sender_channel_id));
-            auto& exec_data = session.system.get<ExecData>();
-            return exec_data.stdout_->is_eof();
+        Core::EventLoop::current().spin_until([&session]() {
+            return session->system.get<ExecData>().stdout_->is_eof();
         });
 
-        auto exited_with_code_0 = TRY(session.system.get<ExecData>().child.wait_for_termination());
+        auto exited_with_code_0 = TRY(session->system.get<ExecData>().child.wait_for_termination());
 
         // FIXME: Send the actual exit status.
         TRY(send_exit_status(session, exited_with_code_0 ? 0 : -1));
