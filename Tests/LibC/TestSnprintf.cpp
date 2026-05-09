@@ -360,4 +360,11 @@ TEST_CASE(g_format)
     EXPECT(test_single<double>({ LITERAL("xxxx"), "|%g|", 1.0, 3, LITERAL("|1|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxx"), "|%g|", 1.1, 5, LITERAL("|1.1|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "|%g|", -1.12, 7, LITERAL("|-1.12|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxx"), "%.3g", 12.34567, 4, LITERAL("12.3\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxx"), "%.4g", 10.1, 4, LITERAL("10.1\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "%.2g", 0.0000123, 7, LITERAL("1.2e-05\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "%.2g", 1234567.0, 7, LITERAL("1.2e+06\0") }));
+
+    EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%g|", 10.00000001, 4, LITERAL("|10|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%g|", 10.0000000001, 4, LITERAL("|10|\0") }));
 }

@@ -12,6 +12,7 @@
 #include <stdarg.h>
 
 #ifndef KERNEL
+#    include <AK/StringFloatingPointConversions.h>
 #    include <math.h>
 #    include <wchar.h>
 #endif
@@ -220,6 +221,174 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 
     return length;
 }
+
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_double_g(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision, bool has_precision, bool upper_case, bool alternate_form)
+{
+    if (isnan(number) || isinf(number)) {
+        bool sign = signbit(number);
+        char buf[5];
+        int len = 0;
+        if (sign)
+            buf[len++] = '-';
+        else if (always_sign)
+            buf[len++] = '+';
+        if (isnan(number)) {
+            buf[len++] = upper_case ? 'N' : 'n';
+            buf[len++] = upper_case ? 'A' : 'a';
+            buf[len++] = upper_case ? 'N' : 'n';
+        } else {
+            buf[len++] = upper_case ? 'I' : 'i';
+            buf[len++] = upper_case ? 'N' : 'n';
+            buf[len++] = upper_case ? 'F' : 'f';
+        }
+        int padding = field_width > (u32)len ? field_width - len : 0;
+        if (!left_pad)
+            for (int i = 0; i < padding; ++i)
+                putch(bufptr, ' ');
+        for (int i = 0; i < len; ++i)
+            putch(bufptr, buf[i]);
+        if (left_pad)
+            for (int i = 0; i < padding; ++i)
+                putch(bufptr, ' ');
+        return len + padding;
+    }
+
+    auto const exponential = convert_floating_point_to_decimal_exponential_form(number);
+    u64 mantissa = exponential.fraction;
+    i32 exponent = exponential.exponent;
+    bool is_negative = exponential.sign;
+
+    auto decimal_digits = [](u64 n, char* buf) -> int {
+        if (n == 0) {
+            buf[0] = '0';
+            return 1;
+        }
+        int len = 0;
+        while (n > 0) {
+            buf[len++] = '0' + (n % 10);
+            n /= 10;
+        }
+        for (int i = 0; i < len / 2; ++i)
+            swap(buf[i], buf[len - i - 1]);
+        return len;
+    };
+
+    char digits[32];
+    int num_digits = decimal_digits(mantissa, digits);
+
+    int significant_digits = has_precision ? (int)precision : 6;
+    if (significant_digits == 0)
+        significant_digits = 1;
+
+    if (num_digits > significant_digits) {
+        int excess = num_digits - significant_digits;
+        u64 divisor = 1;
+        for (int i = 0; i < excess; ++i)
+            divisor *= 10;
+        u64 remainder = mantissa % divisor;
+        u64 half = divisor / 2;
+        mantissa /= divisor;
+        if (remainder > half || (remainder == half && (mantissa & 1)))
+            mantissa++;
+        exponent += excess;
+        num_digits = decimal_digits(mantissa, digits);
+        if (num_digits > significant_digits) {
+            mantissa /= 10;
+            exponent += 1;
+            num_digits = decimal_digits(mantissa, digits);
+        }
+    }
+
+    int x = exponent + num_digits - 1;
+    bool use_scientific = !(significant_digits > x && x >= -4);
+
+    char output[128];
+    char* out = output;
+
+    if (is_negative)
+        *out++ = '-';
+    else if (always_sign)
+        *out++ = '+';
+
+    bool has_decimal_point = false;
+    if (use_scientific) {
+        *out++ = digits[0];
+        if (num_digits > 1 || alternate_form) {
+            *out++ = '.';
+            has_decimal_point = true;
+            for (int i = 1; i < num_digits; ++i)
+                *out++ = digits[i];
+        }
+        if (!alternate_form && has_decimal_point) {
+            while (out > output && *(out - 1) == '0')
+                out--;
+            if (out > output && *(out - 1) == '.')
+                out--;
+        }
+        *out++ = upper_case ? 'E' : 'e';
+        *out++ = x >= 0 ? '+' : '-';
+        int abs_x = x < 0 ? -x : x;
+        if (abs_x < 10)
+            *out++ = '0';
+        out += decimal_digits(abs_x, out);
+    } else {
+        int integer_part_len = x + 1;
+        if (integer_part_len <= 0) {
+            *out++ = '0';
+            *out++ = '.';
+            has_decimal_point = true;
+            for (int i = 0; i < -integer_part_len; ++i)
+                *out++ = '0';
+            for (int i = 0; i < num_digits; ++i)
+                *out++ = digits[i];
+        } else {
+            for (int i = 0; i < integer_part_len; ++i) {
+                if (i < num_digits)
+                    *out++ = digits[i];
+                else
+                    *out++ = '0';
+            }
+            if (num_digits > integer_part_len || alternate_form) {
+                *out++ = '.';
+                has_decimal_point = true;
+                for (int i = integer_part_len; i < num_digits; ++i)
+                    *out++ = digits[i];
+            }
+        }
+        if (!alternate_form && has_decimal_point) {
+            while (out > output && *(out - 1) == '0')
+                out--;
+            if (out > output && *(out - 1) == '.')
+                out--;
+        }
+    }
+
+    int total_len = out - output;
+    int pad = field_width > (u32)total_len ? field_width - total_len : 0;
+
+    if (!left_pad) {
+        char pad_char = zero_pad ? '0' : ' ';
+        if (zero_pad && (is_negative || always_sign)) {
+            putch(bufptr, output[0]);
+            for (int i = 0; i < pad; ++i)
+                putch(bufptr, pad_char);
+            for (int i = 1; i < total_len; ++i)
+                putch(bufptr, output[i]);
+        } else {
+            for (int i = 0; i < pad; ++i)
+                putch(bufptr, pad_char);
+            for (int i = 0; i < total_len; ++i)
+                putch(bufptr, output[i]);
+        }
+    } else {
+        for (int i = 0; i < total_len; ++i)
+            putch(bufptr, output[i]);
+        for (int i = 0; i < pad; ++i)
+            putch(bufptr, ' ');
+    }
+    return total_len + pad;
+}
 #endif
 template<typename PutChFunc, typename CharType>
 ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u64 number, bool alternate_form, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
@@ -401,8 +570,11 @@ struct PrintfImpl {
 #ifndef KERNEL
     ALWAYS_INLINE int format_g(ModifierState const& state, ArgumentListRefT ap) const
     {
-        // FIXME: Exponent notation
-        return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, false);
+        return print_double_g(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, state.has_precision, false, state.alternate_form);
+    }
+    ALWAYS_INLINE int format_G(ModifierState const& state, ArgumentListRefT ap) const
+    {
+        return print_double_g(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, state.has_precision, true, state.alternate_form);
     }
     ALWAYS_INLINE int format_f(ModifierState const& state, ArgumentListRefT ap) const
     {
@@ -593,6 +765,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
                 PRINTF_IMPL_DELEGATE_TO_IMPL(c);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(d);
 #ifndef KERNEL
+                PRINTF_IMPL_DELEGATE_TO_IMPL(G);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(f);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(g);
 #endif
