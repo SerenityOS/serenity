@@ -344,6 +344,39 @@ ErrorOr<void> Region::map_impl(PageDirectory& page_directory, ShouldLockVMObject
 
 ErrorOr<void> Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 {
+    // Flushing the data cache requires this region to be in the current address space,
+    // or in the always mapped kernel address space.
+    VERIFY(&page_directory == Memory::PageDirectory::find_current() || &page_directory == &MM.kernel_page_directory());
+
+    // NOTE: The !Processor::current().has_self_snooping() check assumes that either all or none of
+    //       the processors in an SMP system support self-snooping, since a context switch can happen
+    //       after that check.
+    if (m_memory_type != MemoryType::Normal && !Processor::current().has_self_snooping()) {
+        // The physical pages used by this region could have previously been used by a cacheable region,
+        // so some cache lines might still contain data for this region.
+        // Because non-cacheable accesses bypass the data cache, those lines could later be written back
+        // after the underlying physical memory has changed.
+        // Since we don't track whether physical pages were previously mapped as cacheable,
+        // always flush the data cache to remove any stale entries for this region.
+        // If the processor supports self-snooping, the processor will snoop its own cache and handle
+        // such memory type conflicts transparently.
+
+        if (!is_writable()) {
+            // Temporarily map it as writable, so we can flush the data cache.
+            // In this case, we always need to flush the TLB to change the permissions,
+            // both when making the mapping writable and when reverting to the original permissions.
+
+            TRY(map_impl(page_directory, ShouldLockVMObject::Yes, ShouldFlushTLB::Yes, true, true));
+            Processor::flush_data_cache(vaddr(), PAGE_SIZE * page_count());
+
+            TRY(map_impl(page_directory, ShouldLockVMObject::Yes, ShouldFlushTLB::Yes, is_readable(), is_writable()));
+        } else {
+            TRY(map_impl(page_directory, ShouldLockVMObject::Yes, should_flush_tlb, is_readable(), is_writable()));
+            Processor::flush_data_cache(vaddr(), PAGE_SIZE * page_count());
+        }
+        return {};
+    }
+
     return map_impl(page_directory, ShouldLockVMObject::Yes, should_flush_tlb, is_readable(), is_writable());
 }
 
