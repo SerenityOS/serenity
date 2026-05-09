@@ -243,6 +243,28 @@ void ProcessorBase::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr
     flush_tlb_local(vaddr, page_count);
 }
 
+void ProcessorBase::flush_data_cache(VirtualAddress vaddr, size_t byte_count)
+{
+    if (!Processor::current().has_feature(CPUFeature::Zicbom))
+        return;
+
+    // Flushing userspace memory requires sstatus.SUM=1.
+    SmapDisabler disabler;
+
+    // NOTE: This assumes that all processors have Zicbom and the same m_zicbom_block_size,
+    //       as a context switch can happen during execution of this function.
+
+    auto const block_size = current().m_zicbom_block_size;
+    for (FlatPtr addr = align_down_to(vaddr.get(), block_size); addr < vaddr.get() + byte_count; addr += block_size) {
+        asm volatile(R"(
+            .option push
+            .option arch, +zicbom
+                cbo.flush (%0)
+            .option pop
+        )" ::"r"(addr) : "memory");
+    }
+}
+
 void ProcessorBase::flush_instruction_cache(VirtualAddress, size_t)
 {
     // FIXME: Use the SBI RFENCE extension to flush the instruction cache of other harts when we support SMP on riscv64.
@@ -689,6 +711,16 @@ void Processor::find_and_parse_devicetree_node()
         store_fpu_state(s_clean_fpu_state);
 
         generate_userspace_extension_bitmask();
+
+        if (has_feature(CPUFeature::Zicbom)) {
+            auto zicbom_block_size = cpu.get_property("riscv,cbom-block-size"sv);
+            if (zicbom_block_size.has_value() && zicbom_block_size->size() == sizeof(u32))
+                m_zicbom_block_size = zicbom_block_size->as<u32>();
+            else
+                dmesgln("CPU[{}]: Supports Zicbom but its node ({}) doesn't have a valid \"riscv,cbom-block-size\" property", id(), cpu_name);
+        } else {
+            dmesgln("CPU[{}]: Doesn't support Zicbom, Processor::flush_data_cache() won't work", id());
+        }
 
         break;
     }

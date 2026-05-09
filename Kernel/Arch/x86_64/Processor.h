@@ -67,6 +67,8 @@ private:
     alignas(Descriptor) Descriptor m_gdt[256];
     u32 m_gdt_length;
 
+    u16 m_clflush_cache_line_size { 0 };
+
     static Atomic<u32> s_idle_cpu_mask;
 
     TSS m_tss;

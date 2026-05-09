@@ -23,6 +23,7 @@
 #include <Kernel/Tasks/Thread.h>
 
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/TrapFrame.h>
@@ -228,6 +229,9 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         m_features |= CPUFeature::IA64;
     if (processor_info.edx() & (1 << 31))
         m_features |= CPUFeature::PBE;
+
+    if (has_feature(CPUFeature::CLFLUSH))
+        m_clflush_cache_line_size = ((processor_info.ebx() >> 8) & 0xff) * 8;
 
     CPUID extended_features(0x7);
 
@@ -667,6 +671,9 @@ UNMAP_AFTER_INIT void ProcessorBase::initialize(u32 cpu)
     if (self->m_has_qemu_hvf_quirk.was_set())
         dmesgln("CPU[{}]: Applied correction for QEMU Hypervisor.framework quirk", current_id());
 
+    if (!has_feature(CPUFeature::CLFLUSH))
+        dmesgln("CPU[{}]: Doesn't support CLFUSH, Processor::flush_data_cache() won't work", current_id());
+
     if (cpu == 0)
         initialize_interrupts();
     else
@@ -805,6 +812,26 @@ void ProcessorBase::flush_tlb(Memory::PageDirectory const* page_directory, Virtu
         Processor::smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
     else
         flush_tlb_local(vaddr, page_count);
+}
+
+void ProcessorBase::flush_data_cache(VirtualAddress vaddr, size_t byte_count)
+{
+    // FIXME: Implement a WBINVD fallback. WBINVD only flushes the caches for the current processor,
+    //        so we need to broadcast an SMP messsage to do that.
+    // FIXME: Maybe use CLFLUSHOPT, if supported.
+    if (!Processor::current().has_feature(CPUFeature::CLFLUSH))
+        return;
+
+    // NOTE: This assumes that all processors have CLFLUSH and the same m_clflush_cache_line_size,
+    //       as a context switch can happen during execution of this function.
+
+    full_memory_fence();
+
+    auto const cache_line_size = current().m_clflush_cache_line_size;
+    for (FlatPtr addr = align_down_to(vaddr.get(), cache_line_size); addr < vaddr.get() + byte_count; addr += cache_line_size)
+        asm volatile("clflush %0" ::"m"(addr) : "memory");
+
+    full_memory_fence();
 }
 
 void ProcessorBase::flush_instruction_cache(VirtualAddress, size_t)
