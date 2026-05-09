@@ -10,12 +10,12 @@
 #include <Kernel/Library/Assertions.h>
 
 namespace Kernel {
-GenericInterruptHandler& GenericInterruptHandler::from(u8 interrupt_number)
+GenericInterruptHandler& GenericInterruptHandler::from(InterruptNumber interrupt_number)
 {
     return get_interrupt_handler(interrupt_number);
 }
 
-GenericInterruptHandler::GenericInterruptHandler(u8 interrupt_number, bool disable_remap)
+GenericInterruptHandler::GenericInterruptHandler(InterruptNumber interrupt_number, bool disable_remap)
     : m_interrupt_number(interrupt_number)
     , m_disable_remap(disable_remap)
 {
@@ -55,7 +55,7 @@ void GenericInterruptHandler::unregister_interrupt_handler()
     m_registered = false;
 }
 
-void GenericInterruptHandler::change_interrupt_number(u8 number)
+void GenericInterruptHandler::change_interrupt_number(InterruptNumber number)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(!m_disable_remap);

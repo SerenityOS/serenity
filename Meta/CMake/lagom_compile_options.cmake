@@ -2,7 +2,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/common_compile_options.cmake)
 
 add_compile_options(-Wno-maybe-uninitialized)
 add_compile_options(-Wno-shorten-64-to-32)
-add_compile_options(-fsigned-char)
 add_compile_options(-ggnu-pubnames)
 if (NOT WIN32)
     add_compile_options(-fPIC)

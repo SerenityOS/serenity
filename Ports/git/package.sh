@@ -6,7 +6,6 @@ files=(
 )
 useconfigure='true'
 configopts=(
-    "--target=${SERENITY_ARCH}-pc-serenity"
     "--with-lib=${SERENITY_INSTALL_ROOT}/usr/local"
     'CFLAGS=-DNO_IPV6 -std=c17'
 )
@@ -19,7 +18,7 @@ build() {
     run make \
         "${makeopts[@]}" \
         CURL_LDFLAGS='-lcurl -lssl -lcrypto -lz'
-    run make strip
+    run make strip STRIP="${STRIP}"
 }
 
 post_install() {

@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Naren Sirigere <sirigere.naren@gmail.com>
+Date: Sat, 7 Feb 2026 04:16:51 +0530
+Subject: [PATCH] Add serenity identifier to rz_types.h
+
+Define serenity as __UNIX__ like, and set RZ_SYS_OS to 'serenity' if __serenity__ identifier is defined
+---
+ librz/include/rz_types.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/librz/include/rz_types.h b/librz/include/rz_types.h
+index 1d3468b7fe3b4cef3fd9aafb26ff090d5f63e610..3b9a513bd9f6a624e7e1f00265a36d7e56582ab0 100644
+--- a/librz/include/rz_types.h
++++ b/librz/include/rz_types.h
+@@ -127,7 +127,7 @@ extern "C" {
+ #define __WINDOWS__ 1
+ #endif
+ 
+-#if defined(EMSCRIPTEN) || defined(__linux__) || defined(__APPLE__) || defined(__GNU__) || defined(__ANDROID__) || defined(__QNX__) || defined(__sun) || defined(__HAIKU__)
++#if defined(EMSCRIPTEN) || defined(__linux__) || defined(__APPLE__) || defined(__GNU__) || defined(__ANDROID__) || defined(__QNX__) || defined(__sun) || defined(__HAIKU__) || defined(__serenity__)
+ #define __BSD__  0
+ #define __UNIX__ 1
+ #endif
+@@ -601,6 +601,8 @@ typedef enum {
+ #define RZ_SYS_OS "freebsd"
+ #elif defined(__HAIKU__)
+ #define RZ_SYS_OS "haiku"
++#elif defined(__serenity__)
++#define RZ_SYS_OS "serenity"
+ #else
+ #define RZ_SYS_OS "unknown"
+ #endif

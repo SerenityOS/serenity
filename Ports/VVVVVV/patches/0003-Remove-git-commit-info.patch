@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Sat, 24 Jan 2026 22:03:00 +0100
+Subject: [PATCH] Remove git commit info
+
+We build the port from a tarball, so it will incorrectly use
+SerenityOS's git commit hash.
+---
+ desktop_version/CMakeLists.txt | 25 -------------------------
+ 1 file changed, 25 deletions(-)
+
+diff --git a/desktop_version/CMakeLists.txt b/desktop_version/CMakeLists.txt
+index 28b4b4b8db2abfdcc508a8fde723d83e94cc8d86..76d9212d1153976007a9069339477d3645cd2c48 100644
+--- a/desktop_version/CMakeLists.txt
++++ b/desktop_version/CMakeLists.txt
+@@ -210,31 +210,6 @@ set(PNG_SRC src/lodepng_wrapper.c)
+ set(CHM_SRC ../third_party/c-hashmap/map.c)
+ set(SBIDI_SRC ../third_party/SheenBidi/Source/SheenBidi.c)
+ 
+-if(NOT OFFICIAL_BUILD)
+-    # Add interim commit hash and its date to the build
+-
+-    # These filenames have to be qualified, because when we run
+-    # the CMake script, its work dir gets set to the build folder
+-    set(VERSION_INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/InterimVersion.in.c)
+-    set(VERSION_OUTPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/InterimVersion.out.c)
+-
+-    add_custom_command(
+-        # This OUTPUT line is required for this to be ran every time
+-        OUTPUT ${VERSION_OUTPUT_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/src/_dummy.c
+-        COMMAND ${CMAKE_COMMAND}
+-        # These args have to be passed through, otherwise the script can't see them
+-        # Also, these args have to come BEFORE `-P`! (Otherwise it fails with an unclear error)
+-        -DINPUT_FILE=${VERSION_INPUT_FILE}
+-        -DOUTPUT_FILE=${VERSION_OUTPUT_FILE}
+-        -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake
+-    )
+-
+-    target_compile_definitions(VVVVVV PRIVATE -DINTERIM_VERSION_EXISTS)
+-
+-    add_library(InterimVersion STATIC src/InterimVersion.out.c)
+-    list(APPEND STATIC_LIBRARIES InterimVersion)
+-endif()
+-
+ # Build options
+ if(ENABLE_WARNINGS)
+     # The weird syntax is due to CMake generator expressions.

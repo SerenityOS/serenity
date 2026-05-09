@@ -33,7 +33,7 @@ enum FlagBits {
     SystemTimerMatch3 = 1 << 3,
 };
 
-Timer::Timer(Memory::TypedMapping<TimerRegisters volatile> registers_mapping, size_t interrupt_number)
+Timer::Timer(Memory::TypedMapping<TimerRegisters volatile> registers_mapping, InterruptNumber interrupt_number)
     : HardwareTimer(interrupt_number)
     , m_registers(move(registers_mapping))
 {

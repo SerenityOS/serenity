@@ -42,10 +42,10 @@ ld/
  create mode 100644 ld/testsuite/ld-elf/symbolic-non-weak-func.s
 
 diff --git a/bfd/elflink.c b/bfd/elflink.c
-index 91c77c211ef065a77883004eb696adacd92a00be..558e2a74061452083fd6bcdc99541b535e134aed 100644
+index 29b89d4ab9ed9edc59b714fcc08379efe43f2695..ea4d3d4fb2587a0a2003a35ee384d2ebe909ab0a 100644
 --- a/bfd/elflink.c
 +++ b/bfd/elflink.c
-@@ -637,14 +637,12 @@ bfd_elf_link_mark_dynamic_symbol (struct bfd_link_info *info,
+@@ -682,14 +682,12 @@ bfd_elf_link_mark_dynamic_symbol (struct bfd_link_info *info,
    if(h->dynamic || bfd_link_relocatable (info))
      return;
  
@@ -66,10 +66,10 @@ index 91c77c211ef065a77883004eb696adacd92a00be..558e2a74061452083fd6bcdc99541b53
      {
        h->dynamic = 1;
 diff --git a/include/bfdlink.h b/include/bfdlink.h
-index ae451075996498eb2c20ea28180dd67489724583..5b5d059b17b62d5f48eede1583638f216f64bb37 100644
+index eac72b8c3885ff1ac996eead9e00bcf87ea7e7fe..d324ad9a5d301c3e0570577c69ec604c4f4735e5 100644
 --- a/include/bfdlink.h
 +++ b/include/bfdlink.h
-@@ -371,6 +371,9 @@ struct bfd_link_info
+@@ -375,6 +375,9 @@ struct bfd_link_info
    /* TRUE if all data symbols should be dynamic.  */
    unsigned int dynamic_data: 1;
  
@@ -80,10 +80,10 @@ index ae451075996498eb2c20ea28180dd67489724583..5b5d059b17b62d5f48eede1583638f21
    unsigned int resolve_section_groups: 1;
  
 diff --git a/ld/NEWS b/ld/NEWS
-index 17fb20a6b9f7813748dc3346075291ce7ad13f56..b05cbd77a9c4492e32a0cea6a54d05af58e090f7 100644
+index 3be78507245ff00590117d7e779d43d832aa0d95..be6fdcebe416842ecc9c4dfe79ced89613ea78cc 100644
 --- a/ld/NEWS
 +++ b/ld/NEWS
-@@ -185,6 +185,8 @@ Changes in 2.37:
+@@ -257,6 +257,8 @@ Changes in 2.37:
  
  * Add -Bno-symbolic to cancel -Bsymbolic and -Bsymbolic-functions.
  
@@ -93,10 +93,10 @@ index 17fb20a6b9f7813748dc3346075291ce7ad13f56..b05cbd77a9c4492e32a0cea6a54d05af
  
  * Add libdep plugin, for linking dependencies of static libraries that
 diff --git a/ld/ld.texi b/ld/ld.texi
-index f6384ad82dd943a1a7e71ed560793d6ab8bdd6f4..7d5d736c32c7011478e7f422d6ca3ea6d2cf9293 100644
+index 3dc76a1f8c6b56c59c1828872827748508f34bcb..9bd468c9d2b6cf246840ae2a5ac1cfc8898ecb55 100644
 --- a/ld/ld.texi
 +++ b/ld/ld.texi
-@@ -1853,7 +1853,7 @@ libraries.
+@@ -1883,7 +1883,7 @@ libraries.
  
  @kindex -Bsymbolic
  @item -Bsymbolic
@@ -105,7 +105,7 @@ index f6384ad82dd943a1a7e71ed560793d6ab8bdd6f4..7d5d736c32c7011478e7f422d6ca3ea6
  definition within the shared library, if any.  Normally, it is possible
  for a program linked against a shared library to override the definition
  within the shared library.  This option is only meaningful on ELF
-@@ -1861,11 +1861,20 @@ platforms which support shared libraries.
+@@ -1891,11 +1891,20 @@ platforms which support shared libraries.
  
  @kindex -Bsymbolic-functions
  @item -Bsymbolic-functions
@@ -129,10 +129,10 @@ index f6384ad82dd943a1a7e71ed560793d6ab8bdd6f4..7d5d736c32c7011478e7f422d6ca3ea6
  @item -Bno-symbolic
  This option can cancel previously specified @samp{-Bsymbolic} and
 diff --git a/ld/ldlex.h b/ld/ldlex.h
-index b8b7d6b6829d9e7427ebd99eb556237005538940..1e60d3f8b7a1aa1280e725eebdf2eed1470ba1fb 100644
+index 85e06b6fcc48d15b90e4490311a40d258920cbc4..971e510aeb6004c279a36dd2c9940464e1eaa507 100644
 --- a/ld/ldlex.h
 +++ b/ld/ldlex.h
-@@ -65,6 +65,7 @@ enum option_values
+@@ -66,6 +66,7 @@ enum option_values
    OPTION_SECTION_ORDERING_FILE,
    OPTION_STATS,
    OPTION_SYMBOLIC,
@@ -141,10 +141,10 @@ index b8b7d6b6829d9e7427ebd99eb556237005538940..1e60d3f8b7a1aa1280e725eebdf2eed1
    OPTION_TASK_LINK,
    OPTION_IMAGE_BASE,
 diff --git a/ld/lexsup.c b/ld/lexsup.c
-index 5399aa45b724e61008686d607a1f3a8e360e2c7f..21e542886ec9a83bb764209affacc0aa4d47bdc3 100644
+index 158abb6dd8ff3993fa5d6673f3c009c22dfb104f..ee1ec8c8fc1930a31977093ba9f03dcce1768bd8 100644
 --- a/ld/lexsup.c
 +++ b/ld/lexsup.c
-@@ -318,9 +318,11 @@ static const struct ld_option ld_options[] =
+@@ -309,9 +309,11 @@ static const struct ld_option ld_options[] =
    { {"Bno-symbolic", no_argument, NULL, OPTION_NO_SYMBOLIC},
      '\0', NULL, N_("Don't bind global references locally"), ONE_DASH },
    { {"Bsymbolic", no_argument, NULL, OPTION_SYMBOLIC},
@@ -158,7 +158,7 @@ index 5399aa45b724e61008686d607a1f3a8e360e2c7f..21e542886ec9a83bb764209affacc0aa
    { {"check-sections", no_argument, NULL, OPTION_CHECK_SECTIONS},
      '\0', NULL, N_("Check section addresses for overlaps (default)"),
      TWO_DASHES },
-@@ -668,8 +670,9 @@ parse_args (unsigned argc, char **argv)
+@@ -661,8 +663,9 @@ parse_args (unsigned argc, char **argv)
    enum symbolic_enum
    {
      symbolic_unset = 0,
@@ -169,7 +169,7 @@ index 5399aa45b724e61008686d607a1f3a8e360e2c7f..21e542886ec9a83bb764209affacc0aa
    } opt_symbolic = symbolic_unset;
    enum dynamic_list_enum
    {
-@@ -1420,6 +1423,9 @@ parse_args (unsigned argc, char **argv)
+@@ -1423,6 +1426,9 @@ parse_args (unsigned argc, char **argv)
  	case OPTION_SYMBOLIC:
  	  opt_symbolic = symbolic;
  	  break;
@@ -179,7 +179,7 @@ index 5399aa45b724e61008686d607a1f3a8e360e2c7f..21e542886ec9a83bb764209affacc0aa
  	case OPTION_SYMBOLIC_FUNCTIONS:
  	  opt_symbolic = symbolic_functions;
  	  break;
-@@ -2038,6 +2044,11 @@ parse_args (unsigned argc, char **argv)
+@@ -2018,6 +2024,11 @@ parse_args (unsigned argc, char **argv)
  	link_info.dynamic = true;
  	link_info.dynamic_data = true;
  	break;
@@ -192,10 +192,10 @@ index 5399aa45b724e61008686d607a1f3a8e360e2c7f..21e542886ec9a83bb764209affacc0aa
  
    /* -z nosectionheader implies --strip-all.  */
 diff --git a/ld/testsuite/ld-elf/shared.exp b/ld/testsuite/ld-elf/shared.exp
-index bf8952a843cf31bdca7032511c3b0a7e74452a63..0d125653e6e9814c35421ee8d552ab25396db69b 100644
+index 2e71ed4b0cd01440d97a11d36608b9ca964f8fa8..148913f7084515068a3a56796608fa8349a21cbd 100644
 --- a/ld/testsuite/ld-elf/shared.exp
 +++ b/ld/testsuite/ld-elf/shared.exp
-@@ -459,6 +459,28 @@ run_ld_link_tests [list \
+@@ -458,6 +458,28 @@ run_ld_link_tests [list \
  	"symbolic-func.so"] \
  ]
  

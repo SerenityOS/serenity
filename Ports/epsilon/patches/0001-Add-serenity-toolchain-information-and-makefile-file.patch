@@ -4,33 +4,33 @@ Date: Tue, 13 Jul 2021 21:17:44 +0200
 Subject: [PATCH] Add serenity toolchain information and makefile files
 
 ---
- build/platform.simulator.serenity.mak  |  6 ++++
- build/toolchain.x86_64-pc-serenity.mak |  1 +
- ion/src/simulator/serenity/Makefile    | 43 ++++++++++++++++++++++++++
+ build/platform.simulator.serenity.mak |  6 ++++
+ build/toolchain.x86_64-serenity.mak   |  1 +
+ ion/src/simulator/serenity/Makefile   | 43 +++++++++++++++++++++++++++
  3 files changed, 50 insertions(+)
  create mode 100644 build/platform.simulator.serenity.mak
- create mode 100644 build/toolchain.x86_64-pc-serenity.mak
+ create mode 100644 build/toolchain.x86_64-serenity.mak
  create mode 100644 ion/src/simulator/serenity/Makefile
 
 diff --git a/build/platform.simulator.serenity.mak b/build/platform.simulator.serenity.mak
 new file mode 100644
-index 0000000000000000000000000000000000000000..0ac83c0bb06554bfa3077b9c2b67516291018e3b
+index 0000000000000000000000000000000000000000..70d961604f4e40d7574df56d6571a0eb7dab024d
 --- /dev/null
 +++ b/build/platform.simulator.serenity.mak
 @@ -0,0 +1,6 @@
-+TOOLCHAIN = x86_64-pc-serenity
++TOOLCHAIN = x86_64-serenity
 +EXE = elf
 +
 +EPSILON_TELEMETRY ?= 0
 +
 +SHOULD_USE_DYNAMIC_SDL = 1
-diff --git a/build/toolchain.x86_64-pc-serenity.mak b/build/toolchain.x86_64-pc-serenity.mak
+diff --git a/build/toolchain.x86_64-serenity.mak b/build/toolchain.x86_64-serenity.mak
 new file mode 100644
-index 0000000000000000000000000000000000000000..bb49f4ed4dcec21891f94ec9c3c9f602d6f4cbcf
+index 0000000000000000000000000000000000000000..01f36e2c05ee2030b0c64f5d346d81040dec94fa
 --- /dev/null
-+++ b/build/toolchain.x86_64-pc-serenity.mak
++++ b/build/toolchain.x86_64-serenity.mak
 @@ -0,0 +1 @@
-+TOOLCHAIN_PREFIX = x86_64-pc-serenity
++TOOLCHAIN_PREFIX = x86_64-serenity
 diff --git a/ion/src/simulator/serenity/Makefile b/ion/src/simulator/serenity/Makefile
 new file mode 100644
 index 0000000000000000000000000000000000000000..5d4bb131983ba85c79042cfa790b94e400158705

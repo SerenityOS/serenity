@@ -671,7 +671,12 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
         dmesgln_xhci("USB Device did not return enough bytes for short device descriptor - Expected {} but got {}", short_device_descriptor_length, transfer_length);
         return EIO;
     }
-    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+
+    if (dev_descriptor.descriptor_header.descriptor_type != DESCRIPTOR_TYPE_DEVICE) {
+        dmesgln_xhci("USB Device returned incorrect descriptor type for GetDescriptor(Device) request - Expected {:#x} but got {:#x}", DESCRIPTOR_TYPE_DEVICE, dev_descriptor.descriptor_header.descriptor_type);
+        return EIO;
+    }
+
     device.set_max_packet_size<xHCIController>({}, dev_descriptor.max_packet_size);
     if (speed == USB::Device::DeviceSpeed::FullSpeed && dev_descriptor.max_packet_size != 8) {
         control_context->drop_contexts = 0;
@@ -686,7 +691,12 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
         dmesgln_xhci("USB Device did not return enough bytes for device descriptor - Expected {} but got {}", sizeof(USBDeviceDescriptor), transfer_length);
         return EIO;
     }
-    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+
+    if (dev_descriptor.descriptor_header.descriptor_type != DESCRIPTOR_TYPE_DEVICE) {
+        dmesgln_xhci("USB Device returned incorrect descriptor type for GetDescriptor(Device) request - Expected {:#x} but got {:#x}", DESCRIPTOR_TYPE_DEVICE, dev_descriptor.descriptor_header.descriptor_type);
+        return EIO;
+    }
+
     device.set_descriptor<xHCIController>({}, dev_descriptor);
 
     // If the device is a hub:

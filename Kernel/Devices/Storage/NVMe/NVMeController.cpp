@@ -354,7 +354,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
     m_controller_regs->acq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first()->paddr().as_ptr()));
     m_controller_regs->asq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first()->paddr().as_ptr()));
 
-    Optional<u8> irq;
+    Optional<InterruptNumber> irq;
     if (queue_type == QueueType::IRQ)
         irq = TRY(allocate_irq(0)); // Admin queue always uses the 0th index when using MSIx
 

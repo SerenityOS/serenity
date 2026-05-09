@@ -567,6 +567,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/2182": "ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/2512": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/2527": "Still used in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/7487": "Incorrect for AK_OS_SERENITY",
 }
 
 # Quick consistency check:

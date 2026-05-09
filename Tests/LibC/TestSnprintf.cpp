@@ -366,5 +366,6 @@ TEST_CASE(g_format)
     EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "%.2g", 1234567.0, 7, LITERAL("1.2e+06\0") }));
 
     EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%g|", 10.00000001, 4, LITERAL("|10|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%g|", 10.0000001, 4, LITERAL("|10|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%g|", 10.0000000001, 4, LITERAL("|10|\0") }));
 }

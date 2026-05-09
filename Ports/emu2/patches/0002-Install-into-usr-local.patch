@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Thu, 26 Feb 2026 20:36:30 +0100
+Subject: [PATCH] Install into /usr/local
+
+---
+ GNUmakefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/GNUmakefile b/GNUmakefile
+index 290e5b074c9b59123aee50e7bdbb526b0130d5fd..27ee92fdebe94da589288a763da73146162456a0 100644
+--- a/GNUmakefile
++++ b/GNUmakefile
+@@ -2,7 +2,7 @@ SHELL=/bin/sh
+ CFLAGS?=-O3
+ LDLIBS?=-lm
+ INSTALL?=install
+-PREFIX?=/usr
++PREFIX?=/usr/local
+ 
+ include platform.mk
+ 

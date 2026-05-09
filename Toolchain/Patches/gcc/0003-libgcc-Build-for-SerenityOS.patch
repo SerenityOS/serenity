@@ -20,10 +20,10 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  3 files changed, 27 insertions(+)
 
 diff --git a/gcc/configure b/gcc/configure
-index 16965953f05160ea4572957144f305cc0cce4e18..63fbeab1be55e2a9bf6718f8a6d826bb7ecf7d27 100755
+index ef780a23c2fdd0103fbc7db663f78dfbb482ef79..cc4cefb7dd48864101eac29466de4c64a6012b27 100755
 --- a/gcc/configure
 +++ b/gcc/configure
-@@ -33648,6 +33648,9 @@ case "$target" in
+@@ -33907,6 +33907,9 @@ case "$target" in
    *-linux-musl*)
      gcc_cv_target_dl_iterate_phdr=yes
      ;;
@@ -34,10 +34,10 @@ index 16965953f05160ea4572957144f305cc0cce4e18..63fbeab1be55e2a9bf6718f8a6d826bb
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 6a88ee5a2dd0b1386b2a5f2fbb579953f8ce9441..5fc80843a52ba80469df05fd5162964c8d7ae322 100644
+index ac10ccc43404010f6166ab3bd07aa8150ea3ad04..bb934cea7e094da59993c0364ff1a980760af1cd 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -1358,6 +1358,11 @@ riscv*-*-freebsd*)
+@@ -1356,6 +1356,11 @@ riscv*-*-freebsd*)
  	tmake_file="${tmake_file} riscv/t-crtstuff riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address} t-slibgcc-libgcc"
  	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
  	;;
@@ -49,7 +49,7 @@ index 6a88ee5a2dd0b1386b2a5f2fbb579953f8ce9441..5fc80843a52ba80469df05fd5162964c
  riscv*-*-*)
  	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
  	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o"
-@@ -1571,6 +1576,19 @@ nvptx-*)
+@@ -1574,6 +1579,19 @@ nvptx-*)
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -70,7 +70,7 @@ index 6a88ee5a2dd0b1386b2a5f2fbb579953f8ce9441..5fc80843a52ba80469df05fd5162964c
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
 diff --git a/libgcc/unwind-dw2-fde-dip.c b/libgcc/unwind-dw2-fde-dip.c
-index 5c19838e0a3c34ea3b0420c552c0100276e5aab4..01138feee2a1c2c69a931c785a6f6614b7239c0f 100644
+index 409fbbf7ef37e0053adbf2b56da1bf46ee53345d..58e6b5624c33afc69aa53a003c23332556a9e35f 100644
 --- a/libgcc/unwind-dw2-fde-dip.c
 +++ b/libgcc/unwind-dw2-fde-dip.c
 @@ -57,6 +57,12 @@

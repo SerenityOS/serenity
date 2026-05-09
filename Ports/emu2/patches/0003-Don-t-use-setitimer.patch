@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Brendan Coles <bcoles@gmail.com>
+Date: Fri, 7 Jan 2022 17:26:40 +0100
+Subject: [PATCH] Don't use setitimer()
+
+Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
+---
+ src/main.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/src/main.c b/src/main.c
+index 7d9c9f59d915cbb09c8b973417b053e2ab277602..baa4fde91fdfee4bc97dc4b2ba3ff1d59c6bc246 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -336,12 +336,6 @@ int main(int argc, char **argv)
+     sigaction(SIGQUIT, &exit_action, NULL);
+     sigaction(SIGPIPE, &exit_action, NULL);
+     sigaction(SIGTERM, &exit_action, NULL);
+-    struct itimerval itv;
+-    itv.it_interval.tv_sec = 0;
+-    itv.it_interval.tv_usec = 54925;
+-    itv.it_value.tv_sec = 0;
+-    itv.it_value.tv_usec = 54925;
+-    setitimer(ITIMER_REAL, &itv, 0);
+     init_bios_mem();
+     video_init_mem();
+     while(1)

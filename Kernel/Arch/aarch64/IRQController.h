@@ -8,6 +8,7 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/Types.h>
+#include <Kernel/Interrupts/Interrupts.h>
 
 namespace Kernel {
 
@@ -22,7 +23,7 @@ public:
 
     virtual void eoi(GenericInterruptHandler const&) = 0;
 
-    virtual Optional<size_t> pending_interrupt() const = 0;
+    virtual Optional<InterruptNumber> pending_interrupt() const = 0;
 
     virtual StringView model() const = 0;
 

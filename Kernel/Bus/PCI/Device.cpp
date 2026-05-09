@@ -92,7 +92,7 @@ PCI::InterruptType Device::get_interrupt_type()
 // is nothing left to do. The second parameter `msi` is used by the
 // driver to indicate its intent to use message signalled interrupts.
 // MSI(x) is preferred over MSI if the device supports both.
-ErrorOr<InterruptType> Device::reserve_irqs(u8 number_of_irqs, bool msi)
+ErrorOr<InterruptType> Device::reserve_irqs(size_t number_of_irqs, bool msi)
 {
     // Let us not allow partial allocation of IRQs for MSIx.
     if (msi && is_msix_capable()) {
@@ -116,12 +116,11 @@ ErrorOr<InterruptType> Device::reserve_irqs(u8 number_of_irqs, bool msi)
     return m_interrupt_range.m_type;
 }
 
-PhysicalAddress Device::msix_table_entry_address(u8 irq)
+PhysicalAddress Device::msix_table_entry_address(InterruptNumber irq)
 {
-    auto index = static_cast<int>(irq) - m_interrupt_range.m_start_irq;
+    auto index = static_cast<int>(irq.value()) - m_interrupt_range.m_start_irq.value();
 
     VERIFY(index < m_interrupt_range.m_irq_count);
-    VERIFY(index >= 0);
     auto table_bar_paddr = PCI::get_bar_address(device_identifier(), static_cast<PCI::HeaderType0BaseRegister>(m_pci_identifier->get_msix_table_bar())).release_value_but_fixme_should_propagate_errors();
     auto table_offset = m_pci_identifier->get_msix_table_offset();
 
@@ -133,14 +132,14 @@ PhysicalAddress Device::msix_table_entry_address(u8 irq)
 // mainly useful for MSI/MSIx based interrupt mechanism where the driver
 // needs to program. If the PCI device doesn't support MSIx interrupts, then
 // this function will just return the irq used for pin based interrupt.
-ErrorOr<u8> Device::allocate_irq(u8 index)
+ErrorOr<InterruptNumber> Device::allocate_irq(size_t index)
 {
-    if (Checked<u8>::addition_would_overflow(m_interrupt_range.m_start_irq, index))
+    if (Checked<size_t>::addition_would_overflow(m_interrupt_range.m_start_irq.value(), index))
         return Error::from_errno(EINVAL);
 
     if ((m_interrupt_range.m_type == InterruptType::MSIX) && is_msix_capable()) {
-        auto entry_ptr = TRY(Memory::map_typed_writable<MSIxTableEntry volatile>(msix_table_entry_address(index + m_interrupt_range.m_start_irq)));
-        entry_ptr->data = msi_data_register(m_interrupt_range.m_start_irq + index, false, false);
+        auto entry_ptr = TRY(Memory::map_typed_writable<MSIxTableEntry volatile>(msix_table_entry_address(index + m_interrupt_range.m_start_irq.value())));
+        entry_ptr->data = msi_data_register(m_interrupt_range.m_start_irq.value() + index, false, false);
         // TODO: we map all the IRQs to cpu 0 by default. We could attach
         //  cpu affinity in the future where specific LAPIC id could be used.
         u64 addr = msi_address_register(0, false, false);
@@ -156,7 +155,7 @@ ErrorOr<u8> Device::allocate_irq(u8 index)
         if (index > 0)
             return Error::from_errno(EINVAL);
 
-        auto data = msi_data_register(m_interrupt_range.m_start_irq + index, false, false);
+        auto data = msi_data_register(m_interrupt_range.m_start_irq.value() + index, false, false);
         auto addr = msi_address_register(0, false, false);
         for (auto& capability : m_pci_identifier->capabilities()) {
             if (capability.id().value() == PCI::Capabilities::ID::MSI) {
@@ -177,7 +176,7 @@ ErrorOr<u8> Device::allocate_irq(u8 index)
     return m_interrupt_range.m_start_irq;
 }
 
-void Device::enable_interrupt(u8 irq)
+void Device::enable_interrupt(InterruptNumber irq)
 {
     if ((m_interrupt_range.m_type == InterruptType::MSIX) && is_msix_capable()) {
         auto entry = Memory::map_typed_writable<MSIxTableEntry volatile>(PhysicalAddress(msix_table_entry_address(irq)));
@@ -195,7 +194,7 @@ void Device::enable_interrupt(u8 irq)
     }
 }
 
-void Device::disable_interrupt(u8 irq)
+void Device::disable_interrupt(InterruptNumber irq)
 {
     if ((m_interrupt_range.m_type == InterruptType::MSIX) && is_msix_capable()) {
         auto entry = Memory::map_typed_writable<MSIxTableEntry volatile>(PhysicalAddress(msix_table_entry_address(irq)));

@@ -1,8 +1,8 @@
 [binaries]
-c = '@SERENITY_ARCH@-pc-serenity-gcc'
-cpp = '@SERENITY_ARCH@-pc-serenity-g++'
-ar = '@SERENITY_ARCH@-pc-serenity-ar'
-ranlib = '@SERENITY_ARCH@-pc-serenity-ranlib'
+c = '@SERENITY_ARCH@-serenity-gcc'
+cpp = '@SERENITY_ARCH@-serenity-g++'
+ar = '@SERENITY_ARCH@-serenity-ar'
+ranlib = '@SERENITY_ARCH@-serenity-ranlib'
 pkgconfig = 'pkg-config'
 
 [properties]

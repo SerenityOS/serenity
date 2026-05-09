@@ -38,24 +38,24 @@ InterruptController::InterruptController(Memory::TypedMapping<InterruptControlle
 
 void InterruptController::enable(GenericInterruptHandler const& handler)
 {
-    u8 interrupt_number = handler.interrupt_number();
+    InterruptNumber interrupt_number = handler.interrupt_number();
     VERIFY(interrupt_number < 64);
 
     if (interrupt_number < 32)
-        m_registers->enable_irqs_1 = m_registers->enable_irqs_1 | (1 << interrupt_number);
+        m_registers->enable_irqs_1 = 1 << interrupt_number.value();
     else
-        m_registers->enable_irqs_2 = m_registers->enable_irqs_2 | (1 << (interrupt_number - 32));
+        m_registers->enable_irqs_2 = 1 << (interrupt_number.value() - 32);
 }
 
 void InterruptController::disable(GenericInterruptHandler const& handler)
 {
-    u8 interrupt_number = handler.interrupt_number();
+    InterruptNumber interrupt_number = handler.interrupt_number();
     VERIFY(interrupt_number < 64);
 
     if (interrupt_number < 32)
-        m_registers->disable_irqs_1 = m_registers->disable_irqs_1 | (1 << interrupt_number);
+        m_registers->disable_irqs_1 = 1 << interrupt_number.value();
     else
-        m_registers->disable_irqs_2 = m_registers->disable_irqs_2 | (1 << (interrupt_number - 32));
+        m_registers->disable_irqs_2 = 1 << (interrupt_number.value() - 32);
 }
 
 void InterruptController::eoi(GenericInterruptHandler const&)
@@ -64,7 +64,7 @@ void InterruptController::eoi(GenericInterruptHandler const&)
     //       The interrupt should be cleared by the corresponding device driver, such as a timer or uart.
 }
 
-Optional<size_t> InterruptController::pending_interrupt() const
+Optional<InterruptNumber> InterruptController::pending_interrupt() const
 {
     auto irq_number_plus_one = bit_scan_forward(((u64)m_registers->irq_pending_2 << 32) | (u64)m_registers->irq_pending_1);
     if (irq_number_plus_one == 0)
@@ -72,7 +72,7 @@ Optional<size_t> InterruptController::pending_interrupt() const
     return irq_number_plus_one - 1;
 }
 
-ErrorOr<size_t> InterruptController::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
+ErrorOr<InterruptNumber> InterruptController::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
 {
     // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.txt
 

@@ -19,7 +19,7 @@ pre_configure() {
 
 configure() {
     run ./configure \
-        --host="${SERENITY_ARCH}-pc-serenity" \
+        --host="${SERENITY_ARCH}-serenity" \
         --build="$("${workdir}/build-aux/config.guess")" \
         --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --with-sysroot="${SERENITY_INSTALL_ROOT}"

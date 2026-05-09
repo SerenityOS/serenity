@@ -8,11 +8,11 @@ Subject: [PATCH] Serenity doesn't have setitimer
  1 file changed, 3 insertions(+)
 
 diff --git a/src/lj_arch.h b/src/lj_arch.h
-index ba7be19..0bd7b1b 100644
+index 84c761666271791e35eeac1c2faaba61feaa9b28..507bc63bbe8fb8583571d6ba3f159aad17c07180 100644
 --- a/src/lj_arch.h
 +++ b/src/lj_arch.h
-@@ -490,6 +490,9 @@
- #define LJ_HASFFI		1
+@@ -630,6 +630,9 @@
+ #define LJ_HASBUFFER		1
  #endif
  
 +// FIXME: Disabled due to lack of setitimer

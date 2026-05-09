@@ -41,25 +41,25 @@ static void ensure_libregex()
 
 extern "C" {
 
-int __attribute__((weak)) regcomp(regex_t* reg, char const* pattern, int cflags)
+int regcomp(regex_t* reg, char const* pattern, int cflags)
 {
     ensure_libregex();
     return s_regcomp(reg, pattern, cflags);
 }
 
-int __attribute__((weak)) regexec(regex_t const* reg, char const* string, size_t nmatch, regmatch_t pmatch[], int eflags)
+int regexec(regex_t const* reg, char const* string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
     ensure_libregex();
     return s_regexec(reg, string, nmatch, pmatch, eflags);
 }
 
-size_t __attribute__((weak)) regerror(int errcode, regex_t const* reg, char* errbuf, size_t errbuf_size)
+size_t regerror(int errcode, regex_t const* reg, char* errbuf, size_t errbuf_size)
 {
     ensure_libregex();
     return s_regerror(errcode, reg, errbuf, errbuf_size);
 }
 
-void __attribute__((weak)) regfree(regex_t* reg)
+void regfree(regex_t* reg)
 {
     ensure_libregex();
     return s_regfree(reg);

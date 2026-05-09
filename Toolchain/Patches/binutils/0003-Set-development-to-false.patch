@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <sholz8530@gmail.com>
+Date: Sun, 3 May 2026 11:52:30 +0200
+Subject: [PATCH] Set "development" to "false"
+
+FIXME: Remove this patch when updating to the next release.
+
+Binutils 2.46 was accidentally packaged with this variable set to true,
+which leads to build errors because this enables -Werror.
+
+https://sourceware.org/pipermail/binutils/2026-May/149177.html
+---
+ bfd/development.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bfd/development.sh b/bfd/development.sh
+index 4f3952062f86f8b8326f075cc22786f6a57c7015..95859b161dfab1f5820e51a5c31d77770d90bde6 100644
+--- a/bfd/development.sh
++++ b/bfd/development.sh
+@@ -16,7 +16,7 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+ # Controls whether to enable development-mode features by default.
+-development=true
++development=false
+ 
+ # Indicate whether this is a release branch.
+ experimental=false

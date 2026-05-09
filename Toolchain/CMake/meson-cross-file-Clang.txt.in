@@ -1,6 +1,6 @@
 [binaries]
-c = '@SERENITY_ARCH@-pc-serenity-clang'
-cpp = '@SERENITY_ARCH@-pc-serenity-clang++'
+c = '@SERENITY_ARCH@-serenity-clang'
+cpp = '@SERENITY_ARCH@-serenity-clang++'
 ar = 'llvm-ar'
 ranlib = 'llvm-ranlib'
 pkgconfig = 'pkg-config'

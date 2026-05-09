@@ -10,6 +10,7 @@
 #include "BookmarksBarWidget.h"
 #include "Tab.h"
 #include "WindowActions.h"
+#include <AK/String.h>
 #include <LibConfig/Listener.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Window.h>
@@ -31,6 +32,9 @@ public:
     Tab& active_tab();
     Tab& create_new_tab(URL::URL const&, Web::HTML::ActivateTab activate);
     void create_new_window(URL::URL const&);
+
+    String const& search_term() const { return m_search_term; }
+    void set_search_term(String const& term) { m_search_term = term; }
 
     GUI::Action& go_back_action() { return *m_go_back_action; }
     GUI::Action& go_forward_action() { return *m_go_forward_action; }
@@ -96,6 +100,8 @@ private:
     RefPtr<GUI::Action> m_disable_user_agent_spoofing;
     RefPtr<GUI::Action> m_disable_search_engine_action;
     RefPtr<GUI::Action> m_change_homepage_action;
+
+    String m_search_term;
 };
 
 }

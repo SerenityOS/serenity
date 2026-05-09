@@ -4,19 +4,19 @@ Date: Sat, 19 Mar 2022 20:05:26 +0100
 Subject: [PATCH] Recognize Serenity as POSIX
 
 ---
- src/lj_arch.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ src/lj_arch.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/src/lj_arch.h b/src/lj_arch.h
-index c8d7138..ba7be19 100644
+index 3c4e3f9b0baa86625841f03e12651096055d9d7a..84c761666271791e35eeac1c2faaba61feaa9b28 100644
 --- a/src/lj_arch.h
 +++ b/src/lj_arch.h
-@@ -74,7 +74,7 @@
-        defined(__NetBSD__) || defined(__OpenBSD__) || \
-        defined(__DragonFly__)) && !defined(__ORBIS__)
- #define LUAJIT_OS	LUAJIT_OS_BSD
--#elif (defined(__sun__) && defined(__svr4__)) || defined(__HAIKU__)
-+#elif (defined(__sun__) && defined(__svr4__)) || defined(__HAIKU__) || defined(__serenity__)
+@@ -89,6 +89,8 @@
+ #define LJ_TARGET_SOLARIS	1
+ #define LUAJIT_OS	LUAJIT_OS_POSIX
+ #elif defined(__HAIKU__)
++#define LUAJIT_OS   LUAJIT_OS_POSIX
++#elif defined(__serenity__)
  #define LUAJIT_OS	LUAJIT_OS_POSIX
  #elif defined(__CYGWIN__)
  #define LJ_TARGET_CYGWIN	1

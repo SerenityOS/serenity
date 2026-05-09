@@ -8,7 +8,7 @@ Subject: [PATCH] Include errno.h
  1 file changed, 1 insertion(+)
 
 diff --git a/src/mkerrcodes.c b/src/mkerrcodes.c
-index 29c1cc2..a1cbd52 100644
+index 29c1cc270bb56d8a70281250510b9bb2ac5cef45..a1cbd526500afae75810945ce18a394ac9025cf5 100644
 --- a/src/mkerrcodes.c
 +++ b/src/mkerrcodes.c
 @@ -22,6 +22,7 @@

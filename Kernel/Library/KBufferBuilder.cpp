@@ -120,7 +120,7 @@ ErrorOr<void> KBufferBuilder::append_escaped_for_json(StringView string)
             TRY(append("\\\\"sv));
             break;
         default:
-            if (ch >= 0 && ch <= 0x1f)
+            if (bit_cast<u8>(ch) <= 0x1f)
                 TRY(appendff("\\u{:04x}", ch));
             else
                 TRY(append(ch));

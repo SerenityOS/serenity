@@ -26,7 +26,7 @@ public:
 
     virtual void eoi(GenericInterruptHandler const&) = 0;
 
-    virtual u8 pending_interrupt() const = 0;
+    virtual Optional<InterruptNumber> pending_interrupt() const = 0;
 
     virtual StringView model() const = 0;
 

@@ -14,7 +14,7 @@ class InterruptController {
 public:
     virtual ~InterruptController() = default;
 
-    virtual ErrorOr<size_t> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const = 0;
+    virtual ErrorOr<InterruptNumber> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const = 0;
 };
 
 }

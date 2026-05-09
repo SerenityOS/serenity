@@ -22,7 +22,7 @@ namespace Kernel {
 #define IRQ_FIRST_PORT 1
 #define IRQ_SECOND_PORT 12
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<I8042ControllerIRQHandler>> I8042ControllerIRQHandler::try_create(I8042Controller const& controller, u8 irq_number)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<I8042ControllerIRQHandler>> I8042ControllerIRQHandler::try_create(I8042Controller const& controller, InterruptNumber irq_number)
 {
     return adopt_nonnull_own_or_enomem(new I8042ControllerIRQHandler(controller, irq_number));
 }
@@ -32,7 +32,7 @@ bool I8042ControllerIRQHandler::handle_irq()
     return m_controller->handle_irq({}, interrupt_number());
 }
 
-UNMAP_AFTER_INIT I8042ControllerIRQHandler::I8042ControllerIRQHandler(I8042Controller const& controller, u8 irq_number)
+UNMAP_AFTER_INIT I8042ControllerIRQHandler::I8042ControllerIRQHandler(I8042Controller const& controller, InterruptNumber irq_number)
     : IRQHandler(irq_number)
     , m_controller(controller)
 {
@@ -47,7 +47,7 @@ UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
 }
 
-bool I8042Controller::handle_irq(Badge<I8042ControllerIRQHandler>, u8 irq_number)
+bool I8042Controller::handle_irq(Badge<I8042ControllerIRQHandler>, InterruptNumber irq_number)
 {
     // NOTE: The controller will read the data and call handle_byte_read_from_serial_input
     // for the appropriate device.

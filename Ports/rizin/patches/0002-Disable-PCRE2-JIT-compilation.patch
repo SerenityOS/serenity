@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Naren Sirigere <sirigere.naren@gmail.com>
+Date: Sat, 7 Feb 2026 03:58:36 +0530
+Subject: [PATCH] Disable PCRE2 JIT compilation
+
+---
+ meson.build                                             | 2 +-
+ subprojects/packagefiles/pcre2/meson.build              | 2 +-
+ subprojects/packagefiles/pcre2_cross_native/meson.build | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index dbae4c42e92b44f846e2c0877f304144f1c2cd93..9ba3f174d8fd01e43f4f036bc53c962a66199535 100644
+--- a/meson.build
++++ b/meson.build
+@@ -213,7 +213,7 @@ endif
+ 
+ # Handle PCRE2
+ cpu_jit_supported = [ 'aarch64', 'arm', 'mips', 'mips64', 'ppc', 'ppc64', 'riscv32', 'riscv64', 's390x', 'x86', 'x86_64' ]
+-pcre2_jit_supported = target_machine.cpu_family() in cpu_jit_supported and cc.get_id() != 'tcc' and target_machine.system() != 'darwin'
++pcre2_jit_supported = target_machine.cpu_family() in cpu_jit_supported and cc.get_id() != 'tcc' and target_machine.system() not in ['darwin', 'serenity']
+ if pcre2_jit_supported
+   add_project_arguments(['-DSUPPORTS_PCRE2_JIT'], language: 'c')
+ endif
+diff --git a/subprojects/packagefiles/pcre2/meson.build b/subprojects/packagefiles/pcre2/meson.build
+index 3ea72e00a9c8ae5be719345769a91092b09e1adc..4aebe1c0cce84bfde02d9c7626f3d6e093974c03 100644
+--- a/subprojects/packagefiles/pcre2/meson.build
++++ b/subprojects/packagefiles/pcre2/meson.build
+@@ -66,7 +66,7 @@ cpu_jit_supported = [ 'aarch64', 'arm', 'mips', 'mips64', 'ppc', 'ppc64', 'riscv
+ # tcc doesn't support the MSVC asm syntax PCRE2 uses (`__asm { ... }`).
+ # Darwin kernel not as well, because of forbidden wx memory.
+ # It is used in the JIT compiler code.
+-if cc.get_id() != 'tcc' and target_machine.cpu_family() in cpu_jit_supported and target_machine.system() != 'darwin'
++if cc.get_id() != 'tcc' and target_machine.cpu_family() in cpu_jit_supported and target_machine.system() not in ['darwin', 'serenity']
+   libpcre2_c_args += ['-DSUPPORT_JIT']
+   pcre2_files += ['src/pcre2_jit_compile.c']
+ endif
+diff --git a/subprojects/packagefiles/pcre2_cross_native/meson.build b/subprojects/packagefiles/pcre2_cross_native/meson.build
+index 50835b03c92ed22a7fe781b200975aabff6a0b42..c428668f063c8e3fe298953b610da470972f9f56 100644
+--- a/subprojects/packagefiles/pcre2_cross_native/meson.build
++++ b/subprojects/packagefiles/pcre2_cross_native/meson.build
+@@ -66,7 +66,7 @@ cpu_jit_supported = [ 'aarch64', 'arm', 'mips', 'mips64', 'ppc', 'ppc64', 'riscv
+ # tcc doesn't support the MSVC asm syntax PCRE2 uses (`__asm { ... }`).
+ # Darwin kernel not as well, because of forbidden wx memory.
+ # It is used in the JIT compiler code.
+-if cc.get_id() != 'tcc' and target_machine.cpu_family() in cpu_jit_supported and target_machine.system() != 'darwin'
++if cc.get_id() != 'tcc' and target_machine.cpu_family() in cpu_jit_supported and target_machine.system() not in ['darwin', 'serenity']
+   libpcre2_c_args += ['-DSUPPORT_JIT']
+   pcre2_files += ['src/pcre2_jit_compile.c']
+ endif

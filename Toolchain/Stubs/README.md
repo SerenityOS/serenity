@@ -29,7 +29,7 @@ Simple, my friend:
 
 ```sh
 touch empty.cpp
-Toolchain/Local/clang/bin/clang++ --target={arch}-pc-serenity -nostdlib -shared empty.cpp -o empty.so
+Toolchain/Local/clang/bin/clang++ --target={arch}-serenity -nostdlib -shared empty.cpp -o empty.so
 # And optionally,
 Toolchain/Local/clang/bin/llvm-strip empty.so
 ```

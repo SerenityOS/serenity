@@ -9,8 +9,8 @@ makeopts=("tcc")
 
 configure() {
     run ./configure \
-        --cross-prefix="${SERENITY_ARCH}-pc-serenity-" \
+        --cross-prefix="${SERENITY_ARCH}-serenity-" \
         --cpu="${SERENITY_ARCH}" \
-        --triplet="${SERENITY_ARCH}-pc-serenity" \
+        --triplet="${SERENITY_ARCH}-serenity" \
         --crtprefix=/usr/lib
 }

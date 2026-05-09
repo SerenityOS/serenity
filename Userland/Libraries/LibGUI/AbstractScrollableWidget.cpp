@@ -186,8 +186,8 @@ void AbstractScrollableWidget::update_scrollbar_visibility()
         auto effective_min_content_size = m_min_content_size;
         if (m_min_content_size == Gfx::IntSize {})
             effective_min_content_size = m_content_size;
-        int horizontal_buffer = rect().width() - 2 * frame_thickness() - effective_min_content_size.width();
-        int vertical_buffer = rect().height() - 2 * frame_thickness() - effective_min_content_size.height() - height_occupied_by_banner_widget();
+        int horizontal_buffer = rect().width() - 2 * frame_thickness() - effective_min_content_size.width() - m_size_occupied_by_fixed_elements.width();
+        int vertical_buffer = rect().height() - 2 * frame_thickness() - effective_min_content_size.height() - height_occupied_by_banner_widget() - m_size_occupied_by_fixed_elements.height();
         bool horizontal_scrollbar_should_be_visible = false, vertical_scrollbar_should_be_visible = false;
         vertical_scrollbar_should_be_visible = vertical_buffer < 0;
         if (vertical_scrollbar_should_be_visible)

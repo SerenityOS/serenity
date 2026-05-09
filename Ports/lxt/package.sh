@@ -14,5 +14,5 @@ configure() {
     export ac_cv_func_fnmatch_works=yes
     export ac_cv_func_malloc_0_nonnull=yes
     export ac_cv_func_realloc_0_nonnull=yes
-    run ./configure --host=x86_64-pc-serenity
+    run ./configure --host=x86_64-serenity
 }

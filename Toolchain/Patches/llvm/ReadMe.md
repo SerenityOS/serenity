@@ -1,18 +1,14 @@
 # Patches for llvm on SerenityOS
 
-## `0001-clang-Add-support-for-SerenityOS.patch`
+## `0001-clang-Add-usr-local-to-the-default-search-path.patch`
 
-Add support for SerenityOS
+Add /usr/local to the default search path
 
-Adds support for the `$arch-pc-serenity` target to the Clang front end.
-This makes the compiler look for libraries and headers in the right
-places, and enables some security mitigations like stack-smashing
-protection and position-independent code by default.
+This includes both /usr/local/include for compiler and /usr/local/lib
+for the linker.
 
-Co-authored-by: kleines Filmröllchen <filmroellchen@serenityos.org>
-Co-authored-by: Andrew Kaster <akaster@serenityos.org>
-Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
-Co-authored-by: Dan Klishch <danilklishch@gmail.com>
+These paths are needed to build Ports with Clang. More precisely, it
+allows ports to find installed dependencies.
 
 ## `0002-llvm-Add-support-for-building-LLVM-on-SerenityOS.patch`
 
@@ -69,4 +65,9 @@ Implement __init_riscv_feature_bits for SerenityOS
 The SerenityOS dynamic linker provides a magic function
 "__get_riscv_feature_bits" that populates __riscv_feature_bits
 and __riscv_cpu_model.
+
+## `0007-libcxxabi-Define-__cxa_thread_atexit-on-serenity.patch`
+
+Define __cxa_thread_atexit on serenity
+
 

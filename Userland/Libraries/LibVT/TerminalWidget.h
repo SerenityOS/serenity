@@ -112,6 +112,7 @@ public:
 
     VT::CursorShape cursor_shape() { return m_cursor_shape; }
     virtual void set_cursor_blinking(bool) override;
+    virtual void set_cursor_hidden(bool) override;
     virtual void set_cursor_shape(CursorShape) override;
 
     static Optional<VT::CursorShape> parse_cursor_shape(StringView);
@@ -146,7 +147,7 @@ private:
     // ^TerminalClient
     virtual void beep() override;
     virtual void set_window_title(StringView) override;
-    virtual void set_window_progress(int value, int max) override;
+    virtual void set_window_progress(VT::ProgressState state, u8) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed(int delta) override;
     virtual void terminal_did_perform_possibly_partial_clear() override;
@@ -230,6 +231,8 @@ private:
 
     VT::CursorShape m_cursor_shape { VT::CursorShape::Block };
     bool m_cursor_is_blinking_set { true };
+
+    bool m_cursor_is_hidden { false };
 
     enum class AutoScrollDirection {
         None,

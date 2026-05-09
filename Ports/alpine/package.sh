@@ -5,7 +5,9 @@ useconfigure='true'
 configopts=(
     '--disable-static'
     '--enable-shared'
+    'CFLAGS=-std=c17 -Wno-error=incompatible-pointer-types'
 )
+makeopts=("-j1") # Building with more than one jobs seems to be broken.
 use_fresh_config_sub='true'
 use_fresh_config_guess='true'
 files=(
@@ -25,7 +27,7 @@ icon_file='web/cgi/favicon.ico'
 configure() {
     run ./"$configscript" \
         "${configopts[@]}" \
-        --host="${SERENITY_ARCH}-pc-serenity" \
+        --host="${SERENITY_ARCH}-serenity" \
         --build="$($workdir/config.guess)" \
         --with-ssl-lib-dir="${SERENITY_INSTALL_ROOT}/usr/local/lib" \
         --with-include-path="${SERENITY_INSTALL_ROOT}/usr/local/include:${SERENITY_INSTALL_ROOT}/usr/local/include/openssl" \

@@ -17,8 +17,8 @@ NPROC=$(get_number_of_processing_units)
 [ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
 # Note: Update this alongside the cmake port, and Meta/CMake/cmake-version.cmake if the build requires this version of cmake.
-CMAKE_VERSION=3.26.4
-CMAKE_ARCHIVE_SHA256=313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208
+CMAKE_VERSION=3.30.0
+CMAKE_ARCHIVE_SHA256=157e5be6055c154c34f580795fe5832f260246506d32954a971300ed7899f579
 CMAKE_ARCHIVE=cmake-${CMAKE_VERSION}.tar.gz
 CMAKE_ARCHIVE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/${CMAKE_ARCHIVE}
 
@@ -46,6 +46,8 @@ pushd "$DIR"/Tarballs
 popd
 
 mkdir -p "${PREFIX_DIR}"
+
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 pushd "${BUILD_DIR}"

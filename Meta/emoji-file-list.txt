@@ -551,6 +551,7 @@ U+1F469.png
 U+1F46F.png
 U+1F471.png
 U+1F473.png
+U+1F474.png
 U+1F478.png
 U+1F479.png
 U+1F47A.png
@@ -1307,6 +1308,7 @@ U+1FAC3.png
 U+1FAC4.png
 U+1FAC5.png
 U+1FAC6.png
+U+1FACD.png
 U+1FACE.png
 U+1FACF.png
 U+1FAD0.png
@@ -1333,6 +1335,7 @@ U+1FAE6.png
 U+1FAE7.png
 U+1FAE8.png
 U+1FAE9.png
+U+1FAEA.png
 U+1FAF0.png
 U+1FAF1.png
 U+1FAF2.png

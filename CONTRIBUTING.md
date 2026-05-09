@@ -64,7 +64,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 
 **Don't:**
 
--   Submit code that's incompatible with the project licence (2-clause BSD.)
+-   Submit code that's incompatible with the project license (2-clause BSD.)
 -   Touch anything outside the stated scope of the PR.
 -   Iterate excessively on your design across multiple commits.
 -   Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.

@@ -82,7 +82,7 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
     u64 pci_64bit_mmio_size = 0;
     FlatPtr pci_io_base = 0;
     u64 pci_io_size = 0;
-    HashMap<PCIInterruptSpecifier, u64> masked_interrupt_mapping;
+    HashMap<PCIInterruptSpecifier, InterruptNumber> masked_interrupt_mapping;
     PCIInterruptSpecifier interrupt_mask;
 
     auto const& device_tree = DeviceTree::get();

@@ -360,7 +360,7 @@ add_lagom_library_install_rules(JSClangPlugin)
 add_library(LibC INTERFACE)
 add_library(LibCrypt INTERFACE)
 add_library(LibSystem INTERFACE)
-if (NOT APPLE AND NOT ANDROID AND NOT EMSCRIPTEN AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD" AND NOT HAIKU)
+if (NOT APPLE AND NOT EMSCRIPTEN AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD" AND NOT HAIKU)
     target_link_libraries(LibCrypt INTERFACE crypt) # LibCore::Account uses crypt() but it's not in libcrypt on macOS
 endif()
 if (SERENITYOS)
@@ -496,6 +496,7 @@ if (BUILD_LAGOM)
         SoftGPU
         Shell
         SQL
+        SSH
         Syntax
         TextCodec
         Threading
@@ -563,7 +564,7 @@ if (BUILD_LAGOM)
 
     add_serenity_subdirectory(Userland/Shell)
 
-    if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD AND NOT ANDROID AND NOT IOS)
+    if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
         # Lagom Services
         add_serenity_subdirectory(Userland/Services)
 
@@ -597,6 +598,7 @@ if (BUILD_LAGOM)
 
         if (APPLE)
             add_serenity_subdirectory(Meta/Lagom/Contrib/MacPDF)
+            add_serenity_subdirectory(Meta/Lagom/Contrib/MacVideoPlayer)
         endif()
 
         find_package(SDL2 QUIET)
@@ -625,6 +627,7 @@ if (BUILD_LAGOM)
 
         lagom_utility(lzcat SOURCES ../../Userland/Utilities/lzcat.cpp LIBS LibCompress LibMain)
         lagom_utility(markdown-check SOURCES ../../Userland/Utilities/markdown-check.cpp LIBS LibFileSystem LibMarkdown LibMain LibManual LibURL)
+        lagom_utility(matroska SOURCES ../../Userland/Utilities/matroska.cpp LIBS LibMain LibMedia)
         lagom_utility(mkfs.fat SOURCES  ../../Userland/Utilities/mkfs.fat.cpp LIBS LibFileSystem LibMain)
 
         if (NOT EMSCRIPTEN)
@@ -658,6 +661,7 @@ if (BUILD_LAGOM)
         lagom_utility(wasm SOURCES ../../Userland/Utilities/wasm.cpp LIBS LibFileSystem LibWasm LibLine LibMain LibJS)
         lagom_utility(xml SOURCES ../../Userland/Utilities/xml.cpp LIBS LibFileSystem LibMain LibXML LibURL)
         lagom_utility(xzcat SOURCES ../../Userland/Utilities/xzcat.cpp LIBS LibCompress LibMain)
+        lagom_utility(zip SOURCES ../../Userland/Utilities/zip.cpp LIBS LibArchive LibFileSystem LibMain)
         lagom_utility(fdtdump SOURCES ../../Userland/Utilities/fdtdump.cpp LIBS LibDeviceTree LibMain)
         lagom_utility(hiddump SOURCES ../../Userland/Utilities/hiddump.cpp LIBS LibHID LibMain)
         lagom_utility(crypto-bench SOURCES ../../Userland/Utilities/crypto-bench.cpp LIBS LibMain LibCrypto)
@@ -697,6 +701,7 @@ if (BUILD_LAGOM)
             LibMedia
             LibPDF
             LibSQL
+            LibSSH
             LibTTF
             LibTest
             LibTextCodec

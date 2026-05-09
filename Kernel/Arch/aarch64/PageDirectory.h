@@ -66,14 +66,13 @@ public:
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
 
-    u64 raw() const { return m_raw; }
     void copy_from(Badge<Memory::PageDirectory>, PageDirectoryEntry const& other) { m_raw = other.m_raw; }
 
     enum Flags {
         Present = 1 << 0,
     };
 
-    bool is_present() const { return (raw() & Present) == Present; }
+    bool is_present() const { return (m_raw & Present) == Present; }
     void set_present(bool) { }
 
     bool is_user_allowed() const { TODO_AARCH64(); }
@@ -84,8 +83,6 @@ public:
 
     bool is_writable() const { TODO_AARCH64(); }
     void set_writable(bool) { }
-
-    void set_memory_type(MemoryType) { }
 
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
@@ -116,19 +113,17 @@ public:
         m_raw |= normal_memory_flags;
     }
 
-    u64 raw() const { return m_raw; }
-
     enum Flags {
         Present = 1 << 0,
     };
 
-    bool is_present() const { return (raw() & Present) == Present; }
+    bool is_present() const { return (m_raw & Present) == Present; }
     void set_present(bool b) { set_bit(Present, b); }
 
-    bool is_user_allowed() const { return (raw() & ACCESS_PERMISSION_EL0) == ACCESS_PERMISSION_EL0; }
+    bool is_user_allowed() const { return (m_raw & ACCESS_PERMISSION_EL0) == ACCESS_PERMISSION_EL0; }
     void set_user_allowed(bool b) { set_bit(ACCESS_PERMISSION_EL0, b); }
 
-    bool is_writable() const { return !((raw() & ACCESS_PERMISSION_READONLY) == ACCESS_PERMISSION_READONLY); }
+    bool is_writable() const { return !((m_raw & ACCESS_PERMISSION_READONLY) == ACCESS_PERMISSION_READONLY); }
     void set_writable(bool b) { set_bit(ACCESS_PERMISSION_READONLY, !b); }
 
     void set_memory_type(MemoryType t)
@@ -145,7 +140,7 @@ public:
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
 
-    bool is_execute_disabled() const { TODO_AARCH64(); }
+    bool is_execute_disabled() const { return (m_raw & EXECUTE_NEVER) == EXECUTE_NEVER; }
     void set_execute_disabled(bool b) { set_bit(EXECUTE_NEVER, b); }
 
     bool is_null() const { return m_raw == 0; }

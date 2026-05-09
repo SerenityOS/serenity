@@ -257,8 +257,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto print_progress = [&] {
         if (!dont_print_progress) {
-            warn("\033]9;{};{};\033\\", index, paths.size());
             double percentage_done = (100. * index) / paths.size();
+            warn("\033]9;4;1;{}\033\\", static_cast<int>(percentage_done));
             warn("{:04.2f}% {:3.1f}s ", percentage_done, (Test::get_time_in_ms() - start_time) / 1000.);
             for (size_t i = 0; i < result_counts.size(); ++i) {
                 auto result_type = static_cast<TestResult>(i);
@@ -286,7 +286,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     print_progress();
     if (!dont_print_progress)
-        warn("\n\033]9;-1;\033\\");
+        warn("\n\033]9;4;0\033\\");
 
     outln("Took {} seconds", time_taken_in_ms / 1000.);
     outln("{}: {}", total_test_emoji, paths.size());

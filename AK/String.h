@@ -30,14 +30,6 @@
 
 namespace AK {
 
-// FIXME: Remove this when OpenBSD Clang fully supports consteval.
-//        And once oss-fuzz updates to clang >15.
-#if defined(AK_OS_OPENBSD) || defined(OSS_FUZZ)
-#    define AK_SHORT_STRING_CONSTEVAL constexpr
-#else
-#    define AK_SHORT_STRING_CONSTEVAL consteval
-#endif
-
 // String is a strongly owned sequence of Unicode code points encoded as UTF-8.
 // The data may or may not be heap-allocated, and may or may not be reference counted.
 // There is no guarantee that the underlying bytes are null-terminated.

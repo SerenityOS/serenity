@@ -448,7 +448,13 @@ static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
 
     if (context.first_chunk->id() == "VP8 "sv) {
         auto vp8_header = TRY(decode_webp_chunk_VP8_header(context.first_chunk->data()));
-        context.size = IntSize { vp8_header.width, vp8_header.height };
+        if (!vp8_header.keyframe_data.has_value())
+            return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk not a key frame");
+
+        if (!vp8_header.show_frame)
+            return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk has invalid visibility for webp image");
+
+        context.size = IntSize { vp8_header.keyframe_data->width, vp8_header.keyframe_data->height };
         context.state = WebPLoadingContext::State::FirstChunkDecoded;
         return {};
     }

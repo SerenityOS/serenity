@@ -12,7 +12,7 @@
 namespace Kernel {
 class UnhandledInterruptHandler final : public GenericInterruptHandler {
 public:
-    explicit UnhandledInterruptHandler(u8 interrupt_vector);
+    explicit UnhandledInterruptHandler(InterruptNumber interrupt_vector);
     virtual ~UnhandledInterruptHandler();
 
     virtual bool handle_interrupt() override;

@@ -23,8 +23,7 @@ if (APPLE)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/patched_mac_headers/stamp"
-        COMMAND "${Python3_EXECUTABLE}" "${SerenityOS_SOURCE_DIR}/Meta/Lagom/Tools/patch_mac_sdk_headers_for_cxx26.py" -o "${CMAKE_BINARY_DIR}/patched_mac_headers" --sdk-path "${CMAKE_OSX_SYSROOT}"
-        COMMAND "${CMAKE_COMMAND}" -E touch "${CMAKE_BINARY_DIR}/patched_mac_headers/stamp"
+        COMMAND "${Python3_EXECUTABLE}" "${SerenityOS_SOURCE_DIR}/Meta/Lagom/Tools/patch_mac_sdk_headers_for_cxx26.py" -o "${CMAKE_BINARY_DIR}/patched_mac_headers" --sdk-path "${CMAKE_OSX_SYSROOT}" --stamp "${CMAKE_BINARY_DIR}/patched_mac_headers/stamp"
         VERBATIM
         DEPENDS "${SerenityOS_SOURCE_DIR}/Meta/Lagom/Tools/patch_mac_sdk_headers_for_cxx26.py"
     )

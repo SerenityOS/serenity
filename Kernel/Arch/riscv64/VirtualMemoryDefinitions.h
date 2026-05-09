@@ -35,6 +35,9 @@ constexpr size_t VPN_0_OFFSET = 12;
 constexpr size_t PPN_MASK = (1LU << PPN_SIZE) - 1;
 constexpr size_t PTE_PPN_MASK = PPN_MASK << PTE_PPN_OFFSET;
 
+constexpr size_t PTE_PBMT_OFFSET = 61;
+constexpr size_t PTE_PBMT_MASK = 0b11;
+
 constexpr size_t PAGE_TABLE_INDEX_BITS = 9;
 constexpr size_t PAGE_TABLE_INDEX_MASK = (1 << PAGE_TABLE_INDEX_BITS) - 1;
 
@@ -53,5 +56,13 @@ enum class PageTableEntryBits {
     Dirty = 1 << 7,
 };
 AK_ENUM_BITWISE_OPERATORS(PageTableEntryBits);
+
+// 12.3. "Svpbmt" Extension for Page-Based Memory Types, Version 1.0
+// https://docs.riscv.org/reference/isa/priv/supervisor.html#svpbmt
+enum class PageBasedMemoryType : u64 {
+    PMA = 0,          // PMA: None
+    NonCacheable = 1, // NC:  Non-cacheable, idempotent, weakly-ordered (RVWMO), main memory
+    IO = 2,           // IO:  Non-cacheable, non-idempotent, strongly-ordered (I/O ordering), I/O
+};
 
 }

@@ -5,7 +5,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/common_compile_options.cmake)
 add_compile_options(-fno-delete-null-pointer-checks)
 add_compile_options(-ffile-prefix-map=${SerenityOS_SOURCE_DIR}=.)
 add_compile_options(-fno-omit-frame-pointer)
-add_compile_options(-fsigned-char)
 add_compile_options(-fsized-deallocation)
 add_compile_options(-fstack-clash-protection)
 add_compile_options(-fstack-protector-strong)
@@ -26,7 +25,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 
     # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
     string(REGEX REPLACE "\\.(.*)" "" LLVM_MAJOR_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
-    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${LLVM_MAJOR_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
+    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${LLVM_MAJOR_VERSION}/lib/${SERENITY_ARCH}-serenity/)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "riscv64")

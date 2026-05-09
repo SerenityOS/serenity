@@ -54,12 +54,11 @@ from it.
 
 ## Kernel-Userspace interfaces
 
-There are 2 main syscalls to handle resource isolation:
+There are 3 main syscalls to handle resource isolation:
 
--   `unshare_create` which creates a new isolation mechanism and returns
-    an index number for a specified isolation type.
--   `unshare_attach` which attach the user process based on the index number
-    and isolation type.
+-   `unshare_open` which creates a new file descriptor for a new unshared resource and returns a file descriptor to work on.
+-   `unshare_create` which creates the unshared resource.
+-   `unshare_enter` which enters the unshared resource for the user process based on the index number of the resource.
 
 ## Jails as a security mechanism
 

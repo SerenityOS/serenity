@@ -19,7 +19,7 @@ It crashes otherwise:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/tests/test.c b/tests/test.c
-index 6cce7984f1efeab38f6fcce39e12d384069c9de6..5d7163109c7e4b14ab17c169893fbbda3ad83a4a 100644
+index 0ae3f95b53983342c1f441923a1ee17124afb150..6881b3cf85c1eebf02487b9a634e2a60c8febf12 100644
 --- a/tests/test.c
 +++ b/tests/test.c
 @@ -43,7 +43,7 @@

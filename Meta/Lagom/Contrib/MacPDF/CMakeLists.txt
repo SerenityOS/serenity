@@ -58,5 +58,5 @@ foreach(xib ${RESOURCES})
         COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text
                 --compile "$<TARGET_BUNDLE_DIR:MacPDF>/Contents/Resources/${nib}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/${xib}"
-        COMMENT "Compiling ${CMAKE_CURRENT_SOURCE_DIR}/${xib}.xib")
+        COMMENT "Compiling ${CMAKE_CURRENT_SOURCE_DIR}/${xib}")
 endforeach()

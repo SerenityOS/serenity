@@ -34,6 +34,11 @@
         layout: @GUI::VerticalBoxLayout {}
     }
 
+    @Browser::FindInPageWidget {
+        name: "find_in_page_widget"
+        visible: false
+    }
+
     @GUI::Statusbar {
         name: "statusbar"
     }

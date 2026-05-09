@@ -294,14 +294,7 @@ public:
     u32 operator[](size_t index) const
     {
         return m_view.visit(
-            [&](StringView view) -> u32 {
-                auto ch = view[index];
-                if constexpr (IsSigned<char>) {
-                    if (ch < 0)
-                        return 256u + ch;
-                    return ch;
-                }
-            },
+            [&](StringView view) -> u32 { return bit_cast<u8>(view[index]); },
             [&](Utf32View const& view) -> u32 { return view[index]; },
             [&](Utf16View const& view) -> u32 { return view.code_point_at(index); },
             [&](Utf8View const& view) -> u32 {
@@ -317,14 +310,7 @@ public:
             return operator[](code_unit_index);
 
         return m_view.visit(
-            [&](StringView view) -> u32 {
-                auto ch = view[code_unit_index];
-                if constexpr (IsSigned<char>) {
-                    if (ch < 0)
-                        return 256u + ch;
-                    return ch;
-                }
-            },
+            [&](StringView view) -> u32 { return bit_cast<u8>(view[code_unit_index]); },
             [&](Utf32View const& view) -> u32 { return view[code_unit_index]; },
             [&](Utf16View const& view) -> u32 { return view.code_unit_at(code_unit_index); },
             [&](Utf8View const& view) -> u32 {

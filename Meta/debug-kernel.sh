@@ -14,8 +14,8 @@ if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
     # GDB used to be installed directly inside the toolchain bin directory
     PATH="$SCRIPT_DIR/../Toolchain/Local/$SERENITY_ARCH/bin:$PATH"
 
-    if command -v "$SERENITY_ARCH-pc-serenity-gdb" >/dev/null; then
-        SERENITY_KERNEL_DEBUGGER="$SERENITY_ARCH-pc-serenity-gdb"
+    if command -v "$SERENITY_ARCH-serenity-gdb" >/dev/null; then
+        SERENITY_KERNEL_DEBUGGER="$SERENITY_ARCH-serenity-gdb"
     elif command -v "$SERENITY_ARCH-elf-gdb" >/dev/null; then
         SERENITY_KERNEL_DEBUGGER="$SERENITY_ARCH-elf-gdb"
     elif command -v gdb >/dev/null && gdb -ex 'set architecture' -ex 'quit' 2>&1 | grep "${SERENITY_ARCH//_/-}"; then

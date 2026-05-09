@@ -146,6 +146,8 @@ class Configuration:
     virtualization_support: bool = False
     qemu_binary: Path | None = None
     qemu_kind: QEMUKind | None = None
+    qemu_major_version: int | None = None
+    qemu_minor_version: int | None = None
     kvm_usable: bool | None = None
     architecture: Arch | None = None
     serenity_src: Path | None = None
@@ -417,8 +419,8 @@ def check_qemu_version(config: Configuration):
     version_groups = qemu_version_regex.search(version_information)
     if version_groups is None:
         raise RunError(f'QEMU seems to be defective, its version information is "{version_information}"')
-    major = int(version_groups.group(1))
-    minor = int(version_groups.group(2))
+    major = config.qemu_major_version = int(version_groups.group(1))
+    minor = config.qemu_minor_version = int(version_groups.group(2))
 
     if major < QEMU_MINIMUM_REQUIRED_MAJOR_VERSION or (
         major == QEMU_MINIMUM_REQUIRED_MAJOR_VERSION and minor < QEMU_MINIMUM_REQUIRED_MINOR_VERSION
@@ -509,8 +511,14 @@ def set_up_cpu_count(config: Configuration):
 
 
 def set_up_spice(config: Configuration):
-    # FIXME: Re-enable SPICE by default once #26210 is fixed.
-    if environ.get("SERENITY_QEMU_SPICE") != "1":
+    # QEMU 10.1 changed the vdagent to reset the connection whenever guest
+    # capabilities are sent. This is not handled in SerenityOS, resulting in a
+    # kernel panic. In QEMU 10.2, this was changed to occur only if the spice
+    # agent advertises ClipboardGrabSerial (which we don't support), to fix a
+    # regression in the Windows agent, and this also fixes things for SerenityOS.
+    # See: https://github.com/qemu/qemu/commit/4be62d311791bf9d318f5139439d170ad5112279
+    # FIXME: Handle the resets correctly for QEMU 10.1.
+    if (config.qemu_major_version, config.qemu_minor_version) == (10, 1):
         return
 
     # Only the default machine has virtio-serial (required for the spice agent).
@@ -694,7 +702,7 @@ def set_up_boot_drive(config: Configuration):
         config.kernel_cmdline.append("root=block3:0")
     elif config.boot_drive_type == BootDriveType.USB_UAS:
         config.add_device("qemu-xhci,id=boot-drive-xhci,p3=0")
-        config.add_device("usb-uas,bus=boot-drive-xhci.0,id=boot-drive-uas,pcap=log.pcap")
+        config.add_device("usb-uas,bus=boot-drive-xhci.0,id=boot-drive-uas")
         config.add_device("scsi-hd,bus=boot-drive-uas.0,scsi-id=0,lun=0,drive=boot-drive")
         # FIXME: Find a better way to address the usb drive
         config.kernel_cmdline.append("root=block3:0")
@@ -724,8 +732,6 @@ def set_up_network_hardware(config: Configuration):
     provided_ethernet_device_type = environ.get("SERENITY_ETHERNET_DEVICE_TYPE")
     if provided_ethernet_device_type is not None:
         config.ethernet_device_type = provided_ethernet_device_type
-    elif config.architecture in [Arch.Aarch64, Arch.RISCV64] and not config.machine_type.is_raspberry_pi():
-        config.ethernet_device_type = "virtio-net-pci"
 
     if config.machine_type.is_raspberry_pi():
         config.network_backend = None
@@ -785,7 +791,7 @@ def set_up_machine_devices(config: Configuration):
         config.cpu_count = None
         config.audio_devices = []
         config.kernel_cmdline.extend(["serial_debug"])
-        config.qemu_cpu = "max" if config.architecture == Arch.Aarch64 else None
+        config.qemu_cpu = "max"
 
         if config.machine_type != MachineType.CI:
             config.extra_arguments.extend(["-serial", "stdio"])

@@ -106,22 +106,22 @@ void GICv2::enable(GenericInterruptHandler const& handler)
     // FIXME: Set the trigger mode in DistributorRegisters::interrupt_configuration (GICD_ICFGRn) to level-triggered or edge-triggered.
 
     auto interrupt_number = handler.interrupt_number();
-    m_distributor_registers->interrupt_set_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
+    m_distributor_registers->interrupt_set_enable[interrupt_number.value() / 32] = 1 << (interrupt_number.value() % 32);
 }
 
 void GICv2::disable(GenericInterruptHandler const& handler)
 {
     auto interrupt_number = handler.interrupt_number();
-    m_distributor_registers->interrupt_clear_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
+    m_distributor_registers->interrupt_clear_enable[interrupt_number.value() / 32] = 1 << (interrupt_number.value() % 32);
 }
 
 void GICv2::eoi(GenericInterruptHandler const& handler)
 {
     auto interrupt_number = handler.interrupt_number();
-    m_cpu_interface_registers->end_of_interrupt = interrupt_number;
+    m_cpu_interface_registers->end_of_interrupt = interrupt_number.value();
 }
 
-Optional<size_t> GICv2::pending_interrupt() const
+Optional<InterruptNumber> GICv2::pending_interrupt() const
 {
     auto interrupt_number = m_cpu_interface_registers->interrupt_acknowledge;
 
@@ -132,7 +132,7 @@ Optional<size_t> GICv2::pending_interrupt() const
     return interrupt_number;
 }
 
-ErrorOr<size_t> GICv2::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
+ErrorOr<InterruptNumber> GICv2::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
 {
     // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/arm,gic.yaml
 

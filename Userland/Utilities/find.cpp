@@ -113,7 +113,7 @@ struct FileData {
     }
 };
 
-template<Unsigned T>
+template<UnsignedIntegral T>
 class NumericRange {
 public:
     NumericRange() = default;

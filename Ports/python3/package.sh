@@ -41,7 +41,7 @@ configopts=(
 export BLDSHARED="${CC} -shared"
 
 configure() {
-    run ./configure --host="${SERENITY_ARCH}-pc-serenity" "--with-build-python=${PYTHON_BIN}" --build="$($workdir/config.guess)" "${configopts[@]}"
+    run ./configure --host="${SERENITY_ARCH}-serenity" "--with-build-python=${PYTHON_BIN}" --build="$($workdir/config.guess)" "${configopts[@]}"
 }
 
 # Note: The showproperty command is used when linting ports, we don't actually need python at this time.

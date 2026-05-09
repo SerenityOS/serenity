@@ -20,7 +20,7 @@ public:
 
     ~TempFile();
 
-    String const& path() const { return m_path; }
+    ByteString const& path() const { return m_path; }
 
 private:
     enum class Type {
@@ -28,14 +28,14 @@ private:
         File
     };
 
-    TempFile(Type type, String path)
+    TempFile(Type type, ByteString path)
         : m_type(type)
         , m_path(move(path))
     {
     }
 
     Type m_type;
-    String m_path;
+    ByteString m_path;
 };
 
 }

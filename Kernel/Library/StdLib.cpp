@@ -229,7 +229,6 @@ void const* memmem(void const* haystack, size_t haystack_length, void const* nee
 // Declare them first, to tell the silly compiler that they are indeed being used.
 [[noreturn]] void __stack_chk_fail() __attribute__((used));
 [[noreturn]] void __stack_chk_fail_local() __attribute__((used));
-extern "C" int __cxa_atexit(void (*)(void*), void*, void*);
 [[noreturn]] void __cxa_pure_virtual();
 
 [[noreturn]] void __stack_chk_fail()
@@ -240,12 +239,6 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*);
 [[noreturn]] void __stack_chk_fail_local()
 {
     VERIFY_NOT_REACHED();
-}
-
-extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
-{
-    VERIFY_NOT_REACHED();
-    return 0;
 }
 
 [[noreturn]] void __cxa_pure_virtual()

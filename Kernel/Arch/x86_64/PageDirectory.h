@@ -21,19 +21,25 @@
 
 namespace Kernel::Memory {
 
+// Bits 51-12 are used for the physical address. If MAXPHYADDR < 52, unused bits have to be 0.
+static constexpr u64 PAGING_STRUCTURE_ENTRY_PADDR_MASK = 0x000f'ffff'ffff'f000;
+
 class PageDirectoryEntry {
 public:
-    PhysicalPtr page_table_base() const { return PhysicalAddress::physical_page_base(m_raw); }
+    PhysicalPtr page_table_base() const
+    {
+        return m_raw & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+    }
+
     void set_page_table_base(PhysicalPtr value)
     {
-        m_raw &= 0x8000000000000fffULL;
-        m_raw |= PhysicalAddress::physical_page_base(value);
+        m_raw &= ~PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+        m_raw |= value & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
     }
 
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
 
-    u64 raw() const { return m_raw; }
     void copy_from(Badge<Memory::PageDirectory>, PageDirectoryEntry const& other) { m_raw = other.m_raw; }
 
     enum Flags {
@@ -47,24 +53,22 @@ public:
         NoExecute = 0x8000000000000000ULL,
     };
 
-    bool is_present() const { return (raw() & Present) == Present; }
+    bool is_present() const { return (m_raw & Present) == Present; }
     void set_present(bool b) { set_bit(Present, b); }
 
-    bool is_user_allowed() const { return (raw() & UserSupervisor) == UserSupervisor; }
+    bool is_user_allowed() const { return (m_raw & UserSupervisor) == UserSupervisor; }
     void set_user_allowed(bool b) { set_bit(UserSupervisor, b); }
 
-    bool is_huge() const { return (raw() & Huge) == Huge; }
+    bool is_huge() const { return (m_raw & Huge) == Huge; }
     void set_huge(bool b) { set_bit(Huge, b); }
 
-    bool is_writable() const { return (raw() & ReadWrite) == ReadWrite; }
+    bool is_writable() const { return (m_raw & ReadWrite) == ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }
 
-    void set_memory_type(MemoryType t) { set_bit(CacheDisabled, t != MemoryType::Normal); }
-
-    bool is_global() const { return (raw() & Global) == Global; }
+    bool is_global() const { return (m_raw & Global) == Global; }
     void set_global(bool b) { set_bit(Global, b); }
 
-    bool is_execute_disabled() const { return (raw() & NoExecute) == NoExecute; }
+    bool is_execute_disabled() const { return (m_raw & NoExecute) == NoExecute; }
     void set_execute_disabled(bool b) { set_bit(NoExecute, b); }
 
 private:
@@ -81,14 +85,16 @@ private:
 
 class PageTableEntry {
 public:
-    PhysicalPtr physical_page_base() const { return PhysicalAddress::physical_page_base(m_raw); }
-    void set_physical_page_base(PhysicalPtr value)
+    PhysicalPtr physical_page_base() const
     {
-        m_raw &= 0x8000000000000fffULL;
-        m_raw |= PhysicalAddress::physical_page_base(value);
+        return m_raw & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
     }
 
-    u64 raw() const { return m_raw; }
+    void set_physical_page_base(PhysicalPtr value)
+    {
+        m_raw &= ~PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+        m_raw |= value & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+    }
 
     enum Flags {
         Present = 1 << 0,
@@ -101,13 +107,13 @@ public:
         NoExecute = 0x8000000000000000ULL,
     };
 
-    bool is_present() const { return (raw() & Present) == Present; }
+    bool is_present() const { return (m_raw & Present) == Present; }
     void set_present(bool b) { set_bit(Present, b); }
 
-    bool is_user_allowed() const { return (raw() & UserSupervisor) == UserSupervisor; }
+    bool is_user_allowed() const { return (m_raw & UserSupervisor) == UserSupervisor; }
     void set_user_allowed(bool b) { set_bit(UserSupervisor, b); }
 
-    bool is_writable() const { return (raw() & ReadWrite) == ReadWrite; }
+    bool is_writable() const { return (m_raw & ReadWrite) == ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }
 
     void set_memory_type(MemoryType t)
@@ -135,10 +141,10 @@ public:
         }
     }
 
-    bool is_global() const { return (raw() & Global) == Global; }
+    bool is_global() const { return (m_raw & Global) == Global; }
     void set_global(bool b) { set_bit(Global, b); }
 
-    bool is_execute_disabled() const { return (raw() & NoExecute) == NoExecute; }
+    bool is_execute_disabled() const { return (m_raw & NoExecute) == NoExecute; }
     void set_execute_disabled(bool b) { set_bit(NoExecute, b); }
 
     bool is_null() const { return m_raw == 0; }

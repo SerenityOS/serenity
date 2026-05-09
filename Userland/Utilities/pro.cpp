@@ -269,7 +269,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         previous_report_time = current_time;
         warn("\r\033[2K");
         if (maybe_total_size.has_value()) {
-            warn("\033]9;{};{};\033\\", downloaded_size, maybe_total_size.value());
+            warn("\033]9;4;1;{}\033\\", static_cast<int>((100. * downloaded_size) / maybe_total_size.value()));
             warn("Download progress: {} / {}", human_readable_size(downloaded_size), human_readable_size(maybe_total_size.value()));
         } else {
             warn("Download progress: {} / ???", human_readable_size(downloaded_size));
@@ -401,7 +401,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (success)
                 update_progress(total_size, total_size, true);
 
-            warn("\033]9;-1;\033\\");
+            warn("\033]9;4;0\033\\");
             warnln();
             if (!success)
                 warnln("Request failed :(");

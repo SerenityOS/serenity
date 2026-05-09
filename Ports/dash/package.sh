@@ -16,7 +16,7 @@ configure() {
     run sh -c "cd host-build && ../configure ${configopts[@]} CFLAGS=-I."
     target_env
     run mkdir -p target-build
-    run sh -c "cd target-build && ../configure --host="${SERENITY_ARCH}-pc-serenity" --disable-helpers ${configopts[@]} CFLAGS=-I."
+    run sh -c "cd target-build && ../configure --host="${SERENITY_ARCH}-serenity" --disable-helpers ${configopts[@]} CFLAGS=-I."
 }
 
 build() {

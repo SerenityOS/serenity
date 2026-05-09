@@ -14,7 +14,9 @@ die() {
 if [ "$(uname -s)" = "SerenityOS" ]; then
     SUDO="pls -E"
 elif command -v sudo >/dev/null; then
-    SUDO="sudo -E"
+    # Preserve all environment variables starting with SERENITY.
+    SERENITY_VARS=$(env | cut -d= -f1 | (grep '^SERENITY' || [[ $? -eq 1 ]]) | tr '\n' ',' | sed 's/,$//')
+    SUDO="sudo --preserve-env=$SERENITY_VARS"
 elif command -v doas >/dev/null; then
     if [ "$SUDO_UID" = '' ]; then
         SUDO_UID=$(id -u)
@@ -118,3 +120,14 @@ check_sha256() {
     fi
     test "${EXPECTED_HASH}" = "${SEEN_HASH}"
 }
+
+HOST_ARCH=$(uname -m)
+if [ "$HOST_ARCH" = "x86_64" ] || [ "$HOST_ARCH" = "amd64" ] || [ "$HOST_ARCH" = "x64" ]; then
+    HOST_ARCH="x86_64"
+elif [ "$HOST_ARCH" = "aarch64" ] || [ "$HOST_ARCH" = "arm64" ]; then
+    HOST_ARCH="aarch64"
+elif [ "$HOST_ARCH" = "riscv64" ]; then
+    HOST_ARCH="riscv64"
+else
+    die "Unknown host architecture: $HOST_ARCH"
+fi

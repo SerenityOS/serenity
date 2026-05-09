@@ -51,7 +51,7 @@ struct CleanupHandler {
 
 static thread_local SinglyLinkedList<CleanupHandler> s_cleanup_handlers;
 
-static __thread bool s_pending_cancellation = false;
+[[maybe_unused]] static __thread bool s_pending_cancellation = false;
 
 [[gnu::weak]] extern ErrorOr<FlatPtr> __create_new_tls_region() asm("__create_new_tls_region");
 [[gnu::weak]] extern ErrorOr<void> __free_tls_region(FlatPtr thread_pointer) asm("__free_tls_region");

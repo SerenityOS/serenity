@@ -46,9 +46,11 @@ set(LIBTEST_BASED_SOURCES
     TestInvalidUIDSet.cpp
     TestSFNUtilities.cpp
     TestSharedInodeVMObject.cpp
+    TestPageFaultRace.cpp
     TestPosixFallocate.cpp
     TestPosixSpawn.cpp
     TestPrivateInodeVMObject.cpp
+    TestPtrace.cpp
     TestKernelAlarm.cpp
     TestKernelFilePermissions.cpp
     TestKernelPledge.cpp
@@ -84,3 +86,5 @@ endif()
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
     serenity_test("${libtest_source}" Kernel LIBS LibSystem)
 endforeach()
+
+target_link_libraries(TestPageFaultRace PRIVATE LibThreading)

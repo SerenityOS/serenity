@@ -320,7 +320,7 @@ size_t AnonymousVMObject::cow_pages() const
 
 PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, VirtualAddress vaddr)
 {
-    SpinlockLocker lock(m_lock);
+    VERIFY(m_lock.is_locked());
 
     if (is_volatile()) {
         // A COW fault in a volatile region? Userspace is writing to volatile memory, this is a bug. Crash.

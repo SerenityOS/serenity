@@ -13,7 +13,7 @@ exit_if_running_as_root "Do not run BuildGNU.sh as root, your Build directory wi
 echo "$DIR"
 
 ARCH=${ARCH:-"x86_64"}
-TARGET="$ARCH-pc-serenity"
+TARGET="$ARCH-serenity"
 PREFIX="$DIR/Local/$ARCH"
 BUILD="$DIR/../Build/$ARCH"
 SYSROOT="$BUILD/Root"
@@ -67,16 +67,17 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
-BINUTILS_VERSION="2.44"
-BINUTILS_MD5SUM="49912ce774666a30806141f106124294"
+# FIXME: When updating this version to the next release, remove the 'development=false' workaround patch.
+BINUTILS_VERSION="2.46.0"
+BINUTILS_MD5SUM="81bb6810bcd1119819dc0804956e1c92"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
 BINUTILS_BASE_URL="https://ftpmirror.gnu.org/gnu/binutils"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
-GCC_VERSION="15.2.0"
-GCC_MD5SUM="b861b092bf1af683c46a8aa2e689a6fd"
+GCC_VERSION="16.1.0"
+GCC_MD5SUM="9b016416f8e2dce4a0ef8759d1936446"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.xz"
 GCC_BASE_URL="https://ftpmirror.gnu.org/gnu/gcc"
@@ -288,6 +289,6 @@ pushd "$DIR/Build/$ARCH"
 
 popd
 
-pushd "$DIR/Local/$ARCH/$ARCH-pc-serenity/bin"
+pushd "$DIR/Local/$ARCH/$ARCH-serenity/bin"
     buildstep "mold_symlink" ln -s ../../../mold/bin/mold ld.mold
 popd

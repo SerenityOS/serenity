@@ -153,13 +153,10 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
         case 25:
             if (should_set) {
                 // Show cursor
-                m_cursor_shape = m_saved_cursor_shape;
-                m_client.set_cursor_shape(m_cursor_shape);
+                m_client.set_cursor_hidden(false);
             } else {
                 // Hide cursor
-                m_saved_cursor_shape = m_cursor_shape;
-                m_cursor_shape = VT::CursorShape::None;
-                m_client.set_cursor_shape(VT::CursorShape::None);
+                m_client.set_cursor_hidden(true);
             }
             break;
         case 1047:
@@ -545,8 +542,8 @@ void Terminal::CNL(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
     unsigned new_row = cursor_row() + num;
-    if (new_row >= m_columns)
-        new_row = m_columns - 1;
+    if (new_row >= m_rows)
+        new_row = m_rows - 1;
     set_cursor(new_row, 0);
 }
 
@@ -577,8 +574,13 @@ void Terminal::REP(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
-    for (unsigned i = 0; i < count; ++i)
-        put_character_at(m_current_state.cursor.row, m_current_state.cursor.column++, m_last_code_point);
+    count = min<unsigned>(count, columns() - cursor_column());
+
+    for (unsigned i = 0; i < count; ++i) {
+        put_character_at(m_current_state.cursor.row, m_current_state.cursor.column, m_last_code_point);
+        if (m_current_state.cursor.column < (size_t)columns() - 1)
+            m_current_state.cursor.column++;
+    }
 }
 
 void Terminal::VPA(Parameters params)
@@ -1355,14 +1357,50 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         }
 #endif
         break;
-    case 9:
-        if (parameters.size() < 2)
-            dbgln("Atttempted to set window progress but gave too few parameters");
-        else if (parameters.size() == 2)
-            m_client.set_window_progress(stringview_ify(1).to_number<int>().value_or(-1), 0);
-        else
-            m_client.set_window_progress(stringview_ify(1).to_number<int>().value_or(-1), stringview_ify(2).to_number<int>().value_or(0));
+    case 9: {
+        if (parameters.size() < 2) {
+            unimplemented_osc_sequence(parameters, last_byte);
+            return;
+        }
+
+        if (stringview_ify(1) != "4"sv) {
+            unimplemented_osc_sequence(parameters, last_byte);
+            return;
+        }
+
+        if (parameters.size() != 3 && parameters.size() != 4) {
+            dbgln("Atttempted to set window progress but gave incorrect number of parameters");
+            return;
+        }
+
+        auto maybe_new_state = stringview_ify(2).to_number<int>();
+        if (!maybe_new_state.has_value()
+            || maybe_new_state.value() < 0
+            || maybe_new_state.value() > to_underlying(ProgressState::Paused)) {
+            dbgln("Atttempted to set window progress but gave invalid state");
+            return;
+        }
+
+        auto new_state = static_cast<ProgressState>(maybe_new_state.value());
+
+        if (parameters.size() == 4) {
+            auto maybe_new_value = stringview_ify(3).to_number<int>();
+            if (!maybe_new_value.has_value()
+                || maybe_new_value.value() < 0
+                || maybe_new_value.value() > 100) {
+                dbgln("Atttempted to set window progress but gave invalid value");
+                return;
+            }
+
+            m_current_progress = maybe_new_value.value();
+        }
+
+        if (new_state == ProgressState::Inactive)
+            m_current_progress = 0;
+
+        m_client.set_window_progress(new_state, m_current_progress);
         break;
+    }
     default:
         unimplemented_osc_sequence(parameters, last_byte);
     }
@@ -1402,12 +1440,13 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     unsigned modifier_mask = int(shift) + (int(alt) << 1) + (int(ctrl) << 2);
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
-        char escape_character = m_cursor_keys_mode == CursorKeysMode::Application ? 'O' : '[';
         StringBuilder builder;
-        if (modifier_mask)
-            MUST(builder.try_appendff("\e{}1;{}{:c}", escape_character, modifier_mask + 1, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
-        else
+        if (modifier_mask) {
+            MUST(builder.try_appendff("\e[1;{}{:c}", modifier_mask + 1, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        } else {
+            char escape_character = m_cursor_keys_mode == CursorKeysMode::Application ? 'O' : '[';
             MUST(builder.try_appendff("\e{}{:c}", escape_character, final)); // StringBuilder's inline capacity of 256 is enough to guarantee no allocations
+        }
         emit_string(builder.string_view());
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {

@@ -7,7 +7,6 @@ config_sub_paths=(
     'build-aux/config.sub'
 )
 configopts=(
-    "--target=${SERENITY_ARCH}-pc-serenity"
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
 )
 files=(

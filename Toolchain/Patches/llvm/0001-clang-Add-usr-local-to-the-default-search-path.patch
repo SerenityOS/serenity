@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lucas Chollet <lucas.chollet@free.fr>
+Date: Sun, 3 May 2026 00:34:43 +0200
+Subject: [PATCH] [clang] Add /usr/local to the default search path
+
+This includes both /usr/local/include for the compiler and
+/usr/local/lib for the linker.
+
+These paths are needed to build Ports with Clang. More precisely, it
+allows ports to find installed dependencies.
+---
+ clang/lib/Driver/ToolChains/Serenity.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
+index 7c29b7c932be44821e5671698de099221a40c403..b55ac5c5f1ff8d9d183d24b8b0137143487b1ffb 100644
+--- a/clang/lib/Driver/ToolChains/Serenity.cpp
++++ b/clang/lib/Driver/ToolChains/Serenity.cpp
+@@ -142,6 +142,8 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
+     CmdArgs.push_back("--pop-state");
+   }
+ 
++  CmdArgs.push_back("-L=/usr/local/lib");
++
+   // Silence warnings when linking C code with a C++ '-stdlib' argument.
+   Args.ClaimAllArgs(options::OPT_stdlib_EQ);
+ 
+@@ -194,5 +196,8 @@ void Serenity::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
+   if (DriverArgs.hasArg(options::OPT_nostdlibinc))
+     return;
+ 
++  addSystemInclude(DriverArgs, CC1Args,
++                   concat(D.SysRoot, "/usr/local/include"));
++
+   addSystemInclude(DriverArgs, CC1Args, concat(D.SysRoot, "/usr/include"));
+ }

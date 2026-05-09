@@ -12,6 +12,8 @@
 #    include <Kernel/Arch/x86_64/Time/RTC.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/ASM_wrapper.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/Entropy.h>
 #endif
 #include <Kernel/Devices/Generic/RandomDevice.h>
 #include <Kernel/Sections.h>
@@ -78,13 +80,33 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
         }
     }
 #elif ARCH(RISCV64)
-    // Fallback to TimeManagement as entropy
-    dmesgln("KernelRng: Using bad entropy source TimeManagement");
-    auto current_time = static_cast<u64>(TimeManagement::now().milliseconds_since_epoch());
-    for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
-        add_random_event(current_time, i % 32);
-        current_time *= 0x574au;
-        current_time += 0x40b2u;
+    auto try_zkr_entropy = [this] -> bool {
+        if (!Processor::current().has_feature(CPUFeature::Zkr))
+            return false;
+
+        dmesgln("KernelRng: Using Zkr extension as entropy source");
+
+        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+            auto entropy_or_error = RISCV64::poll_seed_csr_for_entropy();
+            if (entropy_or_error.is_error())
+                return false;
+
+            add_random_event(entropy_or_error.value(), i % 32);
+        }
+
+        return true;
+    };
+
+    if (!try_zkr_entropy()) {
+        // Fallback to TimeManagement as entropy
+        dmesgln("KernelRng: Using bad entropy source TimeManagement");
+
+        auto current_time = static_cast<u64>(TimeManagement::now().milliseconds_since_epoch());
+        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+            add_random_event(current_time, i % 32);
+            current_time *= 0x574au;
+            current_time += 0x40b2u;
+        }
     }
 #else
     dmesgln("KernelRng: No entropy source available!");

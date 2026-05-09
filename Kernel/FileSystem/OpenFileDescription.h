@@ -84,6 +84,10 @@ public:
     MountFile const* mount_file() const;
     MountFile* mount_file();
 
+    bool is_unshared_resource_file() const;
+    UnsharedResourceFile const* unshared_resource_file() const;
+    UnsharedResourceFile* unshared_resource_file();
+
     bool is_master_pty() const;
     MasterPTY const* master_pty() const;
     MasterPTY* master_pty();

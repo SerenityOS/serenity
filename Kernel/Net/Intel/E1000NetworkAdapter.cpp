@@ -168,7 +168,7 @@ UNMAP_AFTER_INIT ErrorOr<bool> E1000NetworkAdapter::probe(PCI::DeviceIdentifier 
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    u8 irq = pci_device_identifier.interrupt_line().value();
+    InterruptNumber irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
 
@@ -228,7 +228,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
 }
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(StringView interface_name,
-    PCI::DeviceIdentifier const& device_identifier, u8 irq,
+    PCI::DeviceIdentifier const& device_identifier, InterruptNumber irq,
     NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
     NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
     Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors)

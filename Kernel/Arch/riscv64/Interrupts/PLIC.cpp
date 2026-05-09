@@ -18,7 +18,6 @@ UNMAP_AFTER_INIT PLIC::PLIC(Memory::TypedMapping<RegisterMap volatile> registers
     , m_interrupt_count(interrupt_count)
     , m_boot_hart_supervisor_mode_context_id(boot_hart_supervisor_mode_context_id)
 {
-    VERIFY(m_interrupt_count < 256); // TODO: Serenity currently only supports up to 256 unique interrupts, but the PLIC supports up to 1024
     initialize();
 }
 
@@ -42,27 +41,33 @@ void PLIC::enable(GenericInterruptHandler const& handler)
 {
     auto interrupt_number = handler.interrupt_number();
     VERIFY(interrupt_number > 0); // Interrupt number 0 is reserved to mean no-interrupt
-    m_registers->interrupt_enable_bitmap[m_boot_hart_supervisor_mode_context_id][interrupt_number >> 5] |= 1u << (interrupt_number & 0x1F);
+    m_registers->interrupt_enable_bitmap[m_boot_hart_supervisor_mode_context_id][interrupt_number.value() >> 5] |= 1u << (interrupt_number.value() & 0x1F);
 }
 
 void PLIC::disable(GenericInterruptHandler const& handler)
 {
     auto interrupt_number = handler.interrupt_number();
     VERIFY(interrupt_number > 0); // Interrupt number 0 is reserved to mean no-interrupt
-    m_registers->interrupt_enable_bitmap[m_boot_hart_supervisor_mode_context_id][interrupt_number >> 5] &= ~(1u << (interrupt_number & 0x1F));
+    m_registers->interrupt_enable_bitmap[m_boot_hart_supervisor_mode_context_id][interrupt_number.value() >> 5] &= ~(1u << (interrupt_number.value() & 0x1F));
 }
 
 void PLIC::eoi(GenericInterruptHandler const& handler)
 {
-    m_registers->contexts[m_boot_hart_supervisor_mode_context_id].claim_complete = handler.interrupt_number();
+    m_registers->contexts[m_boot_hart_supervisor_mode_context_id].claim_complete = handler.interrupt_number().value();
 }
 
-u8 PLIC::pending_interrupt() const
+Optional<InterruptNumber> PLIC::pending_interrupt() const
 {
-    return m_registers->contexts[m_boot_hart_supervisor_mode_context_id].claim_complete;
+    auto interrupt_number = m_registers->contexts[m_boot_hart_supervisor_mode_context_id].claim_complete;
+
+    // 0 means no pending interrupt.
+    if (interrupt_number == 0)
+        return {};
+
+    return interrupt_number;
 }
 
-ErrorOr<size_t> PLIC::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
+ErrorOr<InterruptNumber> PLIC::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
 {
     // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/sifive,plic-1.0.0.yaml
     // For generic PLICs the #interrupt-cells property should be 1 and the interrupt specifier should simply be the interrupt number.

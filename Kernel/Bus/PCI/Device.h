@@ -11,6 +11,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Interrupts/Interrupts.h>
 
 namespace Kernel::PCI {
 
@@ -21,8 +22,8 @@ enum class InterruptType {
 };
 
 struct InterruptRange {
-    u8 m_start_irq { 0 };
-    u8 m_irq_count { 0 };
+    InterruptNumber m_start_irq { 0 };
+    InterruptNumber m_irq_count { 0 };
     InterruptType m_type { InterruptType::PIN };
 };
 
@@ -52,17 +53,17 @@ public:
 
     void enable_extended_message_signalled_interrupts();
     void disable_extended_message_signalled_interrupts();
-    ErrorOr<InterruptType> reserve_irqs(u8 number_of_irqs, bool msi);
-    ErrorOr<u8> allocate_irq(u8 index);
+    ErrorOr<InterruptType> reserve_irqs(size_t number_of_irqs, bool msi);
+    ErrorOr<InterruptNumber> allocate_irq(size_t index);
     PCI::InterruptType get_interrupt_type();
-    void enable_interrupt(u8 irq);
-    void disable_interrupt(u8 irq);
+    void enable_interrupt(InterruptNumber irq);
+    void disable_interrupt(InterruptNumber irq);
 
 protected:
     explicit Device(DeviceIdentifier const& pci_identifier);
 
 private:
-    PhysicalAddress msix_table_entry_address(u8 irq);
+    PhysicalAddress msix_table_entry_address(InterruptNumber irq);
 
 private:
     NonnullRefPtr<DeviceIdentifier> const m_pci_identifier;

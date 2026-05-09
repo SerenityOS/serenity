@@ -18,7 +18,6 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 
-add_compile_options(-Wno-address-of-packed-member)
 add_compile_options(-Wcast-qual)
 add_compile_options(-Wdeprecated-copy)
 add_compile_options(-Wduplicated-cond)

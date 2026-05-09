@@ -44,7 +44,7 @@ ErrorOr<void> InterruptManagement::register_interrupt_controller(NonnullLockRefP
     return s_interrupt_controllers->try_append(move(interrupt_controller));
 }
 
-u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
+InterruptNumber InterruptManagement::acquire_mapped_interrupt_number(InterruptNumber original_irq)
 {
     return original_irq;
 }
@@ -54,7 +54,7 @@ Vector<NonnullLockRefPtr<IRQController>> const& InterruptManagement::controllers
     return *s_interrupt_controllers;
 }
 
-NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(size_t)
+NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(InterruptNumber)
 {
     // TODO: Support more interrupt controllers
     VERIFY(s_interrupt_controllers->size() == 1);

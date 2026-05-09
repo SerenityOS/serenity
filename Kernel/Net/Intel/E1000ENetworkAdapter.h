@@ -29,7 +29,7 @@ public:
     virtual StringView purpose() const override { return class_name(); }
 
 private:
-    E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&, u8 irq,
+    E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&, InterruptNumber irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
         Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors);

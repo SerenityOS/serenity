@@ -13,13 +13,17 @@
 namespace Gfx {
 
 struct VP8Header {
+    struct KeyframeData {
+        u32 width;
+        u8 horizontal_scale;
+        u32 height;
+        u8 vertical_scale;
+    };
+
     u8 version;
     bool show_frame;
-    u32 size_of_first_partition;
-    u32 width;
-    u8 horizontal_scale;
-    u32 height;
-    u8 vertical_scale;
+    Optional<KeyframeData> keyframe_data;
+
     ReadonlyBytes first_partition;
     ReadonlyBytes second_partition;
 };

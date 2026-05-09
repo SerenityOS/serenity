@@ -372,13 +372,13 @@ ErrorOr<void> Account::sync()
 #endif
     }
 
-    auto new_passwd_file_view = StringView { new_passwd_file, sizeof(new_passwd_file) };
+    auto new_passwd_file_view = StringView { new_passwd_file, strlen(new_passwd_file) };
     TRY(Core::System::rename(new_passwd_file_view, "/etc/passwd"sv));
 
-    auto new_group_file_view = StringView { new_group_file, sizeof(new_group_file) };
+    auto new_group_file_view = StringView { new_group_file, strlen(new_group_file) };
     TRY(Core::System::rename(new_group_file_view, "/etc/group"sv));
 #ifndef AK_OS_BSD_GENERIC
-    auto new_shadow_file_view = StringView { new_shadow_file, sizeof(new_shadow_file) };
+    auto new_shadow_file_view = StringView { new_shadow_file, strlen(new_shadow_file) };
     TRY(Core::System::rename(new_shadow_file_view, "/etc/shadow"sv));
 #endif
 

@@ -14,6 +14,7 @@
 #include "Browser.h"
 #include "BrowserWindow.h"
 #include "DownloadWidget.h"
+#include "FindInPageWidget.h"
 #include "History/HistoryWidget.h"
 #include "InspectorWidget.h"
 #include "StorageWidget.h"
@@ -114,12 +115,20 @@ Tab::Tab(BrowserWindow& window)
 
     m_icon = g_icon_bag.default_favicon;
 
+    m_find_in_page_widget = *find_descendant_of_type_named<FindInPageWidget>("find_in_page_widget");
+
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
 
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
     m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>();
+
+    m_find_in_page_widget->initialize(*m_web_content_view);
+
+    m_find_in_page_widget->on_search_text_change = [this](String const& text) {
+        this->window().set_search_term(text);
+    };
 
     auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
     m_web_content_view->set_preferred_color_scheme(preferred_color_scheme);
@@ -1058,6 +1067,11 @@ void Tab::enable_webdriver_mode()
     m_web_content_view->connect_to_webdriver(Browser::g_webdriver_content_ipc_path);
     auto& webdriver_banner = *find_descendant_of_type_named<GUI::Widget>("webdriver_banner");
     webdriver_banner.set_visible(true);
+}
+
+void Tab::show_find_in_page()
+{
+    m_find_in_page_widget->show(window().search_term());
 }
 
 }

@@ -47,8 +47,9 @@ namespace Gfx {
 // https://datatracker.ietf.org/doc/html/rfc6386#section-19 "Annex A: Bitstream Syntax"
 ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
 {
-    if (vp8_data.size() < 10)
+    if (vp8_data.size() < 3)
         return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk too small");
+    unsigned frame_tag_size = 3;
 
     // FIXME: Eventually, this should probably call into LibVideo/VP8,
     // and image decoders should move into LibImageDecoders which depends on both LibGfx and LibVideo.
@@ -68,40 +69,46 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
     bool show_frame = (frame_tag & 0x10) != 0;
     u32 size_of_first_partition = frame_tag >> 5;
 
-    if (!is_key_frame)
-        return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk not a key frame");
-
-    if (!show_frame)
-        return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk has invalid visibility for webp image");
-
     if (version > 3)
         return Error::from_string_literal("WebPImageDecoderPlugin: unknown version number in 'VP8 ' chunk");
 
-    u32 start_code = data[3] | (data[4] << 8) | (data[5] << 16);
-    if (start_code != 0x2a019d) // https://www.rfc-editor.org/errata/eid7370
-        return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk invalid start_code");
+    Optional<VP8Header::KeyframeData> keyframe_data;
+    if (is_key_frame) {
+        if (vp8_data.size() < 10)
+            return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' keyframe chunk too small");
+        frame_tag_size = 10;
 
-    // "The scaling specifications for each dimension are encoded as follows.
-    //   0     | No upscaling (the most common case).
-    //   1     | Upscale by 5/4.
-    //   2     | Upscale by 5/3.
-    //   3     | Upscale by 2."
-    // This is a display-time operation and doesn't affect decoding."
-    u16 width_and_horizontal_scale = data[6] | (data[7] << 8);
-    u16 width = width_and_horizontal_scale & 0x3fff;
-    u8 horizontal_scale = width_and_horizontal_scale >> 14;
+        u32 start_code = data[3] | (data[4] << 8) | (data[5] << 16);
+        if (start_code != 0x2a019d) // https://www.rfc-editor.org/errata/eid7370
+            return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk invalid start_code");
 
-    u16 heigth_and_vertical_scale = data[8] | (data[9] << 8);
-    u16 height = heigth_and_vertical_scale & 0x3fff;
-    u8 vertical_scale = heigth_and_vertical_scale >> 14;
+        // "The scaling specifications for each dimension are encoded as follows.
+        //   0     | No upscaling (the most common case).
+        //   1     | Upscale by 5/4.
+        //   2     | Upscale by 5/3.
+        //   3     | Upscale by 2."
+        // This is a display-time operation and doesn't affect decoding."
+        u16 width_and_horizontal_scale = data[6] | (data[7] << 8);
+        u16 width = width_and_horizontal_scale & 0x3fff;
+        u8 horizontal_scale = width_and_horizontal_scale >> 14;
 
-    dbgln_if(WEBP_DEBUG, "version {}, show_frame {}, size_of_first_partition {}, width {}, horizontal_scale {}, height {}, vertical_scale {}",
-        version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale);
+        u16 height_and_vertical_scale = data[8] | (data[9] << 8);
+        u16 height = height_and_vertical_scale & 0x3fff;
+        u8 vertical_scale = height_and_vertical_scale >> 14;
 
-    if (vp8_data.size() < 10 + size_of_first_partition)
+        dbgln_if(WEBP_DEBUG, "version {}, show_frame {}, size_of_first_partition {}, width {}, horizontal_scale {}, height {}, vertical_scale {}",
+            version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale);
+
+        keyframe_data = VP8Header::KeyframeData { width, horizontal_scale, height, vertical_scale };
+    } else {
+        dbgln_if(WEBP_DEBUG, "version {}, show_frame {}, size_of_first_partition {}",
+            version, show_frame, size_of_first_partition);
+    }
+
+    if (vp8_data.size() < frame_tag_size + size_of_first_partition)
         return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk too small for full first partition");
 
-    return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale, vp8_data.slice(10, size_of_first_partition), vp8_data.slice(10 + size_of_first_partition) };
+    return VP8Header { version, show_frame, keyframe_data, vp8_data.slice(frame_tag_size), vp8_data.slice(frame_tag_size + size_of_first_partition) };
 }
 
 namespace {
@@ -1071,8 +1078,8 @@ void process_macroblock(Bytes output, IntraMacroblockMode mode, int mb_x, int mb
 void process_subblocks(Bytes y_output, MacroblockMetadata const& metadata, int mb_x, ReadonlyBytes predicted_y_left, ReadonlyBytes predicted_y_above, u8 y_truemotion_corner, Coefficients coefficients_array[], int macroblock_width)
 {
     // Loop over the 4x4 subblocks
-    for (int y = 0, i = 0; y < 4; ++y) {
-        for (int x = 0; x < 4; ++x, ++i) {
+    for (int y = 0; y < 4; ++y) {
+        for (int x = 0; x < 4; ++x) {
             u8 corner = y_truemotion_corner;
             if (x > 0 && y == 0)
                 corner = predicted_y_above[mb_x * 16 + 4 * x - 1];
@@ -1262,6 +1269,8 @@ static ErrorOr<Vector<ReadonlyBytes>> split_data_partitions(ReadonlyBytes second
 
 ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& vp8_header, bool include_alpha_channel)
 {
+    VERIFY(vp8_header.keyframe_data.has_value());
+
     // The first partition stores header, per-segment state, and macroblock metadata.
     auto decoder = TRY(BooleanDecoder::initialize(vp8_header.first_partition));
 
@@ -1271,8 +1280,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& v
     // "Internally, VP8 decomposes each output frame into an array of
     //  macroblocks.  A macroblock is a square array of pixels whose Y
     //  dimensions are 16x16 and whose U and V dimensions are 8x8."
-    int macroblock_width = ceil_div(vp8_header.width, 16);
-    int macroblock_height = ceil_div(vp8_header.height, 16);
+    int macroblock_width = ceil_div(vp8_header.keyframe_data->width, 16);
+    int macroblock_height = ceil_div(vp8_header.keyframe_data->height, 16);
 
     auto macroblock_metadata = TRY(decode_VP8_macroblock_metadata(decoder, header, macroblock_width, macroblock_height));
 
@@ -1285,8 +1294,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& v
     auto data_partitions = TRY(split_data_partitions(vp8_header.second_partition, header.number_of_dct_partitions));
     TRY(decode_VP8_image_data(*bitmap, header, move(data_partitions), macroblock_width, macroblock_height, macroblock_metadata));
 
-    auto width = static_cast<int>(vp8_header.width);
-    auto height = static_cast<int>(vp8_header.height);
+    auto width = static_cast<int>(vp8_header.keyframe_data->width);
+    auto height = static_cast<int>(vp8_header.keyframe_data->height);
     if (bitmap->physical_size() == IntSize { width, height })
         return bitmap;
     return bitmap->cropped({ 0, 0, width, height });

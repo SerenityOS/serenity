@@ -19,7 +19,7 @@ ErrorOr<Device::Resource> Device::get_resource(size_t index) const
     };
 }
 
-ErrorOr<size_t> Device::get_interrupt_number(size_t index) const
+ErrorOr<InterruptNumber> Device::get_interrupt_number(size_t index) const
 {
     auto interrupts = TRY(node().interrupts(DeviceTree::get()));
     auto maybe_interrupt = interrupts.get(index);

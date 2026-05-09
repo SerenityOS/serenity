@@ -9,6 +9,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Interrupts/Interrupts.h>
 
 namespace Kernel {
 
@@ -21,7 +22,7 @@ enum class HandlerType : u8 {
 
 class GenericInterruptHandler {
 public:
-    static GenericInterruptHandler& from(u8 interrupt_number);
+    static GenericInterruptHandler& from(InterruptNumber interrupt_number);
     virtual ~GenericInterruptHandler()
     {
         VERIFY(!m_registered);
@@ -35,7 +36,7 @@ public:
     void register_interrupt_handler();
     void unregister_interrupt_handler();
 
-    u8 interrupt_number() const { return m_interrupt_number; }
+    InterruptNumber interrupt_number() const { return m_interrupt_number; }
 
     ReadonlySpan<u32> per_cpu_call_counts() const;
 
@@ -52,15 +53,15 @@ public:
     bool reserved() const { return m_reserved; }
 
 protected:
-    void change_interrupt_number(u8 number);
-    GenericInterruptHandler(u8 interrupt_number, bool disable_remap = false);
+    void change_interrupt_number(InterruptNumber number);
+    GenericInterruptHandler(InterruptNumber interrupt_number, bool disable_remap = false);
 
     void disable_remap() { m_disable_remap = true; }
 
 private:
     Array<u32, MAX_CPU_COUNT> m_per_cpu_call_counts {};
 
-    u8 m_interrupt_number { 0 };
+    InterruptNumber m_interrupt_number { 0 };
     bool m_disable_remap { false };
     bool m_registered { false };
     bool m_reserved { false };

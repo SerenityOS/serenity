@@ -42,7 +42,7 @@ gcc_path = None
 for serenity_arch in ['x86_64', 'aarch64']:
     candidate_gcc_path = os.path.join(
         DIR_OF_THIS_SCRIPT, 'Toolchain',
-        'Local', serenity_arch, 'bin', f'{serenity_arch}-pc-serenity-gcc'
+        'Local', serenity_arch, 'bin', f'{serenity_arch}-serenity-gcc'
     )
     if os.path.isfile(candidate_gcc_path):
         gcc_path = candidate_gcc_path

@@ -285,3 +285,8 @@ Emoji 16
 🪾 - U+1FABE LEAFLESS TREE
 🪏 - U+1FA8F SHOVEL
 🇨🇶 - U+1F1E8 U+1F1F6 CQ SARK
+
+Emoji 17
+----------
+🫪 - U+1FAEA DISTORTED FACE
+🫍 - U+1FACD ORCA

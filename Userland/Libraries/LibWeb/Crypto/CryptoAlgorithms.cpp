@@ -1366,13 +1366,12 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
     }
 
     // 2. Generate an Ed25519 key pair, as defined in [RFC8032], section 5.1.5.
-    ::Crypto::Curves::Ed25519 curve;
-    auto maybe_private_key = curve.generate_private_key();
+    auto maybe_private_key = ::Crypto::Curves::Ed25519::generate_private_key();
     if (maybe_private_key.is_error())
         return WebIDL::OperationError::create(m_realm, "Failed to generate private key"_string);
     auto private_key_data = maybe_private_key.release_value();
 
-    auto maybe_public_key = curve.generate_public_key(private_key_data);
+    auto maybe_public_key = ::Crypto::Curves::Ed25519::generate_public_key(private_key_data);
     if (maybe_public_key.is_error())
         return WebIDL::OperationError::create(m_realm, "Failed to generate public key"_string);
     auto public_key_data = maybe_public_key.release_value();
@@ -1435,13 +1434,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> ED25519::sign([[maybe_unu
     // with message as M, using the Ed25519 private key associated with key.
     auto private_key = key->handle().get<ByteBuffer>();
 
-    ::Crypto::Curves::Ed25519 curve;
-    auto maybe_public_key = curve.generate_public_key(private_key);
+    auto maybe_public_key = ::Crypto::Curves::Ed25519::generate_public_key(private_key);
     if (maybe_public_key.is_error())
         return WebIDL::OperationError::create(realm, "Failed to generate public key"_string);
     auto public_key = maybe_public_key.release_value();
 
-    auto maybe_signature = curve.sign(public_key, private_key, message);
+    auto maybe_signature = ::Crypto::Curves::Ed25519::sign(public_key, private_key, message);
     if (maybe_signature.is_error())
         return WebIDL::OperationError::create(realm, "Failed to sign message"_string);
     auto signature = maybe_signature.release_value();
@@ -1471,8 +1469,7 @@ WebIDL::ExceptionOr<JS::Value> ED25519::verify([[maybe_unused]] AlgorithmParams 
     auto public_key = key->handle().get<ByteBuffer>();
 
     // 9. Let result be a boolean with the value true if the signature is valid and the value false otherwise.
-    ::Crypto::Curves::Ed25519 curve;
-    auto result = curve.verify(public_key, signature, message);
+    auto result = ::Crypto::Curves::Ed25519::verify(public_key, signature, message);
 
     // 10. Return result.
     return JS::Value(result);

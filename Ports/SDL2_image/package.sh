@@ -13,7 +13,7 @@ files=(
 )
 configure() {
     run ./configure \
-        --host="${SERENITY_ARCH}-pc-serenity" \
+        --host="${SERENITY_ARCH}-serenity" \
         --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --enable-webp='false' \
         --enable-webp-shared='false' \

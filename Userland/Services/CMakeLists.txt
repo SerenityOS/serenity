@@ -2,6 +2,7 @@ add_subdirectory(ConfigServer)
 add_subdirectory(EchoServer)
 add_subdirectory(FileOperation)
 add_subdirectory(LookupServer)
+add_subdirectory(SSHServer)
 add_subdirectory(WebServer)
 
 if (SERENITYOS)

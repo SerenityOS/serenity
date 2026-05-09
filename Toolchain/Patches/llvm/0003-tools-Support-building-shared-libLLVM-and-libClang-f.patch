@@ -16,20 +16,20 @@ it, and the ELF sections that store version data would just waste space.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 32cdd83c0b9f008e54667316cbeffb463e4c760f..dfae22ba01dd81787ebb9d6962a4efddccc44753 100644
+index e469270e75e1ed456a5440a95e31c654c500c65f..0a09dd9c4d70e15fe55b7b8eb95e8f75f9d1cf82 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -232,7 +232,7 @@ if(WIN32 OR CYGWIN)
- elseif(FUCHSIA OR UNIX)
-   set(LLVM_ON_WIN32 0)
+@@ -247,7 +247,7 @@ if(WIN32)
+   set(LLVM_ON_UNIX 0)
+ elseif(FUCHSIA OR UNIX OR CYGWIN)
    set(LLVM_ON_UNIX 1)
--  if(APPLE OR ${CMAKE_SYSTEM_NAME} MATCHES "AIX")
-+  if(APPLE OR SERENITYOS OR ${CMAKE_SYSTEM_NAME} MATCHES "AIX")
+-  if(APPLE OR CYGWIN OR "${CMAKE_SYSTEM_NAME}" MATCHES "AIX")
++  if(APPLE OR SERENITYOS OR CYGWIN OR "${CMAKE_SYSTEM_NAME}" MATCHES "AIX")
      set(LLVM_HAVE_LINK_VERSION_SCRIPT 0)
    else()
      set(LLVM_HAVE_LINK_VERSION_SCRIPT 1)
 diff --git a/llvm/tools/llvm-shlib/CMakeLists.txt b/llvm/tools/llvm-shlib/CMakeLists.txt
-index 53003d90160fe568c288012387cfa97ed70a2fb1..4fc8152ac30112c032d5c1557ae0193a5b88c1de 100644
+index acf10b8a515b4e18bfd94392d87197cd5a8b5137..c944934082365c1cd3f0b4001c23e5cb7a98ad2e 100644
 --- a/llvm/tools/llvm-shlib/CMakeLists.txt
 +++ b/llvm/tools/llvm-shlib/CMakeLists.txt
 @@ -75,7 +75,7 @@ if(LLVM_BUILD_LLVM_DYLIB)

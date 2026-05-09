@@ -156,6 +156,10 @@ StringView primary_platform_name(PrimaryPlatform primary_platform)
         return "Silicon Graphics"sv;
     case PrimaryPlatform::Sun:
         return "Sun"sv;
+    case PrimaryPlatform::V2_Only_Taligent:
+        return "Taligent (only valid in v2 profiles)"sv;
+    case PrimaryPlatform::NotSpecCompliant_Unix:
+        return "Unix (not valid per spec)"sv;
     }
     VERIFY_NOT_REACHED();
 }

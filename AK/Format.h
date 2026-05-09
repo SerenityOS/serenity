@@ -88,7 +88,7 @@ struct TypeErasedParameter {
     template<typename T>
     static bool const IsChar = IsOneOf<T, char, wchar_t, char8_t, char16_t, char32_t>;
 
-    template<Unsigned U>
+    template<UnsignedIntegral U>
     explicit constexpr TypeErasedParameter(U const& value)
     requires(!IsChar<U> && sizeof(U) <= sizeof(u64))
         : value { .as_unsigned = value }
@@ -96,7 +96,7 @@ struct TypeErasedParameter {
     {
     }
 
-    template<Signed I>
+    template<SignedIntegral I>
     explicit constexpr TypeErasedParameter(I const& value)
     requires(!IsChar<I> && sizeof(I) <= sizeof(i64))
         : value { .as_signed = value }

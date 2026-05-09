@@ -23,7 +23,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath thread proc"));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath thread proc map_fixed"));
 
     Core::EventLoop event_loop;
     TRY(Core::System::unveil("/res", "r"));

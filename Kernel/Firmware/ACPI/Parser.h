@@ -52,7 +52,7 @@ class Parser final : public IRQHandler {
 public:
     static Parser* the();
 
-    static void must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number);
+    static void must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number);
 
     virtual StringView purpose() const override { return "ACPI Parser"sv; }
     virtual bool handle_irq() override;
@@ -83,7 +83,7 @@ public:
     ~Parser() = default;
 
 private:
-    Parser(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number);
+    Parser(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number);
 
     void locate_static_data();
     void locate_main_system_description_table();

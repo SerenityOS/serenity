@@ -262,12 +262,6 @@ template<>
 struct __MakeUnsigned<bool> {
     using Type = bool;
 };
-#if ARCH(AARCH64)
-template<>
-struct __MakeUnsigned<wchar_t> {
-    using Type = wchar_t;
-};
-#endif
 
 template<typename T>
 using MakeUnsigned = typename __MakeUnsigned<T>::Type;
@@ -371,12 +365,6 @@ using Void = void;
 template<typename... _Ignored>
 constexpr auto DependentFalse = false;
 
-template<typename T>
-inline constexpr bool IsSigned = IsSame<T, MakeSigned<T>>;
-
-template<typename T>
-inline constexpr bool IsUnsigned = IsSame<T, MakeUnsigned<T>>;
-
 #ifndef KERNEL
 template<typename T>
 inline constexpr bool IsArithmetic = IsIntegral<T> || IsFloatingPoint<T>;
@@ -384,6 +372,18 @@ inline constexpr bool IsArithmetic = IsIntegral<T> || IsFloatingPoint<T>;
 template<typename T>
 inline constexpr bool IsArithmetic = IsIntegral<T>;
 #endif
+
+template<typename T, bool = IsArithmetic<T>>
+inline constexpr bool IsSigned = T(-1) < T(0);
+
+template<typename T>
+inline constexpr bool IsSigned<T, false> = false;
+
+template<typename T, bool = IsArithmetic<T>>
+inline constexpr bool IsUnsigned = T(0) < T(-1);
+
+template<typename T>
+inline constexpr bool IsUnsigned<T, false> = false;
 
 template<typename T>
 inline constexpr bool IsFundamental = IsArithmetic<T> || IsVoid<T> || IsNullPointer<T>;
@@ -496,7 +496,7 @@ template<typename T>
 inline constexpr bool IsDestructible = requires { declval<T>().~T(); };
 
 template<typename T>
-#if defined(AK_COMPILER_CLANG)
+#if __has_builtin(__is_trivially_destructible)
 inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
 #else
 inline constexpr bool IsTriviallyDestructible = __has_trivial_destructor(T) && IsDestructible<T>;

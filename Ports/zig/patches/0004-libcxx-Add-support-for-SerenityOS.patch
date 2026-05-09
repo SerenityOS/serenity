@@ -20,22 +20,24 @@ the layout of the zig-bootstrap project.
 Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
- zig/lib/libcxx/include/__config               |  5 +++--
- .../include/__locale_dir/locale_base_api.h    |  2 ++
- .../__locale_dir/locale_base_api/serenity.h   | 22 +++++++++++++++++++
- .../libcxx/include/__locale_dir/messages.h    |  2 +-
- .../include/__support/ibm/locale_mgmt_zos.h   |  2 +-
- zig/lib/libcxx/src/include/config_elast.h     |  2 ++
- .../libcxx/src/support/ibm/xlocale_zos.cpp    |  2 ++
- zig/src/libs/libcxx.zig                       |  3 ++-
- 8 files changed, 35 insertions(+), 5 deletions(-)
+ zig/lib/libcxx/include/__config               |   5 +-
+ .../include/__locale_dir/locale_base_api.h    |   2 +
+ .../__locale_dir/locale_base_api/serenity.h   |  22 +++
+ .../libcxx/include/__locale_dir/messages.h    |   2 +-
+ .../include/__support/ibm/locale_mgmt_zos.h   |  53 +++++++
+ zig/lib/libcxx/src/include/config_elast.h     |   2 +
+ .../libcxx/src/support/ibm/xlocale_zos.cpp    | 132 ++++++++++++++++++
+ zig/src/libs/libcxx.zig                       |   4 +
+ 8 files changed, 219 insertions(+), 3 deletions(-)
  create mode 100644 zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
+ create mode 100644 zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
+ create mode 100644 zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp
 
 diff --git a/zig/lib/libcxx/include/__config b/zig/lib/libcxx/include/__config
-index 41cb6ac3b68909a53ff2e91ce8e25d36b878ca0c..a0c82b477a074f3eb67efaf200905d2026b50586 100644
+index 03538ff78eed72d26002234df040c3f67ea0556b..694e1ba85c224929fc26d38a0dc8899ff3a9c38a 100644
 --- a/zig/lib/libcxx/include/__config
 +++ b/zig/lib/libcxx/include/__config
-@@ -842,7 +842,8 @@ typedef __char32_t char32_t;
+@@ -845,7 +845,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -45,7 +47,7 @@ index 41cb6ac3b68909a53ff2e91ce8e25d36b878ca0c..a0c82b477a074f3eb67efaf200905d20
  // clang-format on
  #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
-@@ -925,7 +926,7 @@ typedef __char32_t char32_t;
+@@ -928,7 +929,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -109,18 +111,64 @@ index c04bf04025ff0ab99370bc201a5cf14f475aa485..0a9ee60e0e6bd02061ab0ffd04d096e4
  #      include <nl_types.h>
  #    else
 diff --git a/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h b/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
-index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d1467c3565cf 100644
---- a/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..787cc04d57929537d73d871ffd10d1467c3565cf
+--- /dev/null
 +++ b/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
-@@ -10,7 +10,7 @@
- #ifndef _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
- #define _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
- 
--#if defined(__MVS__)
+@@ -0,0 +1,53 @@
++// -*- C++ -*-
++//===----------------------------------------------------------------------===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
++#define _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
++
 +#if defined(__MVS__) || defined(__serenity__)
- #  include <locale.h>
- #  include <string>
- 
++#  include <locale.h>
++#  include <string>
++
++#  ifdef __cplusplus
++extern "C" {
++#  endif
++
++#  define _LC_MAX LC_MESSAGES /* highest real category */
++#  define _NCAT (_LC_MAX + 1) /* maximum + 1 */
++
++#  define _CATMASK(n) (1 << (n))
++#  define LC_COLLATE_MASK _CATMASK(LC_COLLATE)
++#  define LC_CTYPE_MASK _CATMASK(LC_CTYPE)
++#  define LC_MONETARY_MASK _CATMASK(LC_MONETARY)
++#  define LC_NUMERIC_MASK _CATMASK(LC_NUMERIC)
++#  define LC_TIME_MASK _CATMASK(LC_TIME)
++#  define LC_MESSAGES_MASK _CATMASK(LC_MESSAGES)
++#  define LC_ALL_MASK (_CATMASK(_NCAT) - 1)
++
++typedef struct locale_struct {
++  int category_mask;
++  std::string lc_collate;
++  std::string lc_ctype;
++  std::string lc_monetary;
++  std::string lc_numeric;
++  std::string lc_time;
++  std::string lc_messages;
++}* locale_t;
++
++// z/OS does not have newlocale, freelocale and uselocale.
++// The functions below are workarounds in single thread mode.
++locale_t newlocale(int category_mask, const char* locale, locale_t base);
++void freelocale(locale_t locobj);
++locale_t uselocale(locale_t newloc);
++
++#  ifdef __cplusplus
++}
++#  endif
++#endif // defined(__MVS__)
++#endif // _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
 diff --git a/zig/lib/libcxx/src/include/config_elast.h b/zig/lib/libcxx/src/include/config_elast.h
 index 7edff2d9375d46f465a1d72b916b1ccb1a555724..ba24e85be8d0a2b4502d5986377081c1bcd036ee 100644
 --- a/zig/lib/libcxx/src/include/config_elast.h
@@ -135,30 +183,162 @@ index 7edff2d9375d46f465a1d72b916b1ccb1a555724..ba24e85be8d0a2b4502d5986377081c1
  #  define _LIBCPP_ELAST 1160
  #elif defined(_LIBCPP_MSVCRT_LIKE)
 diff --git a/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp b/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp
-index 136999ec0b02f8171bbd8d170aca2b68f7d65681..23a56c0f586728e37ee89bba608b1853983bcb94 100644
---- a/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..23a56c0f586728e37ee89bba608b1853983bcb94
+--- /dev/null
 +++ b/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp
-@@ -7,7 +7,9 @@
- //===----------------------------------------------------------------------===//
- 
- #include <__assert>
+@@ -0,0 +1,132 @@
++//===----------------------------------------------------------------------===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#include <__assert>
 +#ifndef __serenity__
- #include <__support/ibm/xlocale.h>
++#include <__support/ibm/xlocale.h>
 +#endif
- #include <sstream>
- #include <vector>
- 
++#include <sstream>
++#include <vector>
++
++#ifdef __cplusplus
++extern "C" {
++#endif // __cplusplus
++
++locale_t newlocale(int category_mask, const char* locale, locale_t base) {
++  // Maintain current locale name(s) to restore later.
++  std::string current_loc_name(setlocale(LC_ALL, 0));
++
++  // Check for errors.
++  if (category_mask == LC_ALL_MASK && setlocale(LC_ALL, locale) == nullptr) {
++    errno = EINVAL;
++    return (locale_t)0;
++  } else {
++    for (int _Cat = 0; _Cat <= _LC_MAX; ++_Cat) {
++      if ((_CATMASK(_Cat) & category_mask) != 0 && setlocale(_Cat, locale) == nullptr) {
++        setlocale(LC_ALL, current_loc_name.c_str());
++        errno = EINVAL;
++        return (locale_t)0;
++      }
++    }
++  }
++
++  // Create new locale.
++  locale_t newloc = new locale_struct();
++
++  if (base) {
++    if (category_mask != LC_ALL_MASK) {
++      // Copy base when it will not be overwritten.
++      memcpy(newloc, base, sizeof(locale_struct));
++      newloc->category_mask = category_mask | base->category_mask;
++    }
++    delete base;
++  } else {
++    newloc->category_mask = category_mask;
++  }
++
++  if (category_mask & LC_COLLATE_MASK)
++    newloc->lc_collate = locale;
++  if (category_mask & LC_CTYPE_MASK)
++    newloc->lc_ctype = locale;
++  if (category_mask & LC_MONETARY_MASK)
++    newloc->lc_monetary = locale;
++  if (category_mask & LC_NUMERIC_MASK)
++    newloc->lc_numeric = locale;
++  if (category_mask & LC_TIME_MASK)
++    newloc->lc_time = locale;
++  if (category_mask & LC_MESSAGES_MASK)
++    newloc->lc_messages = locale;
++
++  // Restore current locale.
++  setlocale(LC_ALL, current_loc_name.c_str());
++  return (locale_t)newloc;
++}
++
++void freelocale(locale_t locobj) { delete locobj; }
++
++locale_t uselocale(locale_t newloc) {
++  // Maintain current locale name(s).
++  std::string current_loc_name(setlocale(LC_ALL, 0));
++
++  if (newloc) {
++    // Set locales and check for errors.
++    bool is_error =
++        (newloc->category_mask & LC_COLLATE_MASK && setlocale(LC_COLLATE, newloc->lc_collate.c_str()) == nullptr) ||
++        (newloc->category_mask & LC_CTYPE_MASK && setlocale(LC_CTYPE, newloc->lc_ctype.c_str()) == nullptr) ||
++        (newloc->category_mask & LC_MONETARY_MASK && setlocale(LC_MONETARY, newloc->lc_monetary.c_str()) == nullptr) ||
++        (newloc->category_mask & LC_NUMERIC_MASK && setlocale(LC_NUMERIC, newloc->lc_numeric.c_str()) == nullptr) ||
++        (newloc->category_mask & LC_TIME_MASK && setlocale(LC_TIME, newloc->lc_time.c_str()) == nullptr) ||
++        (newloc->category_mask & LC_MESSAGES_MASK && setlocale(LC_MESSAGES, newloc->lc_messages.c_str()) == nullptr);
++
++    if (is_error) {
++      setlocale(LC_ALL, current_loc_name.c_str());
++      errno = EINVAL;
++      return (locale_t)0;
++    }
++  }
++
++  // Construct and return previous locale.
++  locale_t previous_loc = new locale_struct();
++
++  // current_loc_name might be a comma-separated locale name list.
++  if (current_loc_name.find(',') != std::string::npos) {
++    // Tokenize locale name list.
++    const char delimiter = ',';
++    std::vector<std::string> tokenized;
++    std::stringstream ss(current_loc_name);
++    std::string s;
++
++    while (std::getline(ss, s, delimiter)) {
++      tokenized.push_back(s);
++    }
++
++    _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(tokenized.size() >= _NCAT, "locale-name list is too short");
++
++    previous_loc->lc_collate  = tokenized[LC_COLLATE];
++    previous_loc->lc_ctype    = tokenized[LC_CTYPE];
++    previous_loc->lc_monetary = tokenized[LC_MONETARY];
++    previous_loc->lc_numeric  = tokenized[LC_NUMERIC];
++    previous_loc->lc_time     = tokenized[LC_TIME];
++    // Skip LC_TOD.
++    previous_loc->lc_messages = tokenized[LC_MESSAGES];
++  } else {
++    previous_loc->lc_collate  = current_loc_name;
++    previous_loc->lc_ctype    = current_loc_name;
++    previous_loc->lc_monetary = current_loc_name;
++    previous_loc->lc_numeric  = current_loc_name;
++    previous_loc->lc_time     = current_loc_name;
++    previous_loc->lc_messages = current_loc_name;
++  }
++
++  previous_loc->category_mask = LC_ALL_MASK;
++  return previous_loc;
++}
++
++#ifdef __cplusplus
++}
++#endif // __cplusplus
 diff --git a/zig/src/libs/libcxx.zig b/zig/src/libs/libcxx.zig
-index 4e39d1e03a8daff279bda98ea642be5f2dc06fa1..aa21d23fe52d691094b469e87c32d5de37e1f403 100644
+index 316ac6d815b3d6023f0d63164194e412cfdd7e5c..bcd2f86c71b6d0dd4cffb70f0134a6446864c113 100644
 --- a/zig/src/libs/libcxx.zig
 +++ b/zig/src/libs/libcxx.zig
-@@ -203,7 +203,8 @@ pub fn buildLibCxx(comp: *Compilation, prog_node: std.Progress.Node) BuildError!
+@@ -79,6 +79,7 @@ const libcxx_base_files = [_][]const u8{
+     "src/stdexcept.cpp",
+     "src/string.cpp",
+     "src/strstream.cpp",
++    "src/support/ibm/xlocale_zos.cpp",
+     "src/support/win32/locale_win32.cpp",
+     "src/support/win32/support.cpp",
+     "src/system_error.cpp",
+@@ -201,6 +202,9 @@ pub fn buildLibCxx(comp: *Compilation, prog_node: std.Progress.Node) BuildError!
              continue;
          if (std.mem.startsWith(u8, cxx_src, "src/support/win32/") and target.os.tag != .windows)
              continue;
--        if (std.mem.startsWith(u8, cxx_src, "src/support/ibm/") and target.os.tag != .zos)
 +        // SerenityOS uses a patched version of src/support/ibm/xlocale_zos.cpp
-+        if (std.mem.startsWith(u8, cxx_src, "src/support/ibm/") and (target.os.tag != .zos and target.os.tag != .serenity))
-             continue;
++        if (std.mem.startsWith(u8, cxx_src, "src/support/ibm/") and target.os.tag != .serenity)
++             continue;
  
          var cflags = std.array_list.Managed([]const u8).init(arena);
+ 

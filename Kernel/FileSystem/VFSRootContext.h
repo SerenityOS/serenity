@@ -30,7 +30,12 @@ public:
     static Custody const& empty_context_custody_for_kernel_processes();
     static void initialize_empty_ramfs_root_context_for_kernel_processes();
 
-    static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_empty_ramfs();
+    enum class AddToGlobalContextList {
+        Yes,
+        No,
+    };
+    static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_empty_ramfs(AddToGlobalContextList);
+    static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_filesystem(AddToGlobalContextList, FileSystem&);
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_empty();
 
     SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None>& root_custody() { return m_root_custody; }
@@ -45,9 +50,10 @@ public:
     ErrorOr<void> do_full_teardown(Badge<PowerStateSwitchTask>);
 
     ErrorOr<void> unmount(FileBackedFileSystem::List& file_backed_file_systems_list, Inode& guest_inode, StringView custody_path);
-    ErrorOr<void> pivot_root(FileBackedFileSystem::List& file_backed_file_systems_list, FileSystem& fs, NonnullOwnPtr<Mount> new_mount, NonnullRefPtr<Custody> root_mount_point, int root_mount_flags);
 
     ErrorOr<void> apply_to_mount_for_host_custody(Custody const& current_custody, Function<void(Mount&)>);
+
+    ErrorOr<NonnullRefPtr<FileSystem>> mount_point_to_guest_filesystem(Custody const& custody);
 
     struct CurrentMountState {
         Mount::Details details;

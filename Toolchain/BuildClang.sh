@@ -63,11 +63,11 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-LLVM_VERSION="21.1.0"
-LLVM_MD5SUM="b2c81351902a6526499ceb4172b0b994"
-LLVM_NAME="llvm-project-$LLVM_VERSION.src"
-LLVM_PKG="$LLVM_NAME.tar.xz"
-LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
+LLVM_COMMIT='9edf0e73b59540ccec25b355268ebff6d3bba4ef' # LLVM 23.0.0 28/04/2026
+LLVM_MD5SUM="f2a8ac1900fa550613fad2dd20483985"
+LLVM_NAME="llvm-project-$LLVM_COMMIT"
+LLVM_PKG="$LLVM_COMMIT.zip"
+LLVM_URL="https://github.com/llvm/llvm-project/archive/$LLVM_PKG"
 
 buildstep() {
     NAME=$1
@@ -181,7 +181,7 @@ pushd "$DIR/Tarballs"
         rm -rf "$DIR/Build/clang"
 
         echo "Extracting LLVM..."
-        tar -xJf "$LLVM_PKG"
+        unzip -qq "$LLVM_PKG"
 
         pushd "$LLVM_NAME"
             if [ "$dev" = "1" ]; then
@@ -221,13 +221,15 @@ pushd "$DIR/Build/clang"
     pushd llvm
         buildstep "llvm/configure" cmake "$DIR/Tarballs/$LLVM_NAME/llvm" \
             -G Ninja \
-            -DSERENITY_x86_64-pc-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
-            -DSERENITY_aarch64-pc-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
-            -DSERENITY_riscv64-pc-serenity_SYSROOT="$BUILD/riscv64clang/Root" \
-            -DSERENITY_x86_64-pc-serenity_STUBS="$DIR/Stubs/x86_64" \
-            -DSERENITY_aarch64-pc-serenity_STUBS="$DIR/Stubs/aarch64" \
-            -DSERENITY_riscv64-pc-serenity_STUBS="$DIR/Stubs/riscv64" \
+            -DSERENITY_x86_64-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
+            -DSERENITY_aarch64-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
+            -DSERENITY_riscv64-serenity_SYSROOT="$BUILD/riscv64clang/Root" \
+            -DSERENITY_x86_64-serenity_STUBS="$DIR/Stubs/x86_64" \
+            -DSERENITY_aarch64-serenity_STUBS="$DIR/Stubs/aarch64" \
+            -DSERENITY_riscv64-serenity_STUBS="$DIR/Stubs/riscv64" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+            -DCLANG_REPOSITORY_STRING="$LLVM_COMMIT" \
+            -DLLVM_APPEND_VC_REV=OFF \
             -C "$DIR/CMake/LLVMConfig.cmake" \
             ${link_lld:+"-DLLVM_ENABLE_LLD=ON"} \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
@@ -243,9 +245,9 @@ pushd "$DIR/Local/clang/bin/"
     ln -s ../../mold/bin/mold ld.mold
 
     for arch in $ARCHS; do
-        ln -s clang "$arch"-pc-serenity-clang
-        ln -s clang++ "$arch"-pc-serenity-clang++
-        ln -s llvm-nm "$arch"-pc-serenity-nm
-        echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-pc-serenity.cfg
+        ln -s clang "$arch"-serenity-clang
+        ln -s clang++ "$arch"-serenity-clang++
+        ln -s llvm-nm "$arch"-serenity-nm
+        echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-unknown-serenity.cfg
     done
 popd

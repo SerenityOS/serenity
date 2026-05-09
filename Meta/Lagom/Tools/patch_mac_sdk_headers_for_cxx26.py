@@ -11,6 +11,7 @@
 
 import argparse
 import os
+import pathlib
 import subprocess
 
 
@@ -28,6 +29,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--sdk-path', help='Path to Mac SDK', required=True)
     parser.add_argument('-o', '--output-dir', help='Output path for the patched header files', required=True)
+    parser.add_argument('--stamp', help='File to touch at end')
     args = parser.parse_args()
 
     sdk_path = args.sdk_path
@@ -48,6 +50,9 @@ def main():
 
         with open(output_path, "w") as f:
             f.write(content)
+
+    if args.stamp:
+        pathlib.Path(args.stamp).touch()
 
 
 if __name__ == '__main__':

@@ -267,6 +267,7 @@ PDFErrorOr<NonnullRefPtr<StringObject>> Parser::parse_string()
 
 PDFErrorOr<ByteString> Parser::parse_literal_string()
 {
+    // PDF 1.7 spec, 3.2.3 String Objects, Literal Strings
     VERIFY(m_reader.consume('('));
     StringBuilder builder;
     auto opened_parens = 0;
@@ -321,12 +322,11 @@ PDFErrorOr<ByteString> Parser::parse_literal_string()
                 builder.append('\\');
                 break;
             default: {
-                if (ch >= '0' && ch <= '7') {
+                // "The number ddd may consist of one, two, or three octal digits"
+                if (is_ascii_octal_digit(ch)) {
                     int octal_value = ch - '0';
-                    for (int i = 0; i < 2; i++) {
+                    for (int i = 0; i < 2 && is_ascii_octal_digit(m_reader.peek()); i++) {
                         auto octal_ch = m_reader.consume();
-                        if (octal_ch < '0' || octal_ch > '7')
-                            break;
                         octal_value = octal_value * 8 + (octal_ch - '0');
                     }
                     builder.append(static_cast<char>(octal_value));

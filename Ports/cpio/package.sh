@@ -7,3 +7,6 @@ config_sub_paths=('build-aux/config.sub')
 files=(
     "https://ftpmirror.gnu.org/gnu/cpio/cpio-${version}.tar.gz#efa50ef983137eefc0a02fdb51509d624b5e3295c980aa127ceee4183455499e"
 )
+configopts=(
+    'CFLAGS=-std=c17'
+)

@@ -107,15 +107,6 @@ static void console_out(char ch)
     }
 }
 
-// Declare it, so that the symbol is exported, because libstdc++ uses it.
-// However, *only* libstdc++ uses it, and none of the rest of the Kernel.
-extern "C" int sprintf(char* buffer, char const* fmt, ...);
-
-int sprintf(char*, char const*, ...)
-{
-    VERIFY_NOT_REACHED();
-}
-
 static inline void internal_dbgputch(char ch)
 {
     if (s_serial_debug_enabled)

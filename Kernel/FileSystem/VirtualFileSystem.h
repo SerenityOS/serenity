@@ -59,7 +59,6 @@ ErrorOr<FileSystemInitializer const*> find_filesystem_type_initializer(StringVie
 ErrorOr<void> remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list);
 
 ErrorOr<void> mount(VFSRootContext&, MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
-ErrorOr<void> pivot_root_by_copying_mounted_fs_instance(VFSRootContext&, FileSystem& fs, int root_mount_flags);
 
 ErrorOr<void> bind_mount(VFSRootContext&, Custody& source, Custody& mount_point, int flags);
 ErrorOr<void> copy_mount(Custody& source, VFSRootContext& destination, Custody& mount_point, int flags);

@@ -20,3 +20,10 @@ include: Teach the header about serenity
 build: Add platform-specific stubs and implementations
 
 
+## `0005-include-Errnos-are-positive-in-serenity.patch`
+
+include: Errnos are positive in serenity
+
+Checking this with `#if EDOM > 0` doesn't work in serenity since errno
+values are defined to enumerators.
+

@@ -93,25 +93,25 @@ public:
     }
 
     template<typename T>
-    requires(sizeof(T) == sizeof(u8) && Signed<T>) explicit Value(T raw_value)
+    requires(sizeof(T) == sizeof(u8) && SignedIntegral<T>) explicit Value(T raw_value)
         : m_value(u128(static_cast<i64>(bit_cast<i8>(raw_value)), 0))
     {
     }
 
     template<typename T>
-    requires(sizeof(T) == sizeof(u8) && Unsigned<T>) explicit Value(T raw_value)
+    requires(sizeof(T) == sizeof(u8) && UnsignedIntegral<T>) explicit Value(T raw_value)
         : m_value(u128(static_cast<u64>(bit_cast<u8>(raw_value)), 0))
     {
     }
 
     template<typename T>
-    requires(sizeof(T) == sizeof(u16) && Signed<T>) explicit Value(T raw_value)
+    requires(sizeof(T) == sizeof(u16) && SignedIntegral<T>) explicit Value(T raw_value)
         : m_value(u128(static_cast<i64>(bit_cast<i16>(raw_value)), 0))
     {
     }
 
     template<typename T>
-    requires(sizeof(T) == sizeof(u16) && Unsigned<T>) explicit Value(T raw_value)
+    requires(sizeof(T) == sizeof(u16) && UnsignedIntegral<T>) explicit Value(T raw_value)
         : m_value(u128(static_cast<u64>(bit_cast<u16>(raw_value)), 0))
     {
     }

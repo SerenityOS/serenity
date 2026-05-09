@@ -8,26 +8,63 @@
 #include <Kernel/FileSystem/VFSRootContext.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 
+extern SetOnce g_not_in_early_boot;
+
 namespace Kernel {
 
 static RawPtr<VFSRootContext> s_empty_context;
 static RawPtr<Custody> s_empty_context_custody;
 static Atomic<u64> s_vfs_root_context_id = 0;
 
+ErrorOr<NonnullRefPtr<VFSRootContext>> VFSRootContext::create_with_empty_ramfs(AddToGlobalContextList add_to_global_context_list)
+{
+    // NOTE: It's not expected that this will be called for creating a
+    // context that will not be added into the global list after some
+    // point during the boot process.
+    if (g_not_in_early_boot.was_set())
+        VERIFY(add_to_global_context_list == AddToGlobalContextList::Yes);
+
+    auto fs = TRY(RAMFS::try_create({}));
+    TRY(fs->initialize());
+    return create_with_filesystem(add_to_global_context_list, fs);
+}
+
+ErrorOr<NonnullRefPtr<VFSRootContext>> VFSRootContext::create_with_filesystem(AddToGlobalContextList add_to_global_context_list, FileSystem& fs)
+{
+    auto root_custody = TRY(Custody::try_create(nullptr, ""sv, fs.root_inode(), 0));
+    auto context = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VFSRootContext(root_custody)));
+    auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs.root_inode(), 0)));
+    TRY(context->m_details.with([&](auto& details) -> ErrorOr<void> {
+        if (add_to_global_context_list == AddToGlobalContextList::Yes) {
+            dbgln("VFSRootContext({}): Root (\"/\") FileSystemID {}, Mounting {} at inode {} with flags {}",
+                context->id(),
+                fs.fsid(),
+                fs.class_name(),
+                root_custody->inode().identifier(),
+                0);
+        }
+        add_to_mounts_list_and_increment_fs_mounted_count(DoBindMount::No, details.mounts, move(new_mount));
+        return {};
+    }));
+
+    if (add_to_global_context_list == AddToGlobalContextList::Yes) {
+        // Finally, add the context to the global list so it can be used.
+        VFSRootContext::all_root_contexts_list().with([&](auto& list) {
+            list.append(*context);
+        });
+    }
+    return context;
+}
+
 UNMAP_AFTER_INIT void VFSRootContext::initialize_empty_ramfs_root_context_for_kernel_processes()
 {
-    s_empty_context = &MUST(VFSRootContext::create_with_empty_ramfs()).leak_ref();
+    // NOTE: We don't add the context to the vfs root contexts list and
+    // we leak a ref, as this context is artificially created only for
+    // kernel processes.
+    s_empty_context = &MUST(VFSRootContext::create_with_empty_ramfs(AddToGlobalContextList::No)).leak_ref();
     // NOTE: This custody is immutable, so we expose it also outside of the SpinlockProtected
     // template so it could be accessed immediately.
     s_empty_context_custody = &s_empty_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> { return *custody; }).leak_ref();
-
-    // NOTE: We remove the context from the vfs root contexts list because
-    // we leaked a ref, and this context is artificially created only for
-    // kernel processes.
-    dbgln("VFSRootContext({}): Context is artificially made, detach from global list", s_empty_context->id());
-    VFSRootContext::all_root_contexts_list().with([&](auto& list) {
-        list.remove(*s_empty_context);
-    });
 }
 
 VFSRootContext::VFSRootContext(NonnullRefPtr<Custody> custody)
@@ -89,77 +126,6 @@ void VFSRootContext::add_to_mounts_list_and_increment_fs_mounted_count(DoBindMou
     // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
     // deleted after being added.
     mounts_list.append(*new_mount.leak_ptr());
-}
-
-ErrorOr<NonnullRefPtr<VFSRootContext>> VFSRootContext::create_with_empty_ramfs()
-{
-    auto fs = TRY(RAMFS::try_create({}));
-    TRY(fs->initialize());
-    auto root_custody = TRY(Custody::try_create(nullptr, ""sv, fs->root_inode(), 0));
-    auto context = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VFSRootContext(root_custody)));
-    auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs->root_inode(), 0)));
-    TRY(context->m_details.with([&](auto& details) -> ErrorOr<void> {
-        dbgln("VFSRootContext({}): Root (\"/\") FileSystemID {}, Mounting {} at inode {} with flags {}",
-            context->id(),
-            fs->fsid(),
-            fs->class_name(),
-            root_custody->inode().identifier(),
-            0);
-        add_to_mounts_list_and_increment_fs_mounted_count(DoBindMount::No, details.mounts, move(new_mount));
-        return {};
-    }));
-
-    // Finally, add the context to the global list so it can be used.
-    VFSRootContext::all_root_contexts_list().with([&](auto& list) {
-        list.append(*context);
-    });
-    return context;
-}
-
-ErrorOr<void> VFSRootContext::pivot_root(FileBackedFileSystem::List& file_backed_file_systems_list, FileSystem& fs, NonnullOwnPtr<Mount> new_mount, NonnullRefPtr<Custody> root_mount_point, int root_mount_flags)
-{
-    return m_details.with([&](auto& details) -> ErrorOr<void> {
-        return fs.mounted_count().with([&](auto& mounted_count) -> ErrorOr<void> {
-            // NOTE: If the mounted count is 0, then this filesystem is about to be
-            // deleted, so this must be a kernel bug as we don't include such filesystem
-            // in the VirtualFileSystem s_details->file_backed_file_systems_list list anymore.
-            VERIFY(mounted_count > 0);
-
-            // NOTE: The mounts table should not be empty as it always need
-            // to have at least one mount!
-            VERIFY(!details.mounts.is_empty());
-
-            // NOTE: If we have many mounts in the table, then simply don't allow
-            // userspace to override them but instead require to unmount everything except
-            // the root mount first.
-            if (details.mounts.size_slow() != 1)
-                return EPERM;
-
-            auto& mount = *details.mounts.first();
-            TRY(VirtualFileSystem::remove_mount(mount, file_backed_file_systems_list));
-            VERIFY(details.mounts.is_empty());
-
-            dbgln("VFSRootContext({}): Root mount set to FileSystemID {}, Mounting {} at inode {} with flags {}",
-                id(),
-                new_mount->guest_fs().fsid(),
-                new_mount->guest_fs().class_name(),
-                root_mount_point->inode().identifier(),
-                root_mount_flags);
-
-            // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
-            // deleted after being added.
-            details.mounts.append(*new_mount.leak_ptr());
-
-            // NOTE: We essentially do the same thing like VFSRootContext::add_to_mounts_list_and_increment_fs_mounted_count function
-            // but because we already locked the spinlock of the attach count, we can't call that function here.
-            mounted_count++;
-            // NOTE: Now fill the root custody with a valid custody for the new root mount.
-            m_root_custody.with([&root_mount_point](auto& custody) {
-                custody = move(root_mount_point);
-            });
-            return {};
-        });
-    });
 }
 
 ErrorOr<void> VFSRootContext::do_full_teardown(Badge<PowerStateSwitchTask>)
@@ -304,6 +270,27 @@ ErrorOr<void> VFSRootContext::do_on_mount_for_host_custody(ValidateImmutableFlag
 ErrorOr<void> VFSRootContext::apply_to_mount_for_host_custody(Custody const& current_custody, Function<void(Mount&)> callback)
 {
     return do_on_mount_for_host_custody(ValidateImmutableFlag::Yes, current_custody, move(callback));
+}
+
+ErrorOr<NonnullRefPtr<FileSystem>> VFSRootContext::mount_point_to_guest_filesystem(Custody const& custody)
+{
+    return m_details.with([&](auto& details) -> ErrorOr<NonnullRefPtr<FileSystem>> {
+        // NOTE: We either search for the root mount or for a mount that has a parent custody!
+        if (!custody.parent()) {
+            for (auto& mount : details.mounts) {
+                if (!mount.host_custody())
+                    return mount.guest_fs();
+            }
+            // There must be a root mount entry, so fail if we don't find it.
+            VERIFY_NOT_REACHED();
+        } else {
+            for (auto& mount : details.mounts) {
+                if (mount.host_custody() && VirtualFileSystem::check_matching_absolute_path_hierarchy(*mount.host_custody(), custody))
+                    return mount.guest_fs();
+            }
+        }
+        return ENODEV;
+    });
 }
 
 ErrorOr<VFSRootContext::CurrentMountState> VFSRootContext::current_mount_state_for_host_custody(Custody const& current_custody) const

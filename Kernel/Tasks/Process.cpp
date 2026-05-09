@@ -1015,18 +1015,25 @@ void Process::die()
         return;
     }
 
-    // Let go of the TTY, otherwise a slave PTY may keep the master PTY from
-    // getting an EOF when the last process using the slave PTY dies.
-    // If the master PTY owner relies on an EOF to know when to wait() on a
-    // slave owner, we have to allow the PTY pair to be torn down.
-    with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
+    {
+        SpinlockLocker lock(g_scheduler_lock);
+        set_stopped(false);
 
-    VERIFY(m_threads_for_coredump.is_empty());
-    for_each_thread([&](auto& thread) {
-        auto result = m_threads_for_coredump.try_append(thread);
-        if (result.is_error())
-            dbgln("Failed to add thread {} to coredump due to OOM", thread.tid());
-    });
+        // Let go of the TTY, otherwise a slave PTY may keep the master PTY from
+        // getting an EOF when the last process using the slave PTY dies.
+        // If the master PTY owner relies on an EOF to know when to wait() on a
+        // slave owner, we have to allow the PTY pair to be torn down.
+        with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
+
+        VERIFY(m_threads_for_coredump.is_empty());
+        for_each_thread([&](auto& thread) {
+            auto result = m_threads_for_coredump.try_append(thread);
+            if (result.is_error())
+                dbgln("Failed to add thread {} to coredump due to OOM", thread.tid());
+        });
+
+        kill_all_threads();
+    }
 
     all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
@@ -1050,8 +1057,6 @@ void Process::die()
             }
         }
     });
-
-    kill_all_threads();
 }
 
 void Process::terminate_due_to_signal(u8 signal)
@@ -1328,6 +1333,59 @@ ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vf
         target_custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), path, current_directory()));
     }
     return MountTargetContext { *target_custody.release_nonnull(), *vfs_root_context };
+}
+
+void Process::replace_vfs_root_context(VFSRootContext& new_context)
+{
+    m_attached_vfs_root_context.with([&new_context](auto& context) {
+        if (context.ptr() == &new_context)
+            return;
+        VERIFY(context);
+        context->detach({});
+        context = new_context;
+        new_context.attach({});
+    });
+}
+
+void Process::replace_hostname_context(HostnameContext& new_context)
+{
+    m_attached_hostname_context.with([&new_context](auto& context) {
+        if (context.ptr() == &new_context)
+            return;
+        VERIFY(context);
+        context->detach({});
+        context = new_context;
+        new_context.set_attached({});
+    });
+}
+
+void Process::replace_scoped_process_list(ScopedProcessList& list)
+{
+    m_scoped_process_list.with([this, &list](auto& list_ptr) {
+        if (list_ptr.ptr() == &list)
+            return;
+        if (list_ptr) {
+            list_ptr->attached_processes().with([&](auto& list) {
+                list.remove(*this);
+            });
+            list_ptr->detach({});
+        }
+        list_ptr = list;
+        list_ptr->attach(*this);
+    });
+}
+
+void Process::replace_resource(VFSRootContext& context)
+{
+    replace_vfs_root_context(context);
+}
+void Process::replace_resource(HostnameContext& context)
+{
+    replace_hostname_context(context);
+}
+void Process::replace_resource(ScopedProcessList& list)
+{
+    replace_scoped_process_list(list);
 }
 
 ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<CustodyBase>, int dirfd)

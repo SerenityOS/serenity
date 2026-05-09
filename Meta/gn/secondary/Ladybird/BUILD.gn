@@ -134,7 +134,10 @@ executable("ladybird_executable") {
       "AppKit/main.mm",
     ]
 
-    deps += [ "//Userland/Libraries/LibUnicode" ]
+    deps += [
+      "//Meta/Lagom/Tools:patch_mac_sdk_headers_for_cxx26",
+      "//Userland/Libraries/LibUnicode",
+    ]
 
     cflags_objcc = [
       "-fobjc-arc",

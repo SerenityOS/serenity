@@ -31,7 +31,7 @@ Parser* Parser::the()
     return s_acpi_parser;
 }
 
-void Parser::must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number)
+void Parser::must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number)
 {
     VERIFY(!s_acpi_parser);
     s_acpi_parser = new (nothrow) Parser(rsdp, fadt, irq_number);
@@ -394,7 +394,7 @@ UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
     }
 }
 
-UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number)
+UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number)
     : IRQHandler(irq_number)
     , m_rsdp(rsdp)
     , m_fadt(fadt)

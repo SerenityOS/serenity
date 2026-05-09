@@ -26,7 +26,7 @@ extern void* __auxiliary_vector;
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle);
 void __cxa_finalize(void* dso_handle);
-__attribute__((noreturn)) void __cxa_pure_virtual(void) __attribute__((weak));
+__attribute__((noreturn)) void __cxa_pure_virtual(void);
 __attribute__((noreturn)) void __stack_chk_fail(void);
 __attribute__((noreturn)) void __stack_chk_fail_local(void);
 

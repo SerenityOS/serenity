@@ -8,7 +8,7 @@
 #include <Kernel/Library/Panic.h>
 
 namespace Kernel {
-UnhandledInterruptHandler::UnhandledInterruptHandler(u8 interrupt_vector)
+UnhandledInterruptHandler::UnhandledInterruptHandler(InterruptNumber interrupt_vector)
     : GenericInterruptHandler(interrupt_vector)
 {
 }

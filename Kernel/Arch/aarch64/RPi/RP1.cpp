@@ -17,10 +17,10 @@ namespace Kernel::RPi {
 
 class RP1xHCIController final : public USB::xHCI::xHCIController {
 public:
-    static ErrorOr<NonnullLockRefPtr<RP1xHCIController>> try_to_initialize(PhysicalAddress, size_t index, size_t interrupt_number);
+    static ErrorOr<NonnullLockRefPtr<RP1xHCIController>> try_to_initialize(PhysicalAddress, size_t index, InterruptNumber interrupt_number);
 
 private:
-    RP1xHCIController(Memory::TypedMapping<u8> registers_mapping, size_t index, size_t interrupt_number);
+    RP1xHCIController(Memory::TypedMapping<u8> registers_mapping, size_t index, InterruptNumber interrupt_number);
 
     // ^xHCIController
     virtual bool using_message_signalled_interrupts() const override { return m_using_message_signalled_interrupts; }
@@ -32,11 +32,11 @@ private:
     }
 
     size_t m_index { 0 };
-    size_t m_interrupt_number { 0 };
+    InterruptNumber m_interrupt_number { 0 };
     bool m_using_message_signalled_interrupts { false };
 };
 
-ErrorOr<NonnullLockRefPtr<RP1xHCIController>> RP1xHCIController::try_to_initialize(PhysicalAddress paddr, size_t index, size_t interrupt_number)
+ErrorOr<NonnullLockRefPtr<RP1xHCIController>> RP1xHCIController::try_to_initialize(PhysicalAddress paddr, size_t index, InterruptNumber interrupt_number)
 {
     auto registers_mapping = TRY(Memory::map_typed_writable<u8>(paddr));
 
@@ -45,7 +45,7 @@ ErrorOr<NonnullLockRefPtr<RP1xHCIController>> RP1xHCIController::try_to_initiali
     return controller;
 }
 
-UNMAP_AFTER_INIT RP1xHCIController::RP1xHCIController(Memory::TypedMapping<u8> registers_mapping, size_t index, size_t interrupt_number)
+UNMAP_AFTER_INIT RP1xHCIController::RP1xHCIController(Memory::TypedMapping<u8> registers_mapping, size_t index, InterruptNumber interrupt_number)
     : xHCIController(move(registers_mapping))
     , m_index(index)
     , m_interrupt_number(interrupt_number)

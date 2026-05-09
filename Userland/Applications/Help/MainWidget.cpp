@@ -145,7 +145,15 @@ ErrorOr<void> MainWidget::initialize(GUI::Window& window)
                 dbgln("Error opening page: {}", maybe_page.error());
                 return true;
             }
-            auto maybe_path = maybe_page.value()->path();
+
+            auto const& node = *maybe_page.value();
+            auto maybe_path = node.path();
+
+            if (is<Manual::SectionNode>(node)) {
+                if (auto document = static_cast<Manual::SectionNode const&>(node).document())
+                    maybe_path = document->path();
+            }
+
             if (maybe_path.is_error())
                 return true;
             open_page(maybe_path.release_value());

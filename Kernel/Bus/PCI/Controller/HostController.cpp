@@ -223,7 +223,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<void(E
 void HostController::configure_attached_devices(PCIConfiguration& config)
 {
     // First, Assign PCI-to-PCI bridge bus numbering
-    u8 bus_id = 0;
+    u8 bus_id = m_domain.start_bus();
     enumerate_attached_devices([this, &bus_id](EnumerableDeviceIdentifier const& device_identifier) {
         // called for each PCI device encountered (including bridges)
         if (read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::CLASS) != PCI::ClassID::Bridge)
@@ -350,7 +350,7 @@ void HostController::configure_attached_devices(PCIConfiguration& config)
 
         auto interrupt_number = config.masked_interrupt_mapping.get(masked_identifier);
         if (interrupt_number.has_value())
-            write8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_LINE, interrupt_number.value());
+            write8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::INTERRUPT_LINE, interrupt_number.value().value());
 
         if (read8_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::CLASS) != PCI::ClassID::Bridge)
             return;

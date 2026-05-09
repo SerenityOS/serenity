@@ -28,16 +28,19 @@ ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_directory()
     char pattern[] = "/tmp/tmp.XXXXXX";
 
     auto path = TRY(Core::System::mkdtemp(pattern));
-    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::Directory, path));
+    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::Directory, move(path)));
 }
 
 ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_file()
 {
     char file_path[] = "/tmp/tmp.XXXXXX";
-    TRY(Core::System::mkstemp(file_path));
+    // FIXME: Most callers will probably want to open the file, so find a
+    //        way to propagate the fd.
+    auto fd = TRY(Core::System::mkstemp(file_path));
+    TRY(Core::System::close(fd));
 
-    auto string = TRY(String::from_utf8({ file_path, sizeof file_path }));
-    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::File, string));
+    auto path = ByteString(file_path, strlen(file_path));
+    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::File, move(path)));
 }
 
 }

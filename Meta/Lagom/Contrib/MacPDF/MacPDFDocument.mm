@@ -114,11 +114,8 @@
         return NO;
     }
 
-    if (auto doc_or = [self load:data]; !doc_or.is_error()) {
-        _doc = doc_or.value();
-        _data = data;
-        return YES;
-    } else {
+    auto doc_or = [self load:data];
+    if (doc_or.is_error()) {
         NSLog(@"failed to load: %@", @(doc_or.error().message().characters()));
         if (outError) {
             *outError = [NSError errorWithDomain:NSOSStatusErrorDomain
@@ -127,6 +124,10 @@
         }
         return NO;
     }
+
+    _doc = doc_or.value();
+    _data = data;
+    return YES;
 }
 
 + (BOOL)autosavesInPlace

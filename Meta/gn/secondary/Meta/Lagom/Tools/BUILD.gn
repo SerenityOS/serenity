@@ -1,0 +1,23 @@
+import("//Meta/gn/build/mac_sdk.gni")
+
+if (current_os == "mac") {
+  config("sdk_headers_config") {
+    visibility = [ ":patch_mac_sdk_headers_for_cxx26" ]
+    include_dirs = [ "$target_gen_dir/patched_mac_headers" ]
+  }
+
+  action("patch_mac_sdk_headers_for_cxx26") {
+    script = "patch_mac_sdk_headers_for_cxx26.py"
+    outputs = [ "$target_gen_dir/patched_mac_headers/stamp" ]
+    args = [
+      "-o",
+      rebase_path("$target_gen_dir/patched_mac_headers", root_build_dir),
+      "--sdk-path",
+      rebase_path(mac_sdk_path, root_build_dir),
+      "--stamp",
+      rebase_path(outputs[0], root_build_dir),
+    ]
+
+    public_configs = [ ":sdk_headers_config" ]
+  }
+}

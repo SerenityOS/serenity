@@ -17,7 +17,7 @@ namespace Kernel {
 
 class ARMv8Timer final : public HardwareTimer<IRQHandler> {
 public:
-    static ErrorOr<NonnullLockRefPtr<ARMv8Timer>> initialize(u8 interrupt_number, u32 frequency);
+    static ErrorOr<NonnullLockRefPtr<ARMv8Timer>> initialize(InterruptNumber interrupt_number, u32 frequency);
 
     static bool is_initialized();
     static ARMv8Timer& the();
@@ -41,7 +41,7 @@ public:
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
 
 private:
-    ARMv8Timer(u8 interrupt_number, u32 frequency);
+    ARMv8Timer(InterruptNumber interrupt_number, u32 frequency);
 
     static u64 current_ticks();
     static void start_timer(u32 delta);

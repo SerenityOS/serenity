@@ -83,6 +83,29 @@ TEST_CASE(deflate_decompress_compressed_block)
     EXPECT(decompressed == uncompressed.bytes());
 }
 
+TEST_CASE(deflate_decompress_stream_ending_with_sync_flush)
+{
+    // This is the output of compressing "This is a simple text file :)" with
+    // Z_SYNC_FLUSH instead of Z_FINISH. The stream has bfinal=0 on all blocks
+    // and ends with an empty uncompressed block (the sync flush marker).
+    // Real-world PNG files can contain such streams. This shows that zlib is fine decompressing such streams:
+    //     python3 -c "import sys, zlib
+    //         c = zlib.compressobj(zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, -15)
+    //         sys.stdout.buffer.write(c.compress(b'This is a simple text file :)') + c.flush(zlib.Z_SYNC_FLUSH))" |
+    //     python3 -c "import sys, zlib; print(zlib.decompressobj(-15).decompress(sys.stdin.buffer.read()))"
+    // To get the contents of `compressed`, pipe the first command into `xxd -i` instead.
+    Array<u8, 32> const compressed {
+        0x0A, 0xC9, 0xC8, 0x2C, 0x56, 0x00, 0xA2, 0x44, 0x85, 0xE2, 0xCC, 0xDC,
+        0x82, 0x9C, 0x54, 0x85, 0x92, 0xD4, 0x8A, 0x12, 0x85, 0xB4, 0x4C, 0x20,
+        0xCB, 0x4A, 0x13, 0x00, 0x00, 0x00, 0xFF, 0xFF
+    };
+
+    auto const uncompressed = "This is a simple text file :)"sv;
+
+    auto const decompressed = TRY_OR_FAIL(Compress::DeflateDecompressor::decompress_all(compressed));
+    EXPECT(decompressed == uncompressed.bytes());
+}
+
 TEST_CASE(deflate_decompress_uncompressed_block)
 {
     Array<u8, 18> const compressed {

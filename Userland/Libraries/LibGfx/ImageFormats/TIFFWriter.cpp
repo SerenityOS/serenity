@@ -267,17 +267,25 @@ ErrorOr<void> TIFFWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
 
     bool const include_alpha = !is_bitmap_fully_opaque(bitmap);
 
-    u32 const image_data_size = bitmap.width() * bitmap.height() * (include_alpha ? 4 : 3);
+    u8 bytes_per_pixel = include_alpha ? 4 : 3;
+    u32 scanline_size = bitmap.width() * bytes_per_pixel;
+    u32 const image_data_size = scanline_size * bitmap.height();
     auto ifd_entries = make_rgb_ifd(bitmap.width(), bitmap.height(), image_data_size, include_alpha, move(icc_data));
     TRY(encode_ifd(stream, ifd_offset, move(ifd_entries)));
 
-    for (ARGB32 const& pixel : bitmap) {
-        auto color = Color::from_argb(pixel);
-        TRY(stream.write_value<u8>(color.red()));
-        TRY(stream.write_value<u8>(color.green()));
-        TRY(stream.write_value<u8>(color.blue()));
-        if (include_alpha)
-            TRY(stream.write_value<u8>(color.alpha()));
+    auto scanline_buffer = TRY(ByteBuffer::create_uninitialized(scanline_size));
+    for (int y = 0; y < bitmap.height(); ++y) {
+        u8* out = scanline_buffer.data();
+        for (int x = 0; x < bitmap.width(); ++x) {
+            auto color = bitmap.get_pixel(x, y);
+            out[0] = color.red();
+            out[1] = color.green();
+            out[2] = color.blue();
+            if (include_alpha)
+                out[3] = color.alpha();
+            out += bytes_per_pixel;
+        }
+        TRY(stream.write_until_depleted(scanline_buffer));
     }
     return {};
 }

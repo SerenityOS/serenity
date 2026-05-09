@@ -2,7 +2,11 @@
 
 SCRIPT="$(realpath $(dirname "${BASH_SOURCE[0]}"))"
 
-export SERENITY_ARCH="${SERENITY_ARCH:-x86_64}"
+export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
+
+. "${SERENITY_SOURCE_DIR}/Meta/shell_include.sh"
+
+export SERENITY_ARCH="${SERENITY_ARCH:-${HOST_ARCH}}"
 export SERENITY_TOOLCHAIN="${SERENITY_TOOLCHAIN:-GNU}"
 
 if [ -z "${HOST_CC:=}" ]; then
@@ -22,13 +26,11 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
 fi
 
-export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
-
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}clang"
     export SERENITY_TOOLCHAIN_BINDIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/clang/bin"
-    export CC="${SERENITY_ARCH}-pc-serenity-clang"
-    export CXX="${SERENITY_ARCH}-pc-serenity-clang++"
+    export CC="${SERENITY_ARCH}-serenity-clang"
+    export CXX="${SERENITY_ARCH}-serenity-clang++"
     export LD="${SERENITY_TOOLCHAIN_BINDIR}/ld.lld"
     export AR="llvm-ar"
     export RANLIB="llvm-ranlib"
@@ -40,16 +42,16 @@ if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
 else
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}"
     export SERENITY_TOOLCHAIN_BINDIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin"
-    export CC="${SERENITY_ARCH}-pc-serenity-gcc"
-    export CXX="${SERENITY_ARCH}-pc-serenity-g++"
-    export LD="${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity-ld"
-    export AR="${SERENITY_ARCH}-pc-serenity-ar"
-    export RANLIB="${SERENITY_ARCH}-pc-serenity-ranlib"
-    export READELF="${SERENITY_ARCH}-pc-serenity-readelf"
-    export OBJCOPY="${SERENITY_ARCH}-pc-serenity-objcopy"
-    export OBJDUMP="${SERENITY_ARCH}-pc-serenity-objdump"
-    export STRIP="${SERENITY_ARCH}-pc-serenity-strip"
-    export CXXFILT="${SERENITY_ARCH}-pc-serenity-c++filt"
+    export CC="${SERENITY_ARCH}-serenity-gcc"
+    export CXX="${SERENITY_ARCH}-serenity-g++"
+    export LD="${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-serenity-ld"
+    export AR="${SERENITY_ARCH}-serenity-ar"
+    export RANLIB="${SERENITY_ARCH}-serenity-ranlib"
+    export READELF="${SERENITY_ARCH}-serenity-readelf"
+    export OBJCOPY="${SERENITY_ARCH}-serenity-objcopy"
+    export OBJDUMP="${SERENITY_ARCH}-serenity-objdump"
+    export STRIP="${SERENITY_ARCH}-serenity-strip"
+    export CXXFILT="${SERENITY_ARCH}-serenity-c++filt"
 fi
 
 export PATH="${SERENITY_TOOLCHAIN_BINDIR}:${SERENITY_SOURCE_DIR}/Toolchain/Local/cmake/bin:${HOST_PATH}"

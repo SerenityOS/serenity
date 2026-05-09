@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 // Defined in fenv.cpp, but we must not include fenv.h, so here's its prototype.
 int fegetround(void);
 
@@ -51,3 +55,5 @@ int fegetround(void);
 #define FLT_HAS_SUBNORM 1
 #define DBL_HAS_SUBNORM 1
 #define LDBL_HAS_SUBNORM 1
+
+__END_DECLS

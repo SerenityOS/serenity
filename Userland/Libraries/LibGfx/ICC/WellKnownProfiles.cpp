@@ -53,7 +53,7 @@ static EMatrix3x3 identity_matrix()
     };
 }
 
-template<Unsigned T>
+template<UnsignedIntegral T>
 Vector<T> make_2x2x2_cube()
 {
     Vector<T> values;
@@ -74,7 +74,7 @@ Vector<T> make_2x2x2_cube()
     return values;
 }
 
-template<Unsigned T>
+template<UnsignedIntegral T>
 CLUTData make_2x2x2_cube_clut()
 {
     Vector<u8, 4> number_of_grid_points_in_dimension;

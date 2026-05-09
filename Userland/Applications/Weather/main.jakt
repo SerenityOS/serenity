@@ -93,7 +93,7 @@ fn api(
     return OpenWeatherMap(
         api_key: key
         make_request: fn[&mut client, &mut async](anon u: prelude::String) throws -> RequestData {
-            mut request = start_request(&mut client, "GET", URL::URL(u))
+            mut request = start_request(&mut client, "GET", URL::URL(&u))
             mut promise: Promise<prelude::String> = Promise()
 
             unsafe {
@@ -128,7 +128,8 @@ fn do_incremental_search<T>(
             return true
         }))
     } catch e {
-        GUI::MessageBox::show_error(&raw window, format("Failed to fetch search results: {}", e))
+        let error = format("Failed to fetch search results: {}", e)
+        GUI::MessageBox::show_error(&raw window, ak_string_view(&error))
     }
 }
 
@@ -136,7 +137,7 @@ fn update_entry<T>(
     mut entry: IndividualEntryWidget
     api: &mut T
     window: &GUI::Window
-    query: AK::ByteString
+    query: prelude::String
     first_time: bool = false
 ) {
     try {
@@ -157,8 +158,14 @@ fn update_entry<T>(
         entry.invalidate_layout()
     } catch e {
         entry.remove_from_parent()
-        GUI::MessageBox::show_error(&raw window, format("Failed to fetch weather data: {}", e))
+        let error = format("Failed to fetch weather data: {}", e)
+        GUI::MessageBox::show_error(&raw window, ak_string_view(&error))
     }
+}
+
+[[stores_arguments(from: "return")]]
+fn ak_string_view(anon from: &prelude::String) -> AK::StringView {
+    return AK::StringView(from)
 }
 
 fn main() {
@@ -226,7 +233,7 @@ fn main() {
                 mut c = view.content!
                 mut entry = c.add<UnderlyingClassTypeOf<IndividualEntryWidget>>().self()
                 entry.container!.set_view_state(GUI::DynamicWidgetContainer::ViewState::Collapsed)
-                try update_entry(entry, api: &mut owm_api, &window, query: name as! ByteString, first_time: true)
+                try update_entry(entry, api: &mut owm_api, &window, query: name, first_time: true)
 
                 view.searchbox!.set_text("", GUI::TextBox::AllowCallback::No)
                 view.searchbox!.set_focus(false, GUI::TextBox::FocusSource::Programmatic)

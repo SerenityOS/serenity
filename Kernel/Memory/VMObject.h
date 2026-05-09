@@ -63,6 +63,9 @@ protected:
     template<typename Callback>
     void for_each_region(Callback);
 
+    template<typename Callback>
+    void for_each_region_locked(Callback);
+
     void remap_regions_locked();
     void remap_regions();
     bool remap_regions_one_page(size_t page_index, NonnullRefPtr<PhysicalRAMPage> page);
@@ -88,6 +91,15 @@ template<typename Callback>
 inline void VMObject::for_each_region(Callback callback)
 {
     SpinlockLocker lock(m_lock);
+    for (auto& region : m_regions) {
+        callback(region);
+    }
+}
+
+template<typename Callback>
+inline void VMObject::for_each_region_locked(Callback callback)
+{
+    VERIFY(m_lock.is_locked());
     for (auto& region : m_regions) {
         callback(region);
     }

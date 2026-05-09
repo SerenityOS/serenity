@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='ClassiCube'
-version='1.3.6'
+version='1.3.8'
 files=(
-    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz#fab780f4dcf0669a0f94683c9b6596f40cb83e09727a3b91aaae5e934a9740b0"
+    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz#35293acf1e63baeca832dec2512283f2975c79ddf80cc855a12c10464723a6c4"
 )
 workdir="${port}-${version}/"
 depends=(

@@ -7,14 +7,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 exit_if_running_as_root "Do not run BuildGDB.sh as root, parts of your Toolchain directory will become root-owned"
 
-GDB_VERSION="13.1"
-GDB_MD5SUM="4aaad768ff2585464173c091947287ec"
+GDB_VERSION="17.1"
+GDB_MD5SUM="dbe28c65254063f4f397f0b205b510ba"
 GDB_NAME="gdb-$GDB_VERSION"
 GDB_PKG="${GDB_NAME}.tar.xz"
 GDB_BASE_URL="https://ftpmirror.gnu.org/gnu/gdb"
 
 ARCH=${1:-"x86_64"}
-TARGET="$ARCH-pc-serenity"
+TARGET="$ARCH-serenity"
 PREFIX="$DIR/Local/$ARCH-gdb"
 
 echo "Building GDB $GDB_VERSION for $TARGET"

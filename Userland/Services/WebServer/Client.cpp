@@ -228,6 +228,7 @@ ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest 
 {
     StringBuilder builder;
     TRY(builder.try_append("HTTP/1.0 301 Moved Permanently\r\n"sv));
+    TRY(builder.try_append("Content-Length: 0\r\n"sv));
     TRY(builder.try_append("Location: "sv));
     TRY(builder.try_append(redirect_path));
     TRY(builder.try_append("\r\n"sv));

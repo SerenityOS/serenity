@@ -452,8 +452,4 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     }
 }
 
-// Define some Itanium C++ ABI methods to stop the linker from complaining.
-// If we actually call these something has gone horribly wrong
-void* __dso_handle __attribute__((visibility("hidden")));
-
 }

@@ -17,13 +17,13 @@ class ChaCha20 {
 public:
     ChaCha20(ReadonlyBytes key, ReadonlyBytes nonce, u32 initial_counter = 0);
 
-    void encrypt(ReadonlyBytes input, Bytes& output);
-    void decrypt(ReadonlyBytes input, Bytes& output);
+    void encrypt(ReadonlyBytes input, Bytes output);
+    void decrypt(ReadonlyBytes input, Bytes output);
     void generate_block();
     ReadonlyBytes block() const { return { m_block, 64 }; }
 
 private:
-    void run_cipher(ReadonlyBytes input, Bytes& output);
+    void run_cipher(ReadonlyBytes input, Bytes output);
     ALWAYS_INLINE void do_quarter_round(u32& a, u32& b, u32& c, u32& d);
 
     u32 m_state[16] {};

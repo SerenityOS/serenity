@@ -7,6 +7,7 @@
 #include <AK/Format.h>
 #include <LibCore/Timer.h>
 #include <LibMedia/Containers/Matroska/MatroskaDemuxer.h>
+#include <LibMedia/Video/VP8/Decoder.h>
 #include <LibMedia/Video/VP9/Decoder.h>
 
 #include "PlaybackManager.h"
@@ -710,6 +711,10 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOw
     auto codec_id = TRY(demuxer->get_codec_id_for_track(track));
     OwnPtr<VideoDecoder> decoder;
     switch (codec_id) {
+    case CodecID::VP8:
+        decoder = DECODER_TRY_ALLOC(try_make<Video::VP8::Decoder>());
+        break;
+
     case CodecID::VP9:
         decoder = DECODER_TRY_ALLOC(try_make<Video::VP9::Decoder>());
         break;

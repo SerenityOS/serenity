@@ -15,8 +15,6 @@
 
 namespace Gfx {
 
-static SystemTheme dummy_theme;
-static SystemTheme const* theme_page = &dummy_theme;
 static Core::AnonymousBuffer theme_buffer;
 
 Core::AnonymousBuffer& current_system_theme_buffer()
@@ -28,7 +26,6 @@ Core::AnonymousBuffer& current_system_theme_buffer()
 void set_system_theme(Core::AnonymousBuffer buffer)
 {
     theme_buffer = move(buffer);
-    theme_page = theme_buffer.data<SystemTheme>();
 }
 
 ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, Optional<ByteString> const& color_scheme)

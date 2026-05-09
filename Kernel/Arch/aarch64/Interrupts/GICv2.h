@@ -27,12 +27,12 @@ public:
 
     virtual void eoi(GenericInterruptHandler const&) override;
 
-    virtual Optional<size_t> pending_interrupt() const override;
+    virtual Optional<InterruptNumber> pending_interrupt() const override;
 
     virtual StringView model() const override { return "GICv2"sv; }
 
     // ^DeviceTree::InterruptController
-    virtual ErrorOr<size_t> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
+    virtual ErrorOr<InterruptNumber> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
 
     struct DistributorRegisters;
     struct CPUInterfaceRegisters;

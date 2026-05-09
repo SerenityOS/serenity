@@ -73,6 +73,7 @@ class UserOrKernelBuffer;
 class VFSRootContext;
 class WaitQueue;
 class WorkQueue;
+class UnsharedResourceFile;
 
 namespace Memory {
 class AddressSpace;

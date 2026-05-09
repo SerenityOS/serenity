@@ -52,6 +52,9 @@ namespace AK {
 #    pragma GCC diagnostic push
 // FIXME: GCC does not like the union, thinking we access a zero-sized array out of bounds.
 #    pragma GCC diagnostic ignored "-Warray-bounds"
+// FIXME: GCC claims that the atomic m_call_nesting member is sometimes accessed out of bounds.
+//        Figure out if this is a false-positive.
+#    pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
 
 template<typename>

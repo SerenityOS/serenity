@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Thu, 2 Apr 2026 18:26:15 +0200
+Subject: [PATCH] feat(vim.ui.open): support serenity "open" tool
+
+---
+ runtime/lua/vim/ui.lua | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/runtime/lua/vim/ui.lua b/runtime/lua/vim/ui.lua
+index 28ae4bfee08a0f556eaf27d78b3a3fe0c55eb1d9..af5a338f58cd47d7e50cd087a755a8a6aa65be02 100644
+--- a/runtime/lua/vim/ui.lua
++++ b/runtime/lua/vim/ui.lua
+@@ -196,8 +196,10 @@ function M._get_open_cmd()
+     return { 'explorer.exe' }, nil
+   elseif vim.fn.executable('lemonade') == 1 then
+     return { 'lemonade', 'open' }, nil
++  elseif vim.fn.executable('open') == 1 then
++    return { 'open' }, nil
+   else
+-    return nil, 'vim.ui.open: no handler found (tried: wslview, explorer.exe, xdg-open, lemonade)'
++    return nil, 'vim.ui.open: no handler found (tried: wslview, explorer.exe, xdg-open, lemonade, open)'
+   end
+ end
+ 

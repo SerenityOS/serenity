@@ -252,7 +252,7 @@ private:
     [[nodiscard]] PageFaultResponse handle_cow_fault(size_t page_index);
     [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index, bool mark_page_dirty = false);
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalRAMPage& page_in_slot_at_time_of_fault);
-    [[nodiscard]] PageFaultResponse handle_dirty_on_write_fault(size_t page_index);
+    [[nodiscard]] PageFaultResponse handle_inode_write_fault(size_t page_index);
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, ShouldLockVMObject);
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalRAMPage>, ShouldLockVMObject);

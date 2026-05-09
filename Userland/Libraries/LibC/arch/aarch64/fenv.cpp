@@ -1,22 +1,85 @@
 /*
  * Copyright (c) 2024, Tom Finet <tom.codeninja@gmail.com>
+ * Copyright (c) 2026, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <fenv.h>
 
 extern "C" {
+
+// https://developer.arm.com/documentation/ddi0601/2025-12/AArch64-Registers/FPCR--Floating-point-Control-Register#fieldset_0-23_22
+// RMode, bits [23:22]
+enum class RoundingMode : u8 {
+    RoundToNearest = 0b00,            // RN
+    RoundTowardsPlusInfinity = 0b01,  // RP
+    RoundTowardsMinusInfinity = 0b10, // RN
+    RoundTowardsZero = 0b11,          // RZ
+};
+
+static constexpr size_t FPCR_RMODE_OFFSET = 22;
+static constexpr u64 FPCR_RMODE_MASK = 0b11;
+
+static RoundingMode rmode_from_feround(int c_rounding_mode)
+{
+    switch (c_rounding_mode) {
+    case FE_TONEAREST:
+        return RoundingMode::RoundToNearest;
+    case FE_TOWARDZERO:
+        return RoundingMode::RoundTowardsZero;
+    case FE_DOWNWARD:
+        return RoundingMode::RoundTowardsMinusInfinity;
+    case FE_UPWARD:
+        return RoundingMode::RoundTowardsPlusInfinity;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+static int feround_from_rmode(RoundingMode frm)
+{
+    switch (frm) {
+    case RoundingMode::RoundToNearest:
+        return FE_TONEAREST;
+    case RoundingMode::RoundTowardsPlusInfinity:
+        return FE_UPWARD;
+    case RoundingMode::RoundTowardsMinusInfinity:
+        return FE_DOWNWARD;
+    case RoundingMode::RoundTowardsZero:
+        return FE_TOWARDZERO;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+static RoundingMode get_rounding_mode()
+{
+    u64 fpcr = 0;
+    asm volatile("mrs %0, fpcr" : "=r"(fpcr));
+    return static_cast<RoundingMode>((fpcr >> FPCR_RMODE_OFFSET) & FPCR_RMODE_MASK);
+}
+
+static void set_rounding_mode(RoundingMode rmode)
+{
+    u64 fpcr = 0;
+    asm volatile("mrs %0, fpcr" : "=r"(fpcr));
+
+    fpcr &= ~(FPCR_RMODE_MASK << FPCR_RMODE_OFFSET);
+    fpcr |= to_underlying(rmode) << FPCR_RMODE_OFFSET;
+
+    asm volatile("msr fpcr, %0" ::"r"(fpcr));
+}
 
 int fegetenv(fenv_t* env)
 {
     if (!env)
         return 1;
 
-    (void)env;
-    TODO_AARCH64();
+    asm volatile("mrs %0, fpcr" : "=r"(env->fpcr));
+    asm volatile("mrs %0, fpsr" : "=r"(env->fpsr));
+
     return 0;
 }
 
@@ -25,8 +88,9 @@ int fesetenv(fenv_t const* env)
     if (!env)
         return 1;
 
-    (void)env;
-    TODO_AARCH64();
+    asm volatile("msr fpcr, %0" ::"r"(env->fpcr));
+    asm volatile("msr fpsr, %0" ::"r"(env->fpsr));
+
     return 0;
 }
 
@@ -64,7 +128,7 @@ int fesetexceptflag(fexcept_t const* except, int exceptions)
 
 int fegetround()
 {
-    TODO_AARCH64();
+    return feround_from_rmode(get_rounding_mode());
 }
 
 int fesetround(int rounding_mode)
@@ -75,7 +139,8 @@ int fesetround(int rounding_mode)
     if (rounding_mode == FE_TOMAXMAGNITUDE)
         rounding_mode = FE_TONEAREST;
 
-    TODO_AARCH64();
+    set_rounding_mode(rmode_from_feround(rounding_mode));
+
     return 0;
 }
 

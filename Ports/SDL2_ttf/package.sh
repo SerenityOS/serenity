@@ -12,7 +12,7 @@ depends=(
 
 configure() {
     run ./configure \
-        --host="${SERENITY_ARCH}-pc-serenity" \
+        --host="${SERENITY_ARCH}-serenity" \
         --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --with-x='no' \
         --disable-static \

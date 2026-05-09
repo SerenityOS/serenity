@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Wed, 1 Apr 2026 02:14:41 +0200
+Subject: [PATCH] include: Errnos are positive in serenity
+
+Checking this with `#if EDOM > 0` doesn't work in serenity since errno
+values are defined to enumerators.
+---
+ include/uv/errno.h | 2 +-
+ src/uv-common.h    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/uv/errno.h b/include/uv/errno.h
+index ac00778cfc59fb55e361b24fc81a965a5e8f97e7..b3aaddf769e1f244c48025ece037402eee6ec506 100644
+--- a/include/uv/errno.h
++++ b/include/uv/errno.h
+@@ -23,7 +23,7 @@
+ #define UV_ERRNO_H_
+ 
+ #include <errno.h>
+-#if EDOM > 0
++#if EDOM > 0 || defined(__serenity__)
+ # define UV__ERR(x) (-(x))
+ #else
+ # define UV__ERR(x) (x)
+diff --git a/src/uv-common.h b/src/uv-common.h
+index b9a8e976eefdd62cfad31f6d3ed9b6179776eaa4..20f30603dc3863f098effa4af64162d911d6e616 100644
+--- a/src/uv-common.h
++++ b/src/uv-common.h
+@@ -42,7 +42,7 @@
+ # include <stdatomic.h>
+ #endif
+ 
+-#if EDOM > 0
++#if EDOM > 0 || defined(__serenity__)
+ # define UV__ERR(x) (-(x))
+ #else
+ # define UV__ERR(x) (x)

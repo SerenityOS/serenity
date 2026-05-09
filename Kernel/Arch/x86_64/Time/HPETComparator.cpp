@@ -13,14 +13,14 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<HPETComparator> HPETComparator::create(u8 number, u8 irq, bool periodic_capable, bool is_64bit_capable)
+UNMAP_AFTER_INIT NonnullLockRefPtr<HPETComparator> HPETComparator::create(u8 number, InterruptNumber irq, bool periodic_capable, bool is_64bit_capable)
 {
     auto timer = adopt_lock_ref(*new HPETComparator(number, irq, periodic_capable, is_64bit_capable));
     timer->register_interrupt_handler();
     return timer;
 }
 
-UNMAP_AFTER_INIT HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable, bool is_64bit_capable)
+UNMAP_AFTER_INIT HPETComparator::HPETComparator(u8 number, InterruptNumber irq, bool periodic_capable, bool is_64bit_capable)
     : HardwareTimer(irq)
     , m_periodic(false)
     , m_periodic_capable(periodic_capable)

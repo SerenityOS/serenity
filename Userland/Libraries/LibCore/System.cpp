@@ -48,7 +48,7 @@ static int memfd_create(char const* name, unsigned int flags)
 }
 #endif
 
-#if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
+#if defined(AK_OS_MACOS)
 #    include <mach-o/dyld.h>
 #    include <sys/mman.h>
 #else
@@ -141,7 +141,7 @@ static ErrorOr<Optional<struct group>> getgrent_impl(Span<char> buffer)
 namespace Core::System {
 
 #ifndef HOST_NAME_MAX
-#    if defined(AK_OS_MACOS) || defined(AK_OS_IOS)
+#    if defined(AK_OS_MACOS)
 #        define HOST_NAME_MAX 255
 #    else
 #        define HOST_NAME_MAX 64
@@ -428,7 +428,7 @@ ErrorOr<Optional<struct spwd>> getspnam(StringView name)
 }
 #endif
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_IOS) && !defined(AK_OS_HAIKU)
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_HAIKU)
 ErrorOr<int> accept4(int sockfd, sockaddr* address, socklen_t* address_length, int flags)
 {
     auto fd = ::accept4(sockfd, address, address_length, flags);
@@ -573,13 +573,6 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         return Error::from_errno(errno);
 
     if (::ftruncate(fd, size) < 0) {
-        auto saved_errno = errno;
-        TRY(close(fd));
-        return Error::from_errno(saved_errno);
-    }
-
-    void* addr = ::mmap(NULL, size, PROT_WRITE, MAP_SHARED, fd, 0);
-    if (addr == MAP_FAILED) {
         auto saved_errno = errno;
         TRY(close(fd));
         return Error::from_errno(saved_errno);
@@ -940,19 +933,17 @@ ErrorOr<Optional<struct group>> getgrnam(StringView name)
         return Optional<struct group> {};
 }
 
-#if !defined(AK_OS_IOS)
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
 {
-#    ifdef AK_OS_SERENITY
+#ifdef AK_OS_SERENITY
     int rc = syscall(SC_clock_settime, clock_id, ts);
     HANDLE_SYSCALL_RETURN_VALUE("clocksettime", rc, {});
-#    else
+#else
     if (::clock_settime(clock_id, ts) < 0)
         return Error::from_syscall("clocksettime"sv, -errno);
     return {};
-#    endif
-}
 #endif
+}
 
 static ALWAYS_INLINE ErrorOr<pid_t> posix_spawn_wrapper(StringView path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const arguments[], char* const envp[], StringView function_name, decltype(::posix_spawn) spawn_function)
 {
@@ -1168,14 +1159,14 @@ ErrorOr<int> mkstemp(Span<char> pattern)
     return fd;
 }
 
-ErrorOr<String> mkdtemp(Span<char> pattern)
+ErrorOr<ByteString> mkdtemp(Span<char> pattern)
 {
     auto* path = ::mkdtemp(pattern.data());
     if (path == nullptr) {
         return Error::from_errno(errno);
     }
 
-    return String::from_utf8(StringView { path, strlen(path) });
+    return ByteString { path, strlen(path) };
 }
 
 ErrorOr<void> rename(StringView old_path, StringView new_path)
@@ -1314,24 +1305,33 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 #endif
 
 #ifdef AK_OS_SERENITY
-ErrorOr<u32> unshare_create(Kernel::UnshareType type, unsigned flags)
+ErrorOr<unsigned> unshare_open(Kernel::UnshareType type)
+{
+    Syscall::SC_unshare_open_params params {
+        static_cast<int>(type),
+    };
+    int rc = syscall(SC_unshare_open, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_open", rc, rc);
+}
+
+ErrorOr<u32> unshare_create(unsigned fd)
 {
     Syscall::SC_unshare_create_params params {
-        static_cast<int>(type),
-        static_cast<int>(flags),
+        static_cast<int>(fd),
     };
     int rc = syscall(SC_unshare_create, &params);
     HANDLE_SYSCALL_RETURN_VALUE("unshare_create", rc, rc);
 }
 
-ErrorOr<void> unshare_attach(Kernel::UnshareType type, unsigned index)
+ErrorOr<void> unshare_enter(Kernel::UnshareType type, unsigned index, int flags)
 {
-    Syscall::SC_unshare_attach_params params {
+    Syscall::SC_unshare_enter_params params {
         static_cast<int>(type),
         static_cast<int>(index),
+        flags,
     };
-    int rc = syscall(SC_unshare_attach, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("unshare_attach", rc, {});
+    int rc = syscall(SC_unshare_enter, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_enter", rc, {});
 }
 
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
@@ -1429,7 +1429,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
         envp[environment->size()] = nullptr;
 
         if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
-#    if defined(AK_OS_MACOS) || defined(AK_OS_IOS) || defined(AK_OS_FREEBSD) || defined(AK_OS_SOLARIS)
+#    if defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD) || defined(AK_OS_SOLARIS)
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
@@ -1865,7 +1865,7 @@ ErrorOr<ByteString> current_executable_path()
     size_t len = sizeof(path);
     if (sysctl(mib, 4, path, &len, nullptr, 0) < 0)
         return Error::from_syscall("sysctl"sv, -errno);
-#elif defined(AK_OS_MACOS) || defined(AK_OS_IOS)
+#elif defined(AK_OS_MACOS)
     u32 size = sizeof(path);
     auto ret = _NSGetExecutablePath(path, &size);
     if (ret != 0)

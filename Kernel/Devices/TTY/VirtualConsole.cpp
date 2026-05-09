@@ -456,7 +456,7 @@ void VirtualConsole::set_window_title(StringView)
     // Do nothing.
 }
 
-void VirtualConsole::set_window_progress(int, int)
+void VirtualConsole::set_window_progress(VT::ProgressState, u8)
 {
     // Do nothing.
 }
@@ -489,6 +489,11 @@ void VirtualConsole::set_cursor_shape(VT::CursorShape)
 }
 
 void VirtualConsole::set_cursor_blinking(bool)
+{
+    // Do nothing
+}
+
+void VirtualConsole::set_cursor_hidden(bool)
 {
     // Do nothing
 }

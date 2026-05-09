@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Interrupts/Interrupts.h>
 #include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::PCI {
@@ -70,7 +71,7 @@ struct PCIConfiguration {
 
     // The keys contains the bus, device & function at the same offsets as OpenFirmware PCI addresses,
     // with the least significant 8 bits being the interrupt pin.
-    HashMap<PCIInterruptSpecifier, u64> masked_interrupt_mapping;
+    HashMap<PCIInterruptSpecifier, InterruptNumber> masked_interrupt_mapping;
     PCIInterruptSpecifier interrupt_mask;
 };
 

@@ -65,7 +65,7 @@ template("unix_toolchain") {
     }
 
     tool("alink") {
-      if (current_os == "ios" || current_os == "mac") {
+      if (current_os == "mac") {
         command = "libtool -D -static -no_warning_for_no_symbols {{arflags}} -o {{output}} {{inputs}}"
         not_needed([ "ar" ])
       } else {
@@ -93,7 +93,7 @@ template("unix_toolchain") {
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       rspfile = outfile + ".rsp"
       rspfile_content = "{{inputs}}"
-      if (current_os == "ios" || current_os == "mac") {
+      if (current_os == "mac") {
         command = "$ld -shared {{ldflags}} -o $outfile @\"$rspfile\" {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
         default_output_extension = ".dylib"
       } else {
@@ -113,7 +113,7 @@ template("unix_toolchain") {
 
     tool("solink_module") {
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
-      if (current_os == "ios" || current_os == "mac") {
+      if (current_os == "mac") {
         command = "$ld -shared {{ldflags}} -Wl,-flat_namespace -Wl,-undefined,suppress -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
         default_output_extension = ".dylib"
       } else {
@@ -135,7 +135,7 @@ template("unix_toolchain") {
         command_launcher = "ccache"
       }
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
-      if (current_os == "ios" || current_os == "mac") {
+      if (current_os == "mac") {
         command = "$ld {{ldflags}} -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-rpath,@executable_path/../lib"
       } else {
         command = "$ld {{ldflags}} -o $outfile -Wl,--start-group {{inputs}} -Wl,--end-group -Wl,-rpath,\\\$ORIGIN/../lib {{libs}}"
@@ -157,7 +157,7 @@ template("unix_toolchain") {
       description = "COPY {{source}} {{output}}"
     }
 
-    if (current_os == "ios" || current_os == "mac") {
+    if (current_os == "mac") {
       tool("copy_bundle_data") {
         # https://github.com/nico/hack/blob/master/notes/copydir.md
         _copydir = "cd {{source}} && " +

@@ -27,10 +27,10 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  4 files changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index a0094c2dd95b43abc80d78cd87b85bc39ddf9eaf..d69a9eac17b868b9c726b3d6b0d80e53d3af68ea 100644
+index 8dc9e17b214cd30087673c6f4c0707cab3adecc3..6636b3b9585145cfadce97501c75dffe63769596 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
-@@ -1792,7 +1792,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
+@@ -1800,7 +1800,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -39,7 +39,7 @@ index a0094c2dd95b43abc80d78cd87b85bc39ddf9eaf..d69a9eac17b868b9c726b3d6b0d80e53
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -2807,7 +2807,7 @@ AC_DEFUN([GLIBCXX_ENABLE_CLOCALE], [
+@@ -2815,7 +2815,7 @@ AC_DEFUN([GLIBCXX_ENABLE_CLOCALE], [
        dragonfly* | freebsd*)
  	enable_clocale_flag=dragonfly
  	;;
@@ -49,10 +49,10 @@ index a0094c2dd95b43abc80d78cd87b85bc39ddf9eaf..d69a9eac17b868b9c726b3d6b0d80e53
  	;;
        *)
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 819a1d82876a156e27a831bdaa695d155c34e31f..0cd50a29ab76d8af432aefdcb07b43f15f70688a 100755
+index 6713e4504b1cd5ac2c7eddea758f8a51ab3d946e..14ff25d3fd9e912636b4dea503672bb228bf9433 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
-@@ -12003,6 +12003,11 @@ else
+@@ -12402,6 +12402,11 @@ else
      lt_cv_dlopen_libs=
      ;;
  
@@ -64,7 +64,7 @@ index 819a1d82876a156e27a831bdaa695d155c34e31f..0cd50a29ab76d8af432aefdcb07b43f1
    darwin*)
    # if libdl is installed we need to link against it
      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
-@@ -16680,7 +16685,7 @@ fi
+@@ -16849,7 +16854,7 @@ fi
        dragonfly* | freebsd*)
  	enable_clocale_flag=dragonfly
  	;;
@@ -73,7 +73,7 @@ index 819a1d82876a156e27a831bdaa695d155c34e31f..0cd50a29ab76d8af432aefdcb07b43f1
  	enable_clocale_flag=newlib
  	;;
        *)
-@@ -21377,7 +21382,7 @@ fi
+@@ -21546,7 +21551,7 @@ fi
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -82,7 +82,7 @@ index 819a1d82876a156e27a831bdaa695d155c34e31f..0cd50a29ab76d8af432aefdcb07b43f1
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -28654,7 +28659,7 @@ case "${host}" in
+@@ -28979,7 +28984,7 @@ case "${host}" in
      # This is a freestanding configuration; there is nothing to do here.
      ;;
  
@@ -92,7 +92,7 @@ index 819a1d82876a156e27a831bdaa695d155c34e31f..0cd50a29ab76d8af432aefdcb07b43f1
  
      $as_echo "#define HAVE_ASINF 1" >>confdefs.h
 diff --git a/libstdc++-v3/configure.host b/libstdc++-v3/configure.host
-index 253e5a9ad0dbe0698e3672cbee1c89eab8f2702d..45a22282657499d3a3c747f19110f63cbb044995 100644
+index ff97216167decaccd18605e238309906008f5cf0..f0c31f8030dd2eaa207098f220dff8e9ea155381 100644
 --- a/libstdc++-v3/configure.host
 +++ b/libstdc++-v3/configure.host
 @@ -307,6 +307,9 @@ case "${host_os}" in

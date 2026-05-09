@@ -1,20 +1,28 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='VVVVVV'
-version='2.3.6'
+version='2.4.3'
 useconfigure='true'
 files=(
-    "https://github.com/TerryCavanagh/VVVVVV/archive/refs/tags/${version}.tar.gz#a3366aab9e8462d330044ab1ec63927e9f5c3801c0ed96b24f08c553dcb911e9"
+    "https://github.com/TerryCavanagh/VVVVVV/releases/download/${version}/VVVVVV-${version}.zip#72128cc6aa9f3aad1aa01f4f45cb48bd940856675f0cc30704dab80239871e9b"
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
-    "-DCMAKE_BUILD_TYPE=Release"
-    "-Sdesktop_version"
+    '-DCMAKE_BUILD_TYPE=Release'
+    '-DBUNDLE_DEPENDENCIES=OFF'
+    '-Sdesktop_version'
 )
-depends=("SDL2" "SDL2_mixer")
+depends=(
+    'SDL2'
+    'SDL2_mixer'
+    'tinyxml2'
+    'libphysfs'
+    'FAudio'
+)
 icon_file='desktop_version/icon.ico'
 launcher_name='VVVVVV'
 launcher_category='&Games'
 launcher_command='/opt/VVVVVV/VVVVVV'
+workdir='VVVVVV'
 
 configure() {
     run cmake "${configopts[@]}"

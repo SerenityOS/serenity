@@ -134,7 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     return -1;
                 }
 
-                return run_in_windowed_mode(temp_directory_path.to_byte_string(), path.basename());
+                return run_in_windowed_mode(temp_directory_path, path.basename());
             }
 
             is_selection_mode = true;

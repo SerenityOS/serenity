@@ -143,7 +143,7 @@ DecoderErrorOr<VideoFullRangeFlag> Parser::read_video_full_range_flag(BigEndianI
     return VideoFullRangeFlag::Studio;
 }
 
-template<Signed T = i8>
+template<SignedIntegral T = i8>
 static ErrorOr<T> read_signed(BigEndianInputBitStream& bit_stream, u8 bits)
 {
     auto value_unsigned = static_cast<T>(TRY(bit_stream.read_bits(bits)));

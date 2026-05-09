@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT void SharedIRQHandler::initialize(u8 interrupt_number)
+UNMAP_AFTER_INIT void SharedIRQHandler::initialize(InterruptNumber interrupt_number)
 {
     auto* handler = new SharedIRQHandler(interrupt_number);
     handler->register_interrupt_handler();
@@ -48,7 +48,7 @@ void SharedIRQHandler::enumerate_handlers(Function<void(GenericInterruptHandler&
     m_handlers.for_each([&](auto& handler) { callback(handler); });
 }
 
-SharedIRQHandler::SharedIRQHandler(u8 irq)
+SharedIRQHandler::SharedIRQHandler(InterruptNumber irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {

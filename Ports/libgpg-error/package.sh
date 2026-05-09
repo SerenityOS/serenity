@@ -15,7 +15,7 @@ depends=(
 
 configure() {
     run ./configure \
-        --host="${SERENITY_ARCH}-pc-serenity" \
+        --host="${SERENITY_ARCH}-serenity" \
         --build="$("${workdir}/build-aux/config.guess")" \
         --with-sysroot="${SERENITY_INSTALL_ROOT}" \
         --disable-tests \

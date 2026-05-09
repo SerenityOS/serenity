@@ -73,3 +73,22 @@ The SerenityOS dynamic linker provides a magic function
 "__get_riscv_feature_bits" that populates __riscv_feature_bits
 and __riscv_cpu_model.
 
+## `0009-i386-Avoid-splitting-16-32-bit-volatile-mem-test-int.patch`
+
+i386: Avoid splitting 16/32-bit volatile mem test into 8-bit test [PR125180]
+
+With -ffuse-ops-with-volatile-access which is now even on by default
+thie splitter can split a 16 or 32-bit volatile memory test into
+an 8-bit volatile memory test, which is undesirable and e.g. when
+it refers to some memory mapped hw registers it could misbehave.
+
+2026-05-05  Jakub Jelinek  <jakub@redhat.com>
+
+	PR target/125180
+	* config/i386/i386.md (HI/SI test -> QI test splitter): Punt if
+	operands[2] is a volatile MEM.
+
+	* gcc.target/i386/pr125180.c: New test.
+
+Reviewed-by: Uros Bizjak <ubizjak@gmail.com>
+

@@ -131,14 +131,8 @@ int main(int argc, char** argv)
             asm volatile("ud2" :);
 #elif ARCH(RISCV64)
             // Invalid instructions are not required to trap on RISC-V.
-            // However, writing to a read-only CSR, which the non-compressed unimp pseudoinstruction
-            // gets expanded to, is required to cause an illegal-instruction exception.
-            asm volatile(R"(
-                .option push
-                .option arch, -c
-                    unimp
-                .option pop
-            )" :);
+            // However, writing to a read-only CSR is required to cause an illegal-instruction exception.
+            asm volatile("csrw cycle, zero" :);
 #else
 #    error Unknown architecture
 #endif

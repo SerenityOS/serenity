@@ -106,9 +106,9 @@ void GICv3::enable(GenericInterruptHandler const& handler)
     auto interrupt_number = handler.interrupt_number();
 
     if (interrupt_number < SHARED_PERIPHERAL_INTERRUPT_RANGE_START)
-        m_redistributor_registers[m_boot_cpu_redistributor_index]->sgis_and_ppis.interrupt_set_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
+        m_redistributor_registers[m_boot_cpu_redistributor_index]->sgis_and_ppis.interrupt_set_enable[interrupt_number.value() / 32] = 1 << (interrupt_number.value() % 32);
     else
-        m_distributor_registers->interrupt_set_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
+        m_distributor_registers->interrupt_set_enable[interrupt_number.value() / 32] = 1 << (interrupt_number.value() % 32);
 }
 
 void GICv3::disable(GenericInterruptHandler const& handler)
@@ -116,18 +116,18 @@ void GICv3::disable(GenericInterruptHandler const& handler)
     auto interrupt_number = handler.interrupt_number();
 
     if (interrupt_number < SHARED_PERIPHERAL_INTERRUPT_RANGE_START)
-        m_redistributor_registers[m_boot_cpu_redistributor_index]->sgis_and_ppis.interrupt_clear_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
+        m_redistributor_registers[m_boot_cpu_redistributor_index]->sgis_and_ppis.interrupt_clear_enable[interrupt_number.value() / 32] = 1 << (interrupt_number.value() % 32);
     else
-        m_distributor_registers->interrupt_clear_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
+        m_distributor_registers->interrupt_clear_enable[interrupt_number.value() / 32] = 1 << (interrupt_number.value() % 32);
 }
 
 void GICv3::eoi(GenericInterruptHandler const& handler)
 {
     auto interrupt_number = handler.interrupt_number();
-    Aarch64::ICC_EOIR1_EL1::write({ .INTID = interrupt_number });
+    Aarch64::ICC_EOIR1_EL1::write({ .INTID = interrupt_number.value() });
 }
 
-Optional<size_t> GICv3::pending_interrupt() const
+Optional<InterruptNumber> GICv3::pending_interrupt() const
 {
     auto interrupt_number = Aarch64::ICC_IAR1_EL1::read().INTID;
 
@@ -143,7 +143,7 @@ Optional<size_t> GICv3::pending_interrupt() const
     return interrupt_number;
 }
 
-ErrorOr<size_t> GICv3::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
+ErrorOr<InterruptNumber> GICv3::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
 {
     // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/arm,gic-v3.yaml
 

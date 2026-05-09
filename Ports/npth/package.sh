@@ -9,5 +9,5 @@ files=(
 )
 
 configure() {
-    run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" "${configopts[@]}"
+    run ./configure --host="${SERENITY_ARCH}-serenity" --build="$($workdir/build-aux/config.guess)" "${configopts[@]}"
 }

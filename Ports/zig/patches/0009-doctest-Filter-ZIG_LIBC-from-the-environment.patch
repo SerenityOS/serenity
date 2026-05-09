@@ -10,18 +10,18 @@ them to look for the host libraries in the target libc locations.
  1 file changed, 5 insertions(+)
 
 diff --git a/zig/tools/doctest.zig b/zig/tools/doctest.zig
-index ccdbc6b065c9b6c6fae58aea742c9df973bcf36a..cf4b0ae4426c6d41a751f6d04ce0e772895455c5 100644
+index 2b0d7431b7e2bcf541f1ddd8dbe4ef3b17e70fae..fef83582c8b226ade705c5a6f7b1911c7c875ae1 100644
 --- a/zig/tools/doctest.zig
 +++ b/zig/tools/doctest.zig
-@@ -123,6 +123,11 @@ fn printOutput(
-     var env_map = try process.getEnvMap(arena);
-     try env_map.put("CLICOLOR_FORCE", "1");
+@@ -37,6 +37,11 @@ pub fn main(init: std.process.Init) !void {
+ 
+     try environ_map.put("CLICOLOR_FORCE", "1");
  
 +    // If we're cross-compiling Zig, it's possible that a different libc
 +    // location is set via ZIG_LIBC. Since doctests are to execute on the
 +    // host exclusively, we filter this variable out.
-+    env_map.remove("ZIG_LIBC");
++    _ = environ_map.swapRemove("ZIG_LIBC");
 +
-     const host = try std.zig.system.resolveTargetQuery(.{});
-     const obj_ext = builtin.object_format.fileExt(builtin.cpu.arch);
-     const print = std.debug.print;
+     var args_it = try init.minimal.args.iterateAllocator(arena);
+     if (!args_it.skip()) fatal("missing argv[0]", .{});
+ 

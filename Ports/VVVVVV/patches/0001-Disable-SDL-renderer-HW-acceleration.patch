@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Fri, 23 Jan 2026 00:10:24 +0100
+Subject: [PATCH] Disable SDL renderer HW acceleration
+
+---
+ desktop_version/src/Screen.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/desktop_version/src/Screen.cpp b/desktop_version/src/Screen.cpp
+index cedf311501c78ec4408a5698998c2a490c7a1e03..7086c100218b0aceab987cbbe6442792ee2ab824 100644
+--- a/desktop_version/src/Screen.cpp
++++ b/desktop_version/src/Screen.cpp
+@@ -60,7 +60,7 @@ void Screen::init(const struct ScreenSettings* settings)
+         VVV_exit(1);
+     }
+ 
+-    m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
++    m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_TARGETTEXTURE);
+ 
+     if (m_renderer == NULL)
+     {

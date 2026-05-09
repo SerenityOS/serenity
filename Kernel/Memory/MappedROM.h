@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/OwnPtr.h>
+#include <Kernel/Library/MiniStdLib.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/Region.h>
 
@@ -21,24 +23,23 @@ public:
     size_t offset { 0 };
     PhysicalAddress paddr;
 
-    u8 const* pointer_to_chunk_starting_with(StringView prefix, size_t chunk_size) const
+    Optional<PhysicalAddress> find_chunk_starting_with(StringView prefix, size_t chunk_size, CallableAs<bool, ReadonlyBytes> auto predicate) const
     {
-        auto prefix_length = prefix.length();
-        if (size < prefix_length)
-            return nullptr;
-        for (auto* candidate = base(); candidate <= end() - prefix_length; candidate += chunk_size) {
-            if (!__builtin_memcmp(prefix.characters_without_null_termination(), candidate, prefix.length()))
-                return candidate;
-        }
-        return nullptr;
-    }
+        PhysicalAddress start_paddr = PhysicalAddress { align_up_to(paddr.get(), chunk_size) };
+        size_t start_offset = start_paddr.get() - paddr.get();
 
-    Optional<PhysicalAddress> find_chunk_starting_with(StringView prefix, size_t chunk_size) const
-    {
-        auto result = pointer_to_chunk_starting_with(prefix, chunk_size);
-        if (!result)
-            return {};
-        return paddr_of(result);
+        for (size_t offset = start_offset; offset <= size - prefix.length(); offset += chunk_size) {
+            u8 const* candidate = base() + offset;
+            if (memcmp(prefix.characters_without_null_termination(), candidate, prefix.length()) != 0)
+                continue;
+
+            if (!predicate(ReadonlyBytes { candidate, size - offset }))
+                continue;
+
+            return paddr_of(candidate);
+        }
+
+        return {};
     }
 
     PhysicalAddress paddr_of(u8 const* ptr) const { return paddr.offset(ptr - this->base()); }

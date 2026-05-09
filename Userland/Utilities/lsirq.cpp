@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     json.as_array().for_each([cpu_count](JsonValue const& value) {
         auto& handler = value.as_object();
         auto purpose = handler.get_byte_string("purpose"sv).value_or({});
-        auto interrupt = handler.get_u8("interrupt_line"sv).value();
+        auto interrupt = handler.get_integer<size_t>("interrupt_line"sv).value();
         auto controller = handler.get_byte_string("controller"sv).value_or({});
         auto call_counts = handler.get_array("per_cpu_call_counts"sv).value();
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libphysfs
 useconfigure=true
-version=3.0.2
+version=3.2.0
 workdir="physfs-${version}"
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 files=(
-    "https://icculus.org/physfs/downloads/physfs-${version}.tar.bz2#304df76206d633df5360e738b138c94e82ccf086e50ba84f456d3f8432f9f863"
+    "https://github.com/icculus/physfs/archive/refs/tags/release-${version}.tar.gz#1991500eaeb8d5325e3a8361847ff3bf8e03ec89252b7915e1f25b3f8ab5d560"
 )
+workdir="physfs-release-${version}"
 
 configure() {
     run cmake "${configopts[@]}"
