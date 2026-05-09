@@ -237,7 +237,7 @@ private:
 
     [[nodiscard]] bool should_dirty_on_write(size_t page_index, ShouldLockVMObject should_lock_vmobject) const;
 
-    ErrorOr<void> map_impl(PageDirectory&, ShouldLockVMObject, ShouldFlushTLB);
+    ErrorOr<void> map_impl(PageDirectory&, ShouldLockVMObject, ShouldFlushTLB, bool readable, bool writeable);
 
     void set_access_bit(Access access, bool b)
     {
@@ -254,8 +254,8 @@ private:
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalRAMPage& page_in_slot_at_time_of_fault);
     [[nodiscard]] PageFaultResponse handle_inode_write_fault(size_t page_index);
 
-    [[nodiscard]] bool map_individual_page_impl(size_t page_index, ShouldLockVMObject);
-    [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalRAMPage>, ShouldLockVMObject);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, ShouldLockVMObject, bool readable, bool writeable);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalRAMPage>, ShouldLockVMObject, bool readable, bool writeable);
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, PhysicalAddress);
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, PhysicalAddress, bool readable, bool writeable, ShouldLockVMObject);
 
