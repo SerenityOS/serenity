@@ -9,6 +9,7 @@
 #include <AK/Vector.h>
 
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
@@ -98,6 +99,18 @@ void ProcessorBase::flush_entire_tlb_local()
 void ProcessorBase::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, size_t page_count)
 {
     flush_tlb_local(vaddr, page_count);
+}
+
+void ProcessorBase::flush_data_cache(VirtualAddress vaddr, size_t byte_count)
+{
+    // NOTE: This assumes that all processors have the same cache line size,
+    //       as a context switch can happen during execution of this function.
+
+    auto const cache_line_size = Aarch64::Asm::get_cache_line_size();
+    for (FlatPtr addr = align_down_to(vaddr.get(), cache_line_size); addr < vaddr.get() + byte_count; addr += cache_line_size)
+        asm volatile("dc civac, %0" ::"r"(addr) : "memory");
+
+    full_memory_fence();
 }
 
 void ProcessorBase::flush_instruction_cache(VirtualAddress vaddr, size_t byte_count)

@@ -74,6 +74,8 @@ private:
 
     Optional<ProcessorInfo> m_info;
     Array<unsigned long long, EXTENSION_BITMASK_GROUP_COUNT> m_userspace_extension_bitmask {};
+
+    u32 m_zicbom_block_size { 0 };
 };
 
 ALWAYS_INLINE bool ProcessorBase::is_initialized()
