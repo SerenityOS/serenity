@@ -101,7 +101,7 @@ private:
     ErrorOr<NonnullRefPtr<Session>> find_session(u32 sender_channel_id);
 
     template<typename F, typename F2>
-    Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, F&& file_extractor, F2&& sender);
+    Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, F file_extractor, F2 sender);
     Coroutine<void> async_stream_data_to_subsystem(NonnullRefPtr<Session>);
     Coroutine<void> async_wait_for_child(NonnullRefPtr<Session>);
 

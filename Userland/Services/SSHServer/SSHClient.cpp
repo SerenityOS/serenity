@@ -675,7 +675,7 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
 }
 
 template<typename F, typename F2>
-Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session, F&& file_extractor, F2&& sender)
+Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session, F file_extractor, F2 sender)
 {
     auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
         while (true) {
