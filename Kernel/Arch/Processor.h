@@ -94,6 +94,7 @@ public:
     {
         return current_id() == 0;
     }
+    ALWAYS_INLINE bool has_self_snooping() const;
     ALWAYS_INLINE bool has_nx() const;
     ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
     {
