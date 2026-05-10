@@ -242,6 +242,11 @@ ALWAYS_INLINE void ProcessorBase::disable_interrupts()
     cli();
 }
 
+ALWAYS_INLINE bool ProcessorBase::has_self_snooping() const
+{
+    return has_feature(CPUFeature::SS);
+}
+
 ALWAYS_INLINE bool ProcessorBase::has_nx() const
 {
     return has_feature(CPUFeature::NX);

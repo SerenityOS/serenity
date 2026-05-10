@@ -145,6 +145,11 @@ ALWAYS_INLINE void ProcessorBase::set_current_in_scheduler(bool value)
     current().m_in_scheduler = value;
 }
 
+ALWAYS_INLINE bool ProcessorBase::has_self_snooping() const
+{
+    return false;
+}
+
 ALWAYS_INLINE bool ProcessorBase::has_nx() const
 {
     return true;
