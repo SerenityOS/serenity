@@ -82,6 +82,7 @@ host_env() {
 
 installedpackagesdb="${DESTDIR}/usr/Ports/installed.db"
 
+curlopts=(--fail --location --silent --show-error)
 makeopts=("-j${MAKEJOBS}")
 installopts=()
 configscript=configure
@@ -136,13 +137,18 @@ if [ -n "${IN_SERENITY_PORT_DEV:-}" ]; then
 fi
 
 run_nocd() {
-    echo "+ $@ (nocd)" >&2
-    ("$@")
+    (
+        set -x
+        "$@"
+    )
 }
 
 run() {
-    echo "+ $@"
-    (cd "$workdir" && "$@")
+    (
+        set -ex
+        cd "$workdir"
+        "$@"
+    )
 }
 
 run_replace_in_file() {
@@ -314,7 +320,7 @@ do_download_file() {
     echo "Downloading URL: ${url}"
 
     if which curl; then
-        run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
+        run_nocd curl "${curlopts[@]}" "$url" -o "$filename"
     else
         run_nocd pro "$url" > "$filename"
     fi
