@@ -617,10 +617,9 @@ Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session>
         co_return {};
     }();
 
-    if (maybe_error.is_error()) {
-        dbgln("Unable to process incoming channel data: {}", maybe_error.error());
-        // FIXME: Think about what we should do with this error.
-    }
+    if (maybe_error.is_error())
+        disconnect(maybe_error.release_error());
+
     co_return;
 }
 
@@ -848,6 +847,12 @@ ErrorOr<void> SSHClient::send_exit_status(Session const& session, int status)
 
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
+}
+
+void SSHClient::disconnect(Error error)
+{
+    dbgln("Disconnecting: {}", error);
+    m_disconnect();
 }
 
 } // SSHServer
