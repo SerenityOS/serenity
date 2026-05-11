@@ -14,7 +14,9 @@ namespace SSH::Server {
 TCPClient::TCPClient(NonnullOwnPtr<Core::TCPSocket>&& socket, Function<void()>&& on_quit)
     : m_on_quit(move(on_quit))
     , m_socket(move(socket))
-    , m_ssh_client(*m_socket)
+    , m_ssh_client(*m_socket, [this]() {
+        Core::EventLoop::current().deferred_invoke([this]() { die(); });
+    })
 {
 }
 
