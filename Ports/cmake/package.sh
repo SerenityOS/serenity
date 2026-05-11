@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='cmake'
 # NOTE: keep this version aligned with Toolchain/BuildCMake.sh
-version='3.30.0'
+version='3.30.3'
 useconfigure='true'
 files=(
-    "https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}.tar.gz#157e5be6055c154c34f580795fe5832f260246506d32954a971300ed7899f579"
+    "https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}.tar.gz#6d5de15b6715091df7f5441007425264bdd477809f80333fdf95f846aaff88e4"
 )
 depends=(
     'bash'
