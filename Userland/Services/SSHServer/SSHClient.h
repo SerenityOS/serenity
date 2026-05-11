@@ -49,6 +49,7 @@ public:
 
     enum class BehaviorControl : u8 {
         ContinueExecution,
+        WaitForMoreData,
         Disconnect,
     };
 

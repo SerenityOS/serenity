@@ -27,6 +27,11 @@ namespace SSH::Server {
 
 ErrorOr<SSHClient::BehaviorControl> SSHClient::handle_data(ByteBuffer& data)
 {
+    if (m_state != State::Constructed) {
+        if (!is_buffer_containing_a_full_packet(data))
+            return BehaviorControl::WaitForMoreData;
+    }
+
     switch (m_state) {
     case State::Constructed:
         TRY(handle_protocol_version(data));

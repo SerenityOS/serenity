@@ -40,6 +40,11 @@ ErrorOr<void> Cipher::encrypt(u32 packet_sequence_number, Bytes bytes)
     return {};
 }
 
+u32 IdentityCipher::decrypt_packet_length(u32, Bytes bytes)
+{
+    return AK::convert_between_host_and_network_endian(ByteReader::load32(bytes.data()));
+}
+
 NonnullOwnPtr<ChaCha20Poly1305Cipher> ChaCha20Poly1305Cipher::create(ByteBuffer const& shared_secret, Crypto::Hash::Digest<256> hash, Crypto::Hash::Digest<256> session_id)
 {
 
@@ -109,7 +114,7 @@ NonnullOwnPtr<ChaCha20Poly1305Cipher> ChaCha20Poly1305Cipher::create(ByteBuffer 
 
 // 7. Packet Handling
 // https://datatracker.ietf.org/doc/html/draft-ietf-sshm-chacha20-poly1305-02#section-7
-void ChaCha20Poly1305Cipher::decrypt_impl(u32 packet_sequence_number, Bytes bytes)
+u32 ChaCha20Poly1305Cipher::decrypt_packet_length(u32 packet_sequence_number, Bytes bytes)
 {
     // "When receiving a packet, the length must be decrypted first. When 4 bytes o
     // ciphertext length have been received, they may be decrypted using the K_2 key,
@@ -123,14 +128,25 @@ void ChaCha20Poly1305Cipher::decrypt_impl(u32 packet_sequence_number, Bytes byte
     Crypto::Cipher::ChaCha20 length_decryptor(m_k_2_client_to_server.bytes(), nonce, 0);
     length_decryptor.decrypt(encrypted_length, encrypted_length);
 
+    u32 packet_length = AK::convert_between_host_and_network_endian(ByteReader::load32(encrypted_length.data()));
+    return packet_length;
+}
+
+// 7. Packet Handling
+// https://datatracker.ietf.org/doc/html/draft-ietf-sshm-chacha20-poly1305-02#section-7
+void ChaCha20Poly1305Cipher::decrypt_impl(u32 packet_sequence_number, Bytes bytes)
+{
+    u32 packet_length = decrypt_packet_length(packet_sequence_number, bytes);
+
     // FIXME: "Once the entire packet has been received, the MAC MUST be checked before decryption."
 
     // "the packet decrypted using ChaCha20 as described above (with K_1, the packet
     // sequence number as nonce and a starting block counter of 1)."
 
-    u32 packet_length = AK::convert_between_host_and_network_endian(ByteReader::load32(encrypted_length.data()));
     auto packet = bytes.slice(4, packet_length);
 
+    NetworkOrdered<u64> nonce_data(packet_sequence_number);
+    ReadonlyBytes nonce { &nonce_data, sizeof(nonce_data) };
     Crypto::Cipher::ChaCha20 packet_decryptor(m_k_1_client_to_server.bytes(), nonce, 1);
     packet_decryptor.decrypt(packet, packet);
 }

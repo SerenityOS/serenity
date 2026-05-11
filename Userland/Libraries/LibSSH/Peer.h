@@ -24,6 +24,8 @@ public:
     virtual ~Peer() = default;
 
 protected:
+    bool is_buffer_containing_a_full_packet(ReadonlyBytes);
+
     ErrorOr<ByteBuffer> read_packet(ByteBuffer&);
     ErrorOr<void> write_packet(ReadonlyBytes payload);
 

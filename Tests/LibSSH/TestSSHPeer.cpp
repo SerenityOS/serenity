@@ -48,8 +48,16 @@ public:
         set_shared_secret(move(shared_secret));
     }
 
+    PeerMock(SocketMock& socket, Crypto::Hash::Digest<256> hash, ByteBuffer shared_secret)
+        : SSH::Peer(socket)
+    {
+        set_hash(hash);
+        set_shared_secret(move(shared_secret));
+    }
+
     using SSH::Peer::handle_disconnect_message;
     using SSH::Peer::handle_new_keys_message;
+    using SSH::Peer::is_buffer_containing_a_full_packet;
     using SSH::Peer::read_packet;
     using SSH::Peer::send_new_keys_message;
     using SSH::Peer::session_id;
@@ -118,4 +126,60 @@ TEST_CASE(stable_session_id)
     peer.set_hash(new_hash);
 
     EXPECT_EQ(peer.session_id(), session_id);
+}
+
+TEST_CASE(is_buffer_containing_a_full_packet)
+{
+    // A session ID is stable, even after the peers rekeyed.
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket);
+
+    auto message = TRY_OR_FAIL(ByteBuffer::copy(new_keys_message.bytes()));
+    message.append("Additional data"sv.bytes());
+
+    EXPECT(peer.is_buffer_containing_a_full_packet(new_keys_message.bytes()));
+    EXPECT(peer.is_buffer_containing_a_full_packet(new_keys_message.bytes().trim(new_keys_message.length())));
+    EXPECT(!peer.is_buffer_containing_a_full_packet(new_keys_message.bytes().trim(new_keys_message.length() - 1)));
+}
+
+TEST_CASE(is_buffer_containing_a_full_packet_encrypted)
+{
+    // The data comes from ChaCha20Poly1305_decrypt.
+    auto shared_secret_raw = "\x53\x22\xc2\x28\x50\xfe\x85\xbd\xb3\x35\xcf\xb4\x67\x4a\x82\x0b\xd0\x54\xa3\xd9\x4a\xc8\x3c\x55\x91\xb4\xd5\xf7\x52\x28\xd2\x6c"sv.bytes();
+    auto hash_raw = "\xc0\x73\x95\x08\xd8\xc0\xbf\x2a\x6d\x13\x1b\xfd\x67\x88\x32\xdf\x15\xeb\x5a\x2e\x5a\xf3\xdf\x98\xa1\x1c\x41\x2b\x2a\x26\x4d\x62"sv.bytes();
+
+    auto shared_secret = TRY_OR_FAIL(ByteBuffer::copy(shared_secret_raw));
+    SSH::ChaCha20Poly1305Cipher::Digest hash;
+    hash_raw.copy_to({ &hash.data, decltype(hash)::Size });
+
+    // A session ID is stable, even after the peers rekeyed.
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket, hash, shared_secret);
+
+    auto make_message = []() {
+        return ByteBuffer::copy(new_keys_message.bytes());
+    };
+
+    // This is hackish, we call read_packet multiple times to bump Peer's private variable
+    // m_incoming_packet_sequence_number to 3. This is required to decrypt the packet below.
+    for (u32 i = 0; i < 2; ++i) {
+        auto message = TRY_OR_FAIL(make_message());
+        TRY_OR_FAIL(peer.read_packet(message));
+    }
+
+    auto message = TRY_OR_FAIL(make_message());
+    TRY_OR_FAIL(peer.handle_new_keys_message(message));
+
+    // Peer is properly initialized to decrypt messages.
+
+    auto encrypted_raw = "\x0c\x3b\x6d\x66\xb1\x72\xf3\x85\xa4\x88\x35\xf2\x0a\x6d\xa5\x9b\x29\xcf\xe6\xe8\x5f\xad\x05\x6b\x94\x89\xae\xab\x10\x37\x88\x7a\x6b\x58\x30\xb1\x9b\x6f\xc1\x8f\x6c\x89\x68\x24"sv.bytes();
+    auto packet = TRY_OR_FAIL(ByteBuffer::copy(encrypted_raw));
+    auto additional_data = "Additional data"sv.bytes();
+    packet.append(additional_data);
+
+    EXPECT(peer.is_buffer_containing_a_full_packet(packet));
+    EXPECT(peer.is_buffer_containing_a_full_packet(packet.bytes().trim(encrypted_raw.size())));
+    EXPECT(!peer.is_buffer_containing_a_full_packet(packet.bytes().trim(encrypted_raw.size() - 1)));
 }
