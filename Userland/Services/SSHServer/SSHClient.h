@@ -47,12 +47,12 @@ public:
     {
     }
 
-    enum class ShouldDisconnect : u8 {
-        No,
-        Yes,
+    enum class BehaviorControl : u8 {
+        ContinueExecution,
+        Disconnect,
     };
 
-    ErrorOr<ShouldDisconnect> handle_data(ByteBuffer& data);
+    ErrorOr<BehaviorControl> handle_data(ByteBuffer& data);
 
 private:
     enum class State : u8 {
@@ -84,7 +84,7 @@ private:
     ErrorOr<void> send_publickey_ok_message(ReadonlyBytes algorithm_name, ReadonlyBytes blob);
     ErrorOr<void> send_user_authentication_success();
 
-    ErrorOr<ShouldDisconnect> handle_generic_packet(GenericMessage&&);
+    ErrorOr<BehaviorControl> handle_generic_packet(GenericMessage&&);
 
     ErrorOr<void> handle_channel_open_message(GenericMessage&);
     ErrorOr<void> send_channel_open_confirmation(Session const&);
