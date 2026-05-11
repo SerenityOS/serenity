@@ -51,8 +51,13 @@ ErrorOr<void> TCPClient::on_ready_to_read()
         return {};
 
     while (!m_read_buffer.is_empty()) {
-        if (TRY(m_ssh_client.handle_data(m_read_buffer)) == SSHClient::ShouldDisconnect::Yes)
+        auto next_behavior = TRY(m_ssh_client.handle_data(m_read_buffer));
+        switch (next_behavior) {
+        case SSHClient::BehaviorControl::ContinueExecution:
+            continue;
+        case SSHClient::BehaviorControl::Disconnect:
             die();
+        }
     }
     return {};
 }

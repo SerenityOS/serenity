@@ -25,7 +25,7 @@
 
 namespace SSH::Server {
 
-ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_data(ByteBuffer& data)
+ErrorOr<SSHClient::BehaviorControl> SSHClient::handle_data(ByteBuffer& data)
 {
     switch (m_state) {
     case State::Constructed:
@@ -50,7 +50,7 @@ ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_data(ByteBuffer& data)
     case State::Authentified:
         return handle_generic_packet(TRY(unpack_generic_message(data)));
     }
-    return ShouldDisconnect::No;
+    return BehaviorControl::ContinueExecution;
 }
 
 // 4.2.  Protocol Version Exchange
@@ -460,12 +460,12 @@ ErrorOr<void> SSHClient::send_user_authentication_success()
     return {};
 }
 
-ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_generic_packet(GenericMessage&& message)
+ErrorOr<SSHClient::BehaviorControl> SSHClient::handle_generic_packet(GenericMessage&& message)
 {
     switch (message.type) {
     case MessageID::DISCONNECT:
         TRY(handle_disconnect_message(message.data));
-        return ShouldDisconnect::Yes;
+        return BehaviorControl::Disconnect;
     case MessageID::CHANNEL_OPEN:
         TRY(handle_channel_open_message(message));
         break;
@@ -488,7 +488,7 @@ ErrorOr<SSHClient::ShouldDisconnect> SSHClient::handle_generic_packet(GenericMes
         dbgln_if(SSH_DEBUG, "Unexpected packet: {}", to_underlying(message.type));
         return Error::from_string_literal("Unexpected packet type");
     }
-    return ShouldDisconnect::No;
+    return BehaviorControl::ContinueExecution;
 }
 
 // 5.1.  Opening a Channel
