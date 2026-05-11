@@ -55,6 +55,8 @@ ErrorOr<void> TCPClient::on_ready_to_read()
         switch (next_behavior) {
         case SSHClient::BehaviorControl::ContinueExecution:
             continue;
+        case SSHClient::BehaviorControl::WaitForMoreData:
+            return {};
         case SSHClient::BehaviorControl::Disconnect:
             die();
         }

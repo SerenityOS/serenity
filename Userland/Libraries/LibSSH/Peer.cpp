@@ -12,6 +12,18 @@
 
 namespace SSH {
 
+bool Peer::is_buffer_containing_a_full_packet(ReadonlyBytes data)
+{
+    if (data.size() < sizeof(u32))
+        return false;
+
+    // We make a copy to ensure the input bytes stay unchanged.
+    auto copy = MUST(ByteBuffer::copy(data.trim(sizeof(u32))));
+
+    auto packet_length = m_cipher->decrypt_packet_length(m_incoming_packet_sequence_number, copy);
+    return sizeof(u32) + packet_length + m_cipher->mac_size() <= data.size();
+}
+
 // 6.  Binary Packet Protocol
 // https://datatracker.ietf.org/doc/html/rfc4253#section-6
 ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)

@@ -18,6 +18,7 @@ public:
     Cipher(u8 block_size, u8 mac_size);
     virtual ~Cipher() = default;
 
+    virtual u32 decrypt_packet_length(u32 packet_sequence_number, Bytes bytes) = 0;
     ErrorOr<void> decrypt(u32 packet_sequence_number, Bytes);
     ErrorOr<void> encrypt(u32 packet_sequence_number, Bytes);
 
@@ -42,6 +43,7 @@ public:
     virtual ~IdentityCipher() = default;
 
 private:
+    u32 decrypt_packet_length(u32, Bytes bytes) override;
     void decrypt_impl(u32, Bytes) override { }
     void encrypt_impl(u32, Bytes) override { }
 };
@@ -64,6 +66,7 @@ private:
     {
     }
 
+    u32 decrypt_packet_length(u32, Bytes) override;
     void decrypt_impl(u32, Bytes) override;
     void encrypt_impl(u32, Bytes) override;
 
