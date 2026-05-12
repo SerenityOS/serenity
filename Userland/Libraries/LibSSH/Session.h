@@ -32,6 +32,8 @@ struct ExecData {
     NonnullOwnPtr<Core::File> stdout_;
     NonnullOwnPtr<Core::File> stderr_;
 
+    Optional<int> exit_status {};
+
     Coroutine<ErrorOr<void>> handle_channel_data(Session&);
     void handle_channel_eof(Session const&);
 

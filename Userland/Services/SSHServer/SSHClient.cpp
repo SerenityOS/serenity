@@ -30,6 +30,17 @@ SSHClient::SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect)
     , m_tcp_socket(tcp_socket)
     , m_disconnect(move(disconnect))
 {
+    m_sigchld_handler_id = Core::EventLoop::register_signal(SIGCHLD, [this](int) {
+        if (auto maybe_error = manage_child_death(); maybe_error.is_error()) {
+            // FIXME: Maybe disconnect?
+            dbgln("Error while trying to manage child death: {}", maybe_error.error());
+        }
+    });
+}
+
+SSHClient::~SSHClient()
+{
+    Core::EventLoop::unregister_signal(m_sigchld_handler_id);
 }
 
 ErrorOr<SSHClient::BehaviorControl> SSHClient::handle_data(ByteBuffer& data)
@@ -683,7 +694,6 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     // FIXME: Make sure to cancel these coroutines if anything goes wrong.
     Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stdout_; }, [this](auto&... args) { return send_channel_data(args...); }));
     Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stderr_; }, [this](auto&... args) { return send_channel_extended_data(args...); }));
-    Core::EventLoop::adopt_coroutine(async_wait_for_child(session));
 
     return {};
 }
@@ -701,37 +711,14 @@ Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session,
 
             CO_TRY(sender(session, output));
         }
+
+        CO_TRY(close_exec_session_if_needed(session));
+
         co_return {};
     }();
 
     if (maybe_error.is_error()) {
         dbgln("Unable to read stdout from process: {}", maybe_error.error());
-        // FIXME: Think about what we should do with this error.
-    }
-    co_return;
-}
-
-Coroutine<void> SSHClient::async_wait_for_child(NonnullRefPtr<Session> session)
-{
-    auto maybe_error = [&]() -> ErrorOr<void> {
-        // FIXME: If the child closes STDOUT, we will block the server in
-        //        wait_for_termination() bellow. We should implement a way to
-        //        wake up the event loop on the child's death.
-        Core::EventLoop::current().spin_until([&session]() {
-            return session->system.get<ExecData>().stdout_->is_eof();
-        });
-
-        auto exited_with_code_0 = TRY(session->system.get<ExecData>().child.wait_for_termination());
-
-        // FIXME: Send the actual exit status.
-        TRY(send_exit_status(session, exited_with_code_0 ? 0 : -1));
-
-        TRY(send_channel_close(session));
-        return {};
-    }();
-
-    if (maybe_error.is_error()) {
-        dbgln("Error while waiting for the child: {}", maybe_error.error());
         // FIXME: Think about what we should do with this error.
     }
     co_return;
@@ -863,6 +850,60 @@ ErrorOr<void> SSHClient::send_exit_status(Session const& session, int status)
     TRY(stream.write_value<NetworkOrdered<u32>>(status));
 
     TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
+}
+
+ErrorOr<void> SSHClient::manage_child_death()
+{
+    while (true) {
+        auto maybe_result = Core::System::waitpid(-1, WNOHANG);
+
+        if (maybe_result.is_error()) {
+            auto error = maybe_result.release_error();
+            if (error.code() == EINTR)
+                continue;
+            if (error.code() == ECHILD)
+                return {};
+            return error;
+        }
+
+        auto result = maybe_result.value();
+
+        if (result.pid == 0)
+            return {};
+
+        for (auto& session : m_sessions) {
+            if (session->system.has<ExecData>()) {
+                auto& exec_data = session->system.get<ExecData>();
+                if (exec_data.child.pid() == result.pid) {
+                    bool exited_with_code_0 = true;
+                    if (WIFEXITED(result.status)) {
+                        exited_with_code_0 &= WEXITSTATUS(result.status) == 0;
+                    } else if (WIFSIGNALED(result.status)) {
+                        exited_with_code_0 = false;
+                    }
+
+                    // FIXME: Send the actual exit status.
+                    exec_data.exit_status = exited_with_code_0 ? 0 : -1;
+
+                    TRY(close_exec_session_if_needed(*session));
+                }
+            }
+        }
+    }
+}
+
+ErrorOr<void> SSHClient::close_exec_session_if_needed(Session& session)
+{
+    auto& exec_data = session.system.get<ExecData>();
+    if (!exec_data.exit_status.has_value()
+        || !exec_data.stdout_->is_eof()
+        || !exec_data.stderr_->is_eof())
+        return {};
+
+    TRY(send_exit_status(session, *session.system.get<ExecData>().exit_status));
+
+    TRY(send_channel_close(session));
     return {};
 }
 
