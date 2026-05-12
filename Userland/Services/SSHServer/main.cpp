@@ -27,16 +27,26 @@ OwnPtr<SSH::Server::TCPClient> g_client;
 ErrorOr<void> accept_connection()
 {
     auto client_socket = TRY(g_tcp_server->accept());
+    auto fd = client_socket->fd();
 
     if (auto pid = TRY(Core::System::fork()); pid == 0) {
         // Close the server listening socket. This is deferred to not close
         // the server from within itself.
-        Core::EventLoop::current().deferred_invoke([socket = move(client_socket)]() mutable {
+
+        // We need to ensure the socket survives until the deferred_invoke, but
+        // fd will be closed at the end of the scope with client_socket.
+        auto fd_copy = TRY(Core::System::dup(fd));
+
+        Core::EventLoop::current().deferred_invoke([fd_copy]() mutable {
             g_tcp_server = nullptr;
             auto on_quit = []() {
                 g_client = nullptr;
                 Core::EventLoop::current().quit(0);
             };
+
+            Core::EventLoop::notify_forked(Core::EventLoop::ForkEvent::Child);
+
+            auto socket = MUST(Core::TCPSocket::adopt_fd(fd_copy));
             g_client = SSH::Server::TCPClient::create(move(socket), move(on_quit));
         });
     } else {
