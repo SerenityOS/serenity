@@ -42,6 +42,7 @@ public:
 class SSHClient : public Peer {
 public:
     explicit SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect);
+    ~SSHClient();
 
     enum class BehaviorControl : u8 {
         ContinueExecution,
@@ -102,7 +103,9 @@ private:
     template<typename F, typename F2>
     Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, F file_extractor, F2 sender);
     Coroutine<void> async_stream_data_to_subsystem(NonnullRefPtr<Session>);
-    Coroutine<void> async_wait_for_child(NonnullRefPtr<Session>);
+
+    ErrorOr<void> manage_child_death();
+    ErrorOr<void> close_exec_session_if_needed(Session&);
 
     void disconnect(Error);
 
@@ -115,6 +118,7 @@ private:
     ByteBuffer m_cookie {};
 
     Vector<NonnullRefPtr<Session>> m_sessions;
+    int m_sigchld_handler_id {};
 };
 
 } // SSHServer
