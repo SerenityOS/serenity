@@ -41,12 +41,7 @@ public:
 
 class SSHClient : public Peer {
 public:
-    explicit SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect)
-        : Peer(tcp_socket)
-        , m_tcp_socket(tcp_socket)
-        , m_disconnect(move(disconnect))
-    {
-    }
+    explicit SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect);
 
     enum class BehaviorControl : u8 {
         ContinueExecution,
