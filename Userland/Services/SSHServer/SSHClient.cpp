@@ -25,6 +25,13 @@
 
 namespace SSH::Server {
 
+SSHClient::SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect)
+    : Peer(tcp_socket)
+    , m_tcp_socket(tcp_socket)
+    , m_disconnect(move(disconnect))
+{
+}
+
 ErrorOr<SSHClient::BehaviorControl> SSHClient::handle_data(ByteBuffer& data)
 {
     if (m_state != State::Constructed) {
