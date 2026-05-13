@@ -81,6 +81,21 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     Core::EventLoop loop;
 
+    Core::EventLoop::register_signal(SIGCHLD, [&](int) {
+        while (true) {
+            auto maybe_result = Core::System::waitpid(-1, WNOHANG);
+            if (maybe_result.is_error()) {
+                auto error = maybe_result.release_error();
+                if (error.code() == EINTR)
+                    continue;
+                if (error.code() == ECHILD)
+                    return;
+                dbgln("Error while reaping child processes: {}", error);
+                loop.quit(-1);
+            }
+        }
+    });
+
     g_tcp_server = TRY(Core::TCPServer::try_create());
 
     g_tcp_server->on_ready_to_accept = [] {
