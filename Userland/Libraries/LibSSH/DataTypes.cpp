@@ -29,12 +29,12 @@ ErrorOr<void> encode_mpint(AllocatingMemoryStream& stream, ReadonlyBytes bytes)
 {
     VERIFY(bytes.size() > 0);
 
-    // FIXME: Remove leading zeros.
-    VERIFY(bytes.size() > 0 || bytes[0] == 0);
+    auto first_non_null = find_if(bytes.begin(), bytes.end(), [](u8 byte) { return byte != 0; });
+    bool is_all_zeroes = first_non_null == bytes.end();
 
-    bool should_add_leading_zero = bytes.size() > 0 && bytes[0] & 0x80;
+    bool should_add_leading_zero = !is_all_zeroes && bytes[first_non_null.index()] & 0x80;
 
-    u32 total_length = bytes.size();
+    u32 total_length = bytes.size() - first_non_null.index();
 
     // "If the most significant bit would be set for a positive number,
     // the number MUST be preceded by a zero byte."
@@ -44,7 +44,7 @@ ErrorOr<void> encode_mpint(AllocatingMemoryStream& stream, ReadonlyBytes bytes)
     TRY(stream.write_value<NetworkOrdered<u32>>(total_length));
     if (should_add_leading_zero)
         TRY(stream.write_value<NetworkOrdered<u8>>(0));
-    TRY(stream.write_until_depleted(bytes));
+    TRY(stream.write_until_depleted(bytes.slice(first_non_null.index())));
     return {};
 }
 

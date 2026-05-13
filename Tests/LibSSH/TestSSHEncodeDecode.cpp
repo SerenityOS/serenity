@@ -83,11 +83,23 @@ TEST_CASE(mpint)
         return {};
     };
 
+    TRY_OR_FAIL(test(to_array<u8>({ 0x00 }), to_array<u8>({ 0x00, 0x00, 0x00, 0x00 })));
     TRY_OR_FAIL(test(to_array<u8>({ 0x09, 0xa3, 0x78, 0xf9, 0xb2, 0xe3, 0x32, 0xa7 }), to_array<u8>({ 0x00, 0x00, 0x00, 0x08, 0x09, 0xa3, 0x78, 0xf9, 0xb2, 0xe3, 0x32, 0xa7 })));
     TRY_OR_FAIL(test(to_array<u8>({ 0x80 }), to_array<u8>({ 0x00, 0x00, 0x00, 0x02, 0x00, 0x80 })));
 
+    // Encoding this wrong makes openssh's client return:
+    // ssh_dispatch_run_fatal: [SERVER IP]: incorrect signature
+    auto expected = "\x00\x00\x00\x1f\x5e\x34\x80\x61\xe5\x4d\xe0\xcb\xf3\x94\x1b\xee\x96\x6e\x20\x68\x1d\x83\xeb\x8b\xa2\xce\xc2\x33\x5c\xf1\xfd\x2d\xe7\x2f\x6c"sv.bytes();
+    TRY_OR_FAIL(test(
+        "\x00\x5e\x34\x80\x61\xe5\x4d\xe0\xcb\xf3\x94\x1b\xee\x96\x6e\x20\x68\x1d\x83\xeb\x8b\xa2\xce\xc2\x33\x5c\xf1\xfd\x2d\xe7\x2f\x6c"sv.bytes(),
+        expected));
+
+    // Same as above but with multiple leading zeroes.
+    TRY_OR_FAIL(test(
+        "\x00\x00\x00\x5e\x34\x80\x61\xe5\x4d\xe0\xcb\xf3\x94\x1b\xee\x96\x6e\x20\x68\x1d\x83\xeb\x8b\xa2\xce\xc2\x33\x5c\xf1\xfd\x2d\xe7\x2f\x6c"sv.bytes(),
+        expected));
+
     // FIXME: Whenever we add support for them add the corresponding tests:
-    //        - for input with leading zeros
     //        - for negative input numbers
 }
 
