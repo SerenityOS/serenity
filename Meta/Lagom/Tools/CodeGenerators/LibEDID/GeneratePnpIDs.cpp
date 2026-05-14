@@ -22,27 +22,48 @@ struct PnpIdData {
 
 static ErrorOr<ApprovalDate> parse_approval_date(StringView date)
 {
-    auto parts = date.trim_whitespace().split_view('/', SplitBehavior::KeepEmpty);
-    if (parts.size() != 3)
-        return Error::from_string_literal("Failed to parse approval date parts (mm/dd/yyyy)");
+    ssize_t year_index = -1;
+    ssize_t month_index = -1;
+    ssize_t day_index = -1;
+    char date_separator = '\0';
 
-    auto month = parts[0].to_number<unsigned>();
+    if (date.contains('-')) {
+        // Assume yyyy-mm-dd.
+        year_index = 0;
+        month_index = 1;
+        day_index = 2;
+        date_separator = '-';
+    } else if (date.contains('/')) {
+        // Assume mm/dd/yyyy.
+        month_index = 0;
+        day_index = 1;
+        year_index = 2;
+        date_separator = '/';
+    } else {
+        return Error::from_string_literal("Unknown approval date format");
+    }
+
+    auto parts = date.trim_whitespace().split_view(date_separator, SplitBehavior::KeepEmpty);
+    if (parts.size() != 3)
+        return Error::from_string_literal("Failed to parse approval date parts");
+
+    auto year = parts[year_index].to_number<unsigned>();
+    if (!year.has_value())
+        return Error::from_string_literal("Failed to parse year from approval date");
+    if (year.value() < 1900 || year.value() > 2999)
+        return Error::from_string_literal("Invalid year approval date");
+
+    auto month = parts[month_index].to_number<unsigned>();
     if (!month.has_value())
         return Error::from_string_literal("Failed to parse month from approval date");
     if (month.value() == 0 || month.value() > 12)
         return Error::from_string_literal("Invalid month in approval date");
 
-    auto day = parts[1].to_number<unsigned>();
+    auto day = parts[day_index].to_number<unsigned>();
     if (!day.has_value())
         return Error::from_string_literal("Failed to parse day from approval date");
     if (day.value() == 0 || day.value() > 31)
         return Error::from_string_literal("Invalid day in approval date");
-
-    auto year = parts[2].to_number<unsigned>();
-    if (!year.has_value())
-        return Error::from_string_literal("Failed to parse year from approval date");
-    if (year.value() < 1900 || year.value() > 2999)
-        return Error::from_string_literal("Invalid year approval date");
 
     return ApprovalDate { .year = year.value(), .month = month.value(), .day = day.value() };
 }
