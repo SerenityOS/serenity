@@ -715,7 +715,7 @@ void Game::start_solving()
 void Game::step_solve()
 {
     for (auto& stack : stacks()) {
-        if (stack->type() != Cards::CardStack::Type::Normal)
+        if (stack->type() != Cards::CardStack::Type::Normal && stack->type() != Cards::CardStack::Type::Play)
             continue;
 
         if (attempt_to_move_card_to_foundations(stack))
