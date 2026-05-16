@@ -33,6 +33,7 @@
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/URL.h>
 #include <unistd.h>
+#include <errno.h>
 
 namespace Browser {
 
@@ -52,8 +53,14 @@ ByteString g_webdriver_content_ipc_path;
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file = TRY(Core::File::open(TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read));
-    auto ad_filter_list = TRY(Core::InputBufferedFile::create(move(file)));
+    auto path = TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()));
+    auto file_result = Core::File::open(path, Core::File::OpenMode::Read);
+    if (file_result.is_error()) {
+        if (file_result.error().is_errno() && file_result.error().code() == ENOENT)
+            return {};
+        return file_result.release_error();
+    }
+    auto ad_filter_list = TRY(Core::InputBufferedFile::create(file_result.release_value()));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
     Browser::g_content_filters.clear_with_capacity();
@@ -72,8 +79,14 @@ static ErrorOr<void> load_content_filters()
 
 static ErrorOr<void> load_autoplay_allowlist()
 {
-    auto file = TRY(Core::File::open(TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read));
-    auto allowlist = TRY(Core::InputBufferedFile::create(move(file)));
+    auto path = TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory()));
+    auto file_result = Core::File::open(path, Core::File::OpenMode::Read);
+    if (file_result.is_error()) {
+        if (file_result.error().is_errno() && file_result.error().code() == ENOENT)
+            return {};
+        return file_result.release_error();
+    }
+    auto allowlist = TRY(Core::InputBufferedFile::create(file_result.release_value()));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
     Browser::g_autoplay_allowlist.clear_with_capacity();
@@ -239,7 +252,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         window->content_filters_changed();
     };
-    TRY(content_filters_watcher->add_watch(ByteString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
+    if (!Core::File::open(TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read).is_error())
+        TRY(content_filters_watcher->add_watch(ByteString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
 
     auto autoplay_allowlist_watcher = TRY(Core::FileWatcher::create());
     autoplay_allowlist_watcher->on_change = [&](Core::FileWatcherEvent const&) {
@@ -250,7 +264,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         window->autoplay_allowlist_changed();
     };
-    TRY(autoplay_allowlist_watcher->add_watch(ByteString::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
+    if (!Core::File::open(TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read).is_error())
+        TRY(autoplay_allowlist_watcher->add_watch(ByteString::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
 
     app->on_action_enter = [&](GUI::Action& action) {
         if (auto* browser_window = dynamic_cast<Browser::BrowserWindow*>(app->active_window())) {

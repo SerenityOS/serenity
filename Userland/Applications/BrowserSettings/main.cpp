@@ -10,6 +10,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/SettingsWindow.h>
@@ -28,8 +29,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/home", "r"));
-    TRY(Core::System::unveil("/home/anon/.config/BrowserAutoplayAllowlist.txt", "rwc"));
-    TRY(Core::System::unveil("/home/anon/.config/BrowserContentFilters.txt", "rwc"));
+    TRY(Core::System::unveil(TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory())), "rwc"));
+    TRY(Core::System::unveil(TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory())), "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
