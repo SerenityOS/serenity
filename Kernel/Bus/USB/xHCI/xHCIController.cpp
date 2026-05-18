@@ -754,9 +754,9 @@ ErrorOr<void> xHCIController::enqueue_transfer(u8 slot, u8 endpoint, Pipe::Direc
 
     auto& endpoint_ring = m_slots_state[slot - 1].endpoint_rings[endpoint_index(endpoint, direction) - 1];
     VERIFY(endpoint_ring.region);
-    if (transfer_request_blocks.size() > endpoint_ring.free_transfer_request_blocks)
+
+    if (!endpoint_ring.has_space_for_trbs(transfer_request_blocks.size()))
         return ENOBUFS;
-    endpoint_ring.free_transfer_request_blocks -= transfer_request_blocks.size();
 
     dbgln_if(XHCI_VERBOSE_DEBUG, "-> enqueue_transfer slot={} endpoint={} dir={}:", slot, endpoint, to_underlying(direction));
 
@@ -995,9 +995,9 @@ ErrorOr<void> xHCIController::reset_pipe(USB::Device& device, USB::Pipe& pipe)
     TRY(set_tr_dequeue_pointer(slot, endpoint_id, 0, 0, endpoint_ring.ring_paddr(), 1));
 
     endpoint_ring.enqueue_index = 0;
+    endpoint_ring.dequeue_index = 0;
     endpoint_ring.pending_transfers.clear();
     endpoint_ring.producer_cycle_state = 1;
-    endpoint_ring.free_transfer_request_blocks = endpoint_ring_size - 1; // -1 to exclude the Link TRB
     for (size_t i = 0; i < endpoint_ring_size - 1; i++)
         endpoint_ring.ring_vaddr()[i] = {};
 
@@ -1338,19 +1338,24 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
         return;
     }
     auto transfer_request_block_index = (transfer_request_block_pointer - endpoint_ring.ring_paddr()) / sizeof(TransferRequestBlock);
+
+    // 4.9.2 Transfer Ring Management
+    // Software uses the Dequeue Pointer to determine when a Transfer Ring is full. As
+    // it processes Transfer Events, it updates its copy of the Dequeue Pointer with the
+    // value of the Transfer Event TRB Pointer field.
+    endpoint_ring.dequeue_index = transfer_request_block_index;
+
     for (auto& pending_transfer : endpoint_ring.pending_transfers) {
-        auto freed_transfer_request_blocks = 0;
         if (pending_transfer.start_index <= pending_transfer.end_index) {
             if (pending_transfer.start_index > transfer_request_block_index || transfer_request_block_index > pending_transfer.end_index)
                 continue;
-            freed_transfer_request_blocks = pending_transfer.end_index - pending_transfer.start_index + 1;
         } else {
             if (pending_transfer.start_index > transfer_request_block_index && transfer_request_block_index > pending_transfer.end_index)
                 continue;
-            freed_transfer_request_blocks = (endpoint_ring_size - pending_transfer.start_index) + pending_transfer.end_index;
         }
-        endpoint_ring.free_transfer_request_blocks += freed_transfer_request_blocks;
+
         pending_transfer.endpoint_list_node.remove();
+
         if (endpoint_ring.type == Pipe::Type::Control || endpoint_ring.type == Pipe::Type::Bulk) {
             auto& sync_pending_transfer = static_cast<SyncPendingTransfer&>(pending_transfer);
             sync_pending_transfer.completion_code = transfer_request_block.transfer_event.completion_code;
@@ -1452,6 +1457,37 @@ void xHCIController::poll_thread()
 
     Thread::current()->exit();
     VERIFY_NOT_REACHED();
+}
+
+bool xHCIController::EndpointRing::has_space_for_trbs(size_t count)
+{
+    // 4.9.2.2 Pointer Advancement
+    // To prevent overruns, software shall determine when the Ring is full. The ring is
+    // defined as “full” if advancing the Enqueue Pointer will make it equal to the
+    // Dequeue Pointer. Software shall take Link TRBs into account when evaluating
+    // the full condition. If the Enqueue Pointer is not pointing at a Link TRB, software
+    // can determine if the Ring is full by adding the size of a TRB (16) to the Enqueue
+    // Pointer and checking if the result is equal to the value of the Dequeue Pointer. If
+    // the Enqueue Pointer is pointing at a Link TRB, then software shall compare the
+    // Ring Segment Pointer value in the Link TRB with the Dequeue Pointer.
+
+    u32 current_trb_index = enqueue_index;
+    for (size_t i = 0; i < count; i++) {
+        // The last TRB in a Ring is a Link TRB.
+        bool points_at_link_trb = current_trb_index == endpoint_ring_size - 1;
+
+        if (points_at_link_trb) {
+            // This assumes we don't use segmented Rings, i.e. Link TRBs always point to the first TRB in the same Ring.
+            current_trb_index = 0;
+        } else {
+            current_trb_index++;
+        }
+
+        if (current_trb_index == dequeue_index)
+            return false;
+    }
+
+    return true;
 }
 
 }
