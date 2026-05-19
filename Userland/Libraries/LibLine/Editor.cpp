@@ -809,7 +809,8 @@ auto Editor::get_line(ByteString const& prompt) -> Result<ByteString, Editor::Er
         VT::move_relative(-static_cast<int>(prompt_lines), 0, *stderr_stream).release_value_but_fixme_should_propagate_errors();
     }
 
-    set_origin();
+    if (!set_origin(false))
+        set_origin(1, 1);
 
     m_history_cursor = m_history.size();
 
