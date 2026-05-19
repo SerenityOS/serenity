@@ -697,8 +697,10 @@ ErrorOr<void> Editor::resized()
                 });
             }
         } else {
-            deferred_invoke([this] { handle_resize_event(true).release_value_but_fixme_should_propagate_errors(); });
-            m_has_origin_reset_scheduled = true;
+            TRY(handle_resize_event(false));
+            deferred_invoke([this] {
+                (void)refresh_display();
+            });
         }
     }
 
