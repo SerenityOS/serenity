@@ -141,7 +141,7 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, ByteString const& destina
     }
 
     if (!paths_to_copy.is_empty())
-        TRY(run_file_operation(FileOperation::Copy, paths_to_copy, target, window));
+        TRY(run_file_operation((event.modifiers() & Mod_Ctrl) == Mod_Ctrl ? FileOperation::Copy : FileOperation::Move, paths_to_copy, target, window));
 
     return has_accepted_drop;
 }
