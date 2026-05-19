@@ -711,11 +711,8 @@ ErrorOr<void> Editor::handle_resize_event(bool reset_origin)
         return {};
 
     m_has_origin_reset_scheduled = false;
-    if (reset_origin && !set_origin(false)) {
-        m_has_origin_reset_scheduled = true;
-        deferred_invoke([this] { handle_resize_event(true).release_value_but_fixme_should_propagate_errors(); });
-        return {};
-    }
+    if (reset_origin && !set_origin(false))
+        reset_origin = false;
 
     set_origin(m_origin_row, 1);
 
