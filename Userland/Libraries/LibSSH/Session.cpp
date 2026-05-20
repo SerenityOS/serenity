@@ -53,7 +53,8 @@ ErrorOr<NonnullRefPtr<Session>> Session::create(u32 sender_channel_id, u32 windo
     session->local_channel_id = sender_channel_id;
     session->sender_channel_id = sender_channel_id;
     session->maximum_packet_size = maximum_packet_size;
-    session->window_size = window_size;
+    session->initial_window_size = window_size;
+    session->local_window_size = window_size;
     return session;
 }
 

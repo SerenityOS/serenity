@@ -555,7 +555,7 @@ ErrorOr<void> SSHClient::send_channel_open_confirmation(Session const& session)
     TRY(stream.write_value<NetworkOrdered<u32>>(session.sender_channel_id));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
 
-    TRY(stream.write_value<NetworkOrdered<u32>>(session.window_size));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.initial_window_size));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.maximum_packet_size));
 
     TRY(write_packet(TRY(stream.read_until_eof())));
@@ -619,6 +619,11 @@ ErrorOr<void> SSHClient::handle_channel_data(GenericMessage& message)
         return Error::from_string_literal("Received channel data after EOF");
 
     session.channel_data.append(data);
+    session.total_received_bytes += data.size();
+
+    // FIXME: Try to tune this logic, there is probably some performance to gain here.
+    if (session.local_window_size - session.total_received_bytes < session.initial_window_size / 2)
+        TRY(send_channel_window_adjust_message(session));
 
     // FIXME: Make sure to cancel this coroutine if anything goes wrong.
     if (!session.has_streaming_coroutine)
@@ -816,6 +821,21 @@ ErrorOr<void> SSHClient::handle_channel_window_adjust_message(GenericMessage& me
 
     // FIXME: Actually support this packet and don't spam the client without
     //        respecting its window size.
+    return {};
+}
+
+// 5.2.  Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
+ErrorOr<void> SSHClient::send_channel_window_adjust_message(Session& session)
+{
+    session.local_window_size += session.initial_window_size;
+
+    AllocatingMemoryStream stream;
+    TRY(stream.write_value(MessageID::CHANNEL_WINDOW_ADJUST));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.sender_channel_id));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.initial_window_size));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+
     return {};
 }
 
