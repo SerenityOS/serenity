@@ -975,6 +975,7 @@ U+1F6D1.png
 U+1F6D2.png
 U+1F6D6.png
 U+1F6D7.png
+U+1F6D8.png
 U+1F6DC.png
 U+1F6DD.png
 U+1F6DE.png
@@ -1252,6 +1253,7 @@ U+1FA85.png
 U+1FA87.png
 U+1FA88.png
 U+1FA89.png
+U+1FA8A.png
 U+1FA8F.png
 U+1FA90.png
 U+1FA91.png
