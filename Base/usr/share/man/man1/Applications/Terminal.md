@@ -12,23 +12,31 @@ $ Terminal [options]
 
 ## Description
 
-Terminal is a terminal emulator application for Serenity.
+Terminal is a terminal emulator application for Serenity. It supports multiple tabs within a single window.
 
 It can be launched from the System Menu or the quick access icon to its right, via the `Open in Terminal` action in File Manager and on the Desktop. You can also click on the `Open` link above to launch Terminal.
+
+### Tabs
+
+-   Open a new tab with `Ctrl+Shift+T` or via `File → New Tab`, or by clicking the `+` button in the tab bar.
+-   Close a tab by clicking the `×` button on it or via `File → Quit` when only one tab is open.
+-   The tab bar is hidden when only a single tab is open and shown automatically when more tabs are added.
+
+### Settings
 
 Select `File → Terminal Settings` to launch the Terminal Settings dialog and display user configurable application properties. This dialog box contains two tabs: View and Terminal.
 
 The _View_ tab provides the most frequently sought options:
 
--   Adjust the Terminal font (turn off `Use system default` to select a custom font.
+-   Adjust the Terminal font (turn off `Use system default` to select a custom font).
 -   Specify background opacity, i.e. the amount to which the Terminal's background is transparent, displaying what's underneath.
--   Change the shape of the cursor from Block, to Underscore or to Vertical bar. You can also opt to enable or disable cursor's blink property.
--   To enable or disable the display of terminal scrollbar.
+-   Change the shape of the cursor from Block, to Underscore or to Vertical bar. You can also opt to enable or disable the cursor's blink property.
+-   To enable or disable the display of the terminal scrollbar.
 
 The _Terminal_ tab gives less frequently used options:
 
 -   To either enable System beep, or use Visual bell or disable bell mode altogether.
--   To change Terminal's exit behavior
+-   To change Terminal's exit behavior.
 
 Clicking on the _Apply_ button will cause the currently selected options to take effect immediately.
 
@@ -38,8 +46,8 @@ You can toggle Fullscreen mode by pressing F11.
 
 -   `--help`: Display help message and exit
 -   `--version`: Print version
--   `-e`: Execute this command inside the terminal
--   `-k`: Keep the terminal open after the command has finished executing
+-   `-e <command>`: Execute this command inside the terminal
+-   `-k`: Keep the terminal open after the command has finished executing (only valid with `-e`)
 
 ## Examples
 
