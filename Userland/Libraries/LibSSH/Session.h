@@ -47,7 +47,9 @@ struct Session : public RefCounted<Session> {
     u32 local_channel_id {};
     u32 sender_channel_id {};
     u32 maximum_packet_size {};
-    u64 window_size {};
+    u64 initial_window_size {};
+    u64 local_window_size {};
+    u64 total_received_bytes {};
 
     StreamBuffer channel_data {};
     bool has_streaming_coroutine { false };
