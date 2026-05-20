@@ -50,7 +50,7 @@ ErrorOr<void> accept_connection()
             g_client = SSH::Server::TCPClient::create(move(socket), move(on_quit));
         });
     } else {
-        // The client socket will be close when leaving this function.
+        // The client socket will be closed when leaving this function.
         // The server goes back to listening again.
     }
     return {};
