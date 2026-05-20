@@ -59,7 +59,7 @@ void AbstractButton::set_checked(bool checked, AllowCallback allow_callback)
                 return IterationDecision::Continue;
             sibling.m_checked = false;
             sibling.update();
-            if (sibling.on_checked)
+            if (sibling.on_checked && allow_callback == AllowCallback::Yes)
                 sibling.on_checked(false);
             return IterationDecision::Continue;
         });
