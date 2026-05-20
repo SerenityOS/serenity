@@ -807,8 +807,13 @@ ErrorOr<void> SSHClient::handle_channel_eof(GenericMessage& message)
     return {};
 }
 
-ErrorOr<void> SSHClient::handle_channel_window_adjust_message(GenericMessage&)
+// 5.2.  Data Transfer
+// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
+ErrorOr<void> SSHClient::handle_channel_window_adjust_message(GenericMessage& message)
 {
+    [[maybe_unused]] auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    [[maybe_unused]] auto bytes_to_add = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+
     // FIXME: Actually support this packet and don't spam the client without
     //        respecting its window size.
     return {};
