@@ -134,6 +134,36 @@ ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer, int flags)
     return TRY(System::send(m_fd, buffer.data(), buffer.size(), flags));
 }
 
+ErrorOr<void> PosixSocketHelper::write_until_depleted(ReadonlyBytes bytes, int flags)
+{
+    u64 written = 0;
+    while (written < bytes.size()) {
+        auto maybe_error = write(bytes.slice(written), flags);
+        if (maybe_error.is_error()) {
+            auto& error = maybe_error.error();
+            if (error.code() == EWOULDBLOCK) {
+                struct pollfd the_fd = { .fd = m_fd, .events = POLLOUT, .revents = 0 };
+
+                ErrorOr<int> result { 0 };
+                do {
+                    result = Core::System::poll({ &the_fd, 1 }, 0);
+                } while (result.is_error() && result.error().code() == EINTR);
+
+                if (result.is_error())
+                    return result.release_error();
+
+                continue;
+            }
+
+            return move(error);
+        }
+
+        written += maybe_error.release_value();
+    }
+
+    return {};
+}
+
 void PosixSocketHelper::close()
 {
     if (!is_open()) {
