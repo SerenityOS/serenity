@@ -67,8 +67,8 @@ inline ErrorOr<ByteBuffer> make_open_packet(StringView path, u32 request_id)
     TRY(inner.write_value(SSH::SFTP::FXPMessageID::OPEN));
     TRY(inner.write_value<NetworkOrdered<u32>>(request_id));
     TRY(SSH::encode_string(inner, path));
-    TRY(inner.write_value<NetworkOrdered<u32>>(1)); // SSH_FXF_READ
-    TRY(inner.write_value<NetworkOrdered<u32>>(0)); // No attributes.
+    TRY(inner.write_value<NetworkOrdered<u32>>(1 | 2)); // SSH_FXF_READ | SSH_FXF_WRITE
+    TRY(inner.write_value<NetworkOrdered<u32>>(0));     // No attributes.
 
     auto payload = TRY(inner.read_until_eof());
 
