@@ -81,6 +81,8 @@ ErrorOr<void> Server::handle_packet(FixedMemoryStream& stream)
         return handle_stat(stream, StatType::Normal);
     case FXPMessageID::LSTAT:
         return handle_stat(stream, StatType::LStat);
+    case FXPMessageID::WRITE:
+        return handle_write(stream);
     default:
         dbgln_if(SSH_DEBUG, "Received packet with type: {}", to_underlying(type));
         return Error::from_string_literal("Unknown packet type");
@@ -301,6 +303,27 @@ ErrorOr<void> Server::handle_read(FixedMemoryStream& stream)
         TRY(send_status_message(id, FXStatus::FX_EOF));
     else
         TRY(send_data(id, buffer));
+
+    return {};
+}
+
+// 6.4 Reading and Writing
+// https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-6.4
+ErrorOr<void> Server::handle_write(FixedMemoryStream& stream)
+{
+    u32 id = TRY(stream.read_value<NetworkOrdered<u32>>());
+    auto handle = TRY(decode_string(stream));
+    u64 offset = TRY(stream.read_value<NetworkOrdered<u64>>());
+    auto data = TRY(decode_string(stream));
+
+    auto& file = *TRY(find_file(handle));
+
+    u64 written = 0;
+    while (written < data.size()) {
+        written += TRY(Core::System::pwrite(file.file->fd(), data.bytes().slice(written), offset + written));
+    }
+
+    TRY(send_status_message(id, FXStatus::OK));
 
     return {};
 }
