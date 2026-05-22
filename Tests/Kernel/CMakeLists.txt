@@ -63,7 +63,7 @@ set(LIBTEST_BASED_SOURCES
     TestSigHandler.cpp
     TestSignalDispatch.cpp
     TestTCPSocket.cpp
-    TestWait.cpp
+    Wait/TestWait.cpp
     TestWXProtection.cpp
 )
 
