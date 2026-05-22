@@ -346,6 +346,8 @@ void Process::commit_creation(NonnullRefPtr<Process>& process)
     if (!process->m_is_kernel_process) {
         Process::register_new(*process);
 
+        Process::current().wait_blocker_set().register_new_child(process);
+
         // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
         process->ref();
     }

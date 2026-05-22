@@ -540,6 +540,25 @@ void Thread::WaitBlockerSet::try_unblock(Thread::WaitBlocker& blocker)
     }
 }
 
+void Thread::WaitBlockerSet::register_new_child(Process& process)
+{
+    m_processes.try_append(ProcessBlockInfo(process)).release_value_but_fixme_should_propagate_errors();
+}
+
+bool Thread::WaitBlockerSet::has_waitee(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> const& waitee) const
+{
+    return waitee.visit(
+        [this](Empty const&) {
+            return !m_processes.is_empty();
+        },
+        [this](NonnullRefPtr<Process> const& waitee_process) {
+            return any_of(m_processes, [&waitee_process](auto const& block_info) { return block_info.process == waitee_process; });
+        },
+        [this](NonnullRefPtr<ProcessGroup> const& waitee_process_group) {
+            return any_of(m_processes, [&waitee_process_group](auto const& block_info) { return block_info.process->pgid() == waitee_process_group->pgid(); });
+        });
+}
+
 void Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
 {
     SpinlockLocker lock(m_lock);
@@ -614,10 +633,19 @@ bool Thread::WaitBlockerSet::unblock(Process& process, WaitBlocker::UnblockFlags
             }
         }
         if (!updated_existing) {
+            VERIFY(flags == WaitBlocker::UnblockFlags::Continued || flags == WaitBlocker::UnblockFlags::Stopped);
             dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] add {} flags: {}", m_process, process, (int)flags);
             m_processes.try_append(ProcessBlockInfo(process, flags, signal)).release_value_but_fixme_should_propagate_errors();
         }
     }
+
+    // If we received a Terminated flag, remove the block info corresponding to process.
+    if (did_wait && flags == WaitBlocker::UnblockFlags::Terminated) {
+        auto iter = m_processes.find_if([&process](auto const& known_process) { return process == known_process.process; });
+        VERIFY(iter != m_processes.end());
+        m_processes.remove(iter.index());
+    }
+
     return did_unblock_any;
 }
 
@@ -668,6 +696,10 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<
 
 bool Thread::WaitBlocker::setup_blocker()
 {
+    if (!Process::current().wait_blocker_set().has_waitee(m_waitee)) {
+        m_result = ECHILD;
+        return false;
+    }
     if (m_wait_options & WNOHANG)
         return false;
     return add_to_blocker_set(Process::current().wait_blocker_set());
@@ -730,6 +762,8 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
         return false;
 
     switch (flags) {
+    case UnblockFlags::None:
+        return false;
     case UnblockFlags::Terminated:
         if (!(m_wait_options & WEXITED))
             return false;
@@ -775,6 +809,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
             siginfo.si_status = signal;
 
             switch (flags) {
+            case UnblockFlags::None:
             case UnblockFlags::Terminated:
             case UnblockFlags::Disowned:
                 VERIFY_NOT_REACHED();
