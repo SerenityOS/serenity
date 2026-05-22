@@ -63,7 +63,6 @@ set(LIBTEST_BASED_SOURCES
     TestSigHandler.cpp
     TestSignalDispatch.cpp
     TestTCPSocket.cpp
-    Wait/TestWait.cpp
     TestWXProtection.cpp
 )
 
@@ -88,3 +87,5 @@ foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
 endforeach()
 
 target_link_libraries(TestPageFaultRace PRIVATE LibThreading)
+
+add_subdirectory(Wait)
