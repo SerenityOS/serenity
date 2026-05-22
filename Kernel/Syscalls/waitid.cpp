@@ -15,7 +15,6 @@ ErrorOr<siginfo_t> Process::do_waitid(Variant<Empty, NonnullRefPtr<Process>, Non
     ErrorOr<siginfo_t> result = siginfo_t {};
     if (Thread::current()->block<Thread::WaitBlocker>({}, options, move(waitee), result).was_interrupted())
         return EINTR;
-    VERIFY(!result.is_error() || (options & WNOHANG));
     return result;
 }
 

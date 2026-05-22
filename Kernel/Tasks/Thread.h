@@ -645,6 +645,7 @@ public:
     class WaitBlocker final : public Blocker {
     public:
         enum class UnblockFlags {
+            None,
             Terminated,
             Stopped,
             Continued,
@@ -680,6 +681,7 @@ public:
         {
         }
 
+        void register_new_child(Process&);
         void disowned_by_waiter(Process&);
         bool unblock(Process&, WaitBlocker::UnblockFlags, u8);
         void try_unblock(WaitBlocker&);
@@ -695,9 +697,11 @@ public:
             u8 signal;
             bool was_waited { false };
 
-            explicit ProcessBlockInfo(NonnullRefPtr<Process>&&, WaitBlocker::UnblockFlags, u8);
+            explicit ProcessBlockInfo(NonnullRefPtr<Process>&&, WaitBlocker::UnblockFlags = WaitBlocker::UnblockFlags::None, u8 = 0);
             ~ProcessBlockInfo();
         };
+
+        bool has_waitee(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> const&) const;
 
         Process& m_process;
         Vector<ProcessBlockInfo, 2> m_processes;

@@ -1,5 +1,7 @@
 set(KERNEL_WAIT_SOURCES
     TestWait.cpp
+    TestWaitDoesReap.cpp
+    TestWaitNoChild.cpp
 )
 
 foreach(wait_source IN LISTS KERNEL_WAIT_SOURCES)
