@@ -26,7 +26,10 @@ TEST_CASE(wait)
         exit(0);
         VERIFY_NOT_REACHED();
     }
-    pid_t result = wait(NULL);
+    pid_t result = -1;
+    do {
+        result = wait(NULL);
+    } while (result == -1 && errno == EINTR);
     EXPECT_EQ(result, pid);
     EXPECT_EQ(s_received_sigchld, true);
 }
