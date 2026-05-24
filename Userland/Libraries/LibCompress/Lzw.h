@@ -154,6 +154,11 @@ public:
     {
         VERIFY(m_current_code <= m_code_table.size());
         if (m_current_code < m_code_table.size()) {
+            if (m_output.is_empty()) {
+                m_output = m_code_table.at(m_current_code);
+                return m_output;
+            }
+
             Vector<u8> new_entry = m_output;
             m_output = m_code_table.at(m_current_code);
             new_entry.append(m_output[0]);
