@@ -70,6 +70,7 @@ private:
     void stop_animation();
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;

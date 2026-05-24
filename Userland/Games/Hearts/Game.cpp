@@ -403,9 +403,12 @@ void Game::let_player_play_card()
 {
     auto& player = current_player();
 
-    if (&player == &m_players[0])
-        on_status_change("Select a card to play."_string);
-    else
+    if (&player == &m_players[0]) {
+        if (m_trick_number == 0 && m_trick.is_empty())
+            on_status_change("Select the Two of Clubs to start."_string);
+        else
+            on_status_change("Select a card to play."_string);
+    } else
         on_status_change(String::formatted("Waiting for {} to play a card...", player).release_value_but_fixme_should_propagate_errors());
 
     if (player.is_human) {
@@ -465,8 +468,12 @@ void Game::advance_game()
             int previous_score = player.scores.is_empty() ? 0 : player.scores[player.scores.size() - 1];
             auto score = previous_score + calculate_score((player));
             player.scores.append(score);
-            if (&player == &m_players[0] && on_score_update)
-                on_score_update(score);
+            if (&player == &m_players[0] && on_score_update) {
+                int hand_score = 0;
+                for (auto& card : player.cards_taken)
+                    hand_score += hearts_card_points(*card);
+                on_score_update(hand_score);
+            }
             if (score > highest_score)
                 highest_score = score;
         }
@@ -559,6 +566,14 @@ void Game::advance_game()
             m_trick.clear_with_capacity();
             m_leading_player = &taking_player;
             dbgln_if(HEARTS_DEBUG, "-----");
+
+            auto& human = m_players[0];
+            int score = 0;
+            for (auto& card : human.cards_taken)
+                score += hearts_card_points(*card);
+            if (on_score_update)
+                on_score_update(score);
+
             advance_game();
         },
         750);
@@ -695,11 +710,6 @@ void Game::card_clicked_during_play(size_t card_index, Card& card)
 {
     ByteString explanation;
     if (!is_valid_play(m_players[0], card, &explanation)) {
-        if (m_inverted_card)
-            m_inverted_card->set_inverted(false);
-        card.set_inverted(true);
-        update(card.rect());
-        m_inverted_card = card;
         on_status_change(String::formatted("You can't play this card: {}", explanation).release_value_but_fixme_should_propagate_errors());
         continue_game_after_delay();
         return;
@@ -715,9 +725,38 @@ void Game::card_clicked(size_t card_index, Card& card)
         card_clicked_during_play(card_index, card);
 }
 
+void Game::mousedown_event(GUI::MouseEvent& event)
+{
+    GUI::Frame::mousedown_event(event);
+
+    if (event.button() != GUI::MouseButton::Primary)
+        return;
+
+    if (!m_human_can_play)
+        return;
+
+    for (ssize_t i = m_players[0].hand.size() - 1; i >= 0; i--) {
+        auto& card = m_players[0].hand[i];
+        if (card.is_null())
+            continue;
+        if (card->rect().contains(event.position())) {
+            card->set_inverted(true);
+            update(card->rect());
+            m_inverted_card = card;
+            break;
+        }
+    }
+}
+
 void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
+
+    if (m_inverted_card) {
+        m_inverted_card->set_inverted(false);
+        update(m_inverted_card->rect());
+        m_inverted_card.clear();
+    }
 
     if (event.button() != GUI::MouseButton::Primary)
         return;
