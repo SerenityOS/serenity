@@ -528,8 +528,8 @@ void Thread::WaitBlockerSet::try_unblock(Thread::WaitBlocker& blocker)
         if (blocker.unblock(info.process, info.flags, info.signal, true)) {
             if (blocker.is_wait()) {
                 if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated) {
-                    m_processes.remove(i);
                     dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] terminated, remove {}", m_process, *info.process);
+                    m_processes.remove(i);
                 } else {
                     dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] terminated, mark as waited {}", m_process, *info.process);
                     info.was_waited = true;
