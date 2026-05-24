@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2026, poorblay <poorblay@users.noreply.github.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -464,6 +465,8 @@ void Game::advance_game()
             int previous_score = player.scores.is_empty() ? 0 : player.scores[player.scores.size() - 1];
             auto score = previous_score + calculate_score((player));
             player.scores.append(score);
+            if (&player == &m_players[0] && on_score_update)
+                on_score_update(score);
             if (score > highest_score)
                 highest_score = score;
         }
