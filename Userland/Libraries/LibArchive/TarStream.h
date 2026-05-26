@@ -80,6 +80,8 @@ inline ErrorOr<void> TarInputStream::for_each_extended_header(F func)
     Archive::TarFileStream file_stream = file_contents();
 
     auto header_size = TRY(header().size());
+    if (header_size > 1024 * 1024)
+        return Error::from_string_literal("PAX extended header size exceeds maximum allowed limit");
     ByteBuffer file_contents_buffer = TRY(ByteBuffer::create_zeroed(header_size));
     TRY(file_stream.read_until_filled(file_contents_buffer));
 
