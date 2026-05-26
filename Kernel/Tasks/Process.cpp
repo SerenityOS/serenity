@@ -977,11 +977,6 @@ void Process::finalize()
         m_wait_blocker_set.finalize();
 }
 
-void Process::disowned_by_waiter(Process& process)
-{
-    m_wait_blocker_set.disowned_by_waiter(process);
-}
-
 void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)
 {
     RefPtr<Process> waiter_process;
