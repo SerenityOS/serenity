@@ -151,6 +151,10 @@ int TestSuite::main(ByteString const& suite_name, Span<StringView> arguments)
 
     outln("Running {} cases out of {}.", matching_tests.size(), m_cases.size());
 
+    // If a test forks, we don't want data that was buffered in stdout to
+    // be printed every time a process exits.
+    fflush(stdout);
+
     return run(matching_tests);
 }
 
