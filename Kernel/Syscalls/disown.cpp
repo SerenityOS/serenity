@@ -21,7 +21,7 @@ ErrorOr<FlatPtr> Process::sys$disown(ProcessID pid)
         protected_data.ppid = 0;
         return {};
     }));
-    process->disowned_by_waiter(*this);
+    wait_blocker_set().disown_child(*process);
     return 0;
 }
 }

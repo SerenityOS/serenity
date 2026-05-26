@@ -615,7 +615,6 @@ public:
     ErrorOr<FlatPtr> peek_user_data(Userspace<FlatPtr const*> address);
     ErrorOr<void> poke_user_data(Userspace<FlatPtr*> address, FlatPtr data);
 
-    void disowned_by_waiter(Process& process);
     void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
     Thread::WaitBlockerSet& wait_blocker_set() { return m_wait_blocker_set; }
 

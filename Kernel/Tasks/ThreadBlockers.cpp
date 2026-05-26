@@ -559,7 +559,7 @@ bool Thread::WaitBlockerSet::has_waitee(Variant<Empty, NonnullRefPtr<Process>, N
         });
 }
 
-void Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
+void Thread::WaitBlockerSet::disown_child(Process& process)
 {
     SpinlockLocker lock(m_lock);
     if (m_finalized)

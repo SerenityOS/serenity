@@ -682,7 +682,7 @@ public:
         }
 
         void register_new_child(Process&);
-        void disowned_by_waiter(Process&);
+        void disown_child(Process&);
         bool unblock(Process&, WaitBlocker::UnblockFlags, u8);
         void try_unblock(WaitBlocker&);
         void finalize();
