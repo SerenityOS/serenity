@@ -822,6 +822,9 @@ struct alignas(u64) SCTLR_EL1 {
         // Allow EL0 to read CTR_EL0 (the cache type register).
         system_control_register_el1.UCT = 1;
 
+        // Allow EL0 to perform cache maintenance operations.
+        system_control_register_el1.UCI = 1;
+
         // Fields that are RES1 if no extensions are supported:
         system_control_register_el1.ITD = 1;
         system_control_register_el1.SED = 1;

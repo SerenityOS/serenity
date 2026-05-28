@@ -46,8 +46,7 @@ mkShell.override { stdenv = gccStdenv; } {
     pre-commit
   ]
   ++ lib.optionals stdenv.isLinux [
-    fuse
-    fuse-ext2
+    fuse2fs
     grub2
     parted
   ]
