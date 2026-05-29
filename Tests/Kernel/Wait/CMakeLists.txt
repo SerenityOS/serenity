@@ -1,6 +1,7 @@
 set(KERNEL_WAIT_SOURCES
     TestWait.cpp
     TestWaitDoesReap.cpp
+    TestWaitFirstNoHang.cpp
     TestWaitNoChild.cpp
 )
 

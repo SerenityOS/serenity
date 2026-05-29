@@ -950,6 +950,8 @@ void Process::finalize()
 
     {
         if (is_fully_initialized()) {
+            unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
+
             auto parent_process = Process::from_pid_ignoring_process_lists(ppid());
             if (parent_process && parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
                 (void)parent_process->send_signal(SIGCHLD, this);
@@ -962,9 +964,6 @@ void Process::finalize()
             parent->m_ticks_in_kernel_for_dead_children += m_ticks_in_kernel + m_ticks_in_kernel_for_dead_children;
         }
     }
-
-    if (is_fully_initialized())
-        unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
 
     m_space.with([](auto& space) { space->remove_all_regions({}); });
 
