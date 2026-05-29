@@ -36,7 +36,7 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
         id = 0;
     } else if (waitee == 0) {
         idtype = P_PGID;
-        id = getgid();
+        id = getpgid(getpid());
     } else {
         idtype = P_PID;
         id = waitee;
