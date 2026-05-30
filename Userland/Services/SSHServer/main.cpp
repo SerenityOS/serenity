@@ -36,6 +36,7 @@ ErrorOr<void> accept_connection()
         // We need to ensure the socket survives until the deferred_invoke, but
         // fd will be closed at the end of the scope with client_socket.
         auto fd_copy = TRY(Core::System::dup(fd));
+        TRY(Core::System::fcntl(fd_copy, F_SETFD, FD_CLOEXEC));
 
         Core::EventLoop::current().deferred_invoke([fd_copy]() mutable {
             g_tcp_server = nullptr;
