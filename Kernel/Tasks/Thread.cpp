@@ -673,7 +673,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
         if (sender)
             dbgln("Signal: {} sent {} to {}", *sender, signal, process());
         else
-            dbgln("Signal: Kernel send {} to {}", signal, process());
+            dbgln("Signal: Kernel sent {} to {}", signal, process());
     }
 
     m_pending_signals |= 1 << (signal - 1);
