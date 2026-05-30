@@ -10,9 +10,6 @@
 
 namespace AK {
 
-JsonPathElement JsonPathElement::any_array_element { Kind::AnyIndex };
-JsonPathElement JsonPathElement::any_object_element { Kind::AnyKey };
-
 ErrorOr<JsonValue> JsonPath::try_resolve(JsonValue const& top_root) const
 {
     auto root = top_root;
