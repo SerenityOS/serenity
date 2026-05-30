@@ -68,7 +68,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
     if (tracer->tracer_pid() != caller.pid())
         return EBUSY;
 
-    if (peer->state() == Thread::State::Running)
+    if (peer->state() != Thread::State::Stopped)
         return EBUSY;
 
     scheduler_lock.unlock();
