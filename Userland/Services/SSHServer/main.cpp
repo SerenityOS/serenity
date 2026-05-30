@@ -106,6 +106,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             auto wait_result = maybe_result.value();
             if (wait_result.pid == 0)
                 return;
+
+            if (WIFSIGNALED(wait_result.status))
+                warnln("Connection process exited with: signal({})", WTERMSIG(wait_result.status));
+            else if (WIFEXITED(wait_result.status) && WEXITSTATUS(wait_result.status) > 0)
+                warnln("Connection process exited with: exit code({})", WEXITSTATUS(wait_result.status));
         }
     });
 
