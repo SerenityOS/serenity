@@ -886,7 +886,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     VERIFY(process().is_user_process());
     VERIFY(this == Thread::current());
 
-    dbgln_if(SIGNAL_DEBUG, "Dispatch signal {} to {}, state: {}", signal, *this, state_string());
+    dbgln_if(SIGNAL_DEBUG, "Dispatch signal {} to {}", signal, *this);
 
     if (m_state == Thread::State::Invalid || !is_initialized()) {
         // Thread has barely been created, we need to wait until it is
