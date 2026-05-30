@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
@@ -667,6 +668,23 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     if (should_ignore_signal(signal)) {
         dbgln_if(SIGNAL_DEBUG, "Signal {} was ignored by {}", signal, process());
         return;
+    }
+
+    // https://pubs.opengroup.org/onlinepubs/9799919799/functions/V2_chap02.html#tag_16_04_01
+    // "When any stop signal (SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU) is generated for a process or thread, all pending SIGCONT signals for that process or any of the threads within that process shall be discarded."
+    if (first_is_one_of(signal, SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU)) {
+        process().for_each_thread([](Thread& thread) {
+            thread.m_pending_signals &= ~(1 << (SIGCONT - 1));
+        });
+    }
+
+    // https://pubs.opengroup.org/onlinepubs/9799919799/functions/V2_chap02.html#tag_16_04_01
+    // "Conversely, when SIGCONT is generated for a process or thread, all pending stop signals for that process or any of the threads within that process shall be discarded."
+    if (signal == SIGCONT) {
+        process().for_each_thread([](Thread& thread) {
+            static constexpr u32 STOP_SIGNAL_MASK = (1 << (SIGSTOP - 1)) | (1 << (SIGTSTP - 1)) | (1 << (SIGTTIN - 1)) | (1 << (SIGTTOU - 1));
+            thread.m_pending_signals &= ~STOP_SIGNAL_MASK;
+        });
     }
 
     if constexpr (SIGNAL_DEBUG) {
