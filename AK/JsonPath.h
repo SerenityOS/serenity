@@ -58,9 +58,6 @@ public:
         }
     }
 
-    static JsonPathElement any_array_element;
-    static JsonPathElement any_object_element;
-
     bool operator==(JsonPathElement const& other) const
     {
         switch (other.kind()) {
