@@ -103,6 +103,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 dbgln("Error while reaping child processes: {}", error);
                 loop.quit(-1);
             }
+            auto wait_result = maybe_result.value();
+            if (wait_result.pid == 0)
+                return;
         }
     });
 
