@@ -758,16 +758,31 @@ ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
     return {};
 }
 
+static ErrorOr<void> for_each_part(ReadonlyBytes data, u32 part_size, auto callback)
+{
+    do {
+        auto part = data.trim(part_size);
+
+        TRY(callback(part));
+
+        data = data.slice(part.size());
+    } while (!data.is_empty());
+
+    return {};
+}
+
 // 5.2. Data Transfer
 // https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
 ErrorOr<void> SSHClient::send_channel_data(Session const& session, ReadonlyBytes data)
 {
-    AllocatingMemoryStream stream;
-    TRY(stream.write_value(MessageID::CHANNEL_DATA));
-    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
-    TRY(encode_string(stream, data));
-    TRY(write_packet(TRY(stream.read_until_eof())));
-    return {};
+    return for_each_part(data, session.maximum_packet_size, [&](ReadonlyBytes part) -> ErrorOr<void> {
+        AllocatingMemoryStream stream;
+        TRY(stream.write_value(MessageID::CHANNEL_DATA));
+        TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+        TRY(encode_string(stream, part));
+        TRY(write_packet(TRY(stream.read_until_eof())));
+        return {};
+    });
 }
 
 // 5.2. Data Transfer
@@ -783,13 +798,15 @@ ErrorOr<void> SSHClient::send_channel_extended_data(Session const& session, Read
 
     static constexpr u32 EXTENDED_DATA_STDERR = 1;
 
-    AllocatingMemoryStream stream;
-    TRY(stream.write_value(MessageID::CHANNEL_EXTENDED_DATA));
-    TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
-    TRY(stream.write_value<NetworkOrdered<u32>>(EXTENDED_DATA_STDERR));
-    TRY(encode_string(stream, data));
-    TRY(write_packet(TRY(stream.read_until_eof())));
-    return {};
+    return for_each_part(data, session.maximum_packet_size, [&](ReadonlyBytes part) -> ErrorOr<void> {
+        AllocatingMemoryStream stream;
+        TRY(stream.write_value(MessageID::CHANNEL_EXTENDED_DATA));
+        TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+        TRY(stream.write_value<NetworkOrdered<u32>>(EXTENDED_DATA_STDERR));
+        TRY(encode_string(stream, part));
+        TRY(write_packet(TRY(stream.read_until_eof())));
+        return {};
+    });
 }
 
 ErrorOr<void> SSHClient::handle_channel_eof(GenericMessage& message)
