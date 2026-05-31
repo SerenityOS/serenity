@@ -52,19 +52,7 @@ ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, SSH::SFTP::Attr
 ErrorOr<void> run_for_path_impl(StringView path, bool use_lstat, SSH::SFTP::FXStatus expected_status)
 {
     auto callback = [=](Message message) -> ErrorOr<void> {
-        EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::STATUS);
-        FixedMemoryStream stream { message.payload };
-        EXPECT_EQ(TRY(stream.read_value<NetworkOrdered<u32>>()), 42u);
-        u32 raw_status_code = TRY(stream.read_value<NetworkOrdered<u32>>());
-        auto status_code = static_cast<SSH::SFTP::FXStatus>(raw_status_code);
-        EXPECT_EQ(status_code, expected_status);
-
-        // `error message` and `language tag`
-        TRY(SSH::decode_string(stream));
-        TRY(SSH::decode_string(stream));
-
-        EXPECT(stream.remaining() == 0);
-        return {};
+        return check_status_message(message, expected_status);
     };
 
     return run_server_with_callback(move(callback), path, use_lstat);
