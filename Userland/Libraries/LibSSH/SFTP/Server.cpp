@@ -20,13 +20,19 @@ Coroutine<ErrorOr<void>> Server::handle_channel_data(Session& session)
 
     FixedMemoryStream stream { session.channel_data.data() };
     ScopeGuard commit_read_bytes { [&] { session.channel_data.dequeue(stream.offset()); } };
-    switch (m_state) {
-    case State::Constructed:
+
+    if (m_state == State::Constructed)
         co_return handle_init_message(stream);
-    case State::Initialized:
-        co_return handle_packet(stream);
+
+    VERIFY(m_state == State::Initialized);
+    while (stream.remaining() > 0) {
+        if (!is_buffer_containing_a_full_packet(session.channel_data.data()))
+            co_return {};
+
+        CO_TRY(handle_packet(stream));
     }
-    VERIFY_NOT_REACHED();
+
+    co_return {};
 }
 
 void Server::handle_channel_eof(Session const&)

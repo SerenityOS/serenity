@@ -13,10 +13,23 @@ namespace SSH::SFTP {
 
 // 3. General Packet Format
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-3
+bool Peer::is_buffer_containing_a_full_packet(ReadonlyBytes data)
+{
+    if (data.size() < sizeof(u32))
+        return false;
+
+    FixedMemoryStream stream { data };
+    u32 packet_length = MUST(stream.read_value<NetworkOrdered<u32>>());
+
+    return sizeof(u32) + packet_length <= data.size();
+}
+
+// 3. General Packet Format
+// https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-3
 ErrorOr<FXPMessageID> Peer::read_header(FixedMemoryStream& stream)
 {
     u32 length = TRY(stream.read_value<NetworkOrdered<u32>>());
-    if (length != stream.remaining())
+    if (length > stream.remaining())
         return Error::from_string_literal("Invalid packet size");
 
     auto type = TRY(stream.read_value<FXPMessageID>());

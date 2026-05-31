@@ -97,6 +97,8 @@ public:
     }
 
 protected:
+    static bool is_buffer_containing_a_full_packet(ReadonlyBytes);
+
     ErrorOr<FXPMessageID> read_header(FixedMemoryStream& stream);
     ErrorOr<void> write_packet(ReadonlyBytes bytes);
 

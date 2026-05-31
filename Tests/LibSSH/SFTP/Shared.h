@@ -19,6 +19,7 @@ public:
     {
     }
 
+    using SSH::SFTP::Peer::is_buffer_containing_a_full_packet;
     using SSH::SFTP::Peer::read_header;
     using SSH::SFTP::Peer::write_packet;
 };
