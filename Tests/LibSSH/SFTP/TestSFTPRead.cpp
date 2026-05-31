@@ -48,11 +48,7 @@ ErrorOr<void> run_read_test(StringView path, u64 offset, u64 size, bool expect_e
         }
 
         if (expect_eof) {
-            EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::STATUS);
-            EXPECT_EQ(request_id, TRY(stream.read_value<NetworkOrdered<u32>>()));
-            EXPECT_EQ(to_underlying(SSH::SFTP::FXStatus::FX_EOF), TRY(stream.read_value<NetworkOrdered<u32>>()));
-
-            return {};
+            return check_status_message(message, SSH::SFTP::FXStatus::FX_EOF, request_id);
         }
 
         EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::DATA);

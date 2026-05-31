@@ -78,3 +78,20 @@ inline ErrorOr<ByteBuffer> make_open_packet(StringView path, u32 request_id)
 
     return TRY(packet.read_until_eof());
 }
+
+inline ErrorOr<void> check_status_message(Message const& message, SSH::SFTP::FXStatus expected_status, u32 request_id = 42)
+{
+    EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::STATUS);
+    FixedMemoryStream stream { message.payload };
+    EXPECT_EQ(TRY(stream.read_value<NetworkOrdered<u32>>()), request_id);
+    u32 raw_status_code = TRY(stream.read_value<NetworkOrdered<u32>>());
+    auto status_code = static_cast<SSH::SFTP::FXStatus>(raw_status_code);
+    EXPECT_EQ(status_code, expected_status);
+
+    // `error message` and `language tag`
+    EXPECT(!SSH::decode_string(stream).is_error());
+    EXPECT(!SSH::decode_string(stream).is_error());
+
+    EXPECT(stream.remaining() == 0);
+    return {};
+}

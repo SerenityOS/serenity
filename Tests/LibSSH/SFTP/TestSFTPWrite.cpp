@@ -62,12 +62,7 @@ ErrorOr<void> run_write_test(StringView path, u64 offset, ReadonlyBytes data)
             return {};
         }
 
-        EXPECT_EQ(message.type, SSH::SFTP::FXPMessageID::STATUS);
-        EXPECT_EQ(request_id, TRY(stream.read_value<NetworkOrdered<u32>>()));
-        EXPECT_EQ(to_underlying(SSH::SFTP::FXStatus::OK), TRY(stream.read_value<NetworkOrdered<u32>>()));
-        // error message and language tag
-        EXPECT(TRY(SSH::decode_string(stream)).is_empty());
-        EXPECT(TRY(SSH::decode_string(stream)).is_empty());
+        TRY(check_status_message(message, SSH::SFTP::FXStatus::OK, request_id));
 
         TRY(compare_files(reference_path, path));
 
