@@ -27,14 +27,12 @@ TEST_CASE(read_header)
     // We modify the packet content to change the signaled size.
     auto altered_content = message_copy;
     EXPECT_EQ(altered_content[3], 5);
-    altered_content[3] = 4;
+    altered_content[3] = 6;
     stream = FixedMemoryStream { altered_content.bytes() };
     EXPECT(peer.read_header(stream).is_error());
 
-    // We append bytes to the packet to change the actual size.
-    auto altered_length = message_copy;
-    altered_length.append(0);
-    stream = FixedMemoryStream { altered_length.bytes() };
+    auto empty_packet = to_array<u8>({ 0x00, 0x00, 0x00, 0x00 });
+    stream = FixedMemoryStream { empty_packet.span() };
     EXPECT(peer.read_header(stream).is_error());
 }
 
@@ -61,4 +59,12 @@ TEST_CASE(write_packet)
 
     EXPECT_EQ(written_packet->bytes().trim(4), expected_size);
     EXPECT_EQ(written_packet->bytes().slice(4), payload.bytes());
+}
+
+TEST_CASE(is_buffer_containing_packet)
+{
+    EXPECT(!PeerMock::is_buffer_containing_a_full_packet({}));
+    EXPECT(!PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes().trim(1)));
+    EXPECT(!PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes().trim(g_initialization_packet.length() - 1)));
+    EXPECT(PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes()));
 }
