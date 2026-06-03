@@ -717,7 +717,7 @@ Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session,
             CO_TRY(sender(session, output));
         }
 
-        CO_TRY(close_exec_session_if_needed(session));
+        CO_TRY(close_session_if_needed(session));
 
         co_return {};
     }();
@@ -882,14 +882,14 @@ ErrorOr<void> SSHClient::send_channel_close(Session& session)
 
 // 6.10.  Returning Exit Status
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.10
-ErrorOr<void> SSHClient::send_exit_status(Session const& session, int status)
+ErrorOr<void> SSHClient::send_exit_status(Session const& session)
 {
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_REQUEST));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.sender_channel_id));
     TRY(encode_string(stream, "exit-status"sv));
     TRY(stream.write_value(false));
-    TRY(stream.write_value<NetworkOrdered<u32>>(status));
+    TRY(stream.write_value<NetworkOrdered<u32>>(session.exit_status()));
 
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
@@ -928,22 +928,19 @@ ErrorOr<void> SSHClient::manage_child_death()
                     // FIXME: Send the actual exit status.
                     exec_data.exit_status = exited_with_code_0 ? 0 : -1;
 
-                    TRY(close_exec_session_if_needed(*session));
+                    TRY(close_session_if_needed(*session));
                 }
             }
         }
     }
 }
 
-ErrorOr<void> SSHClient::close_exec_session_if_needed(Session& session)
+ErrorOr<void> SSHClient::close_session_if_needed(Session& session)
 {
-    auto& exec_data = session.system.get<ExecData>();
-    if (!exec_data.exit_status.has_value()
-        || !exec_data.stdout_->is_eof()
-        || !exec_data.stderr_->is_eof())
+    if (!session.is_ready_to_be_closed())
         return {};
 
-    TRY(send_exit_status(session, *session.system.get<ExecData>().exit_status));
+    TRY(send_exit_status(session));
 
     TRY(send_channel_close(session));
     return {};

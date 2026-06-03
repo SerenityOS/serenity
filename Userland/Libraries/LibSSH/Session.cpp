@@ -47,6 +47,11 @@ void ExecData::close_stdin_if_required(Session const& session) const
         stdin_->close();
 }
 
+bool ExecData::is_ready_to_be_closed() const
+{
+    return exit_status.has_value() && stdout_->is_eof() && stderr_->is_eof();
+}
+
 ErrorOr<NonnullRefPtr<Session>> Session::create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size)
 {
     auto session = make_ref_counted<Session>();
@@ -56,6 +61,20 @@ ErrorOr<NonnullRefPtr<Session>> Session::create(u32 sender_channel_id, u32 windo
     session->initial_window_size = window_size;
     session->local_window_size = window_size;
     return session;
+}
+
+bool Session::is_ready_to_be_closed() const
+{
+    return system.visit(
+        [](Empty) { return true; },
+        [](auto& system) { return system.is_ready_to_be_closed(); });
+}
+
+int Session::exit_status() const
+{
+    return system.visit(
+        [](auto const&) { return 0; },
+        [](ExecData const& exec_data) { return *exec_data.exit_status; });
 }
 
 }
