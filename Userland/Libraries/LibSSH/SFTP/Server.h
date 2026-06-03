@@ -25,7 +25,7 @@ public:
     Coroutine<ErrorOr<void>> handle_channel_data(Session&);
     void handle_channel_eof(Session const&);
 
-    bool is_ready_to_be_closed() const { return true; }
+    bool is_ready_to_be_closed() const { return m_is_ready_to_be_closed; }
 
 private:
     enum class State : u8 {
@@ -66,6 +66,7 @@ private:
     State m_state { State::Constructed };
 
     Vector<File> m_open_files {};
+    bool m_is_ready_to_be_closed { false };
 };
 
 } // SSH::SFTP
