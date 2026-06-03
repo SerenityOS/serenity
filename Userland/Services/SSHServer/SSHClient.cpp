@@ -937,6 +937,9 @@ ErrorOr<void> SSHClient::manage_child_death()
 
 ErrorOr<void> SSHClient::close_session_if_needed(Session& session)
 {
+    if (session.is_closed)
+        return {};
+
     if (!session.is_ready_to_be_closed())
         return {};
 
