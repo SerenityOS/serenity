@@ -37,12 +37,17 @@ struct ExecData {
     Coroutine<ErrorOr<void>> handle_channel_data(Session&);
     void handle_channel_eof(Session const&);
 
+    bool is_ready_to_be_closed() const;
+
 private:
     void close_stdin_if_required(Session const&) const;
 };
 
 struct Session : public RefCounted<Session> {
     static ErrorOr<NonnullRefPtr<Session>> create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size);
+
+    bool is_ready_to_be_closed() const;
+    int exit_status() const;
 
     u32 local_channel_id {};
     u32 sender_channel_id {};

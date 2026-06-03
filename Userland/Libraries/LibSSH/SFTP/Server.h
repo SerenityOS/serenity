@@ -25,6 +25,8 @@ public:
     Coroutine<ErrorOr<void>> handle_channel_data(Session&);
     void handle_channel_eof(Session const&);
 
+    bool is_ready_to_be_closed() const { return true; }
+
 private:
     enum class State : u8 {
         Constructed,

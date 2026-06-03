@@ -96,7 +96,7 @@ private:
     ErrorOr<void> handle_channel_window_adjust_message(GenericMessage&);
     ErrorOr<void> send_channel_window_adjust_message(Session&);
     ErrorOr<void> handle_channel_eof(GenericMessage&);
-    ErrorOr<void> send_exit_status(Session const&, int);
+    ErrorOr<void> send_exit_status(Session const&);
     ErrorOr<void> handle_channel_close(GenericMessage&);
     ErrorOr<void> send_channel_close(Session&);
     ErrorOr<NonnullRefPtr<Session>> find_session(u32 sender_channel_id);
@@ -106,7 +106,7 @@ private:
     Coroutine<void> async_stream_data_to_subsystem(NonnullRefPtr<Session>);
 
     ErrorOr<void> manage_child_death();
-    ErrorOr<void> close_exec_session_if_needed(Session&);
+    ErrorOr<void> close_session_if_needed(Session&);
 
     void disconnect(Error);
 
