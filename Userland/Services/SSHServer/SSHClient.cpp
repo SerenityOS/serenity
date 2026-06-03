@@ -645,6 +645,9 @@ Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session>
                 [&](auto& system) -> Coroutine<ErrorOr<void>> { return system.handle_channel_data(session); },
                 [](Empty) -> Coroutine<ErrorOr<void>> { VERIFY_NOT_REACHED(); }));
         }
+
+        CO_TRY(close_session_if_needed(session));
+
         co_return {};
     }();
 
@@ -825,6 +828,8 @@ ErrorOr<void> SSHClient::handle_channel_eof(GenericMessage& message)
     session.system.visit(
         [&](auto& system) { system.handle_channel_eof(session); },
         [](Empty) {});
+
+    TRY(close_session_if_needed(session));
 
     return {};
 }

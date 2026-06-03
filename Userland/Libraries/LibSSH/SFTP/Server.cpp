@@ -32,12 +32,16 @@ Coroutine<ErrorOr<void>> Server::handle_channel_data(Session& session)
         CO_TRY(handle_packet(stream));
     }
 
+    if (session.has_received_eof)
+        m_is_ready_to_be_closed = true;
+
     co_return {};
 }
 
-void Server::handle_channel_eof(Session const&)
+void Server::handle_channel_eof(Session const& session)
 {
-    // There is nothing to do here.
+    if (session.channel_data.is_empty())
+        m_is_ready_to_be_closed = true;
 }
 
 // 4. Protocol Initialization
