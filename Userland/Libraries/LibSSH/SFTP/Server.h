@@ -51,6 +51,8 @@ private:
     ErrorOr<void> handle_open(FixedMemoryStream& stream);
     ErrorOr<void> send_file_handle(u32, File const&);
 
+    ErrorOr<void> handle_close(FixedMemoryStream&);
+
     ErrorOr<void> handle_read(FixedMemoryStream& stream);
     ErrorOr<void> handle_write(FixedMemoryStream& stream);
 

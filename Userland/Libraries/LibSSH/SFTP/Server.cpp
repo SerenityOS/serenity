@@ -89,6 +89,8 @@ ErrorOr<void> Server::handle_packet(FixedMemoryStream& stream)
         return handle_stat(stream, StatType::LStat);
     case FXPMessageID::WRITE:
         return handle_write(stream);
+    case FXPMessageID::CLOSE:
+        return handle_close(stream);
     default:
         dbgln_if(SSH_DEBUG, "Received packet with type: {}", to_underlying(type));
         return Error::from_string_literal("Unknown packet type");
@@ -248,6 +250,17 @@ ErrorOr<void> Server::send_file_handle(u32 id, File const& file)
     auto packet = TRY(stream.read_until_eof());
     TRY(write_packet(packet));
     return {};
+}
+
+ErrorOr<void> Server::handle_close(FixedMemoryStream& stream)
+{
+    u32 id = TRY(stream.read_value<NetworkOrdered<u32>>());
+    auto handle = TRY(decode_string(stream));
+
+    if (m_open_files.remove_first_matching([&](auto const& file) { return file.handle.bytes() == handle; }))
+        return send_status_message(id, FXStatus::OK);
+
+    return send_status_message(id, FXStatus::FAILURE);
 }
 
 ErrorOr<Server::File*> Server::find_file(ReadonlyBytes handle)
