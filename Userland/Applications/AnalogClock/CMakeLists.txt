@@ -10,4 +10,4 @@ set(SOURCES
         )
 
 serenity_app(AnalogClock ICON app-analog-clock)
-target_link_libraries(AnalogClock PRIVATE LibCore LibGfx LibGUI LibMain)
+target_link_libraries(AnalogClock PRIVATE LibCore LibGfx LibGUI LibDesktop LibMain LibURL)

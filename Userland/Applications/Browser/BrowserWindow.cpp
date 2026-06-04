@@ -349,11 +349,10 @@ void BrowserWindow::build_menus(StringView const man_file)
     }
 
     settings_menu->add_separator();
-    auto open_settings_action = GUI::Action::create("Browser &Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
-        [this](auto&) {
-            GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings"sv);
-        });
-    settings_menu->add_action(move(open_settings_action));
+    settings_menu->add_action(GUI::CommonActions::make_settings_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/bin/BrowserSettings"sv));
+    },
+        this));
 
     auto debug_menu = add_menu("&Debug"_string);
     debug_menu->add_action(GUI::Action::create(
