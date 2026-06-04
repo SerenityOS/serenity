@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
+Date: Tue, 5 May 2026 20:56:42 +0200
+Subject: [PATCH] Build with latest macFUSE on macOS
+
+Adjust the macOS build for current macFUSE headers and skip installing the
+legacy preference pane.
+
+Link: https://github.com/alperakcan/fuse-ext2/issues/149
+---
+ fuse-ext2/fuse-ext2.h    | 2 +-
+ fuse-ext2/op_getxattr.c  | 3 ++-
+ tools/macosx/Makefile.am | 2 --
+ 3 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/fuse-ext2/fuse-ext2.h b/fuse-ext2/fuse-ext2.h
+index 07fd1db..09399ed 100644
+--- a/fuse-ext2/fuse-ext2.h
++++ b/fuse-ext2/fuse-ext2.h
+@@ -178,7 +178,7 @@ int op_fgetattr (const char *path, struct stat *stbuf, struct fuse_file_info *fi
+ 
+ int op_getattr (const char *path, struct stat *stbuf);
+ 
+-int op_getxattr(const char *path, const char *name, char *value, size_t size);
++int op_getxattr(const char *path, const char *name, char *value, size_t size, uint32_t position);
+ 
+ ext2_file_t do_open (ext2_filsys e2fs, const char *path, int flags);
+ 
+diff --git a/fuse-ext2/op_getxattr.c b/fuse-ext2/op_getxattr.c
+index 27f95c3..eea5ae3 100644
+--- a/fuse-ext2/op_getxattr.c
++++ b/fuse-ext2/op_getxattr.c
+@@ -15,7 +15,8 @@
+ static int do_getxattr(ext2_filsys e2fs, struct ext2_inode *node, const char *name,
+ 		char *value, size_t size);
+ 
+-int op_getxattr(const char *path, const char *name, char *value, size_t size) {
++int op_getxattr(const char *path, const char *name, char *value, size_t size, uint32_t position) {
++	(void)position;
+ 	int rt;
+ 	ext2_ino_t ino;
+ 	struct ext2_inode inode;
+diff --git a/tools/macosx/Makefile.am b/tools/macosx/Makefile.am
+index 5afaaa4..533d09f 100644
+--- a/tools/macosx/Makefile.am
++++ b/tools/macosx/Makefile.am
+@@ -26,7 +26,5 @@ install-exec-local:
+ 	$(INSTALL) -m 644 $(top_srcdir)/tools/macosx/fuse-ext2.fs/Contents/Info.plist $(DESTDIR)/Library/Filesystems/fuse-ext2.fs/Contents/Info.plist
+ 	$(INSTALL) -m 644 $(top_srcdir)/tools/macosx/fuse-ext2.fs/Contents/PkgInfo $(DESTDIR)/Library/Filesystems/fuse-ext2.fs/Contents/PkgInfo
+ 	$(INSTALL) -m 644 $(top_srcdir)/tools/macosx/fuse-ext2.fs/Contents/Resources/English.lproj/InfoPlist.strings $(DESTDIR)/Library/Filesystems/fuse-ext2.fs/Contents/Resources/English.lproj/InfoPlist.strings
+-	$(INSTALL) -d $(DESTDIR)/Library/PreferencePanes
+-	cp -R $(top_srcdir)/tools/macosx/prefpane/build/Release/fuse-ext2.prefPane $(DESTDIR)/Library/PreferencePanes/fuse-ext2.prefPane
+ 
+ endif
+-- 
+2.49.0
