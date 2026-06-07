@@ -32,7 +32,8 @@ inline ErrorOr<void> server_process_data(SSH::SFTP::Server& server, ReadonlyByte
     auto session = MUST(SSH::Session::create(0, 0, 0));
     session->channel_data.append(bytes);
 
-    return Core::run_async_in_new_event_loop([&]() { return server.handle_channel_data(session); });
+    TRY(Core::run_async_in_new_event_loop([&]() { return server.handle_channel_data(session); }));
+    return {};
 }
 
 struct Message {

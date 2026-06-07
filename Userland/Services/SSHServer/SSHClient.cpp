@@ -641,9 +641,17 @@ Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session>
             if (session->channel_data.data().is_empty())
                 break;
 
-            CO_TRY(co_await session->system.visit(
-                [&](auto& system) -> Coroutine<ErrorOr<void>> { return system.handle_channel_data(session); },
-                [](Empty) -> Coroutine<ErrorOr<void>> { VERIFY_NOT_REACHED(); }));
+            auto behavior = CO_TRY(co_await session->system.visit(
+                [&](auto& system) -> Coroutine<ErrorOr<BehaviorControl>> { return system.handle_channel_data(session); },
+                [](Empty) -> Coroutine<ErrorOr<BehaviorControl>> { VERIFY_NOT_REACHED(); }));
+            switch (behavior) {
+            case BehaviorControl::ContinueExecution:
+                break;
+            case BehaviorControl::WaitForMoreData:
+                co_return {};
+            case BehaviorControl::Disconnect:
+                co_return Error::from_string_literal("Subsystem disconnected");
+            }
         }
 
         CO_TRY(close_session_if_needed(session));

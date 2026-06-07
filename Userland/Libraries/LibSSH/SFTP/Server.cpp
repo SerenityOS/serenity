@@ -13,7 +13,7 @@
 
 namespace SSH::SFTP {
 
-Coroutine<ErrorOr<void>> Server::handle_channel_data(Session& session)
+Coroutine<ErrorOr<BehaviorControl>> Server::handle_channel_data(Session& session)
 {
     // FIXME: For the moment everything is done sequentially, but we should
     //        probably make most IO related syscall asynchronous.
@@ -21,13 +21,15 @@ Coroutine<ErrorOr<void>> Server::handle_channel_data(Session& session)
     FixedMemoryStream stream { session.channel_data.data() };
     ScopeGuard commit_read_bytes { [&] { session.channel_data.dequeue(stream.offset()); } };
 
-    if (m_state == State::Constructed)
-        co_return handle_init_message(stream);
+    if (m_state == State::Constructed) {
+        CO_TRY(handle_init_message(stream));
+        co_return BehaviorControl::ContinueExecution;
+    }
 
     VERIFY(m_state == State::Initialized);
     while (stream.remaining() > 0) {
-        if (!is_buffer_containing_a_full_packet(session.channel_data.data()))
-            co_return {};
+        if (!is_buffer_containing_a_full_packet(session.channel_data.data().slice(stream.offset())))
+            co_return BehaviorControl::WaitForMoreData;
 
         CO_TRY(handle_packet(stream));
     }
@@ -35,7 +37,7 @@ Coroutine<ErrorOr<void>> Server::handle_channel_data(Session& session)
     if (session.has_received_eof)
         m_is_ready_to_be_closed = true;
 
-    co_return {};
+    co_return BehaviorControl::ContinueExecution;
 }
 
 void Server::handle_channel_eof(Session const& session)
