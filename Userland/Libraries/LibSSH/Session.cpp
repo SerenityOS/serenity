@@ -24,7 +24,7 @@ ErrorOr<ExecData> ExecData::create(Core::Process&& process, int fd_stdin, int fd
     return exec_data;
 }
 
-Coroutine<ErrorOr<void>> ExecData::handle_channel_data(Session& session)
+Coroutine<ErrorOr<BehaviorControl>> ExecData::handle_channel_data(Session& session)
 {
     CO_TRY(co_await stdin_->wait_for_state(Core::Notifier::Type::Write));
     auto& stream = session.channel_data;
@@ -33,7 +33,7 @@ Coroutine<ErrorOr<void>> ExecData::handle_channel_data(Session& session)
 
     close_stdin_if_required(session);
 
-    co_return {};
+    co_return BehaviorControl::ContinueExecution;
 }
 
 void ExecData::handle_channel_eof(Session const& session)

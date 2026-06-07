@@ -14,6 +14,7 @@
 #include <AK/Variant.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
+#include <LibSSH/BehaviorControl.h>
 #include <LibSSH/SFTP/Server.h>
 
 namespace SSH {
@@ -34,7 +35,7 @@ struct ExecData {
 
     Optional<int> exit_status {};
 
-    Coroutine<ErrorOr<void>> handle_channel_data(Session&);
+    Coroutine<ErrorOr<BehaviorControl>> handle_channel_data(Session&);
     void handle_channel_eof(Session const&);
 
     bool is_ready_to_be_closed() const;
