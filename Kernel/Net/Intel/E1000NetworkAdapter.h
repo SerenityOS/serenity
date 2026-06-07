@@ -80,11 +80,7 @@ protected:
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
 
-    void out8(u16 address, u8);
-    void out16(u16 address, u16);
     void out32(u16 address, u32);
-    u8 in8(u16 address);
-    u16 in16(u16 address);
     u32 in32(u16 address);
 
     void receive();
