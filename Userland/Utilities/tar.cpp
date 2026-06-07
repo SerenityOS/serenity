@@ -41,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dereference = false;
     StringView directory;
     Vector<ByteString> paths;
+    u32 strip_components {};
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');
@@ -54,6 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
     args_parser.add_option(dereference, "Follow symlinks", "dereference", 'h');
+    args_parser.add_option(strip_components, "Strip the first NUMBER path components from each file path", "strip-components", {}, "NUMBER");
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -163,10 +165,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 path = path.prepend(header.prefix());
             ByteString filename = get_override("path"sv).value_or(path.string());
 
-            if (list || verbose)
+            bool skip = false;
+
+            if (strip_components > 0) {
+                auto parts = LexicalPath(filename).parts();
+                if (parts.size() > strip_components) {
+                    parts.remove(0, strip_components);
+                    StringBuilder stripped_path;
+                    for (unsigned i = 0; i < parts.size(); ++i) {
+                        if (i > 0)
+                            stripped_path.append('/');
+                        stripped_path.append(parts[i]);
+                    }
+                    filename = stripped_path.to_byte_string();
+                } else {
+                    skip = true;
+                }
+            }
+
+            if (!skip && (list || verbose))
                 outln("{}", filename);
 
-            if (extract) {
+            if (!skip && extract) {
                 auto absolute_path = TRY(FileSystem::absolute_path(filename));
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
