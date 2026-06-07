@@ -14,6 +14,7 @@
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Security/Random.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 
@@ -97,10 +98,12 @@ protected:
     NonnullOwnPtr<Memory::Region> m_tx_buffer_region;
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
+
     SetOnce m_has_eeprom;
     bool m_link_up { false };
     EntropySource m_entropy_source;
 
-    DeprecatedWaitQueue m_wait_queue;
+    Mutex m_write_lock;
+    WaitQueue m_wait_queue;
 };
 }
