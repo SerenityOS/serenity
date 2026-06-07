@@ -365,34 +365,10 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
     out32(REG_TIPG, 0x0060200A);
 }
 
-void E1000NetworkAdapter::out8(u16 address, u8 data)
-{
-    dbgln_if(E1000_DEBUG, "E1000: OUT8 {:#02x} @ {:#04x}", data, address);
-    m_registers_io_window->write8(address, data);
-}
-
-void E1000NetworkAdapter::out16(u16 address, u16 data)
-{
-    dbgln_if(E1000_DEBUG, "E1000: OUT16 {:#04x} @ {:#04x}", data, address);
-    m_registers_io_window->write16(address, data);
-}
-
 void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
     dbgln_if(E1000_DEBUG, "E1000: OUT32 {:#08x} @ {:#04x}", data, address);
     m_registers_io_window->write32(address, data);
-}
-
-u8 E1000NetworkAdapter::in8(u16 address)
-{
-    dbgln_if(E1000_DEBUG, "E1000: IN8 @ {:#04x}", address);
-    return m_registers_io_window->read8(address);
-}
-
-u16 E1000NetworkAdapter::in16(u16 address)
-{
-    dbgln_if(E1000_DEBUG, "E1000: IN16 @ {:#04x}", address);
-    return m_registers_io_window->read16(address);
 }
 
 u32 E1000NetworkAdapter::in32(u16 address)
