@@ -76,16 +76,16 @@ private:
         case GraphType::Network: {
             u64 tx {}, rx {};
             if (get_network_usage(tx, rx)) {
-                u64 recent_tx = tx - m_last_total;
-                m_last_total = tx;
-                if (recent_tx > m_current_scale) {
+                u64 recent_rx = rx - m_last_total;
+                m_last_total = rx;
+                if (recent_rx > m_current_scale) {
                     u64 m_old_scale = m_current_scale;
                     // Scale in multiples of 1000 kB/s
-                    m_current_scale = (recent_tx / scale_unit) * scale_unit;
+                    m_current_scale = (recent_rx / scale_unit) * scale_unit;
                     rescale_history(m_old_scale, m_current_scale);
                 } else {
                     // Figure out if we can scale back down.
-                    float max = static_cast<float>(recent_tx) / static_cast<float>(m_current_scale);
+                    float max = static_cast<float>(recent_rx) / static_cast<float>(m_current_scale);
                     for (auto const value : m_history) {
                         if (value > max)
                             max = value;
@@ -96,8 +96,8 @@ private:
                         rescale_history(m_old_scale, m_current_scale);
                     }
                 }
-                m_history.enqueue(static_cast<float>(recent_tx) / static_cast<float>(m_current_scale));
-                m_tooltip = MUST(String::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_tx) * 8.0 / 1000.0));
+                m_history.enqueue(static_cast<float>(recent_rx) / static_cast<float>(m_current_scale));
+                m_tooltip = MUST(String::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_rx) * 8.0 / 1000.0));
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = "Unable to determine network usage"_string;
@@ -205,8 +205,8 @@ private:
             if (!adapter_obj.has_string("ipv4_address"sv) || !adapter_obj.get_bool("link_up"sv).value())
                 continue;
 
-            tx += adapter_obj.get_u64("bytes_in"sv).value_or(0);
-            rx += adapter_obj.get_u64("bytes_out"sv).value_or(0);
+            rx += adapter_obj.get_u64("bytes_in"sv).value_or(0);
+            tx += adapter_obj.get_u64("bytes_out"sv).value_or(0);
         }
         return tx != 0;
     }
