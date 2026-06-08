@@ -74,8 +74,8 @@ private:
             break;
         }
         case GraphType::Network: {
-            u64 tx, rx, link_speed;
-            if (get_network_usage(tx, rx, link_speed)) {
+            u64 tx {}, rx {};
+            if (get_network_usage(tx, rx)) {
                 u64 recent_tx = tx - m_last_total;
                 m_last_total = tx;
                 if (recent_tx > m_current_scale) {
@@ -191,9 +191,9 @@ private:
         return true;
     }
 
-    bool get_network_usage(u64& tx, u64& rx, u64& link_speed)
+    bool get_network_usage(u64& tx, u64& rx)
     {
-        tx = rx = link_speed = 0;
+        tx = rx = 0;
 
         auto json = get_data_as_json(m_proc_net, "/sys/kernel/net/adapters"sv);
         if (json.is_error())
@@ -207,10 +207,7 @@ private:
 
             tx += adapter_obj.get_u64("bytes_in"sv).value_or(0);
             rx += adapter_obj.get_u64("bytes_out"sv).value_or(0);
-            // Link speed data is given in megabits, but we want all return values to be in bytes.
-            link_speed += adapter_obj.get_u64("link_speed"sv).value_or(0) * 8'000'000;
         }
-        link_speed /= 8;
         return tx != 0;
     }
 
