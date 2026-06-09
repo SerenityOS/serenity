@@ -517,35 +517,18 @@ public:
         return VisitHelper::visit(forward<Self>(self), move(visitor));
     }
 
-    template<typename... NewTs>
-    constexpr decltype(auto) downcast() &&
+    template<typename... NewTs, typename Self>
+    ALWAYS_INLINE constexpr decltype(auto) downcast(this Self&& self)
     {
         if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
-            return move(*this).template downcast_variant<NewTs...>();
+            return forward<Self>(self).downcast_variant(TypeWrapper<NewTs...> { });
         } else {
-            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag { } };
-            visit([&](auto& value) {
+            return forward<Self>(self).visit([](auto&& value) -> Variant<NewTs...> {
                 if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                    instance.set(move(value), Detail::VariantNoClearTag { });
+                    return Variant<NewTs...>(forward_like<Self>(value));
+                else
+                    VERIFY_NOT_REACHED();
             });
-            VERIFY(instance.m_index != instance.invalid_index);
-            return instance;
-        }
-    }
-
-    template<typename... NewTs>
-    constexpr decltype(auto) downcast() const&
-    {
-        if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
-            return (*this).downcast_variant(TypeWrapper<NewTs...> { });
-        } else {
-            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag { } };
-            visit([&](auto const& value) {
-                if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                    instance.set(value, Detail::VariantNoClearTag { });
-            });
-            VERIFY(instance.m_index != instance.invalid_index);
-            return instance;
         }
     }
 
@@ -554,16 +537,10 @@ public:
 private:
     friend struct Detail::VisitImpl<IndexType, Ts...>;
 
-    template<typename... NewTs>
-    constexpr Variant<NewTs...> downcast_variant(TypeWrapper<Variant<NewTs...>>) &&
+    template<typename... NewTs, typename Self>
+    constexpr Variant<NewTs...> downcast_variant(this Self&& self, TypeWrapper<Variant<NewTs...>>)
     {
-        return move(*this).template downcast<NewTs...>();
-    }
-
-    template<typename... NewTs>
-    constexpr Variant<NewTs...> downcast_variant(TypeWrapper<Variant<NewTs...>>) const&
-    {
-        return (*this).template downcast<NewTs...>();
+        return forward<Self>(self).template downcast<NewTs...>();
     }
 
     using Helper = Detail::VariantHelper;
