@@ -231,6 +231,7 @@ TEST_CASE(moved_from_state)
 TEST_CASE(duplicated_types)
 {
     Variant<int, int, int, int> its_just_an_int { 42 };
+    EXPECT_EQ(its_just_an_int.index(), 0);
     EXPECT(its_just_an_int.has<int>());
     EXPECT_EQ(its_just_an_int.get<int>(), 42);
 }
@@ -428,6 +429,16 @@ TEST_CASE(forwarding)
         EXPECT_EQ(move_count, 6uz); // FIXME: Shouldn't this be 7?
         EXPECT_EQ(copy_count, 1uz);
     }
+}
+
+TEST_CASE(index_order)
+{
+    Variant<int, float, float, int, char const*> var { 1337 };
+    EXPECT_EQ(var.index(), 0);
+    var.set(3.141f);
+    EXPECT_EQ(var.index(), 1);
+    var.set(+"foobar"); // FIXME: We need to manually decay this to a pointer....
+    EXPECT_EQ(var.index(), 4);
 }
 
 static_assert(([]() consteval -> bool {

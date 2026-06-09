@@ -282,15 +282,23 @@ struct ParameterPack : ParameterPackTag {
 // Blank<T> is a unique replacement for T, if T is a duplicate type.
 template<typename T>
 struct Blank {
-    void operator()() const;
+    // This call operator is here to mirror `Overload`
+    // as the `operator()` is exported in the InheritFromPacks helper
+    // It is here in the form similar to Overload,
+    // but explicitly disabled,
+    // To avoid it being chosen one could also directly change the signature
+    template<typename U, typename = T>
+    requires(DependentFalse<U>)
+    static auto operator()(T, U&&) -> Blank;
 };
 
 template<typename A, typename P>
 inline constexpr bool IsTypeInPack = false;
 
 // IsTypeInPack<T, Pack<Ts...>> will just return whether 'T' exists in 'Ts'.
+// Adjusted for the Overload::Type field
 template<typename T, typename... Ts>
-inline constexpr bool IsTypeInPack<T, ParameterPack<Ts...>> = (IsSame<T, Ts> || ...);
+inline constexpr bool IsTypeInPack<T, ParameterPack<Ts...>> = (IsSame<typename T::Type, typename Ts::Type> || ...);
 
 // Replaces T with Blank<T> if it exists in Qs.
 template<typename T, typename... Qs>
@@ -305,10 +313,9 @@ struct InheritFromUniqueEntries;
 // This makes sure that the search is linear in time (like the 'merge' step of merge sort).
 template<size_t I, typename... Ts, size_t... Js, typename... Qs>
 struct InheritFromUniqueEntries<I, ParameterPack<Ts...>, IndexSequence<Js...>, Qs...>
-    : public BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>... {
+    : public BlankIfDuplicate<Ts, Conditional<(Js >= I), ParameterPack<>, Qs>...>... {
 
-    using BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>::BlankIfDuplicate...;
-    using BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>::operator()...;
+    using BlankIfDuplicate<Ts, Conditional<(Js >= I), ParameterPack<>, Qs>...>::operator()...;
 };
 
 template<typename...>
@@ -320,7 +327,6 @@ template<size_t... Is, typename... Ps>
 struct InheritFromPacks<IndexSequence<Is...>, Ps...>
     : public InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>... {
 
-    using InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>::InheritFromUniqueEntries...;
     using InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>::operator()...;
 };
 
@@ -332,15 +338,17 @@ using MergeAndDeduplicatePacks = InheritFromPacks<MakeIndexSequence<sizeof...(Ps
 //       The stl version does not allow narrowing conversions
 //       main points where we need it are instantiations with literal 0s,
 //       which we could possibly check for with a some more template magic and is_constant_p.
-template<typename T>
+template<typename T, size_t I>
 struct Overload {
+    using Type = T;
+    static constexpr size_t Index = I;
     // This Overload for <T> can be chosen,
     // if the passed type <U>, in its fully qualified form*, can construct a <T>
     // The compiler will then choose the "ideal" overload, if it is unambiguous
     // *: This is the reason for the forwarding reference in the arguments
     template<typename U, typename = T>
     requires(IsConstructible<T, U>)
-    auto operator()(T, U&&) const -> T;
+    static auto operator()(T, U&&) -> Overload;
 };
 
 template<typename... Bases>
@@ -354,7 +362,7 @@ struct MakeOverloadsImpl;
 template<size_t... Indices>
 struct MakeOverloadsImpl<IndexSequence<Indices...>> {
     template<typename... Types>
-    using Apply = AllOverloads<Overload<Types>...>;
+    using Apply = AllOverloads<Overload<Types, Indices>...>;
 };
 
 template<typename... Types>
@@ -413,8 +421,8 @@ public:
     constexpr Variant(T&& t)
     {
         using BestOverload = BestMatch<T>;
-        // FIXME: Can we get the index directly from the resolution?
-        constexpr IndexType BestOverloadIndex = index_of<BestOverload>();
+
+        constexpr IndexType BestOverloadIndex = BestOverload::Index;
         m_index = BestOverloadIndex;
         // FIXME: Is this replacement over the trivial empty union/dummy initialized union
         //        free, and should we try to do it directly
@@ -507,8 +515,8 @@ public:
             Helper::delete_(m_data, m_index);
         }
         using BestOverload = BestMatch<T>;
-        // FIXME: Can we get the index directly from the resolution?
-        constexpr IndexType BestOverloadIndex = index_of<BestOverload>();
+
+        constexpr IndexType BestOverloadIndex = BestOverload::Index;
         m_index = BestOverloadIndex;
 
         Helper::construct<BestOverloadIndex>(m_data, forward<T>(value));
@@ -592,35 +600,18 @@ public:
         return VisitHelper::visit(forward<Self>(self), move(visitor));
     }
 
-    template<typename... NewTs>
-    ALWAYS_INLINE constexpr decltype(auto) downcast() &&
+    template<typename... NewTs, typename Self>
+    ALWAYS_INLINE constexpr decltype(auto) downcast(this Self&& self)
     {
         if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
-            return move(*this).template downcast_variant<NewTs...>();
+            return forward<Self>(self).downcast_variant(TypeWrapper<NewTs...> {});
         } else {
-            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
-            visit([&](auto& value) {
+            return forward<Self>(self).visit([](auto&& value) -> Variant<NewTs...> {
                 if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                    instance.set(move(value), Detail::VariantNoClearTag {});
+                    return Variant<NewTs...>(forward_like<Self>(value));
+                else
+                    VERIFY_NOT_REACHED();
             });
-            VERIFY(instance.m_index != instance.invalid_index);
-            return instance;
-        }
-    }
-
-    template<typename... NewTs>
-    ALWAYS_INLINE constexpr decltype(auto) downcast() const&
-    {
-        if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
-            return (*this).downcast_variant(TypeWrapper<NewTs...> {});
-        } else {
-            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
-            visit([&](auto const& value) {
-                if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                    instance.set(value, Detail::VariantNoClearTag {});
-            });
-            VERIFY(instance.m_index != instance.invalid_index);
-            return instance;
         }
     }
 
@@ -629,16 +620,10 @@ public:
 private:
     friend struct Detail::VisitImpl<IndexType, Ts...>;
 
-    template<typename... NewTs>
-    constexpr Variant<NewTs...> downcast_variant(TypeWrapper<Variant<NewTs...>>) &&
+    template<typename... NewTs, typename Self>
+    constexpr Variant<NewTs...> downcast_variant(this Self&& self, TypeWrapper<Variant<NewTs...>>)
     {
-        return move(*this).template downcast<NewTs...>();
-    }
-
-    template<typename... NewTs>
-    constexpr Variant<NewTs...> downcast_variant(TypeWrapper<Variant<NewTs...>>) const&
-    {
-        return (*this).template downcast<NewTs...>();
+        return forward<Self>(self).template downcast<NewTs...>();
     }
 
     using Helper = Detail::VariantHelper;
