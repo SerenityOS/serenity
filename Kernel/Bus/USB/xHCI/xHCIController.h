@@ -18,13 +18,11 @@
 
 namespace Kernel::USB::xHCI {
 
-class xHCIPCIInterrupter;
-class xHCIDeviceTreeInterrupter;
+class xHCIInterrupter;
 
 class xHCIController
     : public USBController {
-    friend class xHCIPCIInterrupter;
-    friend class xHCIDeviceTreeInterrupter;
+    friend class xHCIInterrupter;
 
 public:
     virtual ~xHCIController() override;
@@ -55,7 +53,7 @@ protected:
     xHCIController(Memory::TypedMapping<u8> registers_mapping);
 
     virtual bool using_message_signalled_interrupts() const = 0;
-    virtual ErrorOr<OwnPtr<GenericInterruptHandler>> create_interrupter(u16 interrupter_id) = 0;
+    virtual ErrorOr<OwnPtr<xHCIInterrupter>> create_interrupter(u16 interrupter_id) = 0;
     virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder&) const = 0;
 
 private:
@@ -253,7 +251,7 @@ private:
     TransferRequestBlock* m_event_ring_segment { nullptr };
     PhysicalPtr m_event_ring_segment_pointer { 0 };
 
-    OwnPtr<GenericInterruptHandler> m_interrupter;
+    OwnPtr<xHCIInterrupter> m_interrupter;
     OwnPtr<xHCIRootHub> m_root_hub;
 
 protected:
@@ -269,6 +267,27 @@ protected:
 
         dmesgln("{}", builder.string_view());
     }
+};
+
+class xHCIInterrupter {
+public:
+    xHCIInterrupter(xHCIController& m_controller, u16 interrupter_id)
+        : m_controller(m_controller)
+        , m_interrupter_id(interrupter_id)
+    {
+    }
+
+    virtual ~xHCIInterrupter() = default;
+
+protected:
+    void handle_interrupt()
+    {
+        m_controller.handle_interrupt(m_interrupter_id);
+    }
+
+private:
+    xHCIController& m_controller;
+    u16 m_interrupter_id { 0 };
 };
 
 }
