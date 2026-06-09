@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2025, Sönke Holz <soenke.holz@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <Kernel/Arch/aarch64/RPi/RP1/RP1.h>
+#include <Kernel/Arch/aarch64/RPi/RP1/xHCI.h>
+#include <Kernel/Boot/CommandLine.h>
+#include <Kernel/Bus/PCI/BarMapping.h>
+#include <Kernel/Bus/PCI/Driver.h>
+#include <Kernel/Bus/PCI/IDs.h>
+#include <Kernel/Bus/USB/USBManagement.h>
+
+namespace Kernel::RPi {
+
+ErrorOr<void> RP1::try_to_initialize_xhci_controllers(PCI::DeviceIdentifier const& pci_identifier)
+{
+    PCI::enable_memory_space(pci_identifier);
+    PCI::enable_bus_mastering(pci_identifier);
+
+    auto bar1_address = TRY(get_bar_address(pci_identifier, PCI::HeaderType0BaseRegister::BAR1));
+
+    // Chapter 5. USB, https://datasheets.raspberrypi.com/rp1/rp1-peripherals.pdf
+    // The interrupt numbers are taken from the devicetree.
+    auto usbhost0 = TRY(RP1xHCIController::try_to_initialize(bar1_address.offset(0x20'0000), 0, 31));
+    auto usbhost1 = TRY(RP1xHCIController::try_to_initialize(bar1_address.offset(0x30'0000), 1, 36));
+
+    USB::USBManagement::the().add_controller(usbhost0);
+    USB::USBManagement::the().add_controller(usbhost1);
+
+    return {};
+}
+
+PCI_DRIVER(RP1Driver);
+
+ErrorOr<void> RP1Driver::probe(PCI::DeviceIdentifier const& pci_device_identifier) const
+{
+    if (kernel_command_line().disable_usb())
+        return EPERM;
+
+    if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::RaspberryPi
+        || pci_device_identifier.hardware_id().device_id != PCI::DeviceID::RaspberryPiRP1)
+        return ENOTSUP;
+
+    return RP1::try_to_initialize_xhci_controllers(pci_device_identifier);
+}
+
+}
