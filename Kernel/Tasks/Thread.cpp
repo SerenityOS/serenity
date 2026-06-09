@@ -648,8 +648,6 @@ u32 Thread::pending_signals_for_state() const
 {
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     constexpr u32 stopped_signal_mask = (1 << (SIGCONT - 1)) | (1 << (SIGKILL - 1)) | (1 << (SIGTRAP - 1));
-    if (is_handling_page_fault())
-        return 0;
     return m_state != State::Stopped ? m_pending_signals : m_pending_signals & stopped_signal_mask;
 }
 
