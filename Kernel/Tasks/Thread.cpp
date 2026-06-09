@@ -114,6 +114,12 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
 
     SpinlockLocker scheduler_lock(g_scheduler_lock);
 
+    // Don't let signals unblock threads that are blocked inside a page fault handler.
+    // This prevents threads from EINTR'ing the inode read in an inode page fault.
+    // FIXME: There's probably a better way to solve this.
+    if (has_unmasked_pending_signals() && !is_handling_page_fault())
+        return BlockResult::InterruptedBySignal;
+
     SpinlockLocker block_lock(m_block_lock);
     // We need to hold m_block_lock so that nobody can unblock a blocker as soon
     // as it is constructed and registered elsewhere
