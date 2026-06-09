@@ -15,16 +15,15 @@ ErrorOr<NonnullOwnPtr<xHCIPCIInterrupter>> xHCIPCIInterrupter::create(PCIxHCICon
 }
 
 xHCIPCIInterrupter::xHCIPCIInterrupter(PCIxHCIController& controller, u16 interrupter_id, InterruptNumber irq)
-    : PCI::IRQHandler(controller, irq)
-    , m_controller(controller)
-    , m_interrupter_id(interrupter_id)
+    : xHCIInterrupter(controller, interrupter_id)
+    , PCI::IRQHandler(controller, irq)
 {
     enable_irq();
 }
 
 bool xHCIPCIInterrupter::handle_irq()
 {
-    m_controller.handle_interrupt(m_interrupter_id);
+    xHCIInterrupter::handle_interrupt();
     return true;
 }
 
@@ -34,16 +33,15 @@ ErrorOr<NonnullOwnPtr<xHCIDeviceTreeInterrupter>> xHCIDeviceTreeInterrupter::cre
 }
 
 xHCIDeviceTreeInterrupter::xHCIDeviceTreeInterrupter(DeviceTreexHCIController& controller, u16 interrupter_id, InterruptNumber irq)
-    : IRQHandler(irq)
-    , m_controller(controller)
-    , m_interrupter_id(interrupter_id)
+    : xHCIInterrupter(controller, interrupter_id)
+    , IRQHandler(irq)
 {
     enable_irq();
 }
 
 bool xHCIDeviceTreeInterrupter::handle_irq()
 {
-    m_controller.handle_interrupt(m_interrupter_id);
+    xHCIInterrupter::handle_interrupt();
     return true;
 }
 

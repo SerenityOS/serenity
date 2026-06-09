@@ -24,7 +24,7 @@ private:
 
     // ^xHCIController
     virtual bool using_message_signalled_interrupts() const override { return m_using_message_signalled_interrupts; }
-    virtual ErrorOr<OwnPtr<GenericInterruptHandler>> create_interrupter(u16 interrupter_id) override;
+    virtual ErrorOr<OwnPtr<USB::xHCI::xHCIInterrupter>> create_interrupter(u16 interrupter_id) override;
     virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder& builder) const override
     {
         TRY(builder.try_appendff("xHCI: RP1 USBHOST{}: "sv, m_index));
@@ -52,7 +52,7 @@ UNMAP_AFTER_INIT RP1xHCIController::RP1xHCIController(Memory::TypedMapping<u8> r
 {
 }
 
-ErrorOr<OwnPtr<GenericInterruptHandler>> RP1xHCIController::create_interrupter(u16)
+ErrorOr<OwnPtr<USB::xHCI::xHCIInterrupter>> RP1xHCIController::create_interrupter(u16)
 {
     // FIXME: Add interrupt support. This requires adding support for the BCM2712 MSI-X interrupt controller.
     return nullptr;

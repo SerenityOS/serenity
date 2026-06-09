@@ -15,7 +15,9 @@
 
 namespace Kernel::USB::xHCI {
 
-class xHCIPCIInterrupter final : public PCI::IRQHandler {
+class xHCIPCIInterrupter final
+    : public xHCIInterrupter
+    , public PCI::IRQHandler {
 public:
     static ErrorOr<NonnullOwnPtr<xHCIPCIInterrupter>> create(PCIxHCIController&, u16 interrupter_id);
 
@@ -25,12 +27,11 @@ private:
     xHCIPCIInterrupter(PCIxHCIController& controller, u16 interrupter_id, InterruptNumber irq);
 
     virtual bool handle_irq() override;
-
-    PCIxHCIController& m_controller;
-    u16 m_interrupter_id { 0 };
 };
 
-class xHCIDeviceTreeInterrupter final : public IRQHandler {
+class xHCIDeviceTreeInterrupter final
+    : public xHCIInterrupter
+    , public IRQHandler {
 public:
     static ErrorOr<NonnullOwnPtr<xHCIDeviceTreeInterrupter>> create(DeviceTreexHCIController&, InterruptNumber irq, u16 interrupter_id);
 
@@ -40,9 +41,6 @@ private:
     xHCIDeviceTreeInterrupter(DeviceTreexHCIController& controller, u16 interrupter_id, InterruptNumber irq);
 
     virtual bool handle_irq() override;
-
-    DeviceTreexHCIController& m_controller;
-    u16 m_interrupter_id { 0 };
 };
 
 }
