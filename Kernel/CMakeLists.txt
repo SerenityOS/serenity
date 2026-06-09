@@ -36,7 +36,6 @@ set(KERNEL_SOURCES
     Bus/USB/xHCI/DeviceTreexHCIController.cpp
     Bus/USB/xHCI/PCIxHCIController.cpp
     Bus/USB/xHCI/xHCIController.cpp
-    Bus/USB/xHCI/xHCIInterrupter.cpp
     Bus/USB/xHCI/xHCIRootHub.cpp
     Bus/USB/Drivers/HID.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
