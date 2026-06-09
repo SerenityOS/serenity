@@ -12,7 +12,6 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/USB/xHCI/PCIxHCIController.h>
-#include <Kernel/Bus/USB/xHCI/xHCIInterrupter.h>
 
 namespace Kernel::USB::xHCI {
 
@@ -65,6 +64,25 @@ void PCIxHCIController::intel_quirk_enable_xhci_ports()
 ErrorOr<OwnPtr<xHCIInterrupter>> PCIxHCIController::create_interrupter(u16 interrupter_id)
 {
     return TRY(xHCIPCIInterrupter::create(*this, interrupter_id));
+}
+
+ErrorOr<NonnullOwnPtr<xHCIPCIInterrupter>> xHCIPCIInterrupter::create(PCIxHCIController& controller, u16 interrupter_id)
+{
+    auto irq = TRY(controller.allocate_irq(0));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) xHCIPCIInterrupter(controller, interrupter_id, irq)));
+}
+
+xHCIPCIInterrupter::xHCIPCIInterrupter(PCIxHCIController& controller, u16 interrupter_id, InterruptNumber irq)
+    : xHCIInterrupter(controller, interrupter_id)
+    , PCI::IRQHandler(controller, irq)
+{
+    enable_irq();
+}
+
+bool xHCIPCIInterrupter::handle_irq()
+{
+    xHCIInterrupter::handle_interrupt();
+    return true;
 }
 
 PCI_DRIVER(xHCIDriver);

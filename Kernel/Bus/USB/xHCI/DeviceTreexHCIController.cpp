@@ -6,7 +6,6 @@
 
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/USB/xHCI/DeviceTreexHCIController.h>
-#include <Kernel/Bus/USB/xHCI/xHCIInterrupter.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Firmware/DeviceTree/Driver.h>
 #include <Kernel/Firmware/DeviceTree/Management.h>
@@ -32,6 +31,24 @@ UNMAP_AFTER_INIT DeviceTreexHCIController::DeviceTreexHCIController(Memory::Type
 ErrorOr<OwnPtr<xHCIInterrupter>> DeviceTreexHCIController::create_interrupter(u16 interrupter_id)
 {
     return TRY(xHCIDeviceTreeInterrupter::create(*this, m_interrupt_number, interrupter_id));
+}
+
+ErrorOr<NonnullOwnPtr<xHCIDeviceTreeInterrupter>> xHCIDeviceTreeInterrupter::create(DeviceTreexHCIController& controller, InterruptNumber irq, u16 interrupter_id)
+{
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) xHCIDeviceTreeInterrupter(controller, interrupter_id, irq)));
+}
+
+xHCIDeviceTreeInterrupter::xHCIDeviceTreeInterrupter(DeviceTreexHCIController& controller, u16 interrupter_id, InterruptNumber irq)
+    : xHCIInterrupter(controller, interrupter_id)
+    , IRQHandler(irq)
+{
+    enable_irq();
+}
+
+bool xHCIDeviceTreeInterrupter::handle_irq()
+{
+    xHCIInterrupter::handle_interrupt();
+    return true;
 }
 
 static constinit Array const compatibles_array = {

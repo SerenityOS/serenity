@@ -12,7 +12,6 @@
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Bus/USB/xHCI/xHCIController.h>
-#include <Kernel/Bus/USB/xHCI/xHCIInterrupter.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel::USB::xHCI {
