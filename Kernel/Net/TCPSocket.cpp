@@ -396,7 +396,7 @@ bool TCPSocket::should_delay_next_ack() const
         return false;
 
     // RFC 1122 says we should not delay ACKs for more than 500 milliseconds.
-    if (TimeManagement::the().monotonic_time(TimePrecision::Precise) >= m_last_ack_sent_time + Duration::from_milliseconds(500))
+    if (TimeManagement::the().monotonic_time() >= m_last_ack_sent_time + Duration::from_milliseconds(500))
         return false;
 
     return true;
