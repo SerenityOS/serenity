@@ -61,7 +61,7 @@ void PCIxHCIController::intel_quirk_enable_xhci_ports()
     PCI::write32_locked(device_identifier(), intel_xhci_usb2_port_routing_offset, PCI::read32_locked(device_identifier(), intel_xhci_usb2_port_routing_mask_offset));
 }
 
-ErrorOr<OwnPtr<xHCIInterrupter>> PCIxHCIController::create_interrupter(u16 interrupter_id)
+ErrorOr<NonnullOwnPtr<xHCIInterrupter>> PCIxHCIController::create_interrupter(u16 interrupter_id)
 {
     return TRY(xHCIPCIInterrupter::create(*this, interrupter_id));
 }

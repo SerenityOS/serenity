@@ -29,7 +29,7 @@ private:
 
     // ^xHCIController
     virtual bool using_message_signalled_interrupts() const override { return m_using_message_signalled_interrupts; }
-    virtual ErrorOr<OwnPtr<xHCIInterrupter>> create_interrupter(u16 interrupter_id) override;
+    virtual ErrorOr<NonnullOwnPtr<xHCIInterrupter>> create_interrupter(u16 interrupter_id) override;
     virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder& builder) const override
     {
         TRY(builder.try_appendff("{}: {}: "sv, device_name(), device_identifier().address()));

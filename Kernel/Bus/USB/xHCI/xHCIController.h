@@ -53,7 +53,7 @@ protected:
     xHCIController(Memory::TypedMapping<u8> registers_mapping);
 
     virtual bool using_message_signalled_interrupts() const = 0;
-    virtual ErrorOr<OwnPtr<xHCIInterrupter>> create_interrupter(u16 interrupter_id) = 0;
+    virtual ErrorOr<NonnullOwnPtr<xHCIInterrupter>> create_interrupter(u16 interrupter_id) = 0;
     virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder&) const = 0;
 
 private:

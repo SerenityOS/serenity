@@ -21,7 +21,7 @@ private:
 
     // ^xHCIController
     virtual bool using_message_signalled_interrupts() const override { return m_using_message_signalled_interrupts; }
-    virtual ErrorOr<OwnPtr<USB::xHCI::xHCIInterrupter>> create_interrupter(u16 interrupter_id) override;
+    virtual ErrorOr<NonnullOwnPtr<USB::xHCI::xHCIInterrupter>> create_interrupter(u16 interrupter_id) override;
     virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder& builder) const override
     {
         TRY(builder.try_appendff("xHCI: RP1 USBHOST{}: "sv, m_index));
