@@ -26,7 +26,7 @@ UNMAP_AFTER_INIT RP1xHCIController::RP1xHCIController(RP1& rp1, Memory::TypedMap
 {
 }
 
-ErrorOr<OwnPtr<USB::xHCI::xHCIInterrupter>> RP1xHCIController::create_interrupter(u16 interrupter_id)
+ErrorOr<NonnullOwnPtr<USB::xHCI::xHCIInterrupter>> RP1xHCIController::create_interrupter(u16 interrupter_id)
 {
     return TRY(RP1xHCIInterrupter::create(m_rp1, *this, interrupter_id, m_interrupt_number));
 }

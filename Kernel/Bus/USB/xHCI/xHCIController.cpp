@@ -256,12 +256,10 @@ ErrorOr<void> xHCIController::initialize()
 
     m_using_message_signalled_interrupts = using_message_signalled_interrupts();
 
-    if (!kernel_command_line().is_xhci_polling_enabled())
-        m_interrupter = TRY(create_interrupter(0));
-
-    // Fall back to polling if we failed to set up interrupts or xHCI polling was enabled from the command line.
-    if (m_interrupter == nullptr)
+    if (kernel_command_line().is_xhci_polling_enabled())
         (void)TRY(m_process->create_kernel_thread("xHCI Poll"sv, [this]() { poll_thread(); }));
+    else
+        m_interrupter = TRY(create_interrupter(0));
 
     return start();
 }
