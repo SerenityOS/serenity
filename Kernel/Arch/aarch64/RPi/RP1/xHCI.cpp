@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, Sönke Holz <soenke.holz@serenityos.org>
+ * Copyright (c) 2025-2026, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,10 +26,23 @@ UNMAP_AFTER_INIT RP1xHCIController::RP1xHCIController(RP1& rp1, Memory::TypedMap
 {
 }
 
-ErrorOr<OwnPtr<USB::xHCI::xHCIInterrupter>> RP1xHCIController::create_interrupter(u16)
+ErrorOr<OwnPtr<USB::xHCI::xHCIInterrupter>> RP1xHCIController::create_interrupter(u16 interrupter_id)
 {
-    // FIXME: Add interrupt support. This requires adding support for the BCM2712 MSI-X interrupt controller.
-    return nullptr;
+    return TRY(RP1xHCIInterrupter::create(m_rp1, *this, interrupter_id, m_interrupt_number));
+}
+
+ErrorOr<NonnullOwnPtr<RP1xHCIInterrupter>> RP1xHCIInterrupter::create(RP1& rp1, RP1xHCIController& controller, u16 interrupter_id, InterruptNumber interrupt_number)
+{
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) RP1xHCIInterrupter(rp1, controller, interrupter_id, interrupt_number)));
+}
+
+RP1xHCIInterrupter::RP1xHCIInterrupter(RP1& rp1, RP1xHCIController& controller, u16 interrupter_id, InterruptNumber interrupt_number)
+    : xHCIInterrupter(controller, interrupter_id)
+{
+    rp1.register_interrupt_handler(interrupt_number, RP1::InterruptTriggerMode::Edge, [this](InterruptNumber) {
+        handle_interrupt();
+        return true;
+    });
 }
 
 }

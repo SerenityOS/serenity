@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, Sönke Holz <soenke.holz@serenityos.org>
+ * Copyright (c) 2025-2026, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,6 +32,14 @@ private:
     size_t m_index { 0 };
     InterruptNumber m_interrupt_number { 0 };
     bool m_using_message_signalled_interrupts { false };
+};
+
+class RP1xHCIInterrupter final : public USB::xHCI::xHCIInterrupter {
+public:
+    static ErrorOr<NonnullOwnPtr<RP1xHCIInterrupter>> create(RP1&, RP1xHCIController&, u16 interrupter_id, InterruptNumber);
+
+private:
+    RP1xHCIInterrupter(RP1&, RP1xHCIController& controller, u16 interrupter_id, InterruptNumber);
 };
 
 }
