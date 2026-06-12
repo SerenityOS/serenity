@@ -10,12 +10,14 @@
 
 namespace Kernel::RPi {
 
+class RP1;
+
 class RP1xHCIController final : public USB::xHCI::xHCIController {
 public:
-    static ErrorOr<NonnullLockRefPtr<RP1xHCIController>> try_to_initialize(PhysicalAddress, size_t index, InterruptNumber interrupt_number);
+    static ErrorOr<NonnullLockRefPtr<RP1xHCIController>> try_to_initialize(RP1&, PhysicalAddress, size_t index, InterruptNumber interrupt_number);
 
 private:
-    RP1xHCIController(Memory::TypedMapping<u8> registers_mapping, size_t index, InterruptNumber interrupt_number);
+    RP1xHCIController(RP1&, Memory::TypedMapping<u8> registers_mapping, size_t index, InterruptNumber interrupt_number);
 
     // ^xHCIController
     virtual bool using_message_signalled_interrupts() const override { return m_using_message_signalled_interrupts; }
@@ -26,6 +28,7 @@ private:
         return {};
     }
 
+    NonnullRefPtr<RP1> m_rp1;
     size_t m_index { 0 };
     InterruptNumber m_interrupt_number { 0 };
     bool m_using_message_signalled_interrupts { false };
