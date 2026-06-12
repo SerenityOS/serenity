@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/SD/Commands.h>
@@ -19,14 +20,6 @@ namespace Kernel {
 // * (SDHC): SD Host Controller Simplified Specification (https://www.sdcard.org/downloads/pls/)
 // * (PLSS) Physical Layer Simplified Specification (https://www.sdcard.org/downloads/pls/)
 // * (BCM2835) BCM2835 ARM Peripherals (https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf)
-
-static void delay(i64 nanoseconds)
-{
-    auto start = TimeManagement::the().monotonic_time();
-    auto end = start + Duration::from_nanoseconds(nanoseconds);
-    while (TimeManagement::the().monotonic_time() < end)
-        Processor::pause();
-}
 
 constexpr u32 max_supported_sdsc_frequency = 25000000;
 constexpr u32 max_supported_sdsc_frequency_high_speed = 50000000;
@@ -330,14 +323,14 @@ ErrorOr<NonnullRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_c
         card_capacity_in_blocks, rca, ocr, cid, scr));
 }
 
-bool SDHostController::retry_with_timeout(Function<bool()> f, i64 delay_between_tries)
+bool SDHostController::retry_with_timeout(Function<bool()> f, i64 delay_between_tries_us)
 {
-    int timeout = 1000;
+    int timeout = 100;
     bool success = false;
     while (!success && timeout > 0) {
         success = f();
         if (!success)
-            delay(delay_between_tries);
+            microseconds_delay(delay_between_tries_us);
         timeout--;
     }
     return timeout > 0;
