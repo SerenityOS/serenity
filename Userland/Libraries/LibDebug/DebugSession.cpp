@@ -259,7 +259,7 @@ bool DebugSession::breakpoint_exists(FlatPtr address) const
     return m_breakpoints.contains(address);
 }
 
-bool DebugSession::insert_watchpoint(FlatPtr address, u32 ebp)
+bool DebugSession::insert_watchpoint(FlatPtr address, FlatPtr frame_pointer)
 {
     auto current_register_status = peek_debug(DEBUG_CONTROL_REGISTER);
     if (!current_register_status.has_value())
@@ -274,7 +274,7 @@ bool DebugSession::insert_watchpoint(FlatPtr address, u32 ebp)
     }
     if (next_available_index > 3)
         return false;
-    WatchPoint watchpoint { address, next_available_index, ebp };
+    WatchPoint watchpoint { address, next_available_index, frame_pointer };
 
     if (!poke_debug(next_available_index, bit_cast<FlatPtr>(address)))
         return false;
