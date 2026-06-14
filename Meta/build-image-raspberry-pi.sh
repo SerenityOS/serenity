@@ -103,7 +103,7 @@ echo "done"
 
 cp -r raspberry-pi-firmware/boot/* boot/
 
-cp "$SERENITY_SOURCE_DIR/Toolchain/Build/edk2/Build/RPi4/RELEASE_GCC5/FV/RPI_EFI.fd" boot/ && {
+cp "$SERENITY_SOURCE_DIR/Toolchain/Build/edk2/Build/RPi4/RELEASE_GCC/FV/RPI_EFI.fd" boot/ && {
     # Based on https://github.com/tianocore/edk2-platforms/tree/master/Platform/RaspberryPi/RPi4#booting-the-firmware.
     PI4_EDK2_BOOT_OPTIONS="
 armstub=RPI_EFI.fd

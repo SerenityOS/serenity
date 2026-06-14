@@ -59,14 +59,14 @@ esac
 shift # edksetup.sh wants no arguments to be set
 
 EDK2_REPO=https://github.com/tianocore/edk2
-EDK2_TAG=edk2-stable202505
+EDK2_TAG=edk2-stable202605
 
 EDK2_PLATFORMS_REPO=https://github.com/tianocore/edk2-platforms
-EDK2_PLATFORMS_REV=c639ab7149a985c196317acec3dd96383c07abbb
+EDK2_PLATFORMS_REV=b5e92aa284c59a22e7e38f79125a20f774ab7027
 
 # Needed for the Raspberry Pi platform.
 EDK2_NON_OSI_REPO=https://github.com/tianocore/edk2-non-osi
-EDK2_NON_OSI_REV=ea2040c2d4e2200557e87b9f9fbd4f8fb7a2b6e8
+EDK2_NON_OSI_REV=7ac12d81e02b323bffdf1ef3c188ea33c2185c91
 
 mkdir -p "$_DIR"/Tarballs
 pushd "$_DIR"/Tarballs
@@ -104,9 +104,9 @@ export PATH="${_DIR}/Local/${SERENITY_ARCH}/bin:${PATH}"
 # These environment variables will be used by the EDK II build scripts.
 export WORKSPACE="$_DIR/Build/edk2"
 export PACKAGES_PATH="$_DIR/Tarballs/edk2:$_DIR/Tarballs/edk2-platforms:$_DIR/Tarballs/edk2-non-osi"
-export GCC5_AARCH64_PREFIX=aarch64-serenity-
-export GCC5_RISCV64_PREFIX=riscv64-serenity-
-export GCC5_X64_PREFIX=x86_64-serenity-
+export GCC_AARCH64_PREFIX=aarch64-serenity-
+export GCC_RISCV64_PREFIX=riscv64-serenity-
+export GCC_X64_PREFIX=x86_64-serenity-
 
 mkdir -p "$WORKSPACE"
 
@@ -119,4 +119,4 @@ make -C "$_DIR/Tarballs/edk2/BaseTools" -j "$MAKEJOBS" # needs to be an in-tree 
 source "$_DIR/Tarballs/edk2/edksetup.sh" BaseTools
 
 # shellcheck disable=SC2086 # Word splitting is intentional here
-build -t GCC5 -b RELEASE -n "$MAKEJOBS" -a "$TARGET_ARCH" -p "$PLATFORM_FILE" $EXTRA_BUILD_OPTIONS
+build -t GCC -b RELEASE -n "$MAKEJOBS" -a "$TARGET_ARCH" -p "$PLATFORM_FILE" $EXTRA_BUILD_OPTIONS
