@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023, the SerenityOS developers.
  * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
+ * Copyright (c) 2026, RiffPointer <riffpointer@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,15 @@ void EventManager::add_event(Event event)
 {
     m_events.append(move(event));
     quick_sort(m_events, [&](auto& a, auto& b) { return a.start < b.start; });
+    m_dirty = true;
+    on_events_change();
+}
+
+void EventManager::delete_event(Event const& event)
+{
+    m_events.remove_first_matching([&](auto& entry) {
+        return entry.summary == event.summary && entry.start.timestamp() == event.start.timestamp() && entry.end.timestamp() == event.end.timestamp();
+    });
     m_dirty = true;
     on_events_change();
 }
