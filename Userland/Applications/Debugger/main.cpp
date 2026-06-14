@@ -7,6 +7,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/LexicalPath.h>
 #include <AK/OwnPtr.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
@@ -29,6 +30,8 @@
 RefPtr<Line::Editor> editor;
 
 OwnPtr<Debug::DebugSession> g_debug_session;
+
+bool const g_print_color = isatty(STDOUT_FILENO);
 
 static void handle_sigint(int)
 {
@@ -106,10 +109,98 @@ static bool handle_disassemble_command(ByteString const& command, FlatPtr first_
     return true;
 }
 
+struct BacktraceFrameInfo {
+    ByteString object_name;
+    ByteString function_name;
+    FlatPtr instruction_address { 0 };
+    Optional<Debug::DebugInfo::SourcePositionWithInlines> source_position_with_inlines;
+
+    ByteString to_byte_string(bool color) const;
+};
+
+static ByteString format_source_position_with_inlines(Debug::DebugInfo::SourcePositionWithInlines const& source_position_with_inlines, bool color)
+{
+    StringBuilder builder;
+    Vector<Debug::DebugInfo::SourcePosition> source_positions;
+
+    if (source_position_with_inlines.source_position.has_value())
+        source_positions.append(source_position_with_inlines.source_position.value());
+
+    for (auto const& position : source_position_with_inlines.inline_chain) {
+        if (!source_positions.contains_slow(position))
+            source_positions.append(position);
+    }
+
+    // FIXME: This behavior was copied from LibCoreDump and CrashReporter.
+    //        Consolidate the behavior and determine whether a chain list
+    //        is the desired display for inline chains.
+    for (size_t i = 0; i < source_positions.size(); ++i) {
+        auto& position = source_positions[i];
+        auto fmt = color ? "\033[34;1m{}\033[0m:{}"sv : "{}:{}"sv;
+        builder.appendff(fmt, LexicalPath::basename(position.file_path), position.line_number);
+        if (i != source_positions.size() - 1) {
+            builder.append(" => "sv);
+        }
+    }
+
+    return builder.to_byte_string();
+}
+
+ByteString BacktraceFrameInfo::to_byte_string(bool color) const
+{
+    StringBuilder builder;
+    builder.appendff("{:p}: ", instruction_address);
+    if (object_name.is_empty()) {
+        builder.append("???"sv);
+        return builder.to_byte_string();
+    }
+    builder.appendff("[{}] {}", object_name, function_name.is_empty() ? "???" : function_name);
+
+    if (source_position_with_inlines.has_value())
+        builder.appendff(" ({})"sv, format_source_position_with_inlines(source_position_with_inlines.value(), color));
+
+    return builder.to_byte_string();
+}
+
 static bool handle_backtrace_command(PtraceRegisters const& regs)
 {
-    (void)regs;
-    TODO();
+    Vector<BacktraceFrameInfo> frames;
+    Debug::ProcessInspector& inspector = *g_debug_session;
+
+    auto add_frame = [&frames, &inspector](FlatPtr address) {
+        if (auto const* lib = inspector.library_at(address)) {
+            ByteString function_name = lib->debug_info->elf().symbolicate(address - lib->base_address);
+            auto source_position_or_error = lib->debug_info->get_source_position_with_inlines(address - lib->base_address);
+            auto const source_position = source_position_or_error.is_error() ? Optional<Debug::DebugInfo::SourcePositionWithInlines> {} : source_position_or_error.release_value();
+            frames.append({ lib->name, move(function_name), address, source_position });
+        } else {
+            frames.append({ ""sv, ""sv, address, {} });
+        }
+    };
+
+    add_frame(regs.ip());
+
+    MUST(AK::unwind_stack_from_frame_pointer(
+        regs.bp(),
+        [&](FlatPtr address) -> ErrorOr<FlatPtr> {
+            auto maybe_value = inspector.peek(address);
+            if (!maybe_value.has_value())
+                return EFAULT;
+            return maybe_value.value();
+        },
+        [&add_frame](AK::StackFrame stack_frame) -> ErrorOr<IterationDecision> {
+            // Subtract one from return_address to go back to the calling instruction to get accurate source position information.
+            auto address = stack_frame.return_address - 1;
+
+            add_frame(address);
+
+            return IterationDecision::Continue;
+        }));
+
+    for (auto& frame : frames) {
+        outln("{}", frame.to_byte_string(g_print_color));
+    }
+
     return true;
 }
 
@@ -261,23 +352,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         VERIFY(optional_regs.has_value());
         PtraceRegisters const& regs = optional_regs.value();
-#if ARCH(X86_64)
-        FlatPtr const ip = regs.rip;
-#elif ARCH(AARCH64)
-        FlatPtr const ip = regs.pc;
-#elif ARCH(RISCV64)
-        FlatPtr const ip = regs.pc;
-#else
-#    error Unknown architecture
-#endif
+        FlatPtr const ip = regs.ip();
 
         auto symbol_at_ip = g_debug_session->symbolicate(ip);
 
-        auto source_position = g_debug_session->get_source_position(ip);
+        auto const* lib_at_ip = g_debug_session->library_at(ip);
+        auto source_position = lib_at_ip->debug_info->get_source_position_with_inlines(ip - lib_at_ip->base_address);
 
         if (in_step_line) {
-            bool no_source_info = !source_position.has_value();
-            if (no_source_info || source_position.value() != previous_source_position) {
+            bool no_source_info = source_position.is_error();
+            if (no_source_info || source_position.value().source_position != previous_source_position) {
                 if (no_source_info)
                     outln("No source information for current instruction! stopping.");
                 in_step_line = false;
@@ -291,9 +375,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             outln("Program is stopped at: {:p}", ip);
 
-        if (source_position.has_value()) {
-            previous_source_position = source_position.value();
-            outln("Source location: {}:{}", source_position.value().file_path, source_position.value().line_number);
+        if (!source_position.is_error() && source_position.value().source_position.has_value()) {
+            previous_source_position = source_position.value().source_position.value();
+            outln("Source location: {}", format_source_position_with_inlines(source_position.value(), g_print_color));
         } else {
             outln("(No source location information for the current instruction)");
         }
@@ -322,7 +406,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 decision = Debug::DebugSession::DebugDecision::SingleStep;
                 success = true;
             } else if (command == "sl") {
-                if (source_position.has_value()) {
+                if (!source_position.is_error() && source_position.value().source_position.has_value()) {
                     decision = Debug::DebugSession::DebugDecision::SingleStep;
                     in_step_line = true;
                     success = true;
