@@ -7,10 +7,8 @@
 #pragma once
 
 #include <AK/ByteString.h>
-#include <AK/Demangle.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/StackUnwinder.h>
@@ -18,11 +16,9 @@
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/ProcessInspector.h>
 #include <signal.h>
-#include <stdio.h>
 #include <sys/arch/regs.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
-#include <unistd.h>
 
 namespace Debug {
 
@@ -200,15 +196,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 
         auto regs = get_registers();
 
-#if ARCH(X86_64)
-        FlatPtr current_instruction = regs.rip;
-#elif ARCH(AARCH64)
-        FlatPtr current_instruction = regs.pc;
-#elif ARCH(RISCV64)
-        FlatPtr current_instruction = regs.pc;
-#else
-#    error Unknown architecture
-#endif
+        FlatPtr current_instruction = regs.ip();
 
         auto debug_status = peek_debug(DEBUG_STATUS_REGISTER);
         if (debug_status.has_value() && (debug_status.value() & 0b1111) > 0) {
@@ -264,18 +252,10 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             // 1. Set pc to point at the actual address of the instruction we broke on.
             //    pc currently points to the instruction after the original instruction.
             // 2. We restore the original instruction, because it was patched with a breakpoint instruction.
-            auto breakpoint_addr = bit_cast<FlatPtr>(current_breakpoint.value().address);
-#if ARCH(X86_64)
-            regs.rip = breakpoint_addr;
-#elif ARCH(AARCH64)
-            regs.pc = breakpoint_addr;
-#elif ARCH(RISCV64)
-            regs.pc = breakpoint_addr;
-#else
-#    error Unknown architecture
-#endif
+            auto breakpoint_address = current_breakpoint.value().address;
+            regs.set_ip(breakpoint_address);
             set_registers(regs);
-            disable_breakpoint(current_breakpoint.value().address);
+            disable_breakpoint(breakpoint_address);
         }
 
         DebugBreakReason reason = (state == State::Syscall && !current_breakpoint.has_value()) ? DebugBreakReason::Syscall : DebugBreakReason::Breakpoint;
