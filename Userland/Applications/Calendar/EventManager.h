@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023, the SerenityOS developers.
  * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
+ * Copyright (c) 2026, RiffPointer <riffpointer@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +37,7 @@ public:
     ErrorOr<void> save(FileSystemAccessClient::File& file);
     ErrorOr<void> load_file(FileSystemAccessClient::File& file);
     void add_event(Event);
+    void delete_event(Event const&);
     void set_events(Vector<Event>);
     void clear() { m_events.clear(); }
 

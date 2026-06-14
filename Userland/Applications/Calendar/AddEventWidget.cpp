@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2024, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2026, RiffPointer <riffpointer@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ namespace Calendar {
 
 static constexpr StringView DATE_FORMAT = "%Y-%m-%d"sv;
 
-ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* window, Core::DateTime start_time, Core::DateTime end_time)
+ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* window, Core::DateTime start_time, Core::DateTime end_time, Event const* event_to_edit)
 {
     auto widget = TRY(try_create());
     widget->m_start_date_time = start_time;
@@ -23,6 +24,9 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
 
     auto& event_title_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("event_title_textbox");
     event_title_textbox.set_focus(true);
+    if (event_to_edit) {
+        event_title_textbox.set_text(event_to_edit->summary.to_byte_string());
+    }
 
     widget->m_start_date_box = *widget->find_descendant_of_type_named<GUI::TextBox>("start_date");
 

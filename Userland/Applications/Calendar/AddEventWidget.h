@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2024, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2026, RiffPointer <riffpointer@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@ class AddEventWidget final : public GUI::Widget {
     C_OBJECT(AddEventWidget);
 
 public:
-    static ErrorOr<NonnullRefPtr<AddEventWidget>> create(AddEventDialog*, Core::DateTime start_time, Core::DateTime end_time);
+    static ErrorOr<NonnullRefPtr<AddEventWidget>> create(AddEventDialog*, Core::DateTime start_time, Core::DateTime end_time, Event const* event_to_edit = nullptr);
     virtual ~AddEventWidget() override = default;
 
 private:

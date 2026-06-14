@@ -2,6 +2,7 @@
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2022-2023, the SerenityOS developers.
  * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
+ * Copyright (c) 2026, RiffPointer <riffpointer@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #pragma once
 
 #include "EventManager.h"
+#include <AK/Optional.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Window.h>
@@ -20,18 +22,19 @@ class AddEventDialog final : public GUI::Dialog {
 public:
     virtual ~AddEventDialog() override = default;
 
-    static void show(Core::DateTime date_time, EventManager& event_manager, Window* parent_window = nullptr)
+    static void show(Core::DateTime date_time, EventManager& event_manager, Window* parent_window = nullptr, Event const* event_to_edit = nullptr)
     {
-        auto dialog = AddEventDialog::construct(date_time, event_manager, parent_window);
+        auto dialog = AddEventDialog::construct(date_time, event_manager, parent_window, event_to_edit);
         dialog->exec();
     }
 
     ErrorOr<bool> add_event_to_calendar(Core::DateTime start_date_time, Core::DateTime end_date_time);
 
 private:
-    AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window = nullptr);
+    AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window = nullptr, Event const* event_to_edit = nullptr);
 
     EventManager& m_event_manager;
+    Optional<Event> m_event_to_edit;
 };
 
 }

@@ -2,6 +2,7 @@
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2022-2023, the SerenityOS developers.
  * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
+ * Copyright (c) 2026, RiffPointer <riffpointer@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,18 +26,20 @@
 
 namespace Calendar {
 
-AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window)
+AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window, Event const* event_to_edit)
     : Dialog(parent_window)
     , m_event_manager(event_manager)
+    , m_event_to_edit(event_to_edit ? Optional<Event>(*event_to_edit) : Optional<Event>())
 {
     resize(360, 140);
-    set_title("Add Event");
+    set_title(event_to_edit ? "Edit Event" : "Add Event");
     set_resizable(false);
     set_icon(parent_window->icon());
 
-    auto start_date_time = Core::DateTime::create(date_time.year(), date_time.month(), date_time.day(), 12, 0);
+    auto start_date_time = event_to_edit ? event_to_edit->start : Core::DateTime::create(date_time.year(), date_time.month(), date_time.day(), 12, 0);
+    auto end_date_time = event_to_edit ? event_to_edit->end : Core::DateTime::from_timestamp(start_date_time.timestamp() + (15 * 60));
     auto main_widget = MUST(AddEventWidget::create(this,
-        start_date_time, Core::DateTime::from_timestamp(start_date_time.timestamp() + (15 * 60))));
+        start_date_time, end_date_time, event_to_edit));
 
     set_main_widget(main_widget);
 }
@@ -49,6 +52,10 @@ ErrorOr<bool> AddEventDialog::add_event_to_calendar(Core::DateTime start_date_ti
     }
 
     auto summary = find_descendant_of_type_named<GUI::TextBox>("event_title_textbox")->get_text();
+    if (m_event_to_edit.has_value()) {
+        m_event_manager.delete_event(m_event_to_edit.value());
+    }
+
     m_event_manager.add_event(Event {
         .summary = TRY(String::from_byte_string(summary)),
         .start = start_date_time,
