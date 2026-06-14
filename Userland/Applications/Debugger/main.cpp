@@ -201,7 +201,8 @@ static void print_help()
         "dis [number of instructions] - Print disassembly\n"
         "bp <address/symbol/file:line> - Insert a breakpoint\n"
         "bt - show backtrace for current thread\n"
-        "x <address> - examine dword in memory\n");
+        "x <address> - examine dword in memory\n"
+        "quit - Exit the debugger\n");
 }
 
 static NonnullOwnPtr<Debug::DebugSession> create_debug_session(StringView command, pid_t pid_to_debug)
@@ -313,6 +314,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             if (command == "cont") {
                 decision = Debug::DebugSession::DebugDecision::Continue;
+                success = true;
+            } else if (command == "quit") {
+                decision = Debug::DebugSession::DebugDecision::Detach;
                 success = true;
             } else if (command == "si") {
                 decision = Debug::DebugSession::DebugDecision::SingleStep;
