@@ -398,7 +398,8 @@ void DebugSession::detach()
     }
     for (auto& watchpoint : m_watchpoints.keys())
         remove_watchpoint(watchpoint);
-    continue_debuggee();
+
+    // The destructor will call ptrace(PT_DETACH).
 }
 
 Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(ByteString const& symbol_name)
