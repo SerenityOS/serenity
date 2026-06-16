@@ -1395,6 +1395,7 @@ FlatPtr ProcessorBase::init_context(Thread& thread, bool leave_crit)
     TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
     trap.regs = &iretframe;
     trap.next_trap = nullptr;
+    thread.current_trap() = &trap;
 
     stack_top -= sizeof(u64); // pointer to TrapFrame
     *reinterpret_cast<u64*>(stack_top) = stack_top + 8;
@@ -1535,8 +1536,6 @@ UNMAP_AFTER_INIT void ProcessorBase::initialize_context_switching(Thread& initia
         "pop %%rdi \n" // move argument for init_finished into place
         "call init_finished \n"
         "call post_init_finished \n"
-        "movq 24(%%rsp), %%rdi \n" // move pointer to TrapFrame into place
-        "call enter_trap_no_irq \n"
         "retq \n"
         :: [new_rsp] "g" (regs.rsp),
         [new_rip] "a" (regs.rip),

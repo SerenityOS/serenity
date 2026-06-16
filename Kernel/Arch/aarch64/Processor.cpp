@@ -326,6 +326,7 @@ FlatPtr ProcessorBase::init_context(Thread& thread, bool leave_crit)
     TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
     trap.regs = &eretframe;
     trap.next_trap = nullptr;
+    thread.current_trap() = &trap;
 
     if constexpr (CONTEXT_SWITCH_DEBUG) {
         dbgln("init_context {} ({}) set up to execute at ip={}, sp={}, stack_top={}",
