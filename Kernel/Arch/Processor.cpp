@@ -127,6 +127,10 @@ void do_context_first_init(Thread* from_thread, Thread* to_thread)
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
 
+    ScopedCritical critical;
+    if (!to_thread->should_die() && to_thread->dispatch_one_pending_signal() == DispatchSignalResult::Yield)
+        Scheduler::yield();
+
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
     // context), we need to notify the scheduler so that it can release
