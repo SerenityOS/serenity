@@ -1,4 +1,5 @@
 set(AK_SOURCES
+    ANSIStyle.cpp
     Assertions.cpp
     Base64.cpp
     ByteString.cpp
