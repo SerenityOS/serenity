@@ -37,7 +37,7 @@ void EventManager::add_event(Event event)
 void EventManager::delete_event(Event const& event)
 {
     m_events.remove_first_matching([&](auto& entry) {
-        return entry.summary == event.summary && entry.start.timestamp() == event.start.timestamp() && entry.end.timestamp() == event.end.timestamp();
+        return entry == event;
     });
     m_dirty = true;
     on_events_change();

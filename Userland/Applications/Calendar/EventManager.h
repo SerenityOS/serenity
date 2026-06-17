@@ -22,6 +22,8 @@ struct Event {
     String summary;
     Core::DateTime start;
     Core::DateTime end;
+
+    bool operator==(Event const&) const = default;
 };
 
 class EventManager {
