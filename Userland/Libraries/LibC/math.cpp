@@ -252,11 +252,11 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
         return extractor.to_float();
     }
 
-    unsigned leading_mantissa_zeroes = extractor.mantissa == 0 ? 32 : count_leading_zeroes(extractor.mantissa);
+    // extractor.mantissa is always != 0 here.
+    unsigned leading_mantissa_zeroes = count_leading_zeroes(extractor.mantissa);
     int shift = min((int)leading_mantissa_zeroes, exponent);
     exponent = max(exponent - shift, 0);
 
-    extractor.exponent <<= shift;
     extractor.exponent = exponent + 1;
 
     return extractor.to_float();
