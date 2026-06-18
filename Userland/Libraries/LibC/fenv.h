@@ -38,8 +38,6 @@ int feraiseexcept(int exceptions);
 #define FE_DOWNWARD 1
 #define FE_UPWARD 2
 #define FE_TOWARDZERO 3
-// Only exists in RISC-V at the moment; on other architectures this is replaced with FE_TONEAREST.
-#define FE_TOMAXMAGNITUDE 4
 
 int fesetround(int round);
 int fegetround(void);

@@ -43,8 +43,6 @@ static RoundingMode frm_from_feround(int c_rounding_mode)
         return RoundingMode::RDN;
     case FE_UPWARD:
         return RoundingMode::RUP;
-    case FE_TOMAXMAGNITUDE:
-        return RoundingMode::RMM;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -62,7 +60,7 @@ static int feround_from_frm(RoundingMode frm)
     case RoundingMode::RUP:
         return FE_UPWARD;
     case RoundingMode::RMM:
-        return FE_TOMAXMAGNITUDE;
+        VERIFY_NOT_REACHED();
     default:
         // DYN is invalid in the frm register and therefore should never appear here.
     case RoundingMode::DYN:
@@ -220,7 +218,7 @@ int fegetround()
 
 int fesetround(int rounding_mode)
 {
-    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOMAXMAGNITUDE)
+    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOWARDZERO)
         return 1;
 
     auto frm = frm_from_feround(rounding_mode);

@@ -58,8 +58,6 @@ enum class RoundingMode {
     Up = FE_UPWARD,
     Down = FE_DOWNWARD,
     ToEven = FE_TONEAREST,
-    // Round to nearest, ties away from zero.
-    ToMaxMagnitude = FE_TOMAXMAGNITUDE,
 };
 
 // This is much branchier than it really needs to be
@@ -125,9 +123,6 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
             should_round = has_nonhalf_fraction || has_half_fraction;
         break;
     case RoundingMode::ToZero:
-        break;
-    case RoundingMode::ToMaxMagnitude:
-        should_round = true;
         break;
     }
 
