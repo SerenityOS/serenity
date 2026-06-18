@@ -269,8 +269,15 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
     }
 
     // Denormal is shifted far enough to become non-denormal.
+    int new_exponent = exponent - leading_mantissa_zeroes;
+    if (new_exponent >= (int)Extractor::exponent_max) {
+        extractor.mantissa = 0;
+        extractor.exponent = Extractor::exponent_max;
+        return extractor.to_float();
+    }
+
     extractor.mantissa <<= (leading_mantissa_zeroes + 1);
-    extractor.exponent = exponent - leading_mantissa_zeroes;
+    extractor.exponent = new_exponent;
 
     return extractor.to_float();
 }

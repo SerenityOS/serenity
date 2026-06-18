@@ -246,6 +246,12 @@ TEST_CASE(scalbn)
     EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, 16), 0x0.0'0000'0008'0000p-1022);
     EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, 48), 0x0.8'0000'0000'0000p-1022);
     EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, 49), 0x1.0'0000'0000'0000p-1022); // Smallest non-denormal number.
+
+    EXPECT_EQ(scalbn(0x0.8'0000'0000'0000p-1022, 2046), 0x1.0'0000'0000'0000p1023);
+    EXPECT_EQ(scalbn(0x0.8'0000'0000'0000p-1022, 2047), __builtin_huge_val());
+    EXPECT_EQ(scalbn(-0x0.8'0000'0000'0000p-1022, 2046), -0x1.0'0000'0000'0000p1023);
+    EXPECT_EQ(scalbn(-0x0.8'0000'0000'0000p-1022, 2047), -__builtin_huge_val());
+
     EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, -3), 0x0.00'000'0000'0001p-1022);
     EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, -4), 0);
 }
