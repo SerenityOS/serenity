@@ -252,12 +252,25 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
         return extractor.to_float();
     }
 
-    // extractor.mantissa is always != 0 here.
-    unsigned leading_mantissa_zeroes = count_leading_zeroes(extractor.mantissa);
-    int shift = min((int)leading_mantissa_zeroes, exponent);
-    exponent = max(exponent - shift, 0);
+    // Denormal x.
+    if (exponent < 0) {
+        unsigned shift = min((unsigned)(-exponent), Extractor::mantissa_bits);
+        extractor.mantissa >>= shift;
+        return extractor.to_float();
+    }
 
-    extractor.exponent = exponent + 1;
+    // extractor.mantissa is always != 0 here.
+    // Mantissa is mantissa_bits long, count_leading_zeroes() counts in ComponentType, adjust:
+    auto const always_zero_bits = sizeof(typename FloatExtractor<FloatT>::ComponentType) * 8 - (FloatExtractor<FloatT>::mantissa_bits);
+    unsigned leading_mantissa_zeroes = count_leading_zeroes(extractor.mantissa) - always_zero_bits;
+    if ((unsigned)exponent <= leading_mantissa_zeroes) {
+        extractor.mantissa <<= exponent;
+        return extractor.to_float();
+    }
+
+    // Denormal is shifted far enough to become non-denormal.
+    extractor.mantissa <<= (leading_mantissa_zeroes + 1);
+    extractor.exponent = exponent - leading_mantissa_zeroes;
 
     return extractor.to_float();
 }

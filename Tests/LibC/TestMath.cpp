@@ -239,14 +239,15 @@ TEST_CASE(scalbn)
     EXPECT_EQ(scalbn(0, 3), 0);
     EXPECT_EQ(scalbn(15.3, 0), 15.3);
 
-    // TODO: implement denormal handling in fallback scalbn
-    //     EXPECT_EQ(scalbn(0x0.0000000000008p-1022, 16), 0x0.0000000000008p-1006);
-    static constexpr auto biggest_subnormal = DBL_MIN - DBL_TRUE_MIN;
-    auto smallest_normal = scalbn(biggest_subnormal, 1);
-    Extractor ex(smallest_normal);
-    EXPECT(ex.exponent != 0);
-
     EXPECT_EQ(scalbn(2.0, 4), 32.0);
+
+    // Denormal inputs.
+    EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, 0), 0x0.0'0000'0000'0008p-1022);
+    EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, 16), 0x0.0'0000'0008'0000p-1022);
+    EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, 48), 0x0.8'0000'0000'0000p-1022);
+    EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, 49), 0x1.0'0000'0000'0000p-1022); // Smallest non-denormal number.
+    EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, -3), 0x0.00'000'0000'0001p-1022);
+    EXPECT_EQ(scalbn(0x0.0'0000'0000'0008p-1022, -4), 0);
 }
 
 TEST_CASE(gamma)
