@@ -248,7 +248,25 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
     auto extractor = Extractor::from_float(x);
 
     if (extractor.exponent != 0) {
-        extractor.exponent = clamp((int)extractor.exponent + exponent, 0, (int)Extractor::exponent_max);
+        int new_exponent = (int)extractor.exponent + exponent;
+        if (new_exponent >= (int)Extractor::exponent_max) {
+            extractor.mantissa = 0;
+            extractor.exponent = Extractor::exponent_max;
+            return extractor.to_float();
+        }
+        if (new_exponent > 0) {
+            extractor.exponent = new_exponent;
+            return extractor.to_float();
+        }
+
+        // Number became denormal (which means extractor.exponent <= -exponent, in particular exponent < 0).
+        unsigned shift = min((unsigned)(-new_exponent), Extractor::mantissa_bits) + 1;
+        typename Extractor::ComponentType new_mantissa = extractor.mantissa >> shift;
+        if (shift <= Extractor::mantissa_bits)
+            new_mantissa |= 1ull << (Extractor::mantissa_bits - shift);
+
+        extractor.mantissa = new_mantissa;
+        extractor.exponent = 0;
         return extractor.to_float();
     }
 
