@@ -1047,13 +1047,24 @@ constexpr T log2(T x)
         return NaN<T>;
 
     auto ext = FloatExtractor<T>::from_float(x);
-    T exponent = ext.exponent - FloatExtractor<T>::exponent_bias;
+
+    if (ext.exponent == 0) {
+        // Denormal. log2(mantissa * 2 ** (-exponent_bias)) == log2(mantissa) - exponent_bias.
+        // Shift mantissa until we have an implicit leading 1. ext.mantissa is always != 0 here.
+        // Mantissa is mantissa_bits long, count_leading_zeroes() counts in ComponentType, adjust:
+        auto const always_zero_bits = sizeof(typename FloatExtractor<T>::ComponentType) * 8 - (FloatExtractor<T>::mantissa_bits);
+        unsigned leading_mantissa_zeroes = count_leading_zeroes(ext.mantissa) - always_zero_bits;
+
+        int exponent = -FloatExtractor<T>::exponent_bias - leading_mantissa_zeroes;
+        ext.mantissa <<= leading_mantissa_zeroes + 1;
+        ext.exponent = FloatExtractor<T>::exponent_bias;
+        return exponent + log2(ext.to_float());
+    }
 
     // When the mantissa shows 0b00 (implicitly 1.0) we are on a power of 2
+    T exponent = ext.exponent - FloatExtractor<T>::exponent_bias;
     if (ext.mantissa == 0)
         return exponent;
-
-    // FIXME: Handle denormalized numbers separately
 
     FloatExtractor<T> mantissa_ext {
         .mantissa = ext.mantissa,
