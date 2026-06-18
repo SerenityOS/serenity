@@ -133,11 +133,8 @@ int fegetround()
 
 int fesetround(int rounding_mode)
 {
-    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOMAXMAGNITUDE)
+    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOWARDZERO)
         return 1;
-
-    if (rounding_mode == FE_TOMAXMAGNITUDE)
-        rounding_mode = FE_TONEAREST;
 
     set_rounding_mode(rmode_from_feround(rounding_mode));
 

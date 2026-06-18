@@ -11,10 +11,6 @@
 
 static constexpr auto reset_rounding_mode = [] { fesetround(FE_TONEAREST); };
 
-#if !ARCH(RISCV64)
-#    define TOMAXMAGNITUDE_DECAYS_TO_TONEAREST
-#endif
-
 TEST_CASE(float_round_up)
 {
     // Non-default rounding mode should not escape files with -frounding-math.
@@ -65,23 +61,6 @@ TEST_CASE(float_round_to_nearest)
     EXPECT_EQ(1.f + 5.9604645e-08f, 1.f);
 }
 
-TEST_CASE(float_round_to_max_magnitude)
-{
-    ScopeGuard rounding_mode_guard = reset_rounding_mode;
-
-    fesetround(FE_TOMAXMAGNITUDE);
-    EXPECT_EQ(0.1f + 0.2f, 0.3f);
-    EXPECT_EQ(0.1f + 0.3f, 0.4f);
-    EXPECT_EQ(0.1f + 0.4f, 0.5f);
-    EXPECT_EQ(-1.f + -0.1f, -1.1f);
-    EXPECT_EQ(1.f + 0.1f, 1.1f);
-#ifdef TOMAXMAGNITUDE_DECAYS_TO_TONEAREST
-    EXPECT_EQ(1.f + 5.9604645e-08f, 1.f);
-#else
-    EXPECT_EQ(1.f + 5.9604645e-08f, 1.0000001f);
-#endif
-}
-
 TEST_CASE(store_round_in_env)
 {
     ScopeGuard rounding_mode_guard = reset_rounding_mode;
@@ -110,12 +89,4 @@ TEST_CASE(save_restore_round)
     EXPECT_EQ(-1.f + -0.1f, -1.0999999f);
     fesetround(rounding_mode);
     EXPECT_EQ(-1.f + -0.1f, -1.1f);
-
-    fesetround(FE_TOMAXMAGNITUDE);
-#ifdef TOMAXMAGNITUDE_DECAYS_TO_TONEAREST
-    // Max-magnitude rounding is not supported by x86, so we expect fesetround to decay it to some other rounding mode.
-    EXPECT_EQ(fegetround(), FE_TONEAREST);
-#else
-    EXPECT_EQ(fegetround(), FE_TOMAXMAGNITUDE);
-#endif
 }
