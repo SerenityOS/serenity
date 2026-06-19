@@ -30,6 +30,9 @@ for ARCH in "${ARCHES[@]}"; do
   eval "RANLIB_GNU_${ARCH}=\"$DIR/Local/$ARCH/bin/$TARGET-ranlib\""
   eval "RANLIB_CLANG_${ARCH}=\"$DIR/Local/clang/bin/llvm-ranlib\""
 
+  eval "AR_GNU_${ARCH}=\"$DIR/Local/$ARCH/bin/$TARGET-ar\""
+  eval "AR_CLANG_${ARCH}=\"$DIR/Local/clang/bin/llvm-ar\""
+
   VAR_CXX_GNU="CXX_GNU_${ARCH}"
   if [ -x "${!VAR_CXX_GNU}" ]; then
       VALID_TOOLCHAINS+=("GNU;${ARCH}")
@@ -194,10 +197,12 @@ build_for() {
     current_build="BUILD_${TOOLCHAIN}_${ARCH}"
     current_cxx="CXX_${TOOLCHAIN}_${ARCH}"
     current_ranlib="RANLIB_${TOOLCHAIN}_${ARCH}"
+    current_ar="AR_${TOOLCHAIN}_${ARCH}"
 
     BUILD="${!current_build}"
     TARGET_CXX="${!current_cxx}"
     TARGET_RANLIB="${!current_ranlib}"
+    TARGET_AR="${!current_ar}"
 
     if already_available "$TOOLCHAIN" "$ARCH"; then
         return 0
@@ -251,6 +256,7 @@ build_for() {
                                                             --target-triple "$JAKT_TARGET" \
                                                             --target-links-ak \
                                                             -C "$TARGET_CXX" \
+                                                            --archiver "$TARGET_AR" \
                                                             -O \
                                                             -J "$NPROC"
 
