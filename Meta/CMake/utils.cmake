@@ -205,12 +205,7 @@ function(embed_resource target section file)
         "${asm_file}"
     )
 
-    target_link_libraries(
-        ${target} PRIVATE
-        -Wl,--whole-archive
-        ${target}-resources-${section}
-        -Wl,--no-whole-archive
-    )
+    target_link_libraries(${target} PRIVATE ${target}-resources-${section})
 endfunction()
 
 function(invoke_generator name generator primary_source header implementation)
