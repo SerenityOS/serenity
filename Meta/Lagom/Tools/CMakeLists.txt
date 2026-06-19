@@ -16,8 +16,6 @@ add_subdirectory(ConfigureComponents)
 add_subdirectory(PrekernelPEImageGenerator)
 add_subdirectory(IPCMagicLinter)
 
-include(jakt)
-
 if (APPLE)
     # FIXME: Remove this once https://openradar.appspot.com/21478051 is fixed.
     find_package(Python3 REQUIRED COMPONENTS Interpreter)

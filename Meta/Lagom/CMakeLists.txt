@@ -82,6 +82,7 @@ endif()
 include(flac_spec_tests)
 include(ca_certificates_data)
 include(lagom_compile_options)
+include(jakt)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

@@ -112,6 +112,14 @@ message(STATUS "Using jakt compiler at ${JAKT_COMPILER}")
 message(STATUS "Using jakt target triple ${JAKT_TARGET_TRIPLE}")
 message(STATUS "Using jakt library directory ${JAKT_LIBRARY_DIR}")
 
+add_library(jakt_main_${JAKT_TARGET_TRIPLE} STATIC IMPORTED)
+set_property(TARGET jakt_main_${JAKT_TARGET_TRIPLE} PROPERTY IMPORTED_LOCATION ${JAKT_LIBRARY_DIR}/libjakt_main_${JAKT_TARGET_TRIPLE}.a)
+add_library(jakt_runtime_${JAKT_TARGET_TRIPLE} STATIC IMPORTED)
+set_property(TARGET jakt_runtime_${JAKT_TARGET_TRIPLE} PROPERTY IMPORTED_LOCATION ${JAKT_LIBRARY_DIR}/libjakt_runtime_${JAKT_TARGET_TRIPLE}.a)
+
+add_library(Jakt::Main ALIAS jakt_main_${JAKT_TARGET_TRIPLE})
+add_library(Jakt::Runtime ALIAS jakt_runtime_${JAKT_TARGET_TRIPLE})
+
 function(add_jakt_executable target source)
     cmake_parse_arguments(PARSE_ARGV 2 JAKT_EXECUTABLE "" "" "INCLUDES;CONFIGS;LINK_LIBRARIES;EXTRA_CPP_SOURCES")
     set(configs)
@@ -211,9 +219,9 @@ function(add_jakt_executable target source)
 
     target_link_libraries(${JAKT_EXECUTABLE_NAME}
         PRIVATE
-        ${JAKT_LIBRARY_DIR}/libjakt_main_${JAKT_TARGET_TRIPLE}.a
+        Jakt::Main
         ${JAKT_EXECUTABLE_NAME}.lib
-        ${JAKT_LIBRARY_DIR}/libjakt_runtime_${JAKT_TARGET_TRIPLE}.a
+        Jakt::Runtime
         ${JAKT_EXECUTABLE_LINK_LIBRARIES}
     )
 endfunction()
