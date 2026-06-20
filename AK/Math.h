@@ -1045,6 +1045,8 @@ constexpr T log2(T x)
         return -Infinity<T>;
     if (x <= 0 || __builtin_isnan(x))
         return NaN<T>;
+    if (__builtin_isinf(x))
+        return Infinity<T>;
 
     auto ext = FloatExtractor<T>::from_float(x);
 

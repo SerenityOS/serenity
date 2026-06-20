@@ -133,6 +133,7 @@ TEST_CASE(logarithms)
     EXPECT_APPROXIMATE(log2(5), 2.321928);
     EXPECT_APPROXIMATE(log2(0x0.0'0000'0000'000cp-1022), 0.5849625007 /* == log2(1.5) */ - 1022 - 49);
     EXPECT_APPROXIMATE(log10(5), 0.698970);
+    EXPECT_EQ(log(AK::Infinity<double>), AK::Infinity<double>);
 }
 
 union Extractor {
