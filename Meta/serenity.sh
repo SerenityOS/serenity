@@ -252,7 +252,6 @@ build_toolchain() {
 
 build_jakt() {
     [ -z "$JAKT_TOOLCHAIN_DIR" ] && return
-    echo "build_jakt: $JAKT_TOOLCHAIN_DIR"
     ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildJakt.sh )
 }
 

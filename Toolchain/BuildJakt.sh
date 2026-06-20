@@ -105,7 +105,6 @@ function already_available() {
     fi
 
     if [ -f "$HASH_FILE" ] && [ "$JAKT_COMMIT_HASH" = "$(<"$HASH_FILE")" ]; then
-        echo "Already have the latest compiler built; remove $HASH_FILE to force-rebuild."
         return 0
     elif [ -f "$HASH_FILE" ]; then
         echo "Expected $JAKT_COMMIT_HASH but found $(<"$HASH_FILE")"
@@ -122,74 +121,65 @@ function stamp() {
     echo "$JAKT_COMMIT_HASH" > "${PREFIX}/.jakt-$TOOLCHAIN-$ARCH.hash"
 }
 
-# === DEPENDENCIES ===
-buildstep dependencies echo "Checking whether 'ninja' is available..."
-if ! command -v "${NINJA:-ninja}" >/dev/null; then
-    buildstep dependencies echo "Please make sure to install Ninja (for the '${NINJA:-ninja}' tool)."
-    exit 1
-fi
-
-buildstep dependencies echo "Checking whether 'cmake' is available..."
-if ! command -v cmake >/dev/null; then
-    buildstep dependencies echo "Please make sure to install CMake (for the 'cmake' tool)."
-    exit 1
-fi
-
-buildstep dependencies echo "Checking whether your C++ compiler works..."
-if ! ${CXX:-c++} -o /dev/null -xc++ - >/dev/null <<'PROGRAM'
-int main() {}
-PROGRAM
-then
-    buildstep dependencies echo "Please make sure to install a working C++ compiler."
-    exit 1
-fi
-
-# === DOWNLOAD AND PATCH ===
-pushd "$DIR/Tarballs"
-    if [ ! -d "${JAKT_NAME}" ]; then
-        echo "Downloading jakt..."
-        rm -f "$JAKT_TARBALL"
-        curl -L --output "$JAKT_TARBALL" "$JAKT_GIT_URL/archive/$JAKT_COMMIT_HASH.tar.gz"
-
-        echo "Extracting jakt..."
-        tar -xzf "${JAKT_TARBALL}"
-    else
-        echo "Using existing Jakt source directory"
+DEPENDENCIES_OK=0
+function check_dependencies() {
+    if [ "$DEPENDENCIES_OK" -eq 1 ]; then
+        return 0
     fi
-popd
 
-# === COMPILE AND INSTALL ===
-if ! already_available local host; then
-    rm -rf "$PREFIX"
-    mkdir -p "$PREFIX"
+    buildstep dependencies echo "Checking whether 'ninja' is available..."
+    if ! command -v "${NINJA:-ninja}" >/dev/null; then
+        buildstep dependencies echo "Please make sure to install Ninja (for the '${NINJA:-ninja}' tool)."
+        exit 1
+    fi
 
-    rm -rf "$DIR/Build/jakt"
-    mkdir -p "$DIR/Build/jakt"
-    pushd "$DIR/Build/jakt"
-        echo "XXX configure jakt"
-        buildstep "jakt/configure" cmake -S "$DIR/Tarballs/${JAKT_NAME}" -B . \
-                                            -DSERENITY_SOURCE_DIR="$DIR/.."   \
-                                            -DCMAKE_INSTALL_PREFIX="$PREFIX"  \
-                                            -DCMAKE_BUILD_TYPE=Release        \
-                                            -GNinja                           \
-                || exit 1
+    buildstep dependencies echo "Checking whether 'cmake' is available..."
+    if ! command -v cmake >/dev/null; then
+        buildstep dependencies echo "Please make sure to install CMake (for the 'cmake' tool)."
+        exit 1
+    fi
 
-        echo "XXX build jakt"
-        buildstep_ninja "jakt/build" ninja jakt_stage1
-        echo "XXX install jakt"
-        buildstep_ninja "jakt/install" ninja install
+    buildstep dependencies echo "Checking whether your C++ compiler works..."
+    if ! ${CXX:-c++} -o /dev/null -xc++ - >/dev/null <<'PROGRAM'
+    int main() {}
+PROGRAM
+    then
+        buildstep dependencies echo "Please make sure to install a working C++ compiler."
+        exit 1
+    fi
+    DEPENDENCIES_OK=1
+}
+
+DOWNLOAD_OK=0
+function download_and_patch() {
+    if [ "$DOWNLOAD_OK" -eq 1 ]; then
+        return 0
+    fi
+    pushd "$DIR/Tarballs"
+        if [ ! -d "${JAKT_NAME}" ]; then
+            echo "Downloading jakt..."
+            rm -f "$JAKT_TARBALL"
+            curl -L --output "$JAKT_TARBALL" "$JAKT_GIT_URL/archive/$JAKT_COMMIT_HASH.tar.gz"
+
+            echo "Extracting jakt..."
+            tar -xzf "${JAKT_TARBALL}"
+        else
+            echo "Using existing Jakt source directory"
+        fi
     popd
-fi
-stamp local host
-
-if ! [ "$FINAL_TARGET" = serenity ]; then
-    echo "Done creating jakt toolchain for host"
-    exit 0
-fi
+    DOWNLOAD_OK=1
+}
 
 build_for() {
     TOOLCHAIN="$1"
     ARCH="$2"
+
+    if already_available "$TOOLCHAIN" "$ARCH"; then
+        return 0
+    fi
+
+    check_dependencies
+    download_and_patch
 
     TARGET="$ARCH-serenity"
     JAKT_TARGET="$ARCH-unknown-serenity-unknown"
@@ -203,10 +193,6 @@ build_for() {
     TARGET_CXX="${!current_cxx}"
     TARGET_RANLIB="${!current_ranlib}"
     TARGET_AR="${!current_ar}"
-
-    if already_available "$TOOLCHAIN" "$ARCH"; then
-        return 0
-    fi
 
     # On at least OpenBSD, the path must exist to call realpath(3) on it
     if [ ! -d "$BUILD" ]; then
@@ -263,16 +249,41 @@ build_for() {
         buildstep "jakt/support/build/$TOOLCHAIN/ranlib" "$TARGET_RANLIB" "$PREFIX/usr/local/lib/$JAKT_TARGET/libjakt_runtime_$JAKT_TARGET.a"
         buildstep "jakt/support/build/$TOOLCHAIN/ranlib" "$TARGET_RANLIB" "$PREFIX/usr/local/lib/$JAKT_TARGET/libjakt_main_$JAKT_TARGET.a"
     popd
+
+    stamp "$TOOLCHAIN" "$ARCH"
 }
+
+if ! already_available local host; then
+    rm -rf "$PREFIX"
+    mkdir -p "$PREFIX"
+
+    check_dependencies
+    download_and_patch
+
+    rm -rf "$DIR/Build/jakt"
+    mkdir -p "$DIR/Build/jakt"
+    pushd "$DIR/Build/jakt"
+        echo "XXX configure jakt"
+        buildstep "jakt/configure" cmake -S "$DIR/Tarballs/${JAKT_NAME}" -B . \
+                                            -DSERENITY_SOURCE_DIR="$DIR/.."   \
+                                            -DCMAKE_INSTALL_PREFIX="$PREFIX"  \
+                                            -DCMAKE_BUILD_TYPE=Release        \
+                                            -GNinja                           \
+                || exit 1
+
+        echo "XXX build jakt"
+        buildstep_ninja "jakt/build" ninja jakt_stage1
+        echo "XXX install jakt"
+        buildstep_ninja "jakt/install" ninja install
+    popd
+    stamp local host
+fi
+
+if ! [ "$FINAL_TARGET" = serenity ]; then
+    exit 0
+fi
 
 for TOOLCHAIN_AND_ARCH in "${VALID_TOOLCHAINS[@]}"; do
     IFS=';' read -r TOOLCHAIN ARCH <<< "$TOOLCHAIN_AND_ARCH"
     buildstep "build/$TOOLCHAIN/$ARCH" build_for "$TOOLCHAIN" "$ARCH"
 done
-
-for TOOLCHAIN_AND_ARCH in "${VALID_TOOLCHAINS[@]}"; do
-    IFS=';' read -r TOOLCHAIN ARCH <<< "$TOOLCHAIN_AND_ARCH"
-    stamp "$TOOLCHAIN" "$ARCH"
-done
-
-echo "Done creating jakt toolchain for targets " "${VALID_TOOLCHAINS[@]}"
