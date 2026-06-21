@@ -11,7 +11,8 @@
 #include <AK/Concepts.h>
 #include <AK/Debug.h>
 #include <AK/DistinctNumeric.h>
-#include <AK/Math.h>
+#include <AK/Math/Rounding.h>
+#include <AK/Math/Sqrt.h>
 #include <AK/Traits.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>

@@ -10,7 +10,8 @@
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/HashMap.h>
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
+#include <AK/Math/Trigonometry.h>
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/String.h>

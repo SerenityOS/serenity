@@ -7,7 +7,6 @@
 #include "CCITTEncoder.h"
 #include <AK/BitStream.h>
 #include <AK/Debug.h>
-#include <AK/Math.h>
 #include <LibGfx/ImageFormats/CCITTCommon.h>
 
 namespace Gfx::CCITT {

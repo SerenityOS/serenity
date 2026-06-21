@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace Crypto::Hash {

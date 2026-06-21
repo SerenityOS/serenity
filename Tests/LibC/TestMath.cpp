@@ -14,6 +14,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/Math.h>
 #include <float.h>
 #include <math.h>
 

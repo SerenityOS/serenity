@@ -5,7 +5,7 @@
  */
 
 #include <AK/Format.h>
-#include <AK/Math.h>
+#include <AK/Math/Radians.h>
 #include <LibGfx/DeltaE.h>
 #include <math.h>
 

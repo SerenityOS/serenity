@@ -5,7 +5,7 @@
  */
 
 #include "CSSLCHLike.h"
-#include <AK/Math.h>
+#include <AK/Math/Radians.h>
 #include <AK/TypeCasts.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValues/CSSMathValue.h>

@@ -8,7 +8,8 @@
 
 #include <AK/Array.h>
 #include <AK/Forward.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
+#include <AK/Math/Rounding.h>
 #include <AK/Types.h>
 #include <math.h>
 

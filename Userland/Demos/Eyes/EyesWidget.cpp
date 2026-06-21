@@ -6,7 +6,8 @@
  */
 
 #include "EyesWidget.h"
-#include <AK/Math.h>
+#include <AK/Math/Sqrt.h>
+#include <AK/Math/Trigonometry.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>

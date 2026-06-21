@@ -6,7 +6,8 @@
 
 #include "BigFraction.h"
 #include <AK/ByteString.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
+#include <AK/Math/Sqrt.h>
 #include <AK/StringBuilder.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 

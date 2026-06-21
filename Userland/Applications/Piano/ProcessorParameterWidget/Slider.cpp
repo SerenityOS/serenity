@@ -7,7 +7,7 @@
 #include "Slider.h"
 #include "WidgetWithLabel.h"
 #include <AK/FixedPoint.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
 
 ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP::ProcessorRangeParameter& parameter, RefPtr<GUI::Label> value_label)
     : Slider(orientation)
@@ -38,7 +38,7 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP:
         real_value.raw() = raw_value;
         if (is_logarithmic())
             // FIXME: Implement exponential for fixed point
-            real_value = exp2(static_cast<double>(real_value));
+            real_value = AK::exp2(static_cast<double>(real_value));
 
         m_parameter.set_value(real_value);
         if (m_value_label) {

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Math/Radians.h>
 #include <LibGfx/Filters/MatrixFilter.h>
 
 namespace Gfx {

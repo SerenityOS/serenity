@@ -9,7 +9,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/CheckedFormatString.h>
-#include <AK/Math.h>
+#include <AK/Math/Fabs.h>
 #include <LibTest/CrashTest.h>
 #include <LibTest/Randomized/RandomnessSource.h>
 #include <LibTest/TestResult.h>

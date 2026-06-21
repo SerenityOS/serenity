@@ -8,7 +8,10 @@
 #pragma once
 
 #include <AK/Format.h>
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
+#include <AK/Math/Exponentials.h>
+#include <AK/Math/Sqrt.h>
+#include <AK/Math/Trigonometry.h>
 
 namespace Audio {
 using AK::Exponentials::exp;

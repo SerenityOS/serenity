@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
+#include <AK/Math/Exponentials.h>
+#include <AK/Math/Rounding.h>
+#include <AK/Math/Sqrt.h>
+#include <AK/Math/Trigonometry.h>
 #include <LibGfx/Gradients.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Painter.h>

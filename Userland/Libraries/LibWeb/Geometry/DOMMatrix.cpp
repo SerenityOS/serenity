@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Math/Radians.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/DOMMatrixPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/Math/Rounding.h>
 
 // These names are defined in B.1.1.3 - Marker assignments
 

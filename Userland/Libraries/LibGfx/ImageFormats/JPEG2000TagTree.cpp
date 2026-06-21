@@ -5,10 +5,9 @@
  */
 
 #include <AK/Function.h>
-#include <AK/Math.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/ImageFormats/JPEG2000TagTree.h>
-
+#include <math.h>
 namespace Gfx::JPEG2000 {
 
 // Tag trees are used to store the code-block inclusion bits and the zero bit-plane information.

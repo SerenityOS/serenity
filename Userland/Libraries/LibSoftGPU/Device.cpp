@@ -8,7 +8,9 @@
 
 #include <AK/AnyOf.h>
 #include <AK/Error.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
+#include <AK/Math/Radians.h>
+#include <AK/Math/Trigonometry.h>
 #include <AK/NumericLimits.h>
 #include <AK/SIMDExtras.h>
 #include <AK/SIMDMath.h>

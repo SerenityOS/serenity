@@ -5,7 +5,7 @@
  */
 
 #include "Angle.h"
-#include <AK/Math.h>
+#include <AK/Math/Radians.h>
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/StyleValues/CSSMathValue.h>
 

@@ -13,7 +13,8 @@
 #include <AK/Types.h>
 
 #ifndef KERNEL
-#    include <AK/Math.h>
+#    include <AK/Math/Exponentials.h>
+#    include <AK/Math/Rounding.h>
 #endif
 #ifndef __SIZEOF_INT128__
 #    include <AK/UFixedBigInt.h>

@@ -13,7 +13,7 @@
 #include <AK/Find.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
 #include <LibGfx/Font/Font.h>

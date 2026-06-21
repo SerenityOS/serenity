@@ -9,7 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
-#include <AK/Math.h>
+#include <AK/Math/Rounding.h>
 #include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
 #include <math.h>
