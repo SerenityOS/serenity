@@ -195,17 +195,26 @@ constexpr T asin(T x)
 {
     CONSTEXPR_STATE(asin, x);
 
-    if (x < 0)
-        return -asin(-x);
+    T sign = 1;
+
+    // asin(x) = -asin(-x)
+    // Use this to make x always >= 0.
+    if (x < 0) {
+        x = -x;
+        sign = -1;
+    }
 
     if (x > 1)
         return NaN<T>;
 
+    T offset = 0;
     if (x > (T)0.5) {
         // asin(x) = pi/2 - 2 * asin(sqrt((1 - x) / 2))
         // If 0.5 < x <= 1, then sqrt((1 - x) / 2 ) < 0.5,
         // and the recursion will go down the `<= 0.5` branch.
-        return Pi<T> / 2 - 2 * asin(sqrt((1 - x) / 2));
+        offset = sign * Pi<T> / 2;
+        x = sqrt((1 - x) / 2);
+        sign = sign * -2;
     }
 
     // https://github.com/samhocevar/lolremez/wiki/Tutorial-4-of-5%3A-fixing-lower-order-parameters
@@ -238,7 +247,7 @@ constexpr T asin(T x)
         }
     };
     T x2 = x * x;
-    return (x + x * x2 * f(x2));
+    return offset + sign * (x + x * x2 * f(x2));
 }
 
 template<FloatingPoint T>
