@@ -25,20 +25,6 @@
 #    pragma clang diagnostic ignored "-Wdouble-promotion"
 #endif
 
-template<size_t>
-constexpr size_t product_even();
-template<>
-constexpr size_t product_even<2>() { return 2; }
-template<size_t value>
-constexpr size_t product_even() { return value * product_even<value - 2>(); }
-
-template<size_t>
-constexpr size_t product_odd();
-template<>
-constexpr size_t product_odd<1>() { return 1; }
-template<size_t value>
-constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
-
 enum class RoundingMode {
     ToZero = FE_TOWARDZERO,
     Up = FE_UPWARD,
