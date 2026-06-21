@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Math.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <LibWeb/PixelUnits.h>

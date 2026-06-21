@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
+#include <AK/Math/Trigonometry.h>
 #include <AK/Optional.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Quad.h>

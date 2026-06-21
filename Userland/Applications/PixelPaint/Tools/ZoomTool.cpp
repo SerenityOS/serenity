@@ -6,6 +6,7 @@
 
 #include "ZoomTool.h"
 #include "../ImageEditor.h"
+#include <AK/Math/Exponentials.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ValueSlider.h>

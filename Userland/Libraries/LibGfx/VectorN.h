@@ -11,7 +11,8 @@
 #include <AK/Array.h>
 #include <AK/ByteString.h>
 #include <AK/Error.h>
-#include <AK/Math.h>
+#include <AK/Math/Rounding.h>
+#include <AK/Math/Sqrt.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 

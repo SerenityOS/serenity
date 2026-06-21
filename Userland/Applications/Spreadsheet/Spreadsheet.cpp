@@ -13,6 +13,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
+#include <AK/Math/Exponentials.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/File.h>

@@ -6,7 +6,10 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
+#include <AK/Math/Fabs.h>
+#include <AK/Math/Radians.h>
+#include <AK/Math/Trigonometry.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Size.h>
 

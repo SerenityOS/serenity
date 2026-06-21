@@ -5,6 +5,7 @@
  */
 
 #include "LevelsDialog.h"
+#include <AK/Math/Exponentials.h>
 #include <Applications/PixelPaint/LevelsDialogGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>

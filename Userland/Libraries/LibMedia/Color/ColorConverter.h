@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Function.h>
+#include <AK/Math/Exponentials.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibMedia/Color/CodingIndependentCodePoints.h>

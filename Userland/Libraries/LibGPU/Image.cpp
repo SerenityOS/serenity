@@ -5,7 +5,7 @@
  */
 
 #include <AK/IntegralMath.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
 #include <LibGPU/Image.h>
 
 namespace GPU {

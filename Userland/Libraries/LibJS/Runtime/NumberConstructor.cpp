@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Error.h>

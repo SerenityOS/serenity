@@ -7,7 +7,6 @@
 
 #include "Calculator.h"
 #include <AK/Assertions.h>
-#include <AK/Math.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 
 namespace Calculator {

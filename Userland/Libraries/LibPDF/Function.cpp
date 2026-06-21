@@ -5,6 +5,7 @@
  */
 
 #include <AK/GenericShorthands.h>
+#include <AK/Math/Radians.h>
 #include <AK/NonnullOwnPtr.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>

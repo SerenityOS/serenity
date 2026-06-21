@@ -8,7 +8,7 @@
 #include "SprayTool.h"
 #include "../ImageEditor.h"
 #include "../Layer.h"
-#include <AK/Math.h>
+#include <AK/Math/Trigonometry.h>
 #include <AK/Queue.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>

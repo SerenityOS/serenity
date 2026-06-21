@@ -7,7 +7,8 @@
 #pragma once
 
 #include <AK/Format.h>
-#include <AK/Math.h>
+#include <AK/Math/Rounding.h>
+#include <AK/Math/Trigonometry.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>

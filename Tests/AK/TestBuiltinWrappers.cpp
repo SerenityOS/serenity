@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/Math/Exponentials.h>
 #include <AK/Types.h>
 
 using namespace Test::Randomized;

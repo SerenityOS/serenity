@@ -5,7 +5,8 @@
  */
 
 #include <AK/Enumerate.h>
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
+#include <AK/Math/Trigonometry.h>
 #include <AK/StringBuilder.h>
 #include <AK/TypeCasts.h>
 #include <LibGfx/BoundingBox.h>

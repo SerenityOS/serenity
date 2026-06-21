@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/Math/Exponentials.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
 #include <LibGfx/Font/OpenType/Font.h>

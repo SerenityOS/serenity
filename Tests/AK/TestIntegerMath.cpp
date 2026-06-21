@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/IntegralMath.h>
+#include <AK/Math/Rounding.h>
 #include <initializer_list>
 
 TEST_CASE(pow)

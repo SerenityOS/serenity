@@ -7,7 +7,8 @@
 #pragma once
 
 #include <AK/FixedArray.h>
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
+#include <AK/Math/Trigonometry.h>
 
 namespace DSP {
 

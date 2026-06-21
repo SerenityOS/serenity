@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Complex.h>
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
 #include <AK/Span.h>
 
 namespace DSP {

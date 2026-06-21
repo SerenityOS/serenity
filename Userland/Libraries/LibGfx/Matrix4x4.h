@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/Math/Trigonometry.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Matrix.h>
 #include <LibGfx/Vector3.h>

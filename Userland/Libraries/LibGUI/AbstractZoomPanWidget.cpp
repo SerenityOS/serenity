@@ -7,6 +7,7 @@
  */
 
 #include "AbstractZoomPanWidget.h"
+#include <AK/Math/Exponentials.h>
 
 namespace GUI {
 

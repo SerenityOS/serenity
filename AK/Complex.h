@@ -7,7 +7,8 @@
 #pragma once
 
 #include <AK/Concepts.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
+#include <AK/Math/Trigonometry.h>
 
 namespace AK {
 

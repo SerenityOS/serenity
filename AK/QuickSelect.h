@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/Math/Rounding.h>
 #include <AK/Random.h>
 #include <AK/StdLibExtras.h>
 

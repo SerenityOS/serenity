@@ -17,7 +17,7 @@
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
-#include <AK/Math.h>
+#include <AK/Math/Trigonometry.h>
 #include <AK/Memory.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>

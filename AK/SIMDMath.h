@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/Math/Sqrt.h>
 #include <AK/SIMD.h>
 #include <AK/SIMDExtras.h>
 #include <math.h>

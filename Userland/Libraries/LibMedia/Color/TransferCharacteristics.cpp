@@ -5,7 +5,8 @@
  */
 
 #include <AK/Format.h>
-#include <AK/Math.h>
+#include <AK/Math/Exponentials.h>
+#include <AK/Math/Sqrt.h>
 #include <AK/StdLibExtras.h>
 
 #include "TransferCharacteristics.h"

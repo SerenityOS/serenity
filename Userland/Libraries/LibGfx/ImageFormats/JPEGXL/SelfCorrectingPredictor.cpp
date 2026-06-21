@@ -6,7 +6,7 @@
 
 #include "SelfCorrectingPredictor.h"
 #include <AK/BitStream.h>
-#include <AK/Math.h>
+#include <math.h>
 
 namespace Gfx::JPEGXL {
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <AK/Math/Constants.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/ViewBox.h>
 

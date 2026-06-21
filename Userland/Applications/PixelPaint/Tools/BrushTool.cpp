@@ -9,6 +9,7 @@
 #include "BrushTool.h"
 #include "../ImageEditor.h"
 #include "../Layer.h"
+#include <AK/Math/Exponentials.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ComboBox.h>

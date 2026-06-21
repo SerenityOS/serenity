@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteString.h>
 #include <AK/FloatingPointStringConversions.h>
+#include <AK/Math/Rounding.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>

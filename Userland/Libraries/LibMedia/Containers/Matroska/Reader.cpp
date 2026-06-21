@@ -7,7 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Function.h>
-#include <AK/Math.h>
+#include <AK/Math/Rounding.h>
 #include <AK/Optional.h>
 #include <AK/Time.h>
 #include <AK/Utf8View.h>

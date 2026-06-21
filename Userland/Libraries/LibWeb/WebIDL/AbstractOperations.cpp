@@ -7,7 +7,6 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/Math.h>
 #include <AK/NumericLimits.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
