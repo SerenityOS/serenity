@@ -26,20 +26,6 @@
 #endif
 
 template<size_t>
-constexpr double e_to_power();
-template<>
-constexpr double e_to_power<0>() { return 1; }
-template<size_t exponent>
-constexpr double e_to_power() { return M_E * e_to_power<exponent - 1>(); }
-
-template<size_t>
-constexpr size_t factorial();
-template<>
-constexpr size_t factorial<0>() { return 1; }
-template<size_t value>
-constexpr size_t factorial() { return value * factorial<value - 1>(); }
-
-template<size_t>
 constexpr size_t product_even();
 template<>
 constexpr size_t product_even<2>() { return 2; }
