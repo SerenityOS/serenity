@@ -19,22 +19,6 @@ namespace AK {
 
 namespace Trigonometry {
 
-namespace Details {
-template<size_t>
-constexpr size_t product_even();
-template<>
-constexpr size_t product_even<2>() { return 2; }
-template<size_t value>
-constexpr size_t product_even() { return value * product_even<value - 2>(); }
-
-template<size_t>
-constexpr size_t product_odd();
-template<>
-constexpr size_t product_odd<1>() { return 1; }
-template<size_t value>
-constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
-}
-
 template<FloatingPoint T>
 constexpr T hypot(T x, T y)
 {
@@ -224,25 +208,37 @@ constexpr T asin(T x)
         return Pi<T> / 2 - 2 * asin(sqrt((1 - x) / 2));
     }
 
-    T squared = x * x;
-    T value = x;
-    T i = x * squared;
-    value += i * Details::product_odd<1>() / Details::product_even<2>() / 3;
-    i *= squared;
-    value += i * Details::product_odd<3>() / Details::product_even<4>() / 5;
-    i *= squared;
-    value += i * Details::product_odd<5>() / Details::product_even<6>() / 7;
-    i *= squared;
-    value += i * Details::product_odd<7>() / Details::product_even<8>() / 9;
-    i *= squared;
-    value += i * Details::product_odd<9>() / Details::product_even<10>() / 11;
-    i *= squared;
-    value += i * Details::product_odd<11>() / Details::product_even<12>() / 13;
-    i *= squared;
-    value += i * Details::product_odd<13>() / Details::product_even<14>() / 15;
-    i *= squared;
-    value += i * Details::product_odd<15>() / Details::product_even<16>() / 17;
-    return value;
+    // https://github.com/samhocevar/lolremez/wiki/Tutorial-4-of-5%3A-fixing-lower-order-parameters
+    auto f = [](T x) {
+        if constexpr (IsSame<T, f32>) {
+            // lolremez --float --degree 5 --range "1e-50:1/4" "(asin(sqrt(x))-sqrt(x))/(x*sqrt(x))" "1/(x*sqrt(x))"
+            // "Estimated max error: 8.5377476e-11"
+            f32 u = 0.039088517f;
+            u = u * x + 0.013210787f;
+            u = u * x + 0.032170232f;
+            u = u * x + 0.044467181f;
+            u = u * x + 0.075008146f;
+            return u * x + 0.16666654f;
+        } else {
+            // FIXME: Could do something custom for long double.
+            // lolremez --degree 11 --range "1e-50:1/4" "(asin(sqrt(x))-sqrt(x))/(x*sqrt(x))" "1/(x*sqrt(x))"
+            // "Estimated max error: 4.3580651842210834e-18"
+            T u = 0.033660618737294104;
+            u = u * x + -0.018930050045116921;
+            u = u * x + 0.021367266503207524;
+            u = u * x + 0.005806729168702944;
+            u = u * x + 0.012349571686866897;
+            u = u * x + 0.013855247852028872;
+            u = u * x + 0.017363058003675668;
+            u = u * x + 0.022371508713932262;
+            u = u * x + 0.03038197103721944;
+            u = u * x + 0.044642856488345831;
+            u = u * x + 0.075000000008444367;
+            return u * x + 0.16666666666662552;
+        }
+    };
+    T x2 = x * x;
+    return (x + x * x2 * f(x2));
 }
 
 template<FloatingPoint T>
