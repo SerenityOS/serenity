@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibChess/Chess.h>
