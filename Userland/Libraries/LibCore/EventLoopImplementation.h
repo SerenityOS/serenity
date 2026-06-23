@@ -53,7 +53,7 @@ public:
     virtual void quit(int) = 0;
     virtual void wake() = 0;
 
-    virtual void post_event(EventReceiver& receiver, NonnullOwnPtr<Event>&&) = 0;
+    virtual void post_event(EventReceiver*, NonnullOwnPtr<Event>&&) = 0;
 
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual void unquit() = 0;

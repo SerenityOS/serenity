@@ -50,7 +50,6 @@ source_set("sources") {
     "DateTime.cpp",
     "DateTime.h",
     "Debounce.h",
-    "DeferredInvocationContext.h",
     "ElapsedTimer.cpp",
     "ElapsedTimer.h",
     "Event.cpp",

@@ -54,7 +54,7 @@ public:
     virtual void unquit() override;
     virtual bool was_exit_requested() const override;
     virtual void notify_forked_and_in_child() override;
-    virtual void post_event(EventReceiver& receiver, NonnullOwnPtr<Event>&&) override;
+    virtual void post_event(EventReceiver*, NonnullOwnPtr<Event>&&) override;
 
 private:
     bool m_exit_requested { false };
