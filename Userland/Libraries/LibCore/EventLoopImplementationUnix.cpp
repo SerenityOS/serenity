@@ -443,7 +443,7 @@ try_select_again:
             type &= notifier.type();
 
             if (type != NotificationType::None)
-                ThreadEventQueue::current().post_event(notifier, make<NotifierActivationEvent>(notifier.fd(), type));
+                ThreadEventQueue::current().post_event(notifier, make<NotifierActivationEvent>());
         }
     }
 
