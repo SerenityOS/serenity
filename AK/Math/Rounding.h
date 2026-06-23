@@ -7,7 +7,10 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/FloatingPoint.h>
+#include <AK/Math/Copysign.h>
 #include <AK/Math/Division.h>
+#include <AK/Math/Fabs.h>
 #include <AK/NumericLimits.h>
 
 #include <AK/Math/Macros.h>
@@ -82,6 +85,12 @@ constexpr T rint(T x)
     //        and `frintn` respectively,
     //        no such guaranteed round exists for x87 `frndint`
 #if ARCH(X86_64)
+    if constexpr (IsSame<T, long double>) {
+        asm(
+            "frndint"
+            : "+t"(x));
+        return x;
+    }
 #    ifdef __SSE4_1__
     if constexpr (IsSame<T, double>) {
         T r;
@@ -99,11 +108,6 @@ constexpr T rint(T x)
             : "x"(x));
         return r;
     }
-#    else
-    asm(
-        "frndint"
-        : "+t"(x));
-    return x;
 #    endif
 #elif ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintx, x);
@@ -132,7 +136,15 @@ constexpr T rint(T x)
     if constexpr (IsSame<T, long double>)
         TODO_RISCV64();
 #endif
-    TODO();
+
+    // Move the value out of the sub integer precision range and back,
+    // This forces a rounding operation according to the current rounding mode
+    if (fabs(x) > (T)FloatExtractor<T>::mantissa_max + 1)
+        return x;
+    auto adjust = copysign((T)FloatExtractor<T>::mantissa_max + 1, x);
+    auto r = x + adjust;
+    r -= adjust;
+    return copysign(r, x); // This last copysign is to preserve the sign of 0s after rounding
 }
 
 template<FloatingPoint T>
