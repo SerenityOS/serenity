@@ -21,6 +21,10 @@
     if (is_constant_evaluated())           \
         CALL_BUILTIN(function, args);
 
+#define ELEMENTWISE_BUILTIN(name, args...)                                          \
+    if constexpr (__has_builtin(__builtin_elementwise_##name) || DependentFalse<T>) \
+    return __builtin_elementwise_##name(args)
+
 #define AARCH64_INSTRUCTION(instruction, arg) \
     if constexpr (IsSame<T, long double>)     \
         TODO();                               \

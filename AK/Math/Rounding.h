@@ -29,6 +29,8 @@ constexpr T ceil(T num)
             ? static_cast<i64>(num)
             : static_cast<i64>(num) + ((num > 0) ? 1 : 0);
     }
+    ELEMENTWISE_BUILTIN(ceil, num);
+
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintp, num);
 #else
@@ -47,6 +49,8 @@ constexpr T floor(T num)
             ? static_cast<i64>(num)
             : static_cast<i64>(num) - ((num > 0) ? 0 : 1);
     }
+    ELEMENTWISE_BUILTIN(floor, num);
+
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintm, num);
 #else
@@ -57,12 +61,14 @@ constexpr T floor(T num)
 template<FloatingPoint T>
 constexpr T trunc(T num)
 {
-#if ARCH(AARCH64)
     if (is_constant_evaluated()) {
         if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
             return num;
         return static_cast<T>(static_cast<i64>(num));
     }
+    ELEMENTWISE_BUILTIN(trunc, num);
+
+#if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintz, num);
 #endif
     // FIXME: Use dedicated instruction in the non constexpr case
@@ -92,6 +98,9 @@ constexpr T rint(T x)
         return x;
     }
 #    ifdef __SSE4_1__
+    // This is only inlined when SSE4.1 is enabled
+    // also for some reason this does not work nicely for frndint
+    ELEMENTWISE_BUILTIN(rint, x);
     if constexpr (IsSame<T, double>) {
         T r;
         asm(
@@ -110,8 +119,12 @@ constexpr T rint(T x)
     }
 #    endif
 #elif ARCH(AARCH64)
+    ELEMENTWISE_BUILTIN(rint, x);
     AARCH64_INSTRUCTION(frintx, x);
 #elif ARCH(RISCV64)
+    ELEMENTWISE_BUILTIN(rint, x);
+    // NOTE: RISC-V only gives us an lrint instruction, which we could use to round-trip cast
+    //       Compilers seem to prefer that over the method below
     if (__builtin_isnan(x))
         return x;
 
@@ -151,6 +164,9 @@ template<FloatingPoint T>
 constexpr T round(T x)
 {
     CONSTEXPR_STATE(round, x);
+#if ARCH(AARCH64) || ARCH(RISCV64) || defined(__SSE4_1__)
+    ELEMENTWISE_BUILTIN(round, x);
+#endif
     // Note: This is break-tie-away-from-zero, so not the hw's understanding of
     //       "nearest", which would be towards even.
     if (x == 0.)
