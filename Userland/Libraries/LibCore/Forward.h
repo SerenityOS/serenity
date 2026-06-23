@@ -18,7 +18,6 @@ class ConfigFile;
 class CustomEvent;
 class DateTime;
 class DirIterator;
-class DeferredInvocationContext;
 class ElapsedTimer;
 class Event;
 class EventLoop;

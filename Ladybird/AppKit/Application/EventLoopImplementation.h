@@ -39,7 +39,7 @@ public:
     virtual size_t pump(PumpMode) override;
     virtual void quit(int) override;
     virtual void wake() override;
-    virtual void post_event(Core::EventReceiver& receiver, NonnullOwnPtr<Core::Event>&&) override;
+    virtual void post_event(Core::EventReceiver*, NonnullOwnPtr<Core::Event>&&) override;
     virtual ~CFEventLoopImplementation() override;
 
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.

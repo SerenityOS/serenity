@@ -438,7 +438,7 @@ void CFEventLoopImplementation::wake()
     CFRunLoopWakeUp(CFRunLoopGetCurrent());
 }
 
-void CFEventLoopImplementation::post_event(Core::EventReceiver& receiver, NonnullOwnPtr<Core::Event>&& event)
+void CFEventLoopImplementation::post_event(Core::EventReceiver* receiver, NonnullOwnPtr<Core::Event>&& event)
 {
     m_thread_event_queue.post_event(receiver, move(event));
 
