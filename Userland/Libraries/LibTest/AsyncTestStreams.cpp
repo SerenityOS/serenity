@@ -21,11 +21,9 @@ struct Spinner {
     void await_suspend(std::coroutine_handle<> awaiter)
     {
         m_awaiter = awaiter;
-        Core::ThreadEventQueue::current().post_event(
-            nullptr,
-            make<Core::DeferredInvocationEvent>([&] {
-                m_awaiter.resume();
-            }));
+        Core::ThreadEventQueue::current().deferred_invoke([&] {
+            m_awaiter.resume();
+        });
     }
 
     void await_resume() { m_awaiter = {}; }
