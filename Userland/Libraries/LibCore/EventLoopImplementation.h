@@ -54,6 +54,7 @@ public:
     virtual void wake() = 0;
 
     virtual void post_event(EventReceiver*, NonnullOwnPtr<Event>&&) = 0;
+    virtual void deferred_invoke(Function<void()>&&);
 
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual void unquit() = 0;
