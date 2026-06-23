@@ -7,18 +7,17 @@
 #pragma once
 
 #include <AK/Concepts.h>
-#include <AK/FloatingPoint.h>
+
+#include <AK/Math/Macros.h>
 
 namespace AK {
 
-template<FloatingPoint FloatT>
-FloatT copysign(FloatT x, FloatT y)
+template<FloatingPoint T>
+constexpr T copysign(T x, T y)
 {
-    using Extractor = FloatExtractor<FloatT>;
-    auto ex = Extractor::from_float(x);
-    auto ey = Extractor::from_float(y);
-    ex.sign = ey.sign;
-    return ex.to_float();
+    CALL_BUILTIN(copysign, x, y);
 }
+
+#include <AK/Math/UndefMacros.h>
 
 }
