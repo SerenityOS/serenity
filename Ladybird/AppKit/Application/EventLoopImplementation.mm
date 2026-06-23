@@ -435,7 +435,7 @@ void CFEventLoopImplementation::quit(int exit_code)
 
 void CFEventLoopImplementation::wake()
 {
-    CFRunLoopWakeUp(CFRunLoopGetCurrent());
+    CFRunLoopWakeUp(m_impl->run_loop);
 }
 
 void CFEventLoopImplementation::post_event(Core::EventReceiver* receiver, NonnullOwnPtr<Core::Event>&& event)
