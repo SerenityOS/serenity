@@ -206,7 +206,7 @@ public:
         //        timer and register it back again when needed. This also has an added benefit of
         //        making fire_when_not_visible and is_visible_for_timer_purposes obsolete.
         if (fire_when_not_visible == TimerShouldFireWhenNotVisible::Yes || strong_owner->is_visible_for_timer_purposes())
-            ThreadEventQueue::current().post_event(strong_owner, make<TimerEvent>());
+            ThreadEventQueue::current().post_event(strong_owner, Event::Type::Timer);
     }
 
     Duration interval;
@@ -443,7 +443,7 @@ try_select_again:
             type &= notifier.type();
 
             if (type != NotificationType::None)
-                ThreadEventQueue::current().post_event(&notifier, make<NotifierActivationEvent>());
+                ThreadEventQueue::current().post_event(&notifier, Event::Type::NotifierActivation);
         }
     }
 
