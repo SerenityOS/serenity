@@ -7,7 +7,9 @@
 #include <LibTest/Macros.h>
 #include <LibTest/TestCase.h>
 
+#include <AK/FloatingPoint.h>
 #include <AK/Math.h>
+#include <AK/NumericLimits.h>
 
 // Test cases for pow(2, x) generated with Python + numpy:
 // echo -e "import numpy as np\nfor x in np.arange(-1020, 1020, 0.9):\n    print(f'{{ {x}, {2**x} }},')" | python3
@@ -35,6 +37,19 @@ TEST_CASE(pow)
     EXPECT_EQ(AK::pow(1., -9223372036854774784.0), 1.);
     EXPECT_EQ(AK::pow(1., -9223372036854775808.0), 1.);
     EXPECT_EQ(AK::pow(1., -9223372036854777856.0), 1.);
+}
+
+TEST_CASE(rint)
+{
+    EXPECT_EQ(AK::rint(0.5), 0);
+    EXPECT_EQ(AK::rint(0.2), 0);
+    EXPECT_EQ(AK::rint(1.0), 1);
+    EXPECT_EQ(AK::rint(1.5), 2);
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max + 1), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max - 1), FloatExtractor<float>::mantissa_max - 1);
+    EXPECT_EQ(AK::rint(-0.5), 0);
+    EXPECT_EQ(AK::rint(-1.5), -2);
 }
 
 TEST_CASE(wrap_to_range)
