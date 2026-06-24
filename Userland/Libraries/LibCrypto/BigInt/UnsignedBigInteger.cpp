@@ -9,6 +9,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/CharacterTypes.h>
 #include <AK/FloatingPoint.h>
+#include <AK/Math/Constants.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringHash.h>
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
@@ -206,7 +207,7 @@ double UnsignedBigInteger::to_double(UnsignedBigInteger::RoundingMode rounding_m
 
     // If it uses too many bit to represent in a double return infinity
     if (highest_bit > Extractor::exponent_bias)
-        return __builtin_huge_val();
+        return AK::Infinity<double>;
 
     // Otherwise we have to take the top 53 bits, use those as the mantissa,
     // and the amount of bits as the exponent. Note that the mantissa has an implicit top bit of 1
@@ -336,7 +337,7 @@ double UnsignedBigInteger::to_double(UnsignedBigInteger::RoundingMode rounding_m
 
                 // In which case it is possible we have to round to infinity
                 if (highest_bit > Extractor::exponent_bias)
-                    return __builtin_huge_val();
+                    return AK::Infinity<double>;
             }
         }
     } else {

@@ -9,6 +9,7 @@
 
 #include <AK/ByteString.h>
 #include <AK/Format.h>
+#include <AK/Math/Constants.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -416,19 +417,19 @@ TEST_CASE(test_strtod_sets_errno)
     EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("10e10", 10e10);
     EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("10.10e10", 10.10e10);
 
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("inf", __builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("infinity", __builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("INF", __builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("INFINITY", __builtin_huge_val());
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("inf", AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("infinity", AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("INF", AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("INFINITY", AK::Infinity<double>);
 
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("Inf", __builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("iNf", __builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("inF", __builtin_huge_val());
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("Inf", AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("iNf", AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("inF", AK::Infinity<double>);
 
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-inf", -__builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-infinity", -__builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-INF", -__builtin_huge_val());
-    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-INFINITY", -__builtin_huge_val());
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-inf", -AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-infinity", -AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-INF", -AK::Infinity<double>);
+    EXPECT_TO_GIVE_VALUE_WITH_0_ERRNO("-INFINITY", -AK::Infinity<double>);
 
 #define EXPECT_TO_GIVE_VALUE_WITH_ERRNO(str_value, double_value, errno_value)              \
     do {                                                                                   \
@@ -439,10 +440,10 @@ TEST_CASE(test_strtod_sets_errno)
     } while (false)
 
     EXPECT_TO_GIVE_VALUE_WITH_ERRNO("nan", __builtin_nan(""), ERANGE);
-    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("10e10000", __builtin_huge_val(), ERANGE);
-    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("0x1p10000", __builtin_huge_val(), ERANGE);
-    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("-10e10000", -__builtin_huge_val(), ERANGE);
-    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("-0x1p10000", -__builtin_huge_val(), ERANGE);
+    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("10e10000", AK::Infinity<double>, ERANGE);
+    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("0x1p10000", AK::Infinity<double>, ERANGE);
+    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("-10e10000", -AK::Infinity<double>, ERANGE);
+    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("-0x1p10000", -AK::Infinity<double>, ERANGE);
     EXPECT_TO_GIVE_VALUE_WITH_ERRNO("10e-10000", 0, ERANGE);
     EXPECT_TO_GIVE_VALUE_WITH_ERRNO("0x1p-10000", 0, ERANGE);
     EXPECT_TO_GIVE_VALUE_WITH_ERRNO("-0x1p-10000", -0., ERANGE);

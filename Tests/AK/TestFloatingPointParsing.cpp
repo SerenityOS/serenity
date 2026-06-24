@@ -248,9 +248,9 @@ TEST_CASE(simple_cases)
     EXPECT_TO_PARSE_TO_VALUE_EQUAL_TO(-0., "-.0e10");
 
 #define EXPECT_TO_PARSE_TO_INFINITY(str)                                  \
-    EXPECT_EQ(__builtin_huge_val(), parse_complete_double(str##sv));      \
-    EXPECT_EQ(__builtin_huge_val(), parse_complete_double("+" str##sv));  \
-    EXPECT_EQ(-__builtin_huge_val(), parse_complete_double("-" str##sv)); \
+    EXPECT_EQ(AK::Infinity<double>, parse_complete_double(str##sv));      \
+    EXPECT_EQ(AK::Infinity<double>, parse_complete_double("+" str##sv));  \
+    EXPECT_EQ(-AK::Infinity<double>, parse_complete_double("-" str##sv)); \
     EXPECT_EQ(AK::Infinity<float>, parse_complete_float(str##sv));        \
     EXPECT_EQ(AK::Infinity<float>, parse_complete_float("+" str##sv));    \
     EXPECT_EQ(-AK::Infinity<float>, parse_complete_float("-" str##sv))

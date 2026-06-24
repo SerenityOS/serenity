@@ -15,6 +15,7 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/IntegralMath.h>
+#include <AK/Math/Constants.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Types.h>
@@ -42,8 +43,8 @@ static_assert(CANON_NAN_BITS == 0x7FF8000000000000);
 // version of these CANON_NAN_BITS)
 // +/- Infinity are represented by a full exponent but without any bits of the
 // mantissa set.
-static constexpr u64 POSITIVE_INFINITY_BITS = bit_cast<u64>(__builtin_huge_val());
-static constexpr u64 NEGATIVE_INFINITY_BITS = bit_cast<u64>(-__builtin_huge_val());
+static constexpr u64 POSITIVE_INFINITY_BITS = bit_cast<u64>(AK::Infinity<double>);
+static constexpr u64 NEGATIVE_INFINITY_BITS = bit_cast<u64>(-AK::Infinity<double>);
 static_assert(POSITIVE_INFINITY_BITS == 0x7FF0000000000000);
 static_assert(NEGATIVE_INFINITY_BITS == 0xFFF0000000000000);
 // However as long as any bit is set in the mantissa with the exponent of all

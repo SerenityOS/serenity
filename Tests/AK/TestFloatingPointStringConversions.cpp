@@ -5,6 +5,7 @@
  */
 
 #include <AK/FloatingPointStringConversions.h>
+#include <AK/Math/Constants.h>
 #include <AK/UFixedBigInt.h>
 #include <LibTest/TestCase.h>
 
@@ -107,7 +108,7 @@ TEST_CASE(hex_float)
 
 TEST_CASE(out_of_range)
 {
-    floating_point_parsing_helper({ "1e309"sv, __builtin_huge_val(), FloatingPointError::OutOfRange, 5, ParserType::Regular });
+    floating_point_parsing_helper({ "1e309"sv, AK::Infinity<double>, FloatingPointError::OutOfRange, 5, ParserType::Regular });
 }
 
 TEST_CASE(rounded_down_to_zero)
