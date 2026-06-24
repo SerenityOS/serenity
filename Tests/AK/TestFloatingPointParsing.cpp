@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/FloatingPointStringConversions.h>
+#include <AK/Math/Constants.h>
 
 static double parse_complete_double(StringView view)
 {
@@ -246,13 +247,13 @@ TEST_CASE(simple_cases)
     EXPECT_TO_PARSE_TO_VALUE_EQUAL_TO(0., "+.0e10");
     EXPECT_TO_PARSE_TO_VALUE_EQUAL_TO(-0., "-.0e10");
 
-#define EXPECT_TO_PARSE_TO_INFINITY(str)                                                     \
-    EXPECT_EQ(__builtin_huge_val(), parse_complete_double(str##sv));                         \
-    EXPECT_EQ(__builtin_huge_val(), parse_complete_double("+" str##sv));                     \
-    EXPECT_EQ(-__builtin_huge_val(), parse_complete_double("-" str##sv));                    \
-    EXPECT_EQ(static_cast<float>(__builtin_huge_valf()), parse_complete_float(str##sv));     \
-    EXPECT_EQ(static_cast<float>(__builtin_huge_valf()), parse_complete_float("+" str##sv)); \
-    EXPECT_EQ(static_cast<float>(-__builtin_huge_valf()), parse_complete_float("-" str##sv))
+#define EXPECT_TO_PARSE_TO_INFINITY(str)                                  \
+    EXPECT_EQ(__builtin_huge_val(), parse_complete_double(str##sv));      \
+    EXPECT_EQ(__builtin_huge_val(), parse_complete_double("+" str##sv));  \
+    EXPECT_EQ(-__builtin_huge_val(), parse_complete_double("-" str##sv)); \
+    EXPECT_EQ(AK::Infinity<float>, parse_complete_float(str##sv));        \
+    EXPECT_EQ(AK::Infinity<float>, parse_complete_float("+" str##sv));    \
+    EXPECT_EQ(-AK::Infinity<float>, parse_complete_float("-" str##sv))
 
     EXPECT_TO_PARSE_TO_INFINITY("123.456e789");
     EXPECT_TO_PARSE_TO_INFINITY("123456.456789e789");
