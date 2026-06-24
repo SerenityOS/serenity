@@ -331,9 +331,9 @@ static T c_str_to_floating_point(char const* str, char** endptr)
         errno = ERANGE;
         // FIXME: Do we actually want to return "different" NaN bit values?
         if (sign != Sign::Negative)
-            return static_cast<T>(__builtin_nan(""));
+            return AK::NaN<T>;
         else
-            return static_cast<T>(-__builtin_nan(""));
+            return -AK::NaN<T>;
     }
 
     // If no conversion could be performed, 0 shall be returned, and errno may be set to [EINVAL].

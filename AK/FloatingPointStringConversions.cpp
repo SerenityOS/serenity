@@ -8,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/FloatingPointStringConversions.h>
 #include <AK/Format.h>
+#include <AK/Math/Constants.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <AK/UFixedBigInt.h>
@@ -1975,7 +1976,7 @@ template<FloatingPoint T>
 constexpr FloatingPointParseResults<T> parse_result_to_full_result(BasicParseResult parse_result)
 {
     if (!parse_result.valid)
-        return { nullptr, FloatingPointError::NoOrInvalidInput, __builtin_nan("") };
+        return { nullptr, FloatingPointError::NoOrInvalidInput, AK::NaN<double> };
 
     FloatingPointParseResults<T> full_result {};
     full_result.end_ptr = parse_result.last_parsed;
@@ -2251,7 +2252,7 @@ FloatingPointParseResults<T> parse_first_hexfloat_until_zero_character(char cons
     auto parse_result = parse_hexfloat(start);
 
     if (!parse_result.valid)
-        return { nullptr, FloatingPointError::NoOrInvalidInput, __builtin_nan("") };
+        return { nullptr, FloatingPointError::NoOrInvalidInput, AK::NaN<double> };
 
     FloatingPointParseResults<T> full_result {};
     full_result.end_ptr = parse_result.last_parsed;

@@ -439,7 +439,7 @@ TEST_CASE(test_strtod_sets_errno)
         EXPECT_EQ(bit_cast<u64>(value), bit_cast<u64>(static_cast<double>(double_value))); \
     } while (false)
 
-    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("nan", __builtin_nan(""), ERANGE);
+    EXPECT_TO_GIVE_VALUE_WITH_ERRNO("nan", AK::NaN<double>, ERANGE);
     EXPECT_TO_GIVE_VALUE_WITH_ERRNO("10e10000", AK::Infinity<double>, ERANGE);
     EXPECT_TO_GIVE_VALUE_WITH_ERRNO("0x1p10000", AK::Infinity<double>, ERANGE);
     EXPECT_TO_GIVE_VALUE_WITH_ERRNO("-10e10000", -AK::Infinity<double>, ERANGE);
