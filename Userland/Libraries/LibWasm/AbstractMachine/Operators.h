@@ -8,6 +8,7 @@
 
 #include <AK/BitCast.h>
 #include <AK/BuiltinWrappers.h>
+#include <AK/Math/Constants.h>
 #include <AK/Result.h>
 #include <AK/SIMD.h>
 #include <AK/SIMDExtras.h>
@@ -1068,7 +1069,7 @@ struct Demote {
             return nanf(""); // FIXME: Ensure canonical NaN remains canonical
 
         if (isinf(lhs))
-            return copysignf(__builtin_huge_valf(), lhs);
+            return copysignf(AK::Infinity<float>, lhs);
 
         return static_cast<float>(lhs);
     }
