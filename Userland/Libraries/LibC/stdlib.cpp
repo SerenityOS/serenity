@@ -8,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/FloatingPointStringConversions.h>
 #include <AK/HashMap.h>
+#include <AK/Math/Constants.h>
 #include <AK/Noncopyable.h>
 #include <AK/Random.h>
 #include <AK/StdLibExtras.h>
@@ -321,9 +322,9 @@ static T c_str_to_floating_point(char const* str, char** endptr)
         // literal infinity" and "input is not literal infinity
         // but did not fit into double".
         if (sign != Sign::Negative)
-            return static_cast<T>(__builtin_huge_val());
+            return AK::Infinity<T>;
         else
-            return static_cast<T>(-__builtin_huge_val());
+            return -AK::Infinity<T>;
     }
 
     if (is_nan_string(parse_ptr, endptr)) {
