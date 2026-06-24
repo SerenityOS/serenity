@@ -36,7 +36,7 @@ static_assert(sizeof(void*) == sizeof(double) || sizeof(void*) == sizeof(u32));
 // doubles have a lot (2^52 - 2) of NaN bit patterns. The canonical form being
 // just 0x7FF8000000000000 i.e. sign = 0 exponent is all ones and the top most
 // bit of the mantissa set.
-static constexpr u64 CANON_NAN_BITS = bit_cast<u64>(__builtin_nan(""));
+static constexpr u64 CANON_NAN_BITS = bit_cast<u64>(AK::NaN<double>);
 static_assert(CANON_NAN_BITS == 0x7FF8000000000000);
 // (Unfortunately all the other values are valid so we have to convert any
 // incoming NaNs to this pattern although in practice it seems only the negative
