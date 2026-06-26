@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
+#include <AK/StdShim.h>
 #include <AK/Types.h>
 
 namespace AK {
