@@ -323,6 +323,75 @@ ALWAYS_INLINE U round_to_impl(double value)
     return static_cast<U>(res);
 }
 
+#elif ARCH(RISCV64)
+template<SignedIntegral I>
+ALWAYS_INLINE I round_to_impl(float value)
+{
+    if constexpr (sizeof(I) <= sizeof(u32)) {
+        i32 res;
+        asm("fcvt.w.s %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<I>(res);
+    }
+    i64 res;
+    asm("fcvt.l.s %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<I>(res);
+}
+
+template<SignedIntegral I>
+ALWAYS_INLINE I round_to_impl(double value)
+{
+    if constexpr (sizeof(I) <= sizeof(u32)) {
+        i32 res;
+        asm("fcvt.w.d %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<I>(res);
+    }
+    i64 res;
+    asm("fcvt.l.d %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<I>(res);
+}
+
+template<UnsignedIntegral U>
+ALWAYS_INLINE U round_to_impl(float value)
+{
+    if constexpr (sizeof(U) <= sizeof(u32)) {
+        u32 res;
+        asm("fcvt.wu.s %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<U>(res);
+    }
+    u64 res;
+    asm("fcvt.lu.s %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<U>(res);
+}
+
+template<UnsignedIntegral U>
+ALWAYS_INLINE U round_to_impl(double value)
+{
+    if constexpr (sizeof(U) <= sizeof(u32)) {
+        u32 res;
+        asm("fcvt.wu.d %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<U>(res);
+    }
+    u64 res;
+    asm("fcvt.lu.d %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<U>(res);
+}
+
 #endif
 
 template<Integral I, FloatingPoint P>
