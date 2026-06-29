@@ -439,6 +439,14 @@ void CFEventLoopImplementation::wake()
     CFRunLoopWakeUp(m_impl->run_loop);
 }
 
+void CFEventLoopImplementation::deferred_invoke(Function<void()>&& invokee)
+{
+    EventLoopImplementation::deferred_invoke(move(invokee));
+    CFRunLoopSourceSignal(m_impl->deferred_source);
+    if (&m_thread_event_queue != &Core::ThreadEventQueue::current())
+        wake();
+}
+
 void CFEventLoopImplementation::post_event(Core::EventReceiver* receiver, NonnullOwnPtr<Core::Event>&& event)
 {
     m_thread_event_queue.post_event(receiver, move(event));

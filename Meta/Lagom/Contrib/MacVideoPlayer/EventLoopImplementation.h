@@ -39,6 +39,7 @@ public:
     virtual size_t pump(PumpMode) override;
     virtual void quit(int) override;
     virtual void wake() override;
+    virtual void deferred_invoke(Function<void()>&&) override;
     virtual void post_event(Core::EventReceiver*, NonnullOwnPtr<Core::Event>&&) override;
     virtual ~CFEventLoopImplementation() override;
 
