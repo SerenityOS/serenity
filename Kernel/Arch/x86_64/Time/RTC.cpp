@@ -25,7 +25,7 @@ RealTimeClock::RealTimeClock(Function<void()> callback)
     InterruptDisabler disabler;
     NonMaskableInterruptDisabler nmi_disabler;
     enable_irq();
-    CMOS::write(0x8B, CMOS::read(0xB) | 0x40);
+    CMOS::write(0x8B, CMOS::read(0x8B) | 0x40);
     reset_to_default_ticks_per_second();
 }
 bool RealTimeClock::handle_irq()
