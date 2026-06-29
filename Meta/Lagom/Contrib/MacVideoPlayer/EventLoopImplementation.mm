@@ -211,7 +211,6 @@ struct CFEventLoopImplementation::Impl {
         context.info = &event_loop_implementation;
         context.perform = [](void* info) {
             auto& self = *static_cast<CFEventLoopImplementation*>(info);
-            self.m_impl->deferred_source_pending = false;
             self.m_thread_event_queue.process();
         };
 
@@ -227,7 +226,6 @@ struct CFEventLoopImplementation::Impl {
 
     CFRunLoopRef run_loop { nullptr };
     CFRunLoopSourceRef deferred_source { nullptr };
-    Atomic<bool> deferred_source_pending { false };
 };
 
 CFEventLoopImplementation::CFEventLoopImplementation()
@@ -451,9 +449,8 @@ void CFEventLoopImplementation::post_event(Core::EventReceiver* receiver, Nonnul
 {
     m_thread_event_queue.post_event(receiver, move(event));
 
-    bool expected = false;
-    if (m_impl->deferred_source && m_impl->deferred_source_pending.compare_exchange_strong(expected, true))
-        CFRunLoopSourceSignal(m_impl->deferred_source);
+    if (&m_thread_event_queue != &Core::ThreadEventQueue::current())
+        wake();
 }
 
 }
