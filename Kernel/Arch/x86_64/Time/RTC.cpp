@@ -63,6 +63,9 @@ bool RealTimeClock::try_to_set_frequency(size_t frequency)
     CMOS::write(0x8A, (previous_rate & 0xF0) | rate);
     m_frequency = frequency;
     dbgln("RTC: Set frequency to {} Hz", frequency);
+    // This ensures that the hardware will generate a new interrupt
+    // but acknowledge any pending interrupt.
+    CMOS::read(0x8C);
     enable_irq();
     return true;
 }
