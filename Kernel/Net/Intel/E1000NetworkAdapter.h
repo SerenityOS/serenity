@@ -149,6 +149,9 @@ private:
     Mutex m_write_lock;
     WaitQueue m_wait_queue;
 
+    u32 m_rx_tail { 0 }; // Only used in the interrupt, no lock required.
+    u32 m_tx_tail { 0 }; // Guarded by m_write_lock.
+
     OwnPtr<InterruptHandler> m_interrupt_handler;
     RefPtr<Process> m_mdio_handling_process;
 };

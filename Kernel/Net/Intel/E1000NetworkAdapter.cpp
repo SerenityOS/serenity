@@ -461,9 +461,8 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
     MutexLocker locker { m_write_lock };
 
-    size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
     dbgln_if(E1000_DEBUG, "E1000: Sending packet ({} bytes)", payload.size());
-    auto& descriptor = m_tx_descriptors[tx_current];
+    auto& descriptor = m_tx_descriptors[m_tx_tail];
 
     if (descriptor.status == 0) {
         // Someone is still using the descriptor, let's wait until it's free.
@@ -475,34 +474,33 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     }
 
     VERIFY(payload.size() <= tx_buffer_size);
-    auto* vptr = (void*)m_tx_buffers[tx_current];
+    void* vptr = m_tx_buffers[m_tx_tail];
     memcpy(vptr, payload.data(), payload.size());
     descriptor.length = payload.size();
     descriptor.status = 0;
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
-    dbgln_if(E1000_DEBUG, "E1000: Using tx descriptor {} (head is at {})", tx_current, in32(REG_TXDESCHEAD));
-    tx_current = (tx_current + 1) % number_of_tx_descriptors;
-    out32(REG_TXDESCTAIL, tx_current);
+    dbgln_if(E1000_DEBUG, "E1000: Using tx descriptor {} (head is at {})", m_tx_tail, in32(REG_TXDESCHEAD));
+    m_tx_tail = (m_tx_tail + 1) % number_of_tx_descriptors;
+    out32(REG_TXDESCTAIL, m_tx_tail);
 
     dbgln_if(E1000_DEBUG, "E1000: Sent packet, status is now {:#02x}!", (u8)descriptor.status);
 }
 
 void E1000NetworkAdapter::receive()
 {
-    u32 rx_current;
     for (;;) {
-        rx_current = in32(REG_RXDESCTAIL) % number_of_rx_descriptors;
-        rx_current = (rx_current + 1) % number_of_rx_descriptors;
-        if (!(m_rx_descriptors[rx_current].status & 1))
+        u32 next_rx = (m_rx_tail + 1) % number_of_rx_descriptors;
+        if (!(m_rx_descriptors[next_rx].status & 1))
             break;
-        auto* buffer = m_rx_buffers[rx_current];
-        u16 length = m_rx_descriptors[rx_current].length;
+        m_rx_tail = next_rx;
+        auto* buffer = m_rx_buffers[m_rx_tail];
+        u16 length = m_rx_descriptors[m_rx_tail].length;
         VERIFY(length <= rx_buffer_size);
         dbgln_if(E1000_DEBUG, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
         did_receive({ buffer, length });
-        m_rx_descriptors[rx_current].status = 0;
-        out32(REG_RXDESCTAIL, rx_current);
+        m_rx_descriptors[m_rx_tail].status = 0;
     }
+    out32(REG_RXDESCTAIL, m_rx_tail);
 }
 
 i32 E1000NetworkAdapter::link_speed()
