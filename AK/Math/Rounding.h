@@ -177,63 +177,70 @@ constexpr T round(T x)
 }
 
 template<Integral I, FloatingPoint P>
-ALWAYS_INLINE I round_to(P value);
+requires(false)
+I round_to_impl(P value);
 
 #if ARCH(X86_64)
 template<Integral I>
-ALWAYS_INLINE I round_to(long double value)
+requires(!IsSame<I, u64>) // fistpl can only output signed numbers
+                          // so u64 is out
+ALWAYS_INLINE I round_to_impl(long double value)
 {
     // Note: fistps outputs into a signed integer location (i16, i32, i64),
-    //       so lets be nice and tell the compiler that.
-    Conditional<sizeof(I) >= sizeof(i16), MakeSigned<I>, i16> ret;
-    if constexpr (sizeof(I) == sizeof(i64)) {
+    //       So we need at least i16 for an output slot,
+    //       and must take the next higher int for unsigned values
+    // Note: Posix allows us to return undefined values on overflows
+    //       (though we should throw a domain error, which we dont in the cases posix lrint doesn't know about)
+    if constexpr (IsOneOf<I, i64, u32>) {
+        i64 ret;
         asm("fistpll %0"
             : "=m"(ret)
             : "t"(value)
             : "st");
-    } else if constexpr (sizeof(I) == sizeof(i32)) {
+        return static_cast<I>(ret);
+    } else if constexpr (IsOneOf<I, i32, u16>) {
+        i32 ret;
         asm("fistpl %0"
             : "=m"(ret)
             : "t"(value)
             : "st");
+        return static_cast<I>(ret);
     } else {
+        i16 ret;
         asm("fistps %0"
             : "=m"(ret)
             : "t"(value)
             : "st");
+        return static_cast<I>(ret);
     }
-    return static_cast<I>(ret);
 }
 
 template<Integral I>
-ALWAYS_INLINE I round_to(float value)
+requires(!IsSame<I, u64>) // cvtss2si can only output signed numbers
+                          // so u64 is out
+ALWAYS_INLINE I round_to_impl(float value)
 {
-    // FIXME: round_to<u64> might will cause issues, aka the indefinite value being set,
-    //        if the value surpasses the i64 limit, even if the result could fit into an u64
-    //        To solve this we would either need to detect that value or do a range check and
-    //        then do a more specialized conversion, which might include a division (which is expensive)
-    if constexpr (sizeof(I) == sizeof(i64) || IsSame<I, u32>) {
+    if constexpr (IsOneOf<I, i64, u32>) {
         i64 ret;
         asm("cvtss2si %1, %0"
             : "=r"(ret)
             : "xm"(value));
         return static_cast<I>(ret);
+    } else {
+        i32 ret;
+        asm("cvtss2si %1, %0"
+            : "=r"(ret)
+            : "xm"(value));
+        return static_cast<I>(ret);
     }
-    i32 ret;
-    asm("cvtss2si %1, %0"
-        : "=r"(ret)
-        : "xm"(value));
-    return static_cast<I>(ret);
 }
 
 template<Integral I>
-ALWAYS_INLINE I round_to(double value)
+requires(!IsSame<I, u64>) // cvtsd2si can only output signed numbers
+                          // so u64 is out
+ALWAYS_INLINE I round_to_impl(double value)
 {
-    // FIXME: round_to<u64> might will cause issues, aka the indefinite value being set,
-    //        if the value surpasses the i64 limit, even if the result could fit into an u64
-    //        To solve this we would either need to detect that value or do a range check and
-    //        then do a more specialized conversion, which might include a division (which is expensive)
-    if constexpr (sizeof(I) == sizeof(i64) || IsSame<I, u32>) {
+    if constexpr (IsOneOf<I, i64, u32>) {
         i64 ret;
         asm("cvtsd2si %1, %0"
             : "=r"(ret)
@@ -249,7 +256,7 @@ ALWAYS_INLINE I round_to(double value)
 
 #elif ARCH(AARCH64)
 template<SignedIntegral I>
-ALWAYS_INLINE I round_to(float value)
+ALWAYS_INLINE I round_to_impl(float value)
 {
     if constexpr (sizeof(I) <= sizeof(u32)) {
         i32 res;
@@ -266,7 +273,7 @@ ALWAYS_INLINE I round_to(float value)
 }
 
 template<SignedIntegral I>
-ALWAYS_INLINE I round_to(double value)
+ALWAYS_INLINE I round_to_impl(double value)
 {
     if constexpr (sizeof(I) <= sizeof(u32)) {
         i32 res;
@@ -283,7 +290,7 @@ ALWAYS_INLINE I round_to(double value)
 }
 
 template<UnsignedIntegral U>
-ALWAYS_INLINE U round_to(float value)
+ALWAYS_INLINE U round_to_impl(float value)
 {
     if constexpr (sizeof(U) <= sizeof(u32)) {
         u32 res;
@@ -292,7 +299,7 @@ ALWAYS_INLINE U round_to(float value)
             : "w"(value));
         return static_cast<U>(res);
     }
-    i64 res;
+    u64 res;
     asm("fcvtnu %0, %s1"
         : "=r"(res)
         : "w"(value));
@@ -300,35 +307,39 @@ ALWAYS_INLINE U round_to(float value)
 }
 
 template<UnsignedIntegral U>
-ALWAYS_INLINE U round_to(double value)
+ALWAYS_INLINE U round_to_impl(double value)
 {
     if constexpr (sizeof(U) <= sizeof(u32)) {
         u32 res;
-        asm("fcvtns %w0, %d1"
+        asm("fcvtnu %w0, %d1"
             : "=r"(res)
             : "w"(value));
         return static_cast<U>(res);
     }
-    i64 res;
-    asm("fcvtns %0, %d1"
+    u64 res;
+    asm("fcvtnu %0, %d1"
         : "=r"(res)
         : "w"(value));
     return static_cast<U>(res);
 }
 
-#else
-template<Integral I, FloatingPoint P>
-ALWAYS_INLINE I round_to(P value)
-{
-    if constexpr (IsSame<P, long double>)
-        return static_cast<I>(__builtin_llrintl(value));
-    if constexpr (IsSame<P, double>)
-        return static_cast<I>(__builtin_llrint(value));
-    if constexpr (IsSame<P, float>)
-        return static_cast<I>(__builtin_llrintf(value));
-}
 #endif
 
+template<Integral I, FloatingPoint P>
+constexpr I round_to(P value)
+{
+    if (is_constant_evaluated()) {
+        return static_cast<I>(rint<P>(value));
+    }
+    if constexpr (requires { round_to_impl<I>(value); }) {
+        return round_to_impl<I>(value);
+    } else {
+        // Naive Implementation
+        // Most HW provides a smarter way of doing this
+        return static_cast<I>(rint<P>(value));
+        // FIXME: Is there any reason to call into libm instead?
+    }
+}
 }
 
 using Rounding::ceil;
