@@ -17,6 +17,7 @@
 #    include <Kernel/Arch/x86_64/Time/HPETComparator.h>
 #    include <Kernel/Arch/x86_64/Time/PIT.h>
 #    include <Kernel/Arch/x86_64/Time/RTC.h>
+#    include <Kernel/Arch/x86_64/Time/TSC.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Timer.h>
 #    include <Kernel/Arch/aarch64/Time/ARMv8Timer.h>
@@ -395,6 +396,15 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
     // We don't need an interrupt for time keeping purposes because we
     // can query the timer.
     m_time_keeper_timer = m_system_timer;
+
+    if (TSC::is_supported_and_invariant()
+        && TSC::the().calibrate(*m_system_timer)) {
+
+        m_read_time_from_hardware = [](auto&&... args) -> u64 {
+            return TSC::the().update_time(args...);
+        };
+        m_time_ticks_per_second = TSC::the().frequency();
+    }
 
     if (periodic_timers.size() > taken_periodic_timers_count) {
         m_profile_timer = periodic_timers[taken_periodic_timers_count];

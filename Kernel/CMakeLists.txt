@@ -446,6 +446,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/RTC.cpp
         Arch/x86_64/Shutdown.cpp
         Arch/x86_64/SmapDisabler.cpp
+        Arch/x86_64/Time/TSC.cpp
     )
 
     set(KERNEL_SOURCES
