@@ -168,7 +168,7 @@ class Configuration:
     # QEMU -m
     ram_size: str | None = "2G"
     # QEMU -cpu
-    qemu_cpu: str | None = "max"
+    qemu_cpu: str | None = "max,migratable=no"
     # QEMU -smp
     cpu_count: int | None = 2
     # QEMU -machine
