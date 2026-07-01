@@ -16,6 +16,7 @@
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -99,14 +100,11 @@ private:
     void set_system_timer(HardwareTimerBase&);
     static void system_timer_tick();
 
-    // Variables between m_update1 and m_update2 are synchronized
-    // FIXME: Replace m_update1 and m_update2 with a SpinlockLocker
-    Atomic<u32> m_update1 { 0 };
+    mutable Spinlock<LockRank::Process> m_lock;
     u32 m_ticks_this_second { 0 };
     u64 m_seconds_since_boot { 0 };
     UnixDateTime m_epoch_time {};
     Duration m_remaining_epoch_time_adjustment {};
-    Atomic<u32> m_update2 { 0 };
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
     SetOnce m_can_query_precise_time;

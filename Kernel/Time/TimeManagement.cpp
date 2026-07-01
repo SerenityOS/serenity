@@ -135,9 +135,8 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
 
     bool do_query = precision == TimePrecision::Precise && m_can_query_precise_time.was_set();
 
-    u32 update_iteration;
-    do {
-        update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
+    {
+        SpinlockLocker locker { m_lock };
         seconds = m_seconds_since_boot;
         ticks = m_ticks_this_second;
 
@@ -167,7 +166,7 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
 #    error Unknown architecture
 #endif
         }
-    } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
+    }
 
     VERIFY(m_time_ticks_per_second > 0);
     VERIFY(ticks < m_time_ticks_per_second);
@@ -179,13 +178,8 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
 UnixDateTime TimeManagement::epoch_time(TimePrecision) const
 {
     // TODO: Take into account precision
-    UnixDateTime time;
-    u32 update_iteration;
-    do {
-        update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
-        time = m_epoch_time;
-    } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
-    return time;
+    SpinlockLocker lockerer { m_lock };
+    return m_epoch_time;
 }
 
 u64 TimeManagement::uptime_ms() const
@@ -478,19 +472,14 @@ void TimeManagement::increment_time_since_boot_hpet()
     // updated here! So we can safely read that information, query the clock,
     // and when we're all done we can update the information. This reduces
     // contention when other processors attempt to read the clock.
-    auto seconds_since_boot = m_seconds_since_boot;
-    auto ticks_this_second = m_ticks_this_second;
-    auto delta_ns = HPET::the().update_time(seconds_since_boot, ticks_this_second, false);
 
-    // Now that we have a precise time, go update it as quickly as we can
-    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-    m_seconds_since_boot = seconds_since_boot;
-    m_ticks_this_second = ticks_this_second;
-    // TODO: Apply m_remaining_epoch_time_adjustment
-    timespec time_adjustment = { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) };
-    m_epoch_time += Duration::from_timespec(time_adjustment);
-
-    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+    {
+        SpinlockLocker locker { m_lock };
+        auto delta_ns = HPET::the().update_time(m_seconds_since_boot, m_ticks_this_second, false);
+        // TODO: Apply m_remaining_epoch_time_adjustment
+        timespec time_adjustment = { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) };
+        m_epoch_time += Duration::from_timespec(time_adjustment);
+    }
 
     update_time_page();
 }
@@ -507,24 +496,19 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 
     m_system_timer->set_callback([this]() {
-        auto seconds_since_boot = m_seconds_since_boot;
-        auto ticks_this_second = m_ticks_this_second;
+        {
+            SpinlockLocker locker { m_lock };
 
-        u64 delta_ns;
-        if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
-            delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
-        else if (m_system_timer->timer_type() == HardwareTimerType::ARMv8Timer)
-            delta_ns = static_cast<ARMv8Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
-        else
-            VERIFY_NOT_REACHED();
+            u64 delta_ns;
+            if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
+                delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(m_seconds_since_boot, m_ticks_this_second, false);
+            else if (m_system_timer->timer_type() == HardwareTimerType::ARMv8Timer)
+                delta_ns = static_cast<ARMv8Timer*>(m_system_timer.ptr())->update_time(m_seconds_since_boot, m_ticks_this_second, false);
+            else
+                VERIFY_NOT_REACHED();
 
-        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-        m_seconds_since_boot = seconds_since_boot;
-        m_ticks_this_second = ticks_this_second;
-
-        m_epoch_time += Duration::from_nanoseconds(delta_ns);
-
-        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+            m_epoch_time += Duration::from_nanoseconds(delta_ns);
+        }
 
         update_time_page();
 
@@ -544,17 +528,11 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 
     m_system_timer->set_callback([this]() {
-        auto seconds_since_boot = m_seconds_since_boot;
-        auto ticks_this_second = m_ticks_this_second;
-        auto delta_ns = static_cast<RISCV64::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
-
-        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-        m_seconds_since_boot = seconds_since_boot;
-        m_ticks_this_second = ticks_this_second;
-
-        m_epoch_time += Duration::from_nanoseconds(delta_ns);
-
-        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+        {
+            SpinlockLocker locker { m_lock };
+            auto delta_ns = static_cast<RISCV64::Timer*>(m_system_timer.ptr())->update_time(m_seconds_since_boot, m_ticks_this_second, false);
+            m_epoch_time += Duration::from_nanoseconds(delta_ns);
+        }
 
         update_time_page();
 
@@ -580,21 +558,21 @@ void TimeManagement::increment_time_since_boot()
     long nanos_per_tick = 1'000'000'000 / m_time_keeper_timer->ticks_per_second();
     time_t max_slew_nanos = nanos_per_tick / 100;
 
-    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+    {
+        SpinlockLocker locker { m_lock };
 
-    auto slew_nanos = Duration::from_nanoseconds(
-        clamp(m_remaining_epoch_time_adjustment.to_nanoseconds(), -max_slew_nanos, max_slew_nanos));
-    m_remaining_epoch_time_adjustment -= slew_nanos;
+        auto slew_nanos = Duration::from_nanoseconds(
+            clamp(m_remaining_epoch_time_adjustment.to_nanoseconds(), -max_slew_nanos, max_slew_nanos));
+        m_remaining_epoch_time_adjustment -= slew_nanos;
 
-    m_epoch_time += Duration::from_nanoseconds(nanos_per_tick + slew_nanos.to_nanoseconds());
+        m_epoch_time += Duration::from_nanoseconds(nanos_per_tick + slew_nanos.to_nanoseconds());
 
-    if (++m_ticks_this_second >= m_time_keeper_timer->ticks_per_second()) {
-        // FIXME: Synchronize with other clock somehow to prevent drifting apart.
-        ++m_seconds_since_boot;
-        m_ticks_this_second = 0;
+        if (++m_ticks_this_second >= m_time_keeper_timer->ticks_per_second()) {
+            // FIXME: Synchronize with other clock somehow to prevent drifting apart.
+            ++m_seconds_since_boot;
+            m_ticks_this_second = 0;
+        }
     }
-
-    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 
     update_time_page();
 }
@@ -627,7 +605,7 @@ void TimeManagement::update_time_page()
 {
     auto& page = time_page();
     u32 update_iteration = AK::atomic_fetch_add(&page.update2, 1u, AK::MemoryOrder::memory_order_acquire);
-    page.clocks[CLOCK_REALTIME_COARSE] = m_epoch_time.to_timespec();
+    page.clocks[CLOCK_REALTIME_COARSE] = epoch_time().to_timespec();
     page.clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).time_since_start({}).to_timespec();
     AK::atomic_store(&page.update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
 }
