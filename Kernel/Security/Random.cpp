@@ -45,7 +45,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
         for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
             add_random_event(Kernel::read_rdrand(), i % 32);
         }
-    } else if (TimeManagement::the().can_query_precise_time()) {
+    } else if (HPET::initialized()) {
         // Add HPET as entropy source if we don't have anything better.
         dmesgln("KernelRng: Using HPET as entropy source");
 
