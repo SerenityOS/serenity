@@ -87,7 +87,6 @@ private:
     bool probe_and_set_x86_legacy_hardware_timers();
     bool probe_and_set_x86_non_legacy_hardware_timers();
     void increment_time_since_boot_hpet();
-    static void update_time();
 #elif ARCH(AARCH64)
     bool probe_and_set_aarch64_hardware_timers();
 #elif ARCH(RISCV64)
@@ -97,8 +96,14 @@ private:
 #endif
     Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
+
     void set_system_timer(HardwareTimerBase&);
+    void system_timer_callback();
     static void system_timer_tick();
+    void update_time();
+
+    // FIXME: Use a function prototype and share it with the hardware implementations.
+    Function<u64(u64&, u32&, bool)> m_read_time_from_hardware { nullptr };
 
     mutable Spinlock<LockRank::Process> m_lock;
     u32 m_ticks_this_second { 0 };
@@ -107,6 +112,7 @@ private:
     Duration m_remaining_epoch_time_adjustment {};
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
+    // If you set this, ensure to have provided a valid m_read_time_from_hardware.
     SetOnce m_can_query_precise_time;
 
     LockRefPtr<HardwareTimerBase> m_system_timer;
