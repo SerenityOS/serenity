@@ -59,7 +59,6 @@ public:
     bool normalize();
     bool load_config(Core::ConfigFile const& config_file, ByteString* error_msg = nullptr);
     bool save_config(Core::ConfigFile& config_file, bool sync = true) const;
-    bool try_auto_add_display_connector(ByteString const&);
 
     // TODO: spaceship operator
     bool operator!=(ScreenLayout const& other) const;

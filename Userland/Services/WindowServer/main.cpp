@@ -8,6 +8,7 @@
 #include "Compositor.h"
 #include "EventLoop.h"
 #include "Screen.h"
+#include "ScreenLayout.h"
 #include "WindowManager.h"
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
@@ -21,6 +22,89 @@
 
 namespace WindowServer {
 RefPtr<Core::ConfigFile> g_config;
+}
+
+static bool try_auto_add_display_connector(WindowServer::ScreenLayout& screen_layout, ByteString const& device_path)
+{
+    int display_connector_fd = open(device_path.characters(), O_RDWR | O_CLOEXEC);
+    if (display_connector_fd < 0) {
+        int err = errno;
+        dbgln("Error ({}) opening display connector device {}", err, device_path);
+        return false;
+    }
+    ScopeGuard fd_guard([&] {
+        close(display_connector_fd);
+    });
+
+    GraphicsHeadModeSetting mode_setting {};
+    memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
+    if (graphics_connector_get_head_mode_setting(display_connector_fd, &mode_setting) < 0) {
+        int err = errno;
+        dbgln("Error ({}) querying resolution from display connector device {}", err, device_path);
+        return false;
+    }
+    if (mode_setting.horizontal_active == 0 || mode_setting.vertical_active == 0) {
+        // Looks like the display is not turned on. Since we don't know what the desired
+        // resolution should be, use the main display as reference.
+        if (screen_layout.screens.is_empty())
+            return false;
+        auto& main_screen = screen_layout.screens[screen_layout.main_screen_index];
+        mode_setting.horizontal_active = main_screen.resolution.width();
+        mode_setting.vertical_active = main_screen.resolution.height();
+    }
+
+    auto append_screen = [&](Gfx::IntRect const& new_screen_rect) {
+        screen_layout.screens.append({ .mode = WindowServer::ScreenLayout::Screen::Mode::Device,
+            .device = device_path,
+            .location = new_screen_rect.location(),
+            .resolution = new_screen_rect.size(),
+            .scale_factor = 1 });
+    };
+
+    if (screen_layout.screens.is_empty()) {
+        append_screen({ 0, 0, mode_setting.horizontal_active, mode_setting.vertical_active });
+        return true;
+    }
+
+    auto original_screens = move(screen_layout.screens);
+    screen_layout.screens = original_screens;
+    ArmedScopeGuard screens_guard([&] {
+        screen_layout.screens = move(original_screens);
+    });
+
+    // Now that we know the current resolution, try to find a location that we can add onto
+    // TODO: make this a little more sophisticated in case a more complex layout is already configured
+    for (auto& screen : screen_layout.screens) {
+        auto screen_rect = screen.virtual_rect();
+        Gfx::IntRect new_screen_rect {
+            screen_rect.right(),
+            screen_rect.top(),
+            (int)mode_setting.horizontal_active,
+            (int)mode_setting.vertical_active
+        };
+
+        bool collision = false;
+        for (auto& other_screen : screen_layout.screens) {
+            if (&screen == &other_screen)
+                continue;
+            if (other_screen.virtual_rect().intersects(new_screen_rect)) {
+                collision = true;
+                break;
+            }
+        }
+
+        if (!collision) {
+            append_screen(new_screen_rect);
+            if (screen_layout.is_valid()) {
+                // We got lucky!
+                screens_guard.disarm();
+                return true;
+            }
+        }
+    }
+
+    dbgln("Failed to add display connector device {} with resolution {}x{} to screen layout", device_path, mode_setting.horizontal_active, mode_setting.vertical_active);
+    return false;
 }
 
 ErrorOr<int> serenity_main(Main::Arguments)
@@ -97,7 +181,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 TRY(Core::System::close(display_connector_fd));
                 if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
                     continue;
-                if (!screen_layout.try_auto_add_display_connector(full_path))
+                if (!try_auto_add_display_connector(screen_layout, full_path))
                     dbgln("Could not auto-add display connector device {} to screen layout", full_path);
             }
             return {};
