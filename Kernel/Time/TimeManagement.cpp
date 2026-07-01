@@ -141,32 +141,8 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
         seconds = m_seconds_since_boot;
         ticks = m_ticks_this_second;
 
-        if (do_query) {
-#if ARCH(X86_64)
-            // We may have to do this over again if the timer interrupt fires
-            // while we're trying to query the information. In that case, our
-            // seconds and ticks became invalid, producing an incorrect time.
-            // Be sure to not modify m_seconds_since_boot and m_ticks_this_second
-            // because this may only be modified by the interrupt handler
-            HPET::the().update_time(seconds, ticks, true);
-#elif ARCH(AARCH64)
-            // FIXME: Get rid of these horrible casts
-            if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
-                const_cast<RPi::Timer*>(static_cast<RPi::Timer const*>(m_system_timer.ptr()))->update_time(seconds, ticks, true);
-            else if (m_system_timer->timer_type() == HardwareTimerType::ARMv8Timer)
-                const_cast<ARMv8Timer*>(static_cast<ARMv8Timer const*>(m_system_timer.ptr()))->update_time(seconds, ticks, true);
-            else
-                VERIFY_NOT_REACHED();
-#elif ARCH(RISCV64)
-            // FIXME: Get rid of these horrible casts
-            if (m_system_timer->timer_type() == HardwareTimerType::RISCVTimer)
-                const_cast<RISCV64::Timer*>(static_cast<RISCV64::Timer const*>(m_system_timer.ptr()))->update_time(seconds, ticks, true);
-            else
-                VERIFY_NOT_REACHED();
-#else
-#    error Unknown architecture
-#endif
-        }
+        if (do_query)
+            m_read_time_from_hardware(seconds, ticks, true);
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
 
     VERIFY(m_time_ticks_per_second > 0);
@@ -402,17 +378,11 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
         taken_non_periodic_timers_count += 1;
     }
 
-    m_system_timer->set_callback([this]() {
-        // Update the time. We don't really care too much about the
-        // frequency of the interrupt because we'll query the main
-        // counter to get an accurate time.
-        if (Processor::is_bootstrap_processor()) {
-            // TODO: Have the other CPUs call system_timer_tick directly
-            increment_time_since_boot_hpet();
-        }
+    m_read_time_from_hardware = [](auto&&... args) -> u64 {
+        return HPET::the().update_time(args...);
+    };
 
-        system_timer_tick();
-    });
+    m_system_timer->set_callback([this]() { system_timer_callback(); });
 
     // Use the HPET main counter frequency for time purposes. This is likely
     // a much higher frequency than the interrupt itself and allows us to
@@ -454,7 +424,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
     }
 
     VERIFY(s_hardware_timers->is_empty());
-    s_hardware_timers->try_append(PIT::initialize(TimeManagement::update_time)).release_value_but_fixme_should_propagate_errors();
+    s_hardware_timers->try_append(PIT::initialize([this]() { update_time(); })).release_value_but_fixme_should_propagate_errors();
     s_hardware_timers->try_append(RealTimeClock::create(TimeManagement::system_timer_tick)).release_value_but_fixme_should_propagate_errors();
     m_time_keeper_timer = (*s_hardware_timers)[0];
     m_system_timer = (*s_hardware_timers)[1];
@@ -462,37 +432,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
     // The timer is only as accurate as the interrupts...
     m_time_ticks_per_second = m_time_keeper_timer->ticks_per_second();
     return true;
-}
-
-void TimeManagement::update_time()
-{
-    TimeManagement::the().increment_time_since_boot();
-}
-
-void TimeManagement::increment_time_since_boot_hpet()
-{
-    VERIFY(!m_time_keeper_timer.is_null());
-    VERIFY(m_time_keeper_timer->timer_type() == HardwareTimerType::HighPrecisionEventTimer);
-
-    // NOTE: m_seconds_since_boot and m_ticks_this_second are only ever
-    // updated here! So we can safely read that information, query the clock,
-    // and when we're all done we can update the information. This reduces
-    // contention when other processors attempt to read the clock.
-    auto seconds_since_boot = m_seconds_since_boot;
-    auto ticks_this_second = m_ticks_this_second;
-    auto delta_ns = HPET::the().update_time(seconds_since_boot, ticks_this_second, false);
-
-    // Now that we have a precise time, go update it as quickly as we can
-    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-    m_seconds_since_boot = seconds_since_boot;
-    m_ticks_this_second = ticks_this_second;
-    // TODO: Apply m_remaining_epoch_time_adjustment
-    timespec time_adjustment = { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) };
-    m_epoch_time += Duration::from_timespec(time_adjustment);
-
-    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
-
-    update_time_page();
 }
 #elif ARCH(AARCH64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
@@ -506,30 +445,14 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 
-    m_system_timer->set_callback([this]() {
-        auto seconds_since_boot = m_seconds_since_boot;
-        auto ticks_this_second = m_ticks_this_second;
-
-        u64 delta_ns;
+    m_read_time_from_hardware = [this](auto&&... args) {
         if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
-            delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
-        else if (m_system_timer->timer_type() == HardwareTimerType::ARMv8Timer)
-            delta_ns = static_cast<ARMv8Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
-        else
-            VERIFY_NOT_REACHED();
-
-        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-        m_seconds_since_boot = seconds_since_boot;
-        m_ticks_this_second = ticks_this_second;
-
-        m_epoch_time += Duration::from_nanoseconds(delta_ns);
-
-        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
-
-        update_time_page();
-
-        system_timer_tick();
-    });
+            return static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(args...);
+        if (m_system_timer->timer_type() == HardwareTimerType::ARMv8Timer)
+            return static_cast<ARMv8Timer*>(m_system_timer.ptr())->update_time(args...);
+        VERIFY_NOT_REACHED();
+    };
+    m_system_timer->set_callback([this]() { system_timer_callback(); });
 
     m_can_query_precise_time.set();
     m_time_keeper_timer = m_system_timer;
@@ -543,23 +466,10 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
     m_system_timer = (*s_hardware_timers)[0];
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 
-    m_system_timer->set_callback([this]() {
-        auto seconds_since_boot = m_seconds_since_boot;
-        auto ticks_this_second = m_ticks_this_second;
-        auto delta_ns = static_cast<RISCV64::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
-
-        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-        m_seconds_since_boot = seconds_since_boot;
-        m_ticks_this_second = ticks_this_second;
-
-        m_epoch_time += Duration::from_nanoseconds(delta_ns);
-
-        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
-
-        update_time_page();
-
-        system_timer_tick();
-    });
+    m_read_time_from_hardware = [this](auto&&... args) {
+        return static_cast<RISCV64::Timer*>(m_system_timer.ptr())->update_time(args...);
+    };
+    m_system_timer->set_callback([this]() { system_timer_callback(); });
 
     m_can_query_precise_time.set();
     m_time_keeper_timer = m_system_timer;
@@ -569,6 +479,25 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 #else
 #    error Unknown architecture
 #endif
+
+void TimeManagement::update_time()
+{
+    VERIFY(m_time_keeper_timer);
+    // NOTE: m_seconds_since_boot and m_ticks_this_second are only ever
+    // updated from here!
+
+    if (m_can_query_precise_time.was_set()) {
+        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+        auto delta_ns = m_read_time_from_hardware(m_seconds_since_boot, m_ticks_this_second, false);
+        // TODO: Apply m_remaining_epoch_time_adjustment
+        m_epoch_time += Duration::from_nanoseconds(delta_ns);
+        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+    } else {
+        increment_time_since_boot();
+    }
+
+    update_time_page();
+}
 
 void TimeManagement::increment_time_since_boot()
 {
@@ -595,8 +524,16 @@ void TimeManagement::increment_time_since_boot()
     }
 
     m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+}
 
-    update_time_page();
+void TimeManagement::system_timer_callback()
+{
+    if (Processor::is_bootstrap_processor()) {
+        // TODO: Find a cleaner way to only update the cached time when
+        //       using a shared system and time keeping interrupt.
+        update_time();
+    }
+    system_timer_tick();
 }
 
 void TimeManagement::system_timer_tick()
