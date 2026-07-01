@@ -110,7 +110,6 @@ private:
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
     SetOnce m_can_query_precise_time;
-    bool m_updating_time { false }; // may only be accessed from the BSP!
 
     LockRefPtr<HardwareTimerBase> m_system_timer;
     LockRefPtr<HardwareTimerBase> m_time_keeper_timer;
