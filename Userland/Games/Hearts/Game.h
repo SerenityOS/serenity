@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2026, poorblay <poorblay@users.noreply.github.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,7 @@ public:
     void setup(ByteString player_name, int hand_number = 0);
 
     Function<void(String const&)> on_status_change;
+    Function<void(int)> on_score_update;
 
 private:
     Game();
@@ -68,6 +70,7 @@ private:
     void stop_animation();
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;

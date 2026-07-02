@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2026, poorblay <poorblay@users.noreply.github.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -56,12 +57,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game.set_focus(true);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
-    statusbar.set_text(0, "Score: 0"_string);
+    statusbar.set_text(0, ""_string);
+    statusbar.set_text(1, "Score: 0"_string);
 
     ByteString player_name = Config::read_string("Hearts"sv, ""sv, "player_name"sv, "Gunnar"sv);
 
     game.on_status_change = [&](String const& status) {
-        statusbar.set_override_text(status);
+        statusbar.set_text(0, status);
+    };
+
+    game.on_score_update = [&](int score) {
+        statusbar.set_text(1, String::formatted("Score: {}", score).release_value_but_fixme_should_propagate_errors());
     };
 
     app->on_action_enter = [&](GUI::Action& action) {
