@@ -87,6 +87,7 @@ private:
     bool probe_and_set_x86_non_legacy_hardware_timers();
     void increment_time_since_boot_hpet();
     static void update_time();
+    SetOnce m_prefer_tsc;
 #elif ARCH(AARCH64)
     bool probe_and_set_aarch64_hardware_timers();
 #elif ARCH(RISCV64)

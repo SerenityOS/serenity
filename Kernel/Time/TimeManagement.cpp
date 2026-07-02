@@ -17,6 +17,7 @@
 #    include <Kernel/Arch/x86_64/Time/HPETComparator.h>
 #    include <Kernel/Arch/x86_64/Time/PIT.h>
 #    include <Kernel/Arch/x86_64/Time/RTC.h>
+#    include <Kernel/Arch/x86_64/Time/TSC.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Timer.h>
 #    include <Kernel/Arch/aarch64/Time/ARMv8Timer.h>
@@ -148,7 +149,10 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
             // seconds and ticks became invalid, producing an incorrect time.
             // Be sure to not modify m_seconds_since_boot and m_ticks_this_second
             // because this may only be modified by the interrupt handler
-            HPET::the().update_time(seconds, ticks, true);
+            if (m_prefer_tsc.was_set())
+                TSC::the().update_time(seconds, ticks, true);
+            else
+                HPET::the().update_time(seconds, ticks, true);
 #elif ARCH(AARCH64)
             // FIXME: Get rid of these horrible casts
             if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
@@ -425,6 +429,31 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
     // We don't need an interrupt for time keeping purposes because we
     // can query the timer.
     m_time_keeper_timer = m_system_timer;
+
+    if (TSC::is_supported_and_invariant()
+        && TSC::the().calibrate(*m_system_timer)) {
+        m_prefer_tsc.set();
+
+        m_system_timer->set_callback([this]() {
+            auto seconds_since_boot = m_seconds_since_boot;
+            auto ticks_this_second = m_ticks_this_second;
+            auto delta_ns = TSC::the().update_time(seconds_since_boot, ticks_this_second, false);
+
+            u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+            m_seconds_since_boot = seconds_since_boot;
+            m_ticks_this_second = ticks_this_second;
+
+            m_epoch_time += Duration::from_nanoseconds(delta_ns);
+
+            m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+
+            update_time_page();
+
+            system_timer_tick();
+        });
+
+        m_time_ticks_per_second = TSC::the().frequency();
+    }
 
     if (periodic_timers.size() > taken_periodic_timers_count) {
         m_profile_timer = periodic_timers[taken_periodic_timers_count];
