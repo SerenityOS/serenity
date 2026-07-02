@@ -25,7 +25,7 @@ RealTimeClock::RealTimeClock(Function<void()> callback)
     InterruptDisabler disabler;
     NonMaskableInterruptDisabler nmi_disabler;
     enable_irq();
-    CMOS::write(0x8B, CMOS::read(0xB) | 0x40);
+    CMOS::write(0x8B, CMOS::read(0x8B) | 0x40);
     reset_to_default_ticks_per_second();
 }
 bool RealTimeClock::handle_irq()
@@ -63,6 +63,9 @@ bool RealTimeClock::try_to_set_frequency(size_t frequency)
     CMOS::write(0x8A, (previous_rate & 0xF0) | rate);
     m_frequency = frequency;
     dbgln("RTC: Set frequency to {} Hz", frequency);
+    // This ensures that the hardware will generate a new interrupt
+    // but acknowledge any pending interrupt.
+    CMOS::read(0x8C);
     enable_irq();
     return true;
 }
