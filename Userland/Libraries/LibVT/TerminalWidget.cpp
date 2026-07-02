@@ -85,6 +85,15 @@ void TerminalWidget::set_pty_master_fd(int fd)
     };
 }
 
+TerminalWidget::~TerminalWidget()
+{
+    if (m_ptm_fd != -1) {
+        m_notifier = nullptr;
+        close(m_ptm_fd);
+        m_ptm_fd = -1;
+    }
+}
+
 TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     : m_terminal(*this)
     , m_automatic_size_policy(automatic_size_policy)

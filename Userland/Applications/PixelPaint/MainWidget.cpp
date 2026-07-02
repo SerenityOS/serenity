@@ -70,10 +70,6 @@ MainWidget::MainWidget()
         }
     };
 
-    m_tab_widget->on_middle_click = [&](auto& widget) {
-        m_tab_widget->on_tab_close_click(widget);
-    };
-
     m_tab_widget->on_tab_close_click = [&](auto& widget) {
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
         if (image_editor.request_close()) {
@@ -187,6 +183,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 m_layer_list_widget->set_selected_layer(bg_layer);
             }
         });
+
+    m_tab_widget->set_add_tab_button_enabled(true);
+    m_tab_widget->on_add_tab_button_click = [this, &window] {
+        m_new_image_action->activate(&window);
+    };
 
     m_new_image_from_clipboard_action = GUI::Action::create(
         "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, Key_V }, g_icon_bag.new_clipboard, [&](auto&) {

@@ -81,11 +81,6 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
         update_displayed_zoom_level();
     };
 
-    m_tab_widget->on_middle_click = [](auto& clicked_widget) {
-        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
-        tab.on_tab_close_request(tab);
-    };
-
     m_tab_widget->on_tab_close_click = [](auto& clicked_widget) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.on_tab_close_request(tab);
@@ -94,6 +89,11 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
     m_tab_widget->on_context_menu_request = [](auto& clicked_widget, const GUI::ContextMenuEvent& context_menu_event) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.context_menu_requested(context_menu_event.screen_position());
+    };
+
+    m_tab_widget->set_add_tab_button_enabled(true);
+    m_tab_widget->on_add_tab_button_click = [this] {
+        create_new_tab(Browser::g_new_tab_url, Web::HTML::ActivateTab::Yes);
     };
 
     m_window_actions.on_create_new_tab = [this] {

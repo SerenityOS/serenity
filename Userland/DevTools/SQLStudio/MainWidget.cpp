@@ -222,6 +222,9 @@ ErrorOr<void> MainWidget::initialize()
         on_editor_change();
     };
 
+    m_tab_widget->set_add_tab_button_enabled(true);
+    m_tab_widget->on_add_tab_button_click = [&] { open_new_script(); };
+
     m_action_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("action_tab_widget"sv);
 
     m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results"_string);
