@@ -7,7 +7,10 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/FloatingPoint.h>
+#include <AK/Math/Copysign.h>
 #include <AK/Math/Division.h>
+#include <AK/Math/Fabs.h>
 #include <AK/NumericLimits.h>
 
 #include <AK/Math/Macros.h>
@@ -26,6 +29,8 @@ constexpr T ceil(T num)
             ? static_cast<i64>(num)
             : static_cast<i64>(num) + ((num > 0) ? 1 : 0);
     }
+    ELEMENTWISE_BUILTIN(ceil, num);
+
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintp, num);
 #else
@@ -44,6 +49,8 @@ constexpr T floor(T num)
             ? static_cast<i64>(num)
             : static_cast<i64>(num) - ((num > 0) ? 0 : 1);
     }
+    ELEMENTWISE_BUILTIN(floor, num);
+
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintm, num);
 #else
@@ -54,12 +61,14 @@ constexpr T floor(T num)
 template<FloatingPoint T>
 constexpr T trunc(T num)
 {
-#if ARCH(AARCH64)
     if (is_constant_evaluated()) {
         if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
             return num;
         return static_cast<T>(static_cast<i64>(num));
     }
+    ELEMENTWISE_BUILTIN(trunc, num);
+
+#if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintz, num);
 #endif
     // FIXME: Use dedicated instruction in the non constexpr case
@@ -82,7 +91,16 @@ constexpr T rint(T x)
     //        and `frintn` respectively,
     //        no such guaranteed round exists for x87 `frndint`
 #if ARCH(X86_64)
+    if constexpr (IsSame<T, long double>) {
+        asm(
+            "frndint"
+            : "+t"(x));
+        return x;
+    }
 #    ifdef __SSE4_1__
+    // This is only inlined when SSE4.1 is enabled
+    // also for some reason this does not work nicely for frndint
+    ELEMENTWISE_BUILTIN(rint, x);
     if constexpr (IsSame<T, double>) {
         T r;
         asm(
@@ -99,15 +117,14 @@ constexpr T rint(T x)
             : "x"(x));
         return r;
     }
-#    else
-    asm(
-        "frndint"
-        : "+t"(x));
-    return x;
 #    endif
 #elif ARCH(AARCH64)
+    ELEMENTWISE_BUILTIN(rint, x);
     AARCH64_INSTRUCTION(frintx, x);
 #elif ARCH(RISCV64)
+    ELEMENTWISE_BUILTIN(rint, x);
+    // NOTE: RISC-V only gives us an lrint instruction, which we could use to round-trip cast
+    //       Compilers seem to prefer that over the method below
     if (__builtin_isnan(x))
         return x;
 
@@ -132,13 +149,24 @@ constexpr T rint(T x)
     if constexpr (IsSame<T, long double>)
         TODO_RISCV64();
 #endif
-    TODO();
+
+    // Move the value out of the sub integer precision range and back,
+    // This forces a rounding operation according to the current rounding mode
+    if (fabs(x) > FloatExtractor<T>::mantissa_max)
+        return x;
+    auto adjust = copysign((T)FloatExtractor<T>::mantissa_max + 1, x);
+    auto r = x + adjust;
+    r -= adjust;
+    return copysign(r, x); // This last copysign is to preserve the sign of 0s after rounding
 }
 
 template<FloatingPoint T>
 constexpr T round(T x)
 {
     CONSTEXPR_STATE(round, x);
+#if ARCH(AARCH64) || ARCH(RISCV64) || defined(__SSE4_1__)
+    ELEMENTWISE_BUILTIN(round, x);
+#endif
     // Note: This is break-tie-away-from-zero, so not the hw's understanding of
     //       "nearest", which would be towards even.
     if (x == 0.)
@@ -149,63 +177,70 @@ constexpr T round(T x)
 }
 
 template<Integral I, FloatingPoint P>
-ALWAYS_INLINE I round_to(P value);
+requires(false)
+I round_to_impl(P value);
 
 #if ARCH(X86_64)
 template<Integral I>
-ALWAYS_INLINE I round_to(long double value)
+requires(!IsSame<I, u64>) // fistpl can only output signed numbers
+                          // so u64 is out
+ALWAYS_INLINE I round_to_impl(long double value)
 {
     // Note: fistps outputs into a signed integer location (i16, i32, i64),
-    //       so lets be nice and tell the compiler that.
-    Conditional<sizeof(I) >= sizeof(i16), MakeSigned<I>, i16> ret;
-    if constexpr (sizeof(I) == sizeof(i64)) {
+    //       So we need at least i16 for an output slot,
+    //       and must take the next higher int for unsigned values
+    // Note: Posix allows us to return undefined values on overflows
+    //       (though we should throw a domain error, which we dont in the cases posix lrint doesn't know about)
+    if constexpr (IsOneOf<I, i64, u32>) {
+        i64 ret;
         asm("fistpll %0"
             : "=m"(ret)
             : "t"(value)
             : "st");
-    } else if constexpr (sizeof(I) == sizeof(i32)) {
+        return static_cast<I>(ret);
+    } else if constexpr (IsOneOf<I, i32, u16>) {
+        i32 ret;
         asm("fistpl %0"
             : "=m"(ret)
             : "t"(value)
             : "st");
+        return static_cast<I>(ret);
     } else {
+        i16 ret;
         asm("fistps %0"
             : "=m"(ret)
             : "t"(value)
             : "st");
+        return static_cast<I>(ret);
     }
-    return static_cast<I>(ret);
 }
 
 template<Integral I>
-ALWAYS_INLINE I round_to(float value)
+requires(!IsSame<I, u64>) // cvtss2si can only output signed numbers
+                          // so u64 is out
+ALWAYS_INLINE I round_to_impl(float value)
 {
-    // FIXME: round_to<u64> might will cause issues, aka the indefinite value being set,
-    //        if the value surpasses the i64 limit, even if the result could fit into an u64
-    //        To solve this we would either need to detect that value or do a range check and
-    //        then do a more specialized conversion, which might include a division (which is expensive)
-    if constexpr (sizeof(I) == sizeof(i64) || IsSame<I, u32>) {
+    if constexpr (IsOneOf<I, i64, u32>) {
         i64 ret;
         asm("cvtss2si %1, %0"
             : "=r"(ret)
             : "xm"(value));
         return static_cast<I>(ret);
+    } else {
+        i32 ret;
+        asm("cvtss2si %1, %0"
+            : "=r"(ret)
+            : "xm"(value));
+        return static_cast<I>(ret);
     }
-    i32 ret;
-    asm("cvtss2si %1, %0"
-        : "=r"(ret)
-        : "xm"(value));
-    return static_cast<I>(ret);
 }
 
 template<Integral I>
-ALWAYS_INLINE I round_to(double value)
+requires(!IsSame<I, u64>) // cvtsd2si can only output signed numbers
+                          // so u64 is out
+ALWAYS_INLINE I round_to_impl(double value)
 {
-    // FIXME: round_to<u64> might will cause issues, aka the indefinite value being set,
-    //        if the value surpasses the i64 limit, even if the result could fit into an u64
-    //        To solve this we would either need to detect that value or do a range check and
-    //        then do a more specialized conversion, which might include a division (which is expensive)
-    if constexpr (sizeof(I) == sizeof(i64) || IsSame<I, u32>) {
+    if constexpr (IsOneOf<I, i64, u32>) {
         i64 ret;
         asm("cvtsd2si %1, %0"
             : "=r"(ret)
@@ -221,7 +256,7 @@ ALWAYS_INLINE I round_to(double value)
 
 #elif ARCH(AARCH64)
 template<SignedIntegral I>
-ALWAYS_INLINE I round_to(float value)
+ALWAYS_INLINE I round_to_impl(float value)
 {
     if constexpr (sizeof(I) <= sizeof(u32)) {
         i32 res;
@@ -238,7 +273,7 @@ ALWAYS_INLINE I round_to(float value)
 }
 
 template<SignedIntegral I>
-ALWAYS_INLINE I round_to(double value)
+ALWAYS_INLINE I round_to_impl(double value)
 {
     if constexpr (sizeof(I) <= sizeof(u32)) {
         i32 res;
@@ -255,7 +290,7 @@ ALWAYS_INLINE I round_to(double value)
 }
 
 template<UnsignedIntegral U>
-ALWAYS_INLINE U round_to(float value)
+ALWAYS_INLINE U round_to_impl(float value)
 {
     if constexpr (sizeof(U) <= sizeof(u32)) {
         u32 res;
@@ -264,7 +299,7 @@ ALWAYS_INLINE U round_to(float value)
             : "w"(value));
         return static_cast<U>(res);
     }
-    i64 res;
+    u64 res;
     asm("fcvtnu %0, %s1"
         : "=r"(res)
         : "w"(value));
@@ -272,35 +307,108 @@ ALWAYS_INLINE U round_to(float value)
 }
 
 template<UnsignedIntegral U>
-ALWAYS_INLINE U round_to(double value)
+ALWAYS_INLINE U round_to_impl(double value)
 {
     if constexpr (sizeof(U) <= sizeof(u32)) {
         u32 res;
-        asm("fcvtns %w0, %d1"
+        asm("fcvtnu %w0, %d1"
             : "=r"(res)
             : "w"(value));
         return static_cast<U>(res);
     }
-    i64 res;
-    asm("fcvtns %0, %d1"
+    u64 res;
+    asm("fcvtnu %0, %d1"
         : "=r"(res)
         : "w"(value));
     return static_cast<U>(res);
 }
 
-#else
-template<Integral I, FloatingPoint P>
-ALWAYS_INLINE I round_to(P value)
+#elif ARCH(RISCV64)
+template<SignedIntegral I>
+ALWAYS_INLINE I round_to_impl(float value)
 {
-    if constexpr (IsSame<P, long double>)
-        return static_cast<I>(__builtin_llrintl(value));
-    if constexpr (IsSame<P, double>)
-        return static_cast<I>(__builtin_llrint(value));
-    if constexpr (IsSame<P, float>)
-        return static_cast<I>(__builtin_llrintf(value));
+    if constexpr (sizeof(I) <= sizeof(u32)) {
+        i32 res;
+        asm("fcvt.w.s %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<I>(res);
+    }
+    i64 res;
+    asm("fcvt.l.s %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<I>(res);
 }
+
+template<SignedIntegral I>
+ALWAYS_INLINE I round_to_impl(double value)
+{
+    if constexpr (sizeof(I) <= sizeof(u32)) {
+        i32 res;
+        asm("fcvt.w.d %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<I>(res);
+    }
+    i64 res;
+    asm("fcvt.l.d %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<I>(res);
+}
+
+template<UnsignedIntegral U>
+ALWAYS_INLINE U round_to_impl(float value)
+{
+    if constexpr (sizeof(U) <= sizeof(u32)) {
+        u32 res;
+        asm("fcvt.wu.s %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<U>(res);
+    }
+    u64 res;
+    asm("fcvt.lu.s %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<U>(res);
+}
+
+template<UnsignedIntegral U>
+ALWAYS_INLINE U round_to_impl(double value)
+{
+    if constexpr (sizeof(U) <= sizeof(u32)) {
+        u32 res;
+        asm("fcvt.wu.d %w0, %1"
+            : "=r"(res)
+            : "f"(value));
+        return static_cast<U>(res);
+    }
+    u64 res;
+    asm("fcvt.lu.d %0, %1"
+        : "=r"(res)
+        : "f"(value));
+    return static_cast<U>(res);
+}
+
 #endif
 
+template<Integral I, FloatingPoint P>
+constexpr I round_to(P value)
+{
+    if (is_constant_evaluated()) {
+        return static_cast<I>(rint<P>(value));
+    }
+    if constexpr (requires { round_to_impl<I>(value); }) {
+        return round_to_impl<I>(value);
+    } else {
+        // Naive Implementation
+        // Most HW provides a smarter way of doing this
+        return static_cast<I>(rint<P>(value));
+        // FIXME: Is there any reason to call into libm instead?
+    }
+}
 }
 
 using Rounding::ceil;

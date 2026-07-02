@@ -16,6 +16,7 @@ template<FloatingPoint T>
 constexpr T sqrt(T x)
 {
     CONSTEXPR_STATE(sqrt, x);
+    ELEMENTWISE_BUILTIN(sqrt, x);
 
 #if ARCH(X86_64)
     if constexpr (IsSame<T, float>) {
