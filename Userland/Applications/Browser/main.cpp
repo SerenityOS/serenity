@@ -158,6 +158,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: This should go away with a standalone download manager at some point.
     TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme(man_file) }));
+    auto settings_url = URL::create_with_file_scheme("/bin/BrowserSettings"sv);
+    TRY(Desktop::Launcher::add_allowed_url(settings_url));
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/BrowserSettings"sv, { settings_url }));
     TRY(Desktop::Launcher::seal_allowlist());
 
     TRY(Core::System::unveil("/tmp/session/%sid/Ladybird.pid", "rwc"));
@@ -176,7 +179,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
-    TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
     TRY(Core::System::unveil("/bin/Browser", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

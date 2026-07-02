@@ -8,6 +8,8 @@
 #include "AnalogClock.h"
 #include <LibCore/DateTime.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -16,15 +18,22 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <LibTimeZone/TimeZone.h>
+#include <LibURL/URL.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::create(arguments));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    auto settings_url = URL::create_with_file_scheme("/bin/ClockSettings"sv);
+    TRY(Desktop::Launcher::add_allowed_url(settings_url));
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/ClockSettings"sv, { settings_url }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-analog-clock"sv));
     auto window = GUI::Window::construct();
@@ -82,6 +91,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     menu->add_action(reset_to_system_time_zone_action);
     reset_to_system_time_zone_action->activate();
+
+    menu->add_separator();
+    menu->add_action(GUI::CommonActions::make_settings_action([&](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/bin/ClockSettings"));
+    }));
 
     clock->on_context_menu_request = [&](auto& event) {
         menu->popup(event.screen_position());

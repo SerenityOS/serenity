@@ -31,8 +31,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme("/bin/MailSettings")));
-    TRY(Desktop::Launcher::add_allowed_handler_with_any_url("/bin/MailSettings"));
+    auto settings_url = URL::create_with_file_scheme("/bin/MailSettings"sv);
+    TRY(Desktop::Launcher::add_allowed_url(settings_url));
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/MailSettings"sv, { settings_url }));
     TRY(Desktop::Launcher::seal_allowlist());
 
     auto window = GUI::Window::construct();
@@ -48,6 +49,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = window->add_menu("&File"_string);
 
+    file_menu->add_action(GUI::CommonActions::make_settings_action([&](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/bin/MailSettings"sv));
+    },
+        window));
+    file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         mail_widget->on_window_close();
         app->quit();

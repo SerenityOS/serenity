@@ -50,10 +50,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domain("Calendar");
     Config::monitor_domain("Calendar");
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath proc exec unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/bin/CalendarSettings", "x"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
