@@ -726,6 +726,9 @@ Move Board::random_move(Color color) const
 
 Board::Result Board::game_result() const
 {
+    if (m_drawn)
+        return Result::DrawByAgreement;
+
     if (m_resigned != Color::None)
         return (m_resigned == Color::White) ? Result::WhiteResign : Result::BlackResign;
 
@@ -931,6 +934,8 @@ StringView Board::result_to_string(Result result, Color turn)
         return "Draw by fivefold repetition"sv;
     case Chess::Board::Result::InsufficientMaterial:
         return "Draw by insufficient material"sv;
+    case Chess::Board::Result::DrawByAgreement:
+        return "Draw by agreement"sv;
     case Chess::Board::Result::NotFinished:
         return "Game not finished"sv;
     default:
@@ -954,6 +959,7 @@ StringView Board::result_to_points_string(Result result, Color turn)
     case Chess::Board::Result::ThreeFoldRepetition:
     case Chess::Board::Result::FiveFoldRepetition:
     case Chess::Board::Result::InsufficientMaterial:
+    case Chess::Board::Result::DrawByAgreement:
         return "1/2-1/2"sv;
     case Chess::Board::Result::NotFinished:
         return "*"sv;

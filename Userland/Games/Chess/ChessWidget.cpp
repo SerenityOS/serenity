@@ -503,24 +503,28 @@ void ChessWidget::input_engine_move()
     }
 
     set_override_cursor(Gfx::StandardCursor::Wait);
-    m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](ErrorOr<Chess::Move> move) {
-        set_override_cursor(Gfx::StandardCursor::None);
-        if (!want_engine_move())
+    m_engine->get_best_move(board(), 4000, [weak_this = make_weak_ptr(), drag_was_enabled](ErrorOr<Chess::Move> move) {
+        auto self = weak_this.strong_ref();
+        if (!self)
             return;
-        set_drag_enabled(drag_was_enabled);
+        self->set_override_cursor(Gfx::StandardCursor::None);
+        if (!self->want_engine_move())
+            return;
+        self->set_drag_enabled(drag_was_enabled);
         if (!move.is_error()) {
-            VERIFY(board().apply_move(move.release_value()));
-            update_move_display_widget(board());
-            if (!m_unlimited_time_control) {
-                apply_increment(move.release_value());
+            auto move_value = move.release_value();
+            VERIFY(self->board().apply_move(move_value));
+            self->update_move_display_widget(self->board());
+            if (!self->m_unlimited_time_control) {
+                self->apply_increment(move_value);
             }
-            if (check_game_over(ClaimDrawBehavior::Prompt))
+            if (self->check_game_over(ClaimDrawBehavior::Prompt))
                 return;
         }
-        m_playback_move_number = m_board.moves().size();
-        m_playback = false;
-        m_board_markings.clear();
-        update();
+        self->m_playback_move_number = self->m_board.moves().size();
+        self->m_playback = false;
+        self->m_board_markings.clear();
+        self->update();
     });
 }
 
@@ -692,7 +696,7 @@ ErrorOr<void, PGNParseError> ChessWidget::import_pgn(Core::File& file)
         }
 
         if (lexer.next_is("1/2-1/2"sv)) {
-            auto value = lexer.consume(3);
+            auto value = lexer.consume(7);
             tokens.append(Token { TokenType::GameTerminator, value });
             break;
         }
@@ -770,6 +774,9 @@ ErrorOr<void, PGNParseError> ChessWidget::import_pgn(Core::File& file)
             }
             if (token.value == "0-1"sv) {
                 m_board.set_resigned(Chess::Color::White);
+            }
+            if (token.value == "1/2-1/2"sv) {
+                m_board.set_drawn();
             }
             break;
         case TokenType::Comment:

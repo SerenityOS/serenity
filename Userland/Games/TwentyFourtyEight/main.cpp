@@ -48,14 +48,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    size_t board_size = Config::read_i32("2048"sv, ""sv, "board_size"sv, 4);
-    u32 target_tile = Config::read_i32("2048"sv, ""sv, "target_tile"sv, 2048);
+    i32 board_size_config = Config::read_i32("2048"sv, ""sv, "board_size"sv, 4);
+    i32 target_tile_config = Config::read_i32("2048"sv, ""sv, "target_tile"sv, 2048);
     bool evil_ai = Config::read_bool("2048"sv, ""sv, "evil_ai"sv, false);
 
-    if ((target_tile & (target_tile - 1)) != 0) {
-        // If the target tile is not a power of 2, reset to its default value.
-        target_tile = 2048;
-    }
+    if (board_size_config < 2 || board_size_config > 16)
+        board_size_config = 4;
+    if (target_tile_config <= 0 || (target_tile_config & (target_tile_config - 1)) != 0)
+        target_tile_config = 2048;
+
+    size_t board_size = static_cast<size_t>(board_size_config);
+    u32 target_tile = static_cast<u32>(target_tile_config);
 
     Config::write_i32("2048"sv, ""sv, "board_size"sv, board_size);
     Config::write_i32("2048"sv, ""sv, "target_tile"sv, target_tile);

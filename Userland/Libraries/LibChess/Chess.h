@@ -150,6 +150,7 @@ public:
         ThreeFoldRepetition,
         FiveFoldRepetition,
         InsufficientMaterial,
+        DrawByAgreement,
         NotFinished,
     };
 
@@ -164,6 +165,7 @@ public:
     int game_score() const;
     bool game_finished() const;
     void set_resigned(Color);
+    void set_drawn() { m_drawn = true; }
     int material_imbalance() const;
 
     Color turn() const { return m_turn; }
@@ -183,6 +185,7 @@ private:
 
     Color m_turn : 2 { Color::White };
     Color m_resigned : 2 { Color::None };
+    bool m_drawn { false };
 
     bool m_white_can_castle_kingside : 1 { true };
     bool m_white_can_castle_queenside : 1 { true };
