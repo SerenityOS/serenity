@@ -6,6 +6,7 @@
 
 #include <Kernel/Arch/aarch64/RPi/RP1/Clocks.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/GPIO.h>
+#include <Kernel/Arch/aarch64/RPi/RP1/PWM.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/RP1.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/xHCI.h>
 #include <Kernel/Boot/CommandLine.h>
@@ -55,6 +56,9 @@ ErrorOr<void> RP1::initialize()
 
     // Section 3.1. GPIO
     auto gpio = TRY(RP1GPIO::create(*this, bar1_address.offset(0xd'0000)));
+
+    // Section 3.4. PWM
+    auto pwm1 = TRY(RP1PWM::create(*this, clocks, bar1_address.offset(0x9'c000), 1));
 
     if (!kernel_command_line().disable_usb()) {
         // Chapter 5. USB
