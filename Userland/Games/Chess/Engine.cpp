@@ -43,9 +43,10 @@ void Engine::connect_to_engine_service()
     posix_spawn_file_actions_adddup2(&file_actions, wpipefds[0], STDIN_FILENO);
     posix_spawn_file_actions_adddup2(&file_actions, rpipefds[1], STDOUT_FILENO);
 
-    auto command_length = m_command.code_points().length();
+    auto command_bytes = m_command.bytes_as_string_view();
+    auto command_length = command_bytes.length();
     auto command_name = new char[command_length + 1];
-    memcpy(command_name, m_command.bytes_as_string_view().characters_without_null_termination(), command_length);
+    memcpy(command_name, command_bytes.characters_without_null_termination(), command_length);
     command_name[command_length] = '\0';
 
     char const* argv[] = { command_name, nullptr };
