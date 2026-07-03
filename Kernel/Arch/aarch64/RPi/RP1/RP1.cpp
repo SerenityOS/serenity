@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Arch/aarch64/RPi/RP1/Clocks.h>
+#include <Kernel/Arch/aarch64/RPi/RP1/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/RP1.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/xHCI.h>
 #include <Kernel/Boot/CommandLine.h>
@@ -51,6 +52,9 @@ ErrorOr<void> RP1::initialize()
 
     // Section 2.5. Clocks
     auto clocks = TRY(RP1Clocks::create(*this, bar1_address.offset(0x1'8000)));
+
+    // Section 3.1. GPIO
+    auto gpio = TRY(RP1GPIO::create(*this, bar1_address.offset(0xd'0000)));
 
     if (!kernel_command_line().disable_usb()) {
         // Chapter 5. USB
