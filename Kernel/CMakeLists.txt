@@ -484,6 +484,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MiniUART.cpp
         Arch/aarch64/RPi/RP1/Clocks.cpp
+        Arch/aarch64/RPi/RP1/Fan.cpp
         Arch/aarch64/RPi/RP1/GPIO.cpp
         Arch/aarch64/RPi/RP1/PWM.cpp
         Arch/aarch64/RPi/RP1/RP1.cpp

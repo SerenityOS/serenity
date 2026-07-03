@@ -271,6 +271,10 @@
 #cmakedefine01 ROUTING_DEBUG
 #endif
 
+#ifndef RP1_DEBUG
+#cmakedefine01 RP1_DEBUG
+#endif
+
 #ifndef RTL8168_DEBUG
 #cmakedefine01 RTL8168_DEBUG
 #endif
