@@ -24,6 +24,11 @@ class [[gnu::packed]] MACAddress {
 public:
     constexpr MACAddress() = default;
 
+    explicit constexpr MACAddress(Array<u8, 6> data)
+    {
+        m_data = data;
+    }
+
     constexpr MACAddress(u8 a, u8 b, u8 c, u8 d, u8 e, u8 f)
     {
         m_data[0] = a;
