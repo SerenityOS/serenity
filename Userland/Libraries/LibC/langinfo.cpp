@@ -96,4 +96,10 @@ char* nl_langinfo(nl_item item)
     // so this cast is probably fine.
     return const_cast<char*>(__nl_langinfo(item));
 }
+
+char* nl_langinfo_l(nl_item item, locale_t)
+{
+    // FIXME: Support other locales.
+    return nl_langinfo(item);
+}
 }
