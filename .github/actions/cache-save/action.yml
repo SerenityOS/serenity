@@ -62,7 +62,7 @@ runs:
         echo "::endgroup::"
 
     - name: 'Toolchain Prebuilt Cache'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       # Do not waste time and storage space by updating the toolchain cache from a PR,
       # as it would be discarded after being merged anyway.
       if: ${{ github.event_name != 'pull_request' && !inputs.toolchain_prebuilt_hit && inputs.arch != 'Lagom' }}
@@ -71,14 +71,14 @@ runs:
         key: ${{ inputs.toolchain_prebuilt_primary_key }}
 
     - name: 'Jakt Toolchain Prebuilt Cache'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       if: ${{ github.event_name != 'pull_request' && !inputs.jakt_prebuilt_hit }}
       with:
           path: ${{ inputs.jakt_prebuilt_path }}
           key: ${{ inputs.jakt_prebuilt_primary_key }}
 
     - name: 'Toolchain Compiler Cache'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       if: ${{ github.event_name != 'pull_request' && inputs.toolchain_ccache_path != '' }}
       with:
         path: ${{ inputs.toolchain_ccache_path }}
@@ -91,7 +91,7 @@ runs:
         CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache --evict-older-than=1d
 
     - name: 'Serenity Compiler Cache'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       if: ${{ github.event_name != 'pull_request' && inputs.serenity_ccache_path != '' }}
       with:
         path: ${{ inputs.serenity_ccache_path }}

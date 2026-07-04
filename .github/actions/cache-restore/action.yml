@@ -105,7 +105,7 @@ runs:
         echo "::endgroup::"
 
     - name: 'Toolchain Prebuilt Cache'
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       id: 'toolchain-prebuilt'
       if: ${{ inputs.arch != 'Lagom' }}
       with:
@@ -113,14 +113,14 @@ runs:
         key: '"toolchain" | "${{ inputs.arch }}" | "${{ inputs.toolchain }}" | "${{ steps.toolchain-stamps.outputs.toolchain_stamp }}"'
 
     - name: 'Jakt Toolchain Prebuilt Cache'
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       id: 'jakt-prebuilt'
       with:
         path: ${{ inputs.jakt_toolchain_cache_path }}
         key: toolchain-${{ runner.os }}-jakt-toolchain-${{ inputs.arch }}-${{ steps.toolchain-stamps.outputs.toolchain_stamp }}-${{ hashFiles('Toolchain/BuildJakt.sh') }}
 
     - name: 'Toolchain Compiler Cache'
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       id: 'toolchain-ccache'
       if: ${{ inputs.toolchain_ccache_path != '' }}
       with:
@@ -138,7 +138,7 @@ runs:
           CCACHE_DIR=${{ inputs.toolchain_ccache_path }} ccache -z
 
     - name: 'Serenity Compiler Cache'
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       id: 'serenity-ccache'
       if: ${{ inputs.serenity_ccache_path != '' }}
       with:
@@ -160,19 +160,19 @@ runs:
           CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache -z
 
     - name: 'TimeZoneData cache'
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ inputs.download_cache_path }}/TZDB
         key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
 
     - name: 'UnicodeData cache'
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
           path: ${{ inputs.download_cache_path }}/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
 
     - name: 'UnicodeLocale cache'
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
           path: ${{ inputs.download_cache_path }}/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
