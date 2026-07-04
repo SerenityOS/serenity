@@ -27,6 +27,14 @@ enum {
 #define LC_MESSAGES LC_MESSAGES
 };
 
+#define LC_NUMERIC_MASK (1 << LC_NUMERIC)
+#define LC_CTYPE_MASK (1 << LC_CTYPE)
+#define LC_COLLATE_MASK (1 << LC_COLLATE)
+#define LC_TIME_MASK (1 << LC_TIME)
+#define LC_MONETARY_MASK (1 << LC_MONETARY)
+#define LC_MESSAGES_MASK (1 << LC_MESSAGES)
+#define LC_ALL_MASK (LC_NUMERIC_MASK | LC_CTYPE_MASK | LC_COLLATE_MASK | LC_TIME_MASK | LC_MONETARY_MASK | LC_MESSAGES_MASK)
+
 struct lconv {
     char* decimal_point;
     char* thousands_sep;
@@ -54,7 +62,13 @@ struct lconv {
     char int_n_sign_posn;
 };
 
+struct __locale_t_impl;
+typedef struct __locale_t_impl* locale_t;
+
 struct lconv* localeconv(void);
+void freelocale(locale_t);
+locale_t newlocale(int, char const*, locale_t);
 char* setlocale(int category, char const* locale);
+locale_t uselocale(locale_t);
 
 __END_DECLS

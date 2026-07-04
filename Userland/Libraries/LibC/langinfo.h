@@ -8,6 +8,7 @@
 
 // Includes essentially mandated by POSIX:
 // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/langinfo.h.html
+#include <locale.h>
 #include <nl_types.h>
 
 #include <sys/cdefs.h>
@@ -80,5 +81,6 @@ enum {
 };
 
 char* nl_langinfo(nl_item);
+char* nl_langinfo_l(nl_item, locale_t);
 
 __END_DECLS

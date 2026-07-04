@@ -64,4 +64,21 @@ struct lconv* localeconv()
 {
     return &default_locale;
 }
+
+void freelocale(locale_t)
+{
+    // FIXME: Implement this.
+}
+
+locale_t newlocale(int, char const*, locale_t)
+{
+    // FIXME: Implement this.
+    return nullptr;
+}
+
+locale_t uselocale(locale_t loc)
+{
+    // FIXME: Implement this.
+    return loc;
+}
 }
