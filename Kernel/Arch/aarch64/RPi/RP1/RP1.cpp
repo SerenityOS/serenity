@@ -6,6 +6,7 @@
 
 #include <Kernel/Arch/aarch64/RPi/RP1/Clocks.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/Fan.h>
+#include <Kernel/Arch/aarch64/RPi/RP1/GEM.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/PWM.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/RP1.h>
@@ -17,6 +18,7 @@
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Library/Panic.h>
+#include <Kernel/Net/NetworkingManagement.h>
 
 // https://datasheets.raspberrypi.com/rp1/rp1-peripherals.pdf
 
@@ -53,6 +55,8 @@ ErrorOr<void> RP1::initialize()
     enable_irq();
     enable_pin_based_interrupts();
 
+    // All interrupt numbers are taken from the devicetree.
+
     // Section 2.5. Clocks
     auto clocks = TRY(RP1Clocks::create(*this, bar1_address.offset(0x1'8000)));
 
@@ -64,13 +68,18 @@ ErrorOr<void> RP1::initialize()
 
     if (!kernel_command_line().disable_usb()) {
         // Chapter 5. USB
-        // The interrupt numbers are taken from the devicetree.
         auto usbhost0 = TRY(RP1xHCIController::try_to_initialize(*this, bar1_address.offset(0x20'0000), 0, 31));
         auto usbhost1 = TRY(RP1xHCIController::try_to_initialize(*this, bar1_address.offset(0x30'0000), 1, 36));
 
         USB::USBManagement::the().add_controller(usbhost0);
         USB::USBManagement::the().add_controller(usbhost1);
     }
+
+    // Chapter 7. Ethernet
+    auto gem_interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(device_identifier()));
+    auto gem = TRY(RP1GEMNetworkAdapter::create(*this, gem_interface_name.representable_view(), bar1_address.offset(0x10'0000), 6));
+
+    NetworkingManagement::the().register_adapter(gem).release_value_but_fixme_should_propagate_errors();
 
     auto cooling_fan_status = DeviceTree::get().resolve_property("/cooling_fan/status"sv);
     if (cooling_fan_status.has_value() && cooling_fan_status->as_string() == "okay"sv) {

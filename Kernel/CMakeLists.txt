@@ -285,6 +285,7 @@ set(KERNEL_SOURCES
     Library/KLexicalPath.cpp
     Library/KString.cpp
     Library/UserOrKernelBuffer.cpp
+    Net/Cadence/GEM.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/VirtIO/VirtIONetworkAdapter.cpp
@@ -484,6 +485,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/MiniUART.cpp
         Arch/aarch64/RPi/RP1/Clocks.cpp
         Arch/aarch64/RPi/RP1/Fan.cpp
+        Arch/aarch64/RPi/RP1/GEM.cpp
         Arch/aarch64/RPi/RP1/GPIO.cpp
         Arch/aarch64/RPi/RP1/PWM.cpp
         Arch/aarch64/RPi/RP1/RP1.cpp
