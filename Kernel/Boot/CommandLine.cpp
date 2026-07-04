@@ -327,4 +327,30 @@ UNMAP_AFTER_INIT size_t CommandLine::switch_to_tty() const
     }
     PANIC("Invalid default tty value: {}", default_tty);
 }
+
+UNMAP_AFTER_INIT CommandLine::RPiFramebufferSize CommandLine::rpi_framebuffer_size() const
+{
+    auto framebuffer_size_str = lookup("rpi_framebuffer_size"sv).value_or("1280x720"sv);
+
+    RPiFramebufferSize framebuffer_size;
+
+    framebuffer_size_str.for_each_split_view('x', SplitBehavior::Nothing,
+        [i = 0, framebuffer_size_str, &framebuffer_size](StringView part) mutable {
+            auto maybe_value = part.to_number<u32>();
+            if (!maybe_value.has_value())
+                PANIC("Invalid Raspberry Pi framebuffer size: {}", framebuffer_size_str);
+
+            if (i == 0)
+                framebuffer_size.width = maybe_value.release_value();
+            else if (i == 1)
+                framebuffer_size.height = maybe_value.release_value();
+            else
+                PANIC("Invalid Raspberry Pi framebuffer size: {}", framebuffer_size_str);
+
+            i++;
+        });
+
+    return framebuffer_size;
+}
+
 }

@@ -8,6 +8,7 @@
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/FramebufferMailboxMessages.h>
 #include <Kernel/Boot/BootInfo.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::RPi {
@@ -16,8 +17,11 @@ Framebuffer::Framebuffer()
 {
     // FIXME: query HDMI for best mode
     // https://github.com/raspberrypi/userland/blob/master/host_applications/linux/apps/tvservice/tvservice.c
-    m_width = 1280;
-    m_height = 720;
+
+    auto requested_framebuffer_size = kernel_command_line().rpi_framebuffer_size();
+
+    m_width = requested_framebuffer_size.width;
+    m_height = requested_framebuffer_size.height;
     m_depth = 32;
     m_initialized = false;
 
