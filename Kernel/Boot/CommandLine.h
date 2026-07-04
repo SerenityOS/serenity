@@ -67,6 +67,11 @@ public:
         Disabled
     };
 
+    struct RPiFramebufferSize {
+        u32 width;
+        u32 height;
+    };
+
     [[nodiscard]] StringView string() const { return m_string->view(); }
     Optional<StringView> lookup(StringView key) const;
     [[nodiscard]] bool contains(StringView key) const;
@@ -101,6 +106,7 @@ public:
     [[nodiscard]] bool is_nvme_polling_enabled() const;
     [[nodiscard]] bool is_xhci_polling_enabled() const;
     [[nodiscard]] size_t switch_to_tty() const;
+    [[nodiscard]] RPiFramebufferSize rpi_framebuffer_size() const;
 
 private:
     CommandLine(StringView);
