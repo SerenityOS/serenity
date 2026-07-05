@@ -669,7 +669,7 @@ static ErrorOr<void> parse_extension(Crypto::ASN1::Decoder& decoder, Vector<Stri
         is_known_extension = true;
         auto constraints = TRY(parse_basic_constraints(extension_decoder, extension_scope));
         certificate.is_certificate_authority = constraints.is_certificate_authority;
-        certificate.path_length_constraint = constraints.path_length_constraint.to_u64();
+        certificate.path_length_constraint = constraints.path_length_constraint.map([](auto& value) { return static_cast<size_t>(value.to_u64()); });
     }
 
     if (extension_id == issuer_alternative_name_oid) {

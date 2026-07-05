@@ -187,7 +187,7 @@ struct AlgorithmIdentifier {
 
 struct BasicConstraints {
     bool is_certificate_authority;
-    Crypto::UnsignedBigInteger path_length_constraint;
+    Optional<Crypto::UnsignedBigInteger> path_length_constraint;
 };
 
 class RelativeDistinguishedName {
