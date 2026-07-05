@@ -282,6 +282,7 @@ bool Context::verify_chain(StringView host) const
         return false;
     }
 
+    size_t ca_certs_below_parent = 0;
     for (size_t cert_index = 0; cert_index < local_chain->size(); ++cert_index) {
         auto const& cert = local_chain->at(cert_index);
 
@@ -292,6 +293,9 @@ bool Context::verify_chain(StringView host) const
             dbgln("verify_chain: Certificate is not valid {}", subject_string);
             return false;
         }
+
+        if (cert_index > 0 && cert.is_certificate_authority && subject_string != issuer_string)
+            ++ca_certs_below_parent;
 
         auto maybe_root_certificate = root_certificates.get(issuer_string.to_byte_string());
         if (maybe_root_certificate.has_value()) {
@@ -327,7 +331,7 @@ bool Context::verify_chain(StringView host) const
             dbgln("verify_chain: {} is not marked as certificate authority", issuer_string);
             return false;
         }
-        if (parent_certificate.path_length_constraint.has_value() && cert_index > parent_certificate.path_length_constraint.value()) {
+        if (parent_certificate.path_length_constraint.has_value() && ca_certs_below_parent > parent_certificate.path_length_constraint.value()) {
             dbgln("verify_chain: Path length for certificate exceeded");
             return false;
         }
