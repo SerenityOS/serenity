@@ -21,14 +21,14 @@ struct ThreadEventQueue::Private {
         AK_MAKE_DEFAULT_MOVABLE(QueuedEvent);
 
     public:
-        QueuedEvent(RefPtr<EventReceiver> const& receiver, NonnullOwnPtr<Event> event)
+        QueuedEvent(EventReceiver* receiver, NonnullOwnPtr<Event> event)
             : receiver(receiver)
             , event(move(event))
             , event_type(this->event->type())
         {
         }
 
-        QueuedEvent(RefPtr<EventReceiver> const& receiver, Event::Type event_type)
+        QueuedEvent(EventReceiver* receiver, Event::Type event_type)
             : receiver(receiver)
             , event_type(event_type)
         {
