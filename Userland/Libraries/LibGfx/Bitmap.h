@@ -103,6 +103,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*, Function<void()>&& destruction_callback = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(StringView path, int scale_factor = 1, Optional<IntSize> ideal_size = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(NonnullOwnPtr<Core::File>, StringView path, Optional<IntSize> ideal_size = {});
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_uri(StringView uri, int scale_factor = 1, Optional<IntSize> ideal_size = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_bytes(ReadonlyBytes, Optional<IntSize> ideal_size = {}, Optional<ByteString> mine_type = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_bytes(ReadonlyBytes);
@@ -242,6 +243,9 @@ private:
     Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize, int);
 
     static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize size, int scale_factor, Optional<size_t> pitch = {});
+
+    using LoadBitmapFunction = Function<ErrorOr<NonnullRefPtr<Bitmap>>(StringView path, Optional<IntSize> ideal_size)>;
+    static ErrorOr<NonnullRefPtr<Bitmap>> load_scaled_bitmap(StringView path, int scale_factor, Optional<IntSize> ideal_size, LoadBitmapFunction&& loader);
 
     IntSize m_size;
     int m_scale;
