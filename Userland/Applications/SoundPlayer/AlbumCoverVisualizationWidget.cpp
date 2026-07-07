@@ -36,7 +36,7 @@ void AlbumCoverVisualizationWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_scaled_bitmap(fitted_rect, *cover, cover->rect(), 1.0f);
     } else {
         if (!m_serenity_bg)
-            m_serenity_bg = Gfx::Bitmap::load_from_file("/res/wallpapers/sunset-retro.png"sv).release_value_but_fixme_should_propagate_errors();
+            m_serenity_bg = MUST(Gfx::Bitmap::load_from_uri("resource://wallpapers/sunset-retro.png"sv));
         painter.draw_scaled_bitmap(frame_inner_rect(), *m_serenity_bg, m_serenity_bg->rect(), 1.0f);
     }
 }

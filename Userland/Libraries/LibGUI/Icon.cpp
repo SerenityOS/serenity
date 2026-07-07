@@ -82,9 +82,9 @@ ErrorOr<Icon> Icon::try_create_default_icon(StringView name)
 {
     RefPtr<Gfx::Bitmap> bitmap16;
     RefPtr<Gfx::Bitmap> bitmap32;
-    if (auto bitmap_or_error = Gfx::Bitmap::load_from_file(ByteString::formatted("/res/icons/16x16/{}.png", name)); !bitmap_or_error.is_error())
+    if (auto bitmap_or_error = Gfx::Bitmap::load_from_uri(ByteString::formatted("resource://icons/16x16/{}.png", name)); !bitmap_or_error.is_error())
         bitmap16 = bitmap_or_error.release_value();
-    if (auto bitmap_or_error = Gfx::Bitmap::load_from_file(ByteString::formatted("/res/icons/32x32/{}.png", name)); !bitmap_or_error.is_error())
+    if (auto bitmap_or_error = Gfx::Bitmap::load_from_uri(ByteString::formatted("resource://icons/32x32/{}.png", name)); !bitmap_or_error.is_error())
         bitmap32 = bitmap_or_error.release_value();
 
     if (!bitmap16 && !bitmap32) {

@@ -103,19 +103,19 @@ void MultiView::set_column_visible(int column_index, bool visible)
 void MultiView::build_actions()
 {
     m_view_as_icons_action = Action::create_checkable(
-        "Icon View", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "Icon View", { Mod_Ctrl, KeyCode::Key_1 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/icon-view.png"sv)), [this](auto&) {
             set_view_mode(ViewMode::Icon);
         },
         this);
 
     m_view_as_table_action = Action::create_checkable(
-        "Table View", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "Table View", { Mod_Ctrl, KeyCode::Key_2 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/table-view.png"sv)), [this](auto&) {
             set_view_mode(ViewMode::Table);
         },
         this);
 
     m_view_as_columns_action = Action::create_checkable(
-        "Columns View", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        "Columns View", { Mod_Ctrl, KeyCode::Key_3 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/columns-view.png"sv)), [this](auto&) {
             set_view_mode(ViewMode::Columns);
         },
         this);

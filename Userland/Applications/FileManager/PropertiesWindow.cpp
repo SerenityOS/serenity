@@ -54,7 +54,7 @@
 ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(ByteString const& path, bool disable_rename, Window* parent)
 {
     auto window = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PropertiesWindow(path, parent)));
-    window->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"sv)));
+    window->set_icon(TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/properties.png"sv)));
     TRY(window->create_widgets(disable_rename));
     return window;
 }

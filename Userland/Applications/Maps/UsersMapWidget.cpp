@@ -13,7 +13,7 @@ namespace Maps {
 UsersMapWidget::UsersMapWidget(Options const& options)
     : MapWidget::MapWidget(options)
 {
-    m_marker_gray_image = Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-gray.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_marker_gray_image = MUST(Gfx::Bitmap::load_from_uri("resource://graphics/maps/marker-gray.png"sv));
 }
 
 void UsersMapWidget::get_users()

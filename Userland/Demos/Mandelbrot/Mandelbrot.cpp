@@ -478,7 +478,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             save_image(ImageType::QOI, "qoi"sv);
         }));
 
-    export_submenu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
+    export_submenu->set_icon(TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/save.png"sv)));
 
     file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));

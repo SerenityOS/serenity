@@ -56,7 +56,7 @@ ErrorOr<void> FileTransferOperation::begin_transfer(SpiceAgent& agent)
 
 static Gfx::Bitmap const& downloads_folder_icon()
 {
-    static NonnullRefPtr<Gfx::Bitmap> s_icon = MUST(Gfx::Bitmap::load_from_file("/res/icons/32x32/downloads.png"sv));
+    static NonnullRefPtr<Gfx::Bitmap> s_icon = MUST(Gfx::Bitmap::load_from_uri("resource://icons/32x32/downloads.png"sv));
     return *s_icon;
 }
 

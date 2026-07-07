@@ -42,8 +42,8 @@ TreeView::TreeView()
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_column_headers_visible(false);
-    m_expand_bitmap = Gfx::Bitmap::load_from_file("/res/icons/serenity/treeview-expand.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_collapse_bitmap = Gfx::Bitmap::load_from_file("/res/icons/serenity/treeview-collapse.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_expand_bitmap = MUST(Gfx::Bitmap::load_from_uri("resource://icons/serenity/treeview-expand.png"sv));
+    m_collapse_bitmap = MUST(Gfx::Bitmap::load_from_uri("resource://icons/serenity/treeview-collapse.png"sv));
 }
 
 ModelIndex TreeView::index_at_event_position(Gfx::IntPoint a_position, bool& is_toggle) const

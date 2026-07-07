@@ -100,8 +100,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     interval_spinbox.set_value(150);
 
-    auto paused_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
-    auto play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
+    auto paused_icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/pause.png"sv));
+    auto play_icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/play.png"sv));
 
     auto play_pause_action = GUI::Action::create("&Play", { Mod_None, Key_Return }, *play_icon, [&](GUI::Action&) {
         board_widget.set_running(!board_widget.is_running());
@@ -109,13 +109,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     main_toolbar.add_action(play_pause_action);
 
-    auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](GUI::Action const&) {
+    auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [&](GUI::Action const&) {
         show_statusbar_hint();
         board_widget.run_generation();
     });
     main_toolbar.add_action(run_one_generation_action);
 
-    auto clear_board_action = GUI::Action::create("&Clear board", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv)), [&](auto&) {
+    auto clear_board_action = GUI::Action::create("&Clear board", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/delete.png"sv)), [&](auto&) {
         show_statusbar_hint();
         statusbar.segment(1).set_text({});
         board_widget.clear_cells();
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     main_toolbar.add_action(clear_board_action);
 
-    auto randomize_cells_action = GUI::Action::create("&Randomize board", { Mod_Ctrl, Key_R }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    auto randomize_cells_action = GUI::Action::create("&Randomize board", { Mod_Ctrl, Key_R }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/reload.png"sv)), [&](auto&) {
         show_statusbar_hint();
         statusbar.segment(1).set_text({});
         board_widget.randomize_cells();
@@ -131,7 +131,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     main_toolbar.add_action(randomize_cells_action);
 
-    auto rotate_pattern_action = GUI::Action::create("&Rotate pattern", { 0, Key_R }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"sv)), [&](auto&) {
+    auto rotate_pattern_action = GUI::Action::create("&Rotate pattern", { 0, Key_R }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/redo.png"sv)), [&](auto&) {
         board_widget.selected_pattern()->rotate_clockwise();
     });
     rotate_pattern_action->set_enabled(false);

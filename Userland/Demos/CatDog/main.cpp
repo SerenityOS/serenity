@@ -25,8 +25,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-catdog"sv));
 
-    auto catdog_icon_sleep = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/catdog-sleeping.png"sv));
-    auto catdog_icon_wake = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/catdog-wake-up.png"sv));
+    auto catdog_icon_sleep = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/catdog-sleeping.png"sv));
+    auto catdog_icon_wake = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/catdog-wake-up.png"sv));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));

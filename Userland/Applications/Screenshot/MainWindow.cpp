@@ -39,7 +39,7 @@ MainWindow::MainWindow()
     };
 
     m_browse = *main_widget->find_descendant_of_type_named<GUI::Button>("browse");
-    m_browse->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_browse->set_icon(MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/open.png"sv)));
     m_browse->on_click = [this](auto) {
         auto filepath = GUI::FilePicker::get_open_filepath(this, "Save screenshot to...", m_destination->text(), true);
 

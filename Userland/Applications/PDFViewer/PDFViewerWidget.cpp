@@ -335,7 +335,7 @@ NonnullRefPtr<Gfx::Bitmap const> PDFViewerWidget::update_thumbnail_for_page(u32 
 void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 {
     auto open_outline_action = GUI::Action::create(
-        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/sidebar.png"sv)), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
             m_sidebar->set_visible(m_sidebar_open);
         },
@@ -346,13 +346,13 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_action(*open_outline_action);
     toolbar.add_separator();
 
-    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-up.png"sv)), [&](auto&) {
         VERIFY(m_viewer->current_page() > 0);
         m_page_text_box->set_value(m_viewer->current_page());
     });
     m_go_to_prev_page_action->set_enabled(false);
 
-    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-down.png"sv)), [&](auto&) {
         VERIFY(m_viewer->current_page() < m_viewer->document()->get_page_count() - 1);
         m_page_text_box->set_value(m_viewer->current_page() + 2);
     });
