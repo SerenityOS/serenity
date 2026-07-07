@@ -228,7 +228,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
     m_context_menu->add_action(show_dotfiles);
 
-    m_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+    m_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
         if (!index.is_valid()) {
             m_context_menu->popup(event.screen_position());
         }

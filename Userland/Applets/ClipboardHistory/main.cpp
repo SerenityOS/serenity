@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
     };
 
-    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
+    auto delete_action = GUI::CommonActions::make_delete_action([&](GUI::Action const&) {
         if (table_view->selection().is_empty())
             return;
 
@@ -73,13 +73,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     });
 
-    auto debug_dump_action = GUI::Action::create("Dump to Debug Console", [&](const GUI::Action&) {
+    auto debug_dump_action = GUI::Action::create("Dump to Debug Console", [&](GUI::Action const&) {
         table_view->selection().for_each_index([&](GUI::ModelIndex& index) {
             dbgln("{}", model->data(index, GUI::ModelRole::Display).as_string());
         });
     });
 
-    auto clear_action = GUI::Action::create("Clear History", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/trash-can.png"sv)), [&](const GUI::Action&) {
+    auto clear_action = GUI::Action::create("Clear History", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/trash-can.png"sv)), [&](GUI::Action const&) {
         model->clear();
         GUI::Clipboard::the().clear();
     });

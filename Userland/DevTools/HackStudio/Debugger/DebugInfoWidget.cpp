@@ -112,7 +112,7 @@ bool DebugInfoWidget::does_variable_support_writing(Debug::DebugInfo::VariableIn
     return variable->is_enum_type() || variable->type_name.is_one_of("int", "bool");
 }
 
-RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::ModelIndex& index)
+RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(GUI::ModelIndex const& index)
 {
     if (!index.is_valid())
         return nullptr;
