@@ -27,9 +27,9 @@ FindInPageWidget::FindInPageWidget()
     m_match_case_checkbox = find_descendant_of_type_named<GUI::CheckBox>("match_case_checkbox");
     m_result_label = find_descendant_of_type_named<GUI::Label>("result_label");
 
-    m_close_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_previous_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_next_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_close_button->set_icon(MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/window-close.png"sv)));
+    m_previous_button->set_icon(MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-up.png"sv)));
+    m_next_button->set_icon(MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-down.png"sv)));
 }
 
 void FindInPageWidget::initialize(WebView::OutOfProcessWebView& web_view)

@@ -28,7 +28,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, ByteString title
 
     auto& key_icon = *widget->find_descendant_of_type_named<GUI::ImageWidget>("key_icon");
 
-    key_icon.set_bitmap(Gfx::Bitmap::load_from_file("/res/icons/32x32/key.png"sv).release_value_but_fixme_should_propagate_errors());
+    key_icon.set_bitmap(MUST(Gfx::Bitmap::load_from_uri("resource://icons/32x32/key.png"sv)));
 
     auto& server_label = *widget->find_descendant_of_type_named<GUI::Label>("server_label");
     server_label.set_text(String::from_byte_string(server).release_value_but_fixme_should_propagate_errors());

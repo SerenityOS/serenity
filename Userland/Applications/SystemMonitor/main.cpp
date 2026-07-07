@@ -351,7 +351,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto kill_action = GUI::Action::create(
-        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"sv)), [&](GUI::Action const&) {
+        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/kill.png"sv)), [&](GUI::Action const&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -362,7 +362,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto stop_action = GUI::Action::create(
-        "&Stop Process", { Mod_Ctrl, Key_S }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"sv)), [&](GUI::Action const&) {
+        "&Stop Process", { Mod_Ctrl, Key_S }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/stop-hand.png"sv)), [&](GUI::Action const&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -373,7 +373,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto continue_action = GUI::Action::create(
-        "&Continue Process", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"sv)), [&](GUI::Action const&) {
+        "&Continue Process", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/continue.png"sv)), [&](GUI::Action const&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGCONT);
@@ -382,7 +382,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto profile_action = GUI::Action::create(
         "&Profile Process", { Mod_Ctrl, Key_P },
-        TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv)), [&](auto&) {
+        TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/app-profiler.png"sv)), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -392,7 +392,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto debug_action = GUI::Action::create(
-        "Debug in HackStudio", { Mod_Ctrl, Key_D }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv)), [&](GUI::Action const&) {
+        "Debug in HackStudio", { Mod_Ctrl, Key_D }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/app-hack-studio.png"sv)), [&](GUI::Action const&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -470,7 +470,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(make_frequency_action(5));
 
     auto view_menu = window->add_menu("&View"_string);
-    auto refresh_action = GUI::Action::create("&Refresh", { Mod_Ctrl, Key_R }, Key_F5, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&refresh_timer, &update_stats](auto&) {
+    auto refresh_action = GUI::Action::create("&Refresh", { Mod_Ctrl, Key_R }, Key_F5, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/reload.png"sv)), [&refresh_timer, &update_stats](auto&) {
         if (refresh_timer.is_active())
             refresh_timer.restart();
         update_stats();

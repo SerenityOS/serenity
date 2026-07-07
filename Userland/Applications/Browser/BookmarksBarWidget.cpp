@@ -124,7 +124,7 @@ BookmarksBarWidget::BookmarksBarWidget(ByteString const& bookmarks_file, bool en
     m_additional = GUI::Button::construct();
     m_additional->set_tooltip("Show hidden bookmarks"_string);
     m_additional->set_menu(m_additional_menu);
-    auto bitmap_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/overflow-menu.png"sv);
+    auto bitmap_or_error = Gfx::Bitmap::load_from_uri("resource://icons/16x16/overflow-menu.png"sv);
     if (!bitmap_or_error.is_error())
         m_additional->set_icon(bitmap_or_error.release_value());
     m_additional->set_button_style(Gfx::ButtonStyle::Coolbar);

@@ -89,15 +89,15 @@ ErrorOr<void> TaskbarWidget::create_context_menu()
 {
     m_context_menu = GUI::Menu::construct();
 
-    m_show_desktop_action = GUI::Action::create("Show Desktop", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv)), [](auto&) {
+    m_show_desktop_action = GUI::Action::create("Show Desktop", TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/desktop.png"sv)), [](auto&) {
         GUI::ConnectionToWindowManagerServer::the().async_toggle_show_desktop();
     });
 
-    auto open_settings_action = GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [this](auto&) {
+    auto open_settings_action = GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/settings.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/Settings"sv);
     });
 
-    auto open_system_monitor_action = GUI::Action::create("System &Monitor", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"sv)), [this](auto&) {
+    auto open_system_monitor_action = GUI::Action::create("System &Monitor", TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/app-system-monitor.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv);
     });
 
@@ -139,7 +139,7 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
     m_task_button_container = main_widget->add<GUI::Widget>();
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 3);
 
-    m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
+    m_default_icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/window.png"sv));
 
     m_applet_area_container = main_widget->add<TaskbarFrame>();
     m_applet_area_container->set_frame_style(Gfx::FrameStyle::SunkenPanel);

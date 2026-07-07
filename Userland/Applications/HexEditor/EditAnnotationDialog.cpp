@@ -73,7 +73,7 @@ EditAnnotationDialog::EditAnnotationDialog(GUI::Window* parent_window, NonnullRe
         [this](Annotation*& annotation) {
             m_annotation = *annotation;
             set_title("Edit Annotation"sv);
-            set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation.png"sv).release_value_but_fixme_should_propagate_errors());
+            set_icon(MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/annotation.png"sv)));
             VERIFY(m_annotation->start_offset <= NumericLimits<i64>::max());
             VERIFY(m_annotation->end_offset <= NumericLimits<i64>::max());
             m_start_offset->set_value(m_annotation->start_offset);
@@ -83,7 +83,7 @@ EditAnnotationDialog::EditAnnotationDialog(GUI::Window* parent_window, NonnullRe
         },
         [this](Selection& selection) {
             set_title("Add Annotation"sv);
-            set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-add.png"sv).release_value_but_fixme_should_propagate_errors());
+            set_icon(MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/annotation-add.png"sv)));
             // Selection start is inclusive, and end is exclusive.
             // Therefore, if the selection isn't empty, we need to subtract 1 from the end offset.
             m_start_offset->set_value(selection.start);

@@ -46,8 +46,8 @@ ErrorOr<void> GalleryWidget::load_basic_model_tab()
     m_add_new_item = *tab.find_descendant_of_type_named<GUI::Button>("add_new_item");
     m_remove_selected_item = *tab.find_descendant_of_type_named<GUI::Button>("remove_selected_item");
 
-    m_add_new_item->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv)));
-    m_remove_selected_item->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/minus.png"sv)));
+    m_add_new_item->set_icon(TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/plus.png"sv)));
+    m_remove_selected_item->set_icon(TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/minus.png"sv)));
 
     m_new_item_name->on_return_pressed = [&] { add_textbox_contents_to_basic_model(); };
     m_add_new_item->on_click = [&](auto) { add_textbox_contents_to_basic_model(); };

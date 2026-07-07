@@ -57,13 +57,13 @@ HexEditor::HexEditor()
     m_context_menu = GUI::Menu::construct();
     m_add_annotation_action = GUI::Action::create(
         "&Add Annotation",
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-add.png"sv).release_value_but_fixme_should_propagate_errors(),
+        MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/annotation-add.png"sv)),
         [this](GUI::Action&) { show_create_annotation_dialog(); },
         this);
     m_context_menu->add_action(*m_add_annotation_action);
     m_edit_annotation_action = GUI::Action::create(
         "&Edit Annotation",
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation.png"sv).release_value_but_fixme_should_propagate_errors(),
+        MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/annotation.png"sv)),
         [this](GUI::Action&) {
             VERIFY(m_hovered_annotation.has_value());
             show_edit_annotation_dialog(*m_hovered_annotation);
@@ -72,7 +72,7 @@ HexEditor::HexEditor()
     m_context_menu->add_action(*m_edit_annotation_action);
     m_delete_annotation_action = GUI::Action::create(
         "&Delete Annotation",
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/annotation-remove.png"sv).release_value_but_fixme_should_propagate_errors(),
+        MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/annotation-remove.png"sv)),
         [this](GUI::Action&) {
             VERIFY(m_hovered_annotation.has_value());
             show_delete_annotation_dialog(*m_hovered_annotation);

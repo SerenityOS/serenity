@@ -30,7 +30,7 @@ ErrorOr<NonnullRefPtr<AddEventWidget>> AddEventWidget::create(AddEventDialog* wi
 
     widget->m_start_date_box = *widget->find_descendant_of_type_named<GUI::TextBox>("start_date");
 
-    auto calendar_date_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv));
+    auto calendar_date_icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/calendar-date.png"sv));
 
     auto& pick_start_date_button = *widget->find_descendant_of_type_named<GUI::Button>("pick_start_date");
     pick_start_date_button.set_icon(calendar_date_icon);

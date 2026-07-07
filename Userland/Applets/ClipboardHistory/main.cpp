@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         });
     });
 
-    auto clear_action = GUI::Action::create("Clear History", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/trash-can.png"sv)), [&](GUI::Action const&) {
+    auto clear_action = GUI::Action::create("Clear History", TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/trash-can.png"sv)), [&](GUI::Action const&) {
         model->clear();
         GUI::Clipboard::the().clear();
     });

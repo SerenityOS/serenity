@@ -156,13 +156,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto timeline_menu = window->add_menu("&Timeline"_string);
     auto previous_frame_action = GUI::Action::create(
-        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
+        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_previous_frame();
         });
     auto next_frame_action = GUI::Action::create(
-        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
+        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_next_frame();
