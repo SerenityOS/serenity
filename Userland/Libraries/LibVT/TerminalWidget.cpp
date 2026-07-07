@@ -591,14 +591,14 @@ bool TerminalWidget::has_selection() const
     return m_selection.is_valid();
 }
 
-void TerminalWidget::set_selection(const VT::Range& selection)
+void TerminalWidget::set_selection(VT::Range const& selection)
 {
     m_selection = selection;
     update_copy_action();
     update();
 }
 
-bool TerminalWidget::selection_contains(const VT::Position& position) const
+bool TerminalWidget::selection_contains(VT::Position const& position) const
 {
     if (!has_selection())
         return false;
@@ -636,7 +636,7 @@ VT::Position TerminalWidget::buffer_position_at(Gfx::IntPoint position) const
     return { row, column };
 }
 
-u32 TerminalWidget::code_point_at(const VT::Position& position) const
+u32 TerminalWidget::code_point_at(VT::Position const& position) const
 {
     VERIFY(position.is_valid());
     VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
@@ -646,7 +646,7 @@ u32 TerminalWidget::code_point_at(const VT::Position& position) const
     return line.code_point(position.column());
 }
 
-VT::Position TerminalWidget::next_position_after(const VT::Position& position, bool should_wrap) const
+VT::Position TerminalWidget::next_position_after(VT::Position const& position, bool should_wrap) const
 {
     VERIFY(position.is_valid());
     VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
@@ -662,7 +662,7 @@ VT::Position TerminalWidget::next_position_after(const VT::Position& position, b
     return { position.row(), position.column() + 1 };
 }
 
-VT::Position TerminalWidget::previous_position_before(const VT::Position& position, bool should_wrap) const
+VT::Position TerminalWidget::previous_position_before(VT::Position const& position, bool should_wrap) const
 {
     VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     if (position.column() == 0) {
@@ -687,7 +687,7 @@ static u32 to_lowercase_code_point(u32 code_point)
     return code_point;
 }
 
-VT::Range TerminalWidget::find_next(StringView needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+VT::Range TerminalWidget::find_next(StringView needle, VT::Position const& start, bool case_sensitivity, bool should_wrap)
 {
     if (needle.is_empty())
         return {};
@@ -731,7 +731,7 @@ VT::Range TerminalWidget::find_next(StringView needle, const VT::Position& start
     return {};
 }
 
-VT::Range TerminalWidget::find_previous(StringView needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+VT::Range TerminalWidget::find_previous(StringView needle, VT::Position const& start, bool case_sensitivity, bool should_wrap)
 {
     if (needle.is_empty())
         return {};

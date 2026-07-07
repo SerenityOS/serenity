@@ -295,7 +295,7 @@ GalleryWidget::GalleryWidget()
     m_cursors_tableview->model()->invalidate();
     m_cursors_tableview->set_column_width(0, 25);
 
-    m_cursors_tableview->on_activation = [&](const GUI::ModelIndex& index) {
+    m_cursors_tableview->on_activation = [&](GUI::ModelIndex const& index) {
         auto icon_index = index.model()->index(index.row(), MouseCursorModel::Column::Bitmap);
         m_cursors_tableview->set_override_cursor(NonnullRefPtr<Gfx::Bitmap const>(icon_index.data().as_bitmap()));
     };

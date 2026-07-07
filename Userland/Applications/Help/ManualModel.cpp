@@ -53,7 +53,7 @@ Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
     return {};
 }
 
-Optional<String> ManualModel::page_name(const GUI::ModelIndex& index) const
+Optional<String> ManualModel::page_name(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -67,7 +67,7 @@ Optional<String> ManualModel::page_name(const GUI::ModelIndex& index) const
     return path.release_value();
 }
 
-Optional<String> ManualModel::page_path(const GUI::ModelIndex& index) const
+Optional<String> ManualModel::page_path(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -100,7 +100,7 @@ ErrorOr<StringView> ManualModel::page_view(String const& path) const
     return view;
 }
 
-Optional<String> ManualModel::page_and_section(const GUI::ModelIndex& index) const
+Optional<String> ManualModel::page_and_section(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -119,7 +119,7 @@ Optional<String> ManualModel::page_and_section(const GUI::ModelIndex& index) con
     return name.release_value();
 }
 
-GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
+GUI::ModelIndex ManualModel::index(int row, int column, GUI::ModelIndex const& parent_index) const
 {
     if (!parent_index.is_valid())
         return create_index(row, column, Manual::sections[row].ptr());
@@ -131,7 +131,7 @@ GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& p
     return create_index(row, column, child.ptr());
 }
 
-GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
+GUI::ModelIndex ManualModel::parent_index(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -158,7 +158,7 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
     VERIFY_NOT_REACHED();
 }
 
-int ManualModel::row_count(const GUI::ModelIndex& index) const
+int ManualModel::row_count(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return static_cast<int>(Manual::sections.size());
@@ -169,12 +169,12 @@ int ManualModel::row_count(const GUI::ModelIndex& index) const
     return static_cast<int>(maybe_children.value().size());
 }
 
-int ManualModel::column_count(const GUI::ModelIndex&) const
+int ManualModel::column_count(GUI::ModelIndex const&) const
 {
     return 1;
 }
 
-GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+GUI::Variant ManualModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     auto* node = static_cast<Manual::Node const*>(index.internal_data());
     switch (role) {
@@ -201,14 +201,14 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
     }
 }
 
-void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, bool const open)
+void ManualModel::update_section_node_on_toggle(GUI::ModelIndex const& index, bool const open)
 {
     auto* node = static_cast<Manual::Node*>(index.internal_data());
     if (is<Manual::SectionNode>(*node))
         static_cast<Manual::SectionNode*>(node)->set_open(open);
 }
 
-GUI::Model::MatchResult ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
+GUI::Model::MatchResult ManualModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
 {
     auto name = page_name(index);
     if (!name.has_value())

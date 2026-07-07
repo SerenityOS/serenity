@@ -91,7 +91,7 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
         tab.on_tab_close_request(tab);
     };
 
-    m_tab_widget->on_context_menu_request = [](auto& clicked_widget, const GUI::ContextMenuEvent& context_menu_event) {
+    m_tab_widget->on_context_menu_request = [](auto& clicked_widget, GUI::ContextMenuEvent const& context_menu_event) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.context_menu_requested(context_menu_event.screen_position());
     };

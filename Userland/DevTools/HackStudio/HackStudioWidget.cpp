@@ -281,7 +281,7 @@ void HackStudioWidget::open_project(ByteString const& root_path)
 Vector<ByteString> HackStudioWidget::selected_file_paths() const
 {
     Vector<ByteString> files;
-    m_project_tree_view->selection().for_each_index([&](const GUI::ModelIndex& index) {
+    m_project_tree_view->selection().for_each_index([&](GUI::ModelIndex const& index) {
         ByteString sub_path = index.data().as_string();
 
         GUI::ModelIndex parent_or_invalid = index.parent();
@@ -512,7 +512,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(ByteString const& label, ByteString const& icon, ByteString const& extension)
 {
     auto icon_no_shadow = TRY(Gfx::Bitmap::load_from_file(icon));
-    return GUI::Action::create(label, icon_no_shadow, [this, extension](const GUI::Action&) {
+    return GUI::Action::create(label, icon_no_shadow, [this, extension](GUI::Action const&) {
         String filename;
         if (GUI::InputBox::show(window(), filename, "Enter a name:"sv, "New File"sv) != GUI::InputBox::ExecResult::OK)
             return;
@@ -554,7 +554,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Byt
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv));
-    return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, icon, [this](const GUI::Action&) {
+    return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, icon, [this](GUI::Action const&) {
         String directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter a name:"sv, "New Directory"sv) != GUI::InputBox::ExecResult::OK)
             return;
@@ -585,7 +585,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_actio
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_selected_action()
 {
-    auto open_selected_action = GUI::Action::create("&Open", [this](const GUI::Action&) {
+    auto open_selected_action = GUI::Action::create("&Open", [this](GUI::Action const&) {
         auto files = selected_file_paths();
         for (auto& file : files)
             open_file(file);
@@ -598,7 +598,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_selected_actio
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_show_in_file_manager_action()
 {
-    auto show_in_file_manager_action = GUI::Action::create("Show in File &Manager", [this](const GUI::Action&) {
+    auto show_in_file_manager_action = GUI::Action::create("Show in File &Manager", [this](GUI::Action const&) {
         auto files = selected_file_paths();
         for (auto& file : files)
             Desktop::Launcher::open(URL::create_with_file_scheme(m_project->root_path(), file));
@@ -611,7 +611,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_show_in_file_manager_action(
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_relative_path_action()
 {
-    auto copy_relative_path_action = GUI::Action::create("Copy &Relative Path", [this](const GUI::Action&) {
+    auto copy_relative_path_action = GUI::Action::create("Copy &Relative Path", [this](GUI::Action const&) {
         auto paths = selected_file_paths();
         VERIFY(!paths.is_empty());
         auto paths_string = ByteString::join('\n', paths);
@@ -625,7 +625,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_relative_path_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_full_path_action()
 {
-    auto copy_full_path_action = GUI::Action::create("Copy &Full Path", [this](const GUI::Action&) {
+    auto copy_full_path_action = GUI::Action::create("Copy &Full Path", [this](GUI::Action const&) {
         auto paths = selected_file_paths();
         VERIFY(!paths.is_empty());
         Vector<ByteString> full_paths;
@@ -642,7 +642,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_full_path_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 {
-    auto delete_action = GUI::CommonActions::make_delete_action([this](const GUI::Action&) {
+    auto delete_action = GUI::CommonActions::make_delete_action([this](GUI::Action const&) {
         auto files = selected_file_paths();
         if (files.is_empty())
             return;
@@ -700,7 +700,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_project_action(
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/hackstudio-project.png"sv));
     return GUI::Action::create(
         "&Project...", icon,
-        [this](const GUI::Action&) {
+        [this](GUI::Action const&) {
             if (warn_unsaved_changes("There are unsaved changes. Would you like to save before creating a new project?") == ContinueDecision::No)
                 return;
             // If the user wishes to save the changes, this occurs in warn_unsaved_changes. If they do not,
@@ -1240,7 +1240,7 @@ void HackStudioWidget::configure_project_tree_view()
 
     m_project_tree_view->set_column_visible(GUI::FileSystemModel::Column::Name, true);
 
-    m_project_tree_view->on_context_menu_request = [this](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+    m_project_tree_view->on_context_menu_request = [this](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
         if (index.is_valid()) {
             m_project_tree_view_context_menu->popup(event.screen_position(), m_open_selected_action);
         }

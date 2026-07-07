@@ -109,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     main_toolbar.add_action(play_pause_action);
 
-    auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](const GUI::Action&) {
+    auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](GUI::Action const&) {
         show_statusbar_hint();
         board_widget.run_generation();
     });

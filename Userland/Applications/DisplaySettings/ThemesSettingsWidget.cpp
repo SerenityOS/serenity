@@ -51,7 +51,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     m_themes_combo = *find_descendant_of_type_named<GUI::ComboBox>("themes_combo");
     m_themes_combo->set_only_allow_values_from_model(true);
     m_themes_combo->set_model(*GUI::ItemListModel<String>::create(m_theme_names));
-    m_themes_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
+    m_themes_combo->on_change = [this](auto&, GUI::ModelIndex const& index) {
         m_selected_theme = &m_themes.at(index.row());
         auto selected_theme_path = String::from_byte_string(m_selected_theme->path);
         ErrorOr<void> set_theme_result;
@@ -97,7 +97,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
             find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->set_checked(true);
         }
     }
-    color_scheme_combo.on_change = [this](auto&, const GUI::ModelIndex& index) {
+    color_scheme_combo.on_change = [this](auto&, GUI::ModelIndex const& index) {
         auto result = String::from_byte_string(index.data().as_string());
         if (result.is_error())
             return;

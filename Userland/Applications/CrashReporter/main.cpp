@@ -117,7 +117,7 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
     };
 }
 
-static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info, size_t thread_index)
+static TitleAndText build_cpu_registers(ELF::Core::ThreadInfo const& thread_info, size_t thread_index)
 {
     auto& regs = thread_info.regs;
 

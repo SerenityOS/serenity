@@ -176,7 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         breadcrumbbar.set_selected_segment(tree_map_widget.viewpoint());
     };
-    tree_map_widget.on_context_menu_request = [&](const GUI::ContextMenuEvent& event) {
+    tree_map_widget.on_context_menu_request = [&](GUI::ContextMenuEvent const& event) {
         ByteString selected_node_path = get_absolute_path_to_selected_node(tree_map_widget);
         if (selected_node_path.is_empty())
             return;
