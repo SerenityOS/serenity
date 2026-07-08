@@ -292,6 +292,7 @@ set(KERNEL_SOURCES
     Net/IP/Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
+    Net/MDIO.cpp
     Net/NetworkAdapter.cpp
     Net/NetworkTask.cpp
     Net/NetworkingManagement.cpp
