@@ -160,32 +160,34 @@ function(serenity_testjs_test test_src sub_dir)
         LIBS ${SERENITY_TEST_LIBS})
 endfunction()
 
-function(serenity_app target_name)
-    cmake_parse_arguments(PARSE_ARGV 1 SERENITY_APP "" "ICON" "")
+if (NOT COMMAND serenity_app)
+    function(serenity_app target_name)
+        cmake_parse_arguments(PARSE_ARGV 1 SERENITY_APP "" "ICON" "")
 
-    set(small_icon "${SerenityOS_SOURCE_DIR}/Base/res/icons/16x16/${SERENITY_APP_ICON}.png")
-    set(medium_icon "${SerenityOS_SOURCE_DIR}/Base/res/icons/32x32/${SERENITY_APP_ICON}.png")
+        set(small_icon "${SerenityOS_SOURCE_DIR}/Base/res/icons/16x16/${SERENITY_APP_ICON}.png")
+        set(medium_icon "${SerenityOS_SOURCE_DIR}/Base/res/icons/32x32/${SERENITY_APP_ICON}.png")
 
-    serenity_bin("${target_name}")
+        serenity_bin("${target_name}")
 
-    if (EXISTS "${small_icon}")
-        embed_resource("${target_name}" serenity_icon_s "${small_icon}")
-    else()
-        message(FATAL_ERROR "Missing small app icon: ${small_icon}")
-    endif()
-
-    if (EXISTS "${medium_icon}")
-        embed_resource("${target_name}" serenity_icon_m "${medium_icon}")
-    else()
-        # These icons are designed small only for use in applets, and thus are exempt.
-        list(APPEND allowed_missing_medium_icons "audio-volume-high")
-        list(APPEND allowed_missing_medium_icons "edit-copy")
-
-        if (NOT ${SERENITY_APP_ICON} IN_LIST allowed_missing_medium_icons)
-            message(FATAL_ERROR "Missing medium app icon: ${medium_icon}")
+        if (EXISTS "${small_icon}")
+            embed_resource("${target_name}" serenity_icon_s "${small_icon}")
+        else()
+            message(FATAL_ERROR "Missing small app icon: ${small_icon}")
         endif()
-    endif()
-endfunction()
+
+        if (EXISTS "${medium_icon}")
+            embed_resource("${target_name}" serenity_icon_m "${medium_icon}")
+        else()
+            # These icons are designed small only for use in applets, and thus are exempt.
+            list(APPEND allowed_missing_medium_icons "audio-volume-high")
+            list(APPEND allowed_missing_medium_icons "edit-copy")
+
+            if (NOT ${SERENITY_APP_ICON} IN_LIST allowed_missing_medium_icons)
+                message(FATAL_ERROR "Missing medium app icon: ${medium_icon}")
+            endif()
+        endif()
+    endfunction()
+endif()
 
 function(embed_resource target section file)
     get_filename_component(asm_file "${file}" NAME)
