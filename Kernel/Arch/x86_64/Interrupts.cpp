@@ -426,14 +426,14 @@ void register_generic_interrupt_handler(InterruptNumber interrupt_number, Generi
             static_cast<SpuriousInterruptHandler*>(handler_slot)->register_handler(handler);
             return;
         }
+
         VERIFY(handler_slot->type() == HandlerType::IRQHandler);
-        static_cast<IRQHandler*>(handler_slot)->set_shared_with_others(true);
         auto& previous_handler = *handler_slot;
-        handler_slot = nullptr;
-        SharedIRQHandler::initialize(interrupt_number);
-        VERIFY(handler_slot);
-        static_cast<SharedIRQHandler*>(handler_slot)->register_handler(previous_handler);
-        static_cast<SharedIRQHandler*>(handler_slot)->register_handler(handler);
+
+        auto* shared_handler = SharedIRQHandler::initialize(interrupt_number, previous_handler, handler);
+        handler_slot = shared_handler;
+        VERIFY(handler_slot->type() == HandlerType::SharedIRQHandler);
+
         return;
     }
     VERIFY_NOT_REACHED();

@@ -17,7 +17,7 @@ namespace Kernel {
 class IRQHandler;
 class SharedIRQHandler final : public GenericInterruptHandler {
 public:
-    static void initialize(InterruptNumber interrupt_number);
+    static SharedIRQHandler* initialize(InterruptNumber interrupt_number, GenericInterruptHandler&, GenericInterruptHandler&);
     virtual ~SharedIRQHandler();
     virtual bool handle_interrupt() override;
 

@@ -13,19 +13,20 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT void SharedIRQHandler::initialize(InterruptNumber interrupt_number)
+UNMAP_AFTER_INIT SharedIRQHandler* SharedIRQHandler::initialize(InterruptNumber interrupt_number, GenericInterruptHandler& handler1, GenericInterruptHandler& handler2)
 {
     auto* handler = new SharedIRQHandler(interrupt_number);
-    handler->register_interrupt_handler();
-    handler->disable_interrupt_vector();
+    handler->register_handler(handler1);
+    handler->register_handler(handler2);
+    return handler;
 }
 
 void SharedIRQHandler::register_handler(GenericInterruptHandler& handler)
 {
     dbgln_if(INTERRUPT_DEBUG, "Interrupt Handler registered @ Shared Interrupt Handler {}", interrupt_number());
     m_handlers.with([&handler](auto& list) { list.append(handler); });
-    enable_interrupt_vector();
 }
+
 void SharedIRQHandler::unregister_handler(GenericInterruptHandler& handler)
 {
     dbgln_if(INTERRUPT_DEBUG, "Interrupt Handler unregistered @ Shared Interrupt Handler {}", interrupt_number());

@@ -214,13 +214,14 @@ void register_generic_interrupt_handler(InterruptNumber interrupt_number, Generi
             // FIXME: Add support for spurious interrupts on riscv64
             TODO_RISCV64();
         }
+
         VERIFY(handler_slot->type() == HandlerType::IRQHandler);
         auto& previous_handler = *handler_slot;
-        handler_slot = nullptr;
-        SharedIRQHandler::initialize(interrupt_number);
-        VERIFY(handler_slot);
-        static_cast<SharedIRQHandler*>(handler_slot)->register_handler(previous_handler);
-        static_cast<SharedIRQHandler*>(handler_slot)->register_handler(handler);
+
+        auto* shared_handler = SharedIRQHandler::initialize(interrupt_number, previous_handler, handler);
+        handler_slot = shared_handler;
+        VERIFY(handler_slot->type() == HandlerType::SharedIRQHandler);
+
         return;
     }
     VERIFY_NOT_REACHED();
