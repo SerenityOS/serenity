@@ -142,6 +142,12 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
 
 // This spinlock is used to reserve IRQs that can be later used by interrupt mechanism such as MSIx
 static Spinlock<LockRank::None> s_interrupt_handler_lock {};
+
+// FIXME: There is a possible race here on SMP systems. When we modify/set the interrupt handler for a specific interrupt,
+//        that change isn't immediately visible for other cores, so if that interrupt happens on another core before this
+//        change is visible, it will call the incorrect handler. Maybe some lock for each handler would be enough.
+//        But we shouldn't use a lock for CPU-local interrupts. Otherwise, that CPU-local interrupt can only happen on one
+//        core at a time. So we might need a different solution for those or possibly altogether.
 // A GICv2 supports a maximum of 1020 interrupts.
 static Array<GenericInterruptHandler*, 1020> s_interrupt_handlers;
 

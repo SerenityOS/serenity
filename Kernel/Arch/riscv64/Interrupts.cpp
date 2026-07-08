@@ -26,6 +26,11 @@ namespace Kernel {
 
 extern "C" void syscall_handler(TrapFrame const*);
 
+// FIXME: There is a possible race here on SMP systems. When we modify/set the interrupt handler for a specific interrupt,
+//        that change isn't immediately visible for other cores, so if that interrupt happens on another core before this
+//        change is visible, it will call the incorrect handler. Maybe some lock for each handler would be enough.
+//        But we shouldn't use a lock for CPU-local interrupts. Otherwise, that CPU-local interrupt can only happen on one
+//        core at a time. So we might need a different solution for those or possibly altogether.
 // FIXME: Share this array with x86_64/aarch64 somehow and consider if this really needs to use raw pointers and not OwnPtrs
 static Array<GenericInterruptHandler*, GENERIC_INTERRUPT_HANDLERS_COUNT> s_interrupt_handlers;
 
