@@ -69,15 +69,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto constants_menu = window->add_menu("&Constants"_string);
     auto const power = Crypto::NumberTheory::Power("10"_bigint, "10"_bigint);
+    auto const pi = Crypto::BigFraction { "31415926535"_sbigint, power };
+    auto const eulers_number = Crypto::BigFraction { "27182818284"_sbigint, power };
+    auto const phi = Crypto::BigFraction { "16180339887"_sbigint, power };
 
     constants_menu->add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::load_from_uri("resource://icons/calculator/pi.png"sv)), [&](auto&) {
-        widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(31415926535), power });
+        widget->set_typed_entry(pi);
     }));
     constants_menu->add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::load_from_uri("resource://icons/calculator/eulers_number.png"sv)), [&](auto&) {
-        widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(27182818284), power });
+        widget->set_typed_entry(eulers_number);
     }));
     constants_menu->add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::load_from_uri("resource://icons/calculator/phi.png"sv)), [&](auto&) {
-        widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
+        widget->set_typed_entry(phi);
     }));
 
     auto round_menu = window->add_menu("&Round"_string);
