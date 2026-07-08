@@ -12,13 +12,15 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
+#include <Kernel/Net/MDIO.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {
 
 class E1000ENetworkAdapter final
-    : public E1000NetworkAdapter {
+    : public E1000NetworkAdapter
+    , public MDIO::Clause22::Interface {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
     static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
@@ -27,6 +29,12 @@ public:
     virtual ~E1000ENetworkAdapter() override;
 
     virtual StringView purpose() const override { return class_name(); }
+
+protected:
+    // ^MDIO::Clause22::Interface
+    virtual void on_phy_link_status_change(MDIO::LinkStatus) override;
+    virtual u16 read_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address) override;
+    virtual void write_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address, u16 value) override;
 
 private:
     E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&, InterruptNumber irq,
@@ -38,5 +46,7 @@ private:
 
     virtual void detect_eeprom() override;
     virtual u32 read_eeprom(u8 address) override;
+
+    RefPtr<Process> m_mdio_handling_process;
 };
 }

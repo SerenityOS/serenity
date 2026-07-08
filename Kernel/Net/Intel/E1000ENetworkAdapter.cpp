@@ -10,15 +10,34 @@
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 
+#define REG_CTRL 0x0000
 #define REG_EECD 0x0010
 #define REG_EEPROM 0x0014
+#define REG_MDIC 0x0020
+
+// CTRL Register
+
+#define REG_CTRL_SLU (1 << 6)
 
 // EECD Register
 
 #define EECD_PRES 0x100
+
+// MIDC Register
+
+#define REG_MDIC_DATA_MASK (0xffff << 0)
+#define REG_MDIC_DATA_OFFSET 0
+#define REG_MDIC_REGADD_OFFSET 16
+#define REG_MDIC_R (1 << 28)
+#define REG_MDIC_OP_WRITE (0b01 << 26)
+#define REG_MDIC_OP_READ (0b10 << 26)
+#define REG_MDIC_PHYADD_OFFSET 21
+
+#define GIGABIT_PHY_ID 1
 
 static bool is_valid_device_id(u16 device_id)
 {
@@ -226,6 +245,8 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<Networking
     auto const& mac = mac_address();
     dmesgln("E1000e: MAC address: {}", mac.to_string());
 
+    m_mdio_handling_process = TRY(spawn_mdio_handling_task(GIGABIT_PHY_ID));
+
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
@@ -248,7 +269,54 @@ UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(StringView interface
 {
 }
 
-UNMAP_AFTER_INIT E1000ENetworkAdapter::~E1000ENetworkAdapter() = default;
+UNMAP_AFTER_INIT E1000ENetworkAdapter::~E1000ENetworkAdapter()
+{
+    if (m_mdio_handling_process) {
+        m_mdio_handling_process->die();
+        // Block until all threads exited to prevent UAF
+        ErrorOr<siginfo_t> result = siginfo_t {};
+        (void)Thread::current()->block<Thread::WaitBlocker>({}, WEXITED, m_mdio_handling_process.release_nonnull(), result);
+    }
+}
+
+void E1000ENetworkAdapter::on_phy_link_status_change(MDIO::LinkStatus link_status)
+{
+    auto ctrl = in32(REG_CTRL);
+
+    if (link_status == MDIO::LinkStatus::Up)
+        ctrl |= REG_CTRL_SLU;
+    else
+        ctrl &= ~REG_CTRL_SLU;
+
+    out32(REG_CTRL, ctrl);
+}
+
+u16 E1000ENetworkAdapter::read_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address)
+{
+    // FIXME: Newer controllers (like the I211) don't have a PHYADD field in the MDIC register.
+    //        They instead have it in a separate register.
+    out32(REG_MDIC, REG_MDIC_OP_READ | (to_underlying(address) << REG_MDIC_REGADD_OFFSET) | (phy_id << REG_MDIC_PHYADD_OFFSET));
+
+    for (;;) {
+        u32 mdic = in32(REG_MDIC);
+        if ((mdic & REG_MDIC_R) == 0) {
+            Processor::wait_check();
+            continue;
+        }
+
+        return (mdic & REG_MDIC_DATA_MASK) >> REG_MDIC_DATA_OFFSET;
+    }
+}
+
+void E1000ENetworkAdapter::write_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address, u16 value)
+{
+    // FIXME: Newer controllers (like the I211) don't have a PHYADD field in the MDIC register.
+    //        They instead have it in a separate register.
+    out32(REG_MDIC, REG_MDIC_OP_WRITE | (to_underlying(address) << REG_MDIC_REGADD_OFFSET) | (value << REG_MDIC_DATA_OFFSET) | (phy_id << REG_MDIC_PHYADD_OFFSET));
+
+    while ((in32(REG_MDIC) & REG_MDIC_R) == 0)
+        Processor::wait_check();
+}
 
 UNMAP_AFTER_INIT void E1000ENetworkAdapter::detect_eeprom()
 {
