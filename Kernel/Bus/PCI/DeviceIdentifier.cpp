@@ -21,9 +21,9 @@ void DeviceIdentifier::initialize()
 {
     for (auto cap : capabilities()) {
         if (cap.id() == PCI::Capabilities::ID::MSIX) {
-            auto msix_bir_bar = (cap.read8(4) & MSIX_TABLE_BIR_MASK);
-            auto msix_bir_offset = (cap.read32(4) & MSIX_TABLE_OFFSET_MASK);
-            auto msix_count = (cap.read16(2) & MSIX_CONTROL_TABLE_MASK) + 1;
+            auto msix_bir_bar = (cap.read8(MSIX_TABLE_OFFSET_OFFSET) & MSIX_TABLE_BIR_MASK);
+            auto msix_bir_offset = (cap.read32(MSIX_TABLE_OFFSET_OFFSET) & MSIX_TABLE_OFFSET_MASK);
+            auto msix_count = (cap.read16(MSIX_CONTROL_OFFSET) & MSIX_CONTROL_TABLE_MASK) + 1;
             m_msix_info = MSIxInfo(msix_count, msix_bir_bar, msix_bir_offset);
         }
 
