@@ -107,6 +107,8 @@ static constexpr u16 MSIX_CONTROL_TABLE_MASK = 0x07ff;
 static constexpr u8 MSIX_TABLE_BIR_MASK = 0x7;
 static constexpr u32 MSIX_TABLE_OFFSET_MASK = 0xffff'fff8;
 static constexpr u16 MSIX_CONTROL_ENABLE = 0x8000;
+static constexpr u8 MSIX_CONTROL_OFFSET = 2;
+static constexpr u8 MSIX_TABLE_OFFSET_OFFSET = 4;
 
 // 2.2.1.1. Numerical Representation, https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
 struct OpenFirmwareAddress {
