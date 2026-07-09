@@ -172,13 +172,13 @@ UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<void(Enumerab
 UNMAP_AFTER_INIT void HostController::enumerate_device(Function<void(EnumerableDeviceIdentifier const&)> const& callback, Function<void(EnumerableDeviceIdentifier const&)>& post_bridge_callback, BusNumber bus, DeviceNumber device, bool recursive_search_into_bridges)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating device in bus={}, device={}", bus, device);
-    if (read16_field(bus, device, 0, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
+    if (read16_field(bus, device, 0, PCI::RegisterOffset::VENDOR_ID) == PCI::NONE_VALUE)
         return;
     enumerate_functions(callback, post_bridge_callback, bus, device, 0, recursive_search_into_bridges);
     if (!(read8_field(bus, device, 0, PCI::RegisterOffset::HEADER_TYPE) & 0x80))
         return;
     for (u8 function = 1; function < 8; ++function) {
-        if (read16_field(bus, device, function, PCI::RegisterOffset::VENDOR_ID) != PCI::none_value)
+        if (read16_field(bus, device, function, PCI::RegisterOffset::VENDOR_ID) != PCI::NONE_VALUE)
             enumerate_functions(callback, post_bridge_callback, bus, device, function, recursive_search_into_bridges);
     }
 }
@@ -206,7 +206,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_attached_devices(Function<void(E
     // recursive PCI-to-PCI bridges starting from bus 0, we might find them here.
     if ((read8_field(0, 0, 0, PCI::RegisterOffset::HEADER_TYPE) & 0x80) != 0) {
         for (int bus_as_function_number = 1; bus_as_function_number < 8; ++bus_as_function_number) {
-            if (read16_field(0, 0, bus_as_function_number, PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
+            if (read16_field(0, 0, bus_as_function_number, PCI::RegisterOffset::VENDOR_ID) == PCI::NONE_VALUE)
                 continue;
             if (read8_field(0, 0, bus_as_function_number, PCI::RegisterOffset::CLASS) != to_underlying(PCI::ClassID::Bridge))
                 continue;
@@ -253,7 +253,7 @@ void HostController::configure_attached_devices(PCIConfiguration& config)
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, 0xFFFFFFFF);
                 auto bar_size = read32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset);
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, bar_value);
-                bar_size &= bar_address_mask;
+                bar_size &= BAR_ADDRESS_MASK;
                 bar_size = (~bar_size) + 1;
 
                 if (bar_size == 0)
@@ -284,7 +284,7 @@ void HostController::configure_attached_devices(PCIConfiguration& config)
                 bar_size |= (u64)read32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset + 4) << 32;
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, bar_value);
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset + 4, next_bar_value);
-                bar_size &= bar_address_mask;
+                bar_size &= BAR_ADDRESS_MASK;
                 bar_size = (~bar_size) + 1;
 
                 if (bar_size == 0) {
@@ -316,7 +316,7 @@ void HostController::configure_attached_devices(PCIConfiguration& config)
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, 0xFFFFFFFF);
                 auto bar_size = read32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset);
                 write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), bar_offset, bar_value);
-                bar_size &= bar_io_address_mask;
+                bar_size &= BAR_IO_ADDRESS_MASK;
                 bar_size = (~bar_size) + 1;
                 if (bar_size == 0)
                     continue;

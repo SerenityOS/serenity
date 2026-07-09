@@ -21,16 +21,16 @@ void DeviceIdentifier::initialize()
 {
     for (auto cap : capabilities()) {
         if (cap.id() == PCI::Capabilities::ID::MSIX) {
-            auto msix_bir_bar = (cap.read8(4) & msix_table_bir_mask);
-            auto msix_bir_offset = (cap.read32(4) & msix_table_offset_mask);
-            auto msix_count = (cap.read16(2) & msix_control_table_mask) + 1;
+            auto msix_bir_bar = (cap.read8(4) & MSIX_TABLE_BIR_MASK);
+            auto msix_bir_offset = (cap.read32(4) & MSIX_TABLE_OFFSET_MASK);
+            auto msix_count = (cap.read16(2) & MSIX_CONTROL_TABLE_MASK) + 1;
             m_msix_info = MSIxInfo(msix_count, msix_bir_bar, msix_bir_offset);
         }
 
         if (cap.id() == PCI::Capabilities::ID::MSI) {
-            bool message_address_64_bit_format = (cap.read8(msi_control_offset) & msi_address_format_mask);
+            bool message_address_64_bit_format = (cap.read8(MSI_CONTROL_OFFSET) & MSI_ADDRESS_FORMAT_MASK);
             u8 count = 1;
-            u8 mme_count = (cap.read8(msi_control_offset) & msi_mmc_format_mask) >> 1;
+            u8 mme_count = (cap.read8(MSI_CONTROL_OFFSET) & MSI_MMC_FORMAT_MASK) >> 1;
             if (mme_count)
                 count = mme_count;
             m_msi_info = MSIInfo(message_address_64_bit_format, count);
