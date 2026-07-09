@@ -55,14 +55,14 @@ void Device::enable_message_signalled_interrupts()
 {
     for (auto& capability : m_pci_identifier->capabilities()) {
         if (capability.id().value() == PCI::Capabilities::ID::MSI)
-            capability.write16(msi_control_offset, capability.read16(msi_control_offset) | msi_control_enable);
+            capability.write16(MSI_CONTROL_OFFSET, capability.read16(MSI_CONTROL_OFFSET) | MSI_CONTROL_ENABLE);
     }
 }
 void Device::disable_message_signalled_interrupts()
 {
     for (auto& capability : m_pci_identifier->capabilities()) {
         if (capability.id().value() == PCI::Capabilities::ID::MSI)
-            capability.write16(msi_control_offset, capability.read16(msi_control_offset) & ~(msi_control_enable));
+            capability.write16(MSI_CONTROL_OFFSET, capability.read16(MSI_CONTROL_OFFSET) & ~(MSI_CONTROL_ENABLE));
     }
 }
 
@@ -70,7 +70,7 @@ void Device::enable_extended_message_signalled_interrupts()
 {
     for (auto& capability : m_pci_identifier->capabilities()) {
         if (capability.id().value() == PCI::Capabilities::ID::MSIX)
-            capability.write16(msi_control_offset, capability.read16(msi_control_offset) | msix_control_enable);
+            capability.write16(MSI_CONTROL_OFFSET, capability.read16(MSI_CONTROL_OFFSET) | MSIX_CONTROL_ENABLE);
     }
 }
 
@@ -78,7 +78,7 @@ void Device::disable_extended_message_signalled_interrupts()
 {
     for (auto& capability : m_pci_identifier->capabilities()) {
         if (capability.id().value() == PCI::Capabilities::ID::MSIX)
-            capability.write16(msi_control_offset, capability.read16(msi_control_offset) & ~(msix_control_enable));
+            capability.write16(MSI_CONTROL_OFFSET, capability.read16(MSI_CONTROL_OFFSET) & ~(MSIX_CONTROL_ENABLE));
     }
 }
 
@@ -159,15 +159,15 @@ ErrorOr<InterruptNumber> Device::allocate_irq(size_t index)
         auto addr = msi_address_register(0, false, false);
         for (auto& capability : m_pci_identifier->capabilities()) {
             if (capability.id().value() == PCI::Capabilities::ID::MSI) {
-                capability.write32(msi_address_low_offset, addr & 0xffffffff);
+                capability.write32(MSI_ADDRESS_LOW_OFFSET, addr & 0xffffffff);
 
                 if (!m_pci_identifier->is_msi_64bit_address_format()) {
-                    capability.write16(msi_address_high_or_data_offset, data);
+                    capability.write16(MSI_ADDRESS_HIGH_OR_DATA_OFFSET, data);
                     break;
                 }
 
-                capability.write32(msi_address_high_or_data_offset, addr >> 32);
-                capability.write16(msi_data_offset, data);
+                capability.write32(MSI_ADDRESS_HIGH_OR_DATA_OFFSET, addr >> 32);
+                capability.write16(MSI_DATA_OFFSET, data);
             }
         }
         return m_interrupt_range.m_start_irq + index;

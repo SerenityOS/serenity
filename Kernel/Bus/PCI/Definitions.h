@@ -86,27 +86,27 @@ enum class Limits {
     MaxFunctionsPerDevice = 8,
 };
 
-static constexpr u16 address_port = 0xcf8;
-static constexpr u16 value_port = 0xcfc;
+static constexpr u16 ADDRESS_PORT = 0xcf8;
+static constexpr u16 VALUE_PORT = 0xcfc;
 
-static constexpr size_t mmio_device_space_size = 4096;
-static constexpr u16 none_value = 0xffff;
-static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
-static constexpr u64 bar_address_mask = ~0xfull;
-static constexpr u64 bar_io_address_mask = ~0x3ull;
+static constexpr size_t MMIO_DEVICE_SPACE_SIZE = 4096;
+static constexpr u16 NONE_VALUE = 0xffff;
+static constexpr size_t MEMORY_RANGE_PER_BUS = MMIO_DEVICE_SPACE_SIZE * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
+static constexpr u64 BAR_ADDRESS_MASK = ~0xfull;
+static constexpr u64 BAR_IO_ADDRESS_MASK = ~0x3ull;
 
-static constexpr u8 msi_control_offset = 2;
-static constexpr u16 msi_control_enable = 0x0001;
-static constexpr u8 msi_address_low_offset = 4;
-static constexpr u8 msi_address_high_or_data_offset = 8;
-static constexpr u8 msi_data_offset = 0xc;
-static constexpr u16 msi_address_format_mask = 0x80;
-static constexpr u8 msi_mmc_format_mask = 0xe;
+static constexpr u8 MSI_CONTROL_OFFSET = 2;
+static constexpr u16 MSI_CONTROL_ENABLE = 0x0001;
+static constexpr u8 MSI_ADDRESS_LOW_OFFSET = 4;
+static constexpr u8 MSI_ADDRESS_HIGH_OR_DATA_OFFSET = 8;
+static constexpr u8 MSI_DATA_OFFSET = 0xc;
+static constexpr u16 MSI_ADDRESS_FORMAT_MASK = 0x80;
+static constexpr u8 MSI_MMC_FORMAT_MASK = 0xe;
 
-static constexpr u16 msix_control_table_mask = 0x07ff;
-static constexpr u8 msix_table_bir_mask = 0x7;
-static constexpr u32 msix_table_offset_mask = 0xffff'fff8;
-static constexpr u16 msix_control_enable = 0x8000;
+static constexpr u16 MSIX_CONTROL_TABLE_MASK = 0x07ff;
+static constexpr u8 MSIX_TABLE_BIR_MASK = 0x7;
+static constexpr u32 MSIX_TABLE_OFFSET_MASK = 0xffff'fff8;
+static constexpr u16 MSIX_CONTROL_ENABLE = 0x8000;
 
 // 2.2.1.1. Numerical Representation, https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
 struct OpenFirmwareAddress {

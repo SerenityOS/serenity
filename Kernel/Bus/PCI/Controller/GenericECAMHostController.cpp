@@ -21,7 +21,7 @@ public:
         auto domain = TRY(determine_pci_domain_for_devicetree_node(device.node(), device.node_name()));
         auto configuration_space = TRY(device.get_resource(0));
 
-        if (configuration_space.size < memory_range_per_bus * (domain.end_bus() - domain.start_bus() + 1))
+        if (configuration_space.size < MEMORY_RANGE_PER_BUS * (domain.end_bus() - domain.start_bus() + 1))
             return ERANGE;
 
         return adopt_nonnull_own_or_enomem(new (nothrow) GenericDeviceTreeECAMHostController(domain, configuration_space.paddr));

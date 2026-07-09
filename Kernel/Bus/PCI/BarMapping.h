@@ -19,7 +19,7 @@ inline ErrorOr<u64> get_bar_bus_address(DeviceIdentifier const& device, HeaderTy
     auto pci_bar_space_type = get_BAR_space_type(pci_bar_value);
 
     if (pci_bar_space_type == BARSpaceType::IOSpace)
-        return pci_bar_value & bar_io_address_mask;
+        return pci_bar_value & BAR_IO_ADDRESS_MASK;
 
     if (pci_bar_space_type == BARSpaceType::Memory64BitSpace) {
         // FIXME: In theory, BAR5 cannot be assigned to 64 bit as it is the last one...
@@ -31,10 +31,10 @@ inline ErrorOr<u64> get_bar_bus_address(DeviceIdentifier const& device, HeaderTy
         u64 next_pci_bar_value = get_BAR(device, static_cast<PCI::HeaderType0BaseRegister>(to_underlying(bar) + 1));
         pci_bar_value |= next_pci_bar_value << 32;
 
-        return pci_bar_value & bar_address_mask;
+        return pci_bar_value & BAR_ADDRESS_MASK;
     }
 
-    return pci_bar_value & bar_address_mask;
+    return pci_bar_value & BAR_ADDRESS_MASK;
 }
 
 inline ErrorOr<PhysicalAddress> get_bar_address(DeviceIdentifier const& device, HeaderType0BaseRegister bar)
