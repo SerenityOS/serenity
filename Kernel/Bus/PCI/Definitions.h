@@ -94,6 +94,7 @@ static constexpr u16 none_value = 0xffff;
 static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
 static constexpr u64 bar_address_mask = ~0xfull;
 static constexpr u64 bar_io_address_mask = ~0x3ull;
+
 static constexpr u8 msi_control_offset = 2;
 static constexpr u16 msi_control_enable = 0x0001;
 static constexpr u8 msi_address_low_offset = 4;
@@ -101,9 +102,10 @@ static constexpr u8 msi_address_high_or_data_offset = 8;
 static constexpr u8 msi_data_offset = 0xc;
 static constexpr u16 msi_address_format_mask = 0x80;
 static constexpr u8 msi_mmc_format_mask = 0xe;
+
 static constexpr u16 msix_control_table_mask = 0x07ff;
 static constexpr u8 msix_table_bir_mask = 0x7;
-static constexpr u16 msix_table_offset_mask = 0xfff8;
+static constexpr u32 msix_table_offset_mask = 0xffff'fff8;
 static constexpr u16 msix_control_enable = 0x8000;
 
 // 2.2.1.1. Numerical Representation, https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
