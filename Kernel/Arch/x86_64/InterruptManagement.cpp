@@ -99,11 +99,18 @@ NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_contro
     if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
         return m_interrupt_controllers[0];
     }
+
     for (auto& irq_controller : m_interrupt_controllers) {
-        if (irq_controller->gsi_base() <= interrupt_vector)
-            if (!irq_controller->is_hard_disabled())
-                return irq_controller;
+        if (irq_controller->is_hard_disabled())
+            continue;
+
+        auto gsi_base = irq_controller->gsi_base();
+        auto gsi_end = gsi_base + irq_controller->interrupt_vectors_count();
+
+        if (interrupt_vector >= gsi_base && interrupt_vector < gsi_end)
+            return irq_controller;
     }
+
     VERIFY_NOT_REACHED();
 }
 
