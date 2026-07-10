@@ -13,11 +13,13 @@
 
 namespace Kernel {
 
+class PIC;
+
 class PICSpuriousInterruptHandler final : public GenericInterruptHandler {
 public:
-    static void initialize(InterruptNumber interrupt_number);
-    static void initialize_for_disabled_master_pic();
-    static void initialize_for_disabled_slave_pic();
+    static void initialize(PIC&, InterruptNumber interrupt_number);
+    static void initialize_for_disabled_master_pic(PIC&);
+    static void initialize_for_disabled_slave_pic(PIC&);
     virtual ~PICSpuriousInterruptHandler();
     virtual bool handle_interrupt() override;
 
@@ -38,10 +40,10 @@ public:
 private:
     void enable_interrupt_vector();
     void disable_interrupt_vector();
-    explicit PICSpuriousInterruptHandler(InterruptNumber interrupt_number);
+    explicit PICSpuriousInterruptHandler(PIC&, InterruptNumber interrupt_number);
     bool m_enabled { false };
     bool m_real_irq { false };
-    NonnullLockRefPtr<IRQController> m_responsible_irq_controller;
+    NonnullLockRefPtr<PIC> m_pic;
     OwnPtr<GenericInterruptHandler> m_real_handler;
 };
 }

@@ -94,15 +94,6 @@ InterruptNumber InterruptManagement::get_irq_vector(InterruptNumber mapped_inter
     return mapped_interrupt_vector;
 }
 
-NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, InterruptNumber interrupt_vector)
-{
-    for (auto& irq_controller : m_interrupt_controllers) {
-        if (irq_controller->gsi_base() <= interrupt_vector && irq_controller->type() == controller_type)
-            return irq_controller;
-    }
-    VERIFY_NOT_REACHED();
-}
-
 NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(InterruptNumber interrupt_vector)
 {
     if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
@@ -137,10 +128,13 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
     VERIFY(m_interrupt_controllers.is_empty());
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
+
     m_interrupt_controllers.try_append(adopt_lock_ref(*new PIC())).release_value_but_fixme_should_propagate_errors();
-    PICSpuriousInterruptHandler::initialize(7);
-    PICSpuriousInterruptHandler::initialize(15);
-    dbgln("Interrupts: Detected {}", m_interrupt_controllers[0]->model());
+    auto pic = static_ptr_cast<PIC>(m_interrupt_controllers[0]);
+
+    PICSpuriousInterruptHandler::initialize(pic, 7);
+    PICSpuriousInterruptHandler::initialize(pic, 15);
+    dbgln("Interrupts: Detected {}", pic->model());
 }
 
 UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
@@ -167,10 +161,13 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
     for (auto& irq_controller : m_interrupt_controllers) {
         VERIFY(irq_controller);
         if (irq_controller->type() == IRQControllerType::i8259) {
-            irq_controller->hard_disable();
-            dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
-            PICSpuriousInterruptHandler::initialize_for_disabled_master_pic();
-            PICSpuriousInterruptHandler::initialize_for_disabled_slave_pic();
+            auto pic = static_ptr_cast<PIC>(irq_controller);
+
+            pic->hard_disable();
+            dbgln("Interrupts: Detected {} - Disabled", pic->model());
+
+            PICSpuriousInterruptHandler::initialize_for_disabled_master_pic(pic);
+            PICSpuriousInterruptHandler::initialize_for_disabled_slave_pic(pic);
         } else {
             dbgln("Interrupts: Detected {}", irq_controller->model());
         }

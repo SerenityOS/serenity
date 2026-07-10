@@ -52,7 +52,6 @@ public:
     void switch_to_ioapic_mode();
 
     NonnullLockRefPtr<IRQController> get_responsible_irq_controller(InterruptNumber interrupt_vector);
-    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, InterruptNumber interrupt_vector);
 
     Vector<ISAInterruptOverrideMetadata> const& isa_overrides() const { return m_isa_interrupt_overrides; }
 
