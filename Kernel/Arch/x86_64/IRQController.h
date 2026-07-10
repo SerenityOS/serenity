@@ -34,7 +34,6 @@ public:
     virtual void spurious_eoi(GenericInterruptHandler const&) const = 0;
     virtual size_t interrupt_vectors_count() const = 0;
     virtual u32 gsi_base() const = 0;
-    virtual u16 get_isr() const = 0;
     virtual u16 get_irr() const = 0;
     virtual StringView model() const = 0;
     virtual IRQControllerType type() const = 0;
