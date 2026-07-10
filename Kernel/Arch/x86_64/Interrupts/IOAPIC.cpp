@@ -91,7 +91,7 @@ void IOAPIC::map_interrupt_redirection(InterruptNumber interrupt_vector)
 void IOAPIC::isa_identity_map(size_t index)
 {
     InterruptDisabler disabler;
-    configure_redirection_entry(index, InterruptManagement::acquire_mapped_interrupt_number(index) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, false, true, Processor::by_id(0).info().apic_id());
+    configure_redirection_entry(index - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(index) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, false, true, Processor::by_id(0).info().apic_id());
 }
 
 bool IOAPIC::is_enabled() const
@@ -202,7 +202,7 @@ void IOAPIC::disable(GenericInterruptHandler const& handler)
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
     InterruptNumber interrupt_vector = handler.interrupt_number();
-    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
+    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < gsi_base() + interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
@@ -217,7 +217,7 @@ void IOAPIC::enable(GenericInterruptHandler const& handler)
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
     InterruptNumber interrupt_vector = handler.interrupt_number();
-    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
+    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < gsi_base() + interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
@@ -231,7 +231,7 @@ void IOAPIC::eoi(GenericInterruptHandler const& handler) const
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
-    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < gsi_base() + interrupt_vectors_count());
     VERIFY(handler.type() != HandlerType::SpuriousInterruptHandler);
     APIC::the().eoi();
 }
