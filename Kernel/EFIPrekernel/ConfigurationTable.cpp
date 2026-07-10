@@ -46,12 +46,15 @@ void populate_firmware_boot_info(BootInfo* boot_info)
         boot_info->smbios.maximum_structure_table_length = entry_point->table_maximum_size;
     } else {
         boot_info->smbios.entry_point_paddr = PhysicalAddress { bit_cast<PhysicalPtr>(search_efi_configuration_table(EFI::SMBIOS_TABLE_GUID)) };
-        boot_info->smbios.entry_point_is_64_bit = false;
 
-        auto* entry_point = reinterpret_cast<SMBIOS::EntryPoint32bit*>(boot_info->smbios.entry_point_paddr.as_ptr());
-        boot_info->smbios.entry_point_length = entry_point->length;
-        boot_info->smbios.structure_table_paddr = PhysicalAddress { entry_point->legacy_structure.smbios_table_ptr };
-        boot_info->smbios.maximum_structure_table_length = entry_point->legacy_structure.smbios_table_length;
+        if (!boot_info->smbios.entry_point_paddr.is_null()) {
+            boot_info->smbios.entry_point_is_64_bit = false;
+
+            auto* entry_point = reinterpret_cast<SMBIOS::EntryPoint32bit*>(boot_info->smbios.entry_point_paddr.as_ptr());
+            boot_info->smbios.entry_point_length = entry_point->length;
+            boot_info->smbios.structure_table_paddr = PhysicalAddress { entry_point->legacy_structure.smbios_table_ptr };
+            boot_info->smbios.maximum_structure_table_length = entry_point->legacy_structure.smbios_table_length;
+        }
     }
 }
 
