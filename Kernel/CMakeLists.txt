@@ -428,6 +428,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Interrupts/APIC.cpp
         Arch/x86_64/Interrupts/IOAPIC.cpp
         Arch/x86_64/Interrupts/PIC.cpp
+        Arch/x86_64/Interrupts/PICSpuriousInterruptHandler.cpp
         Arch/x86_64/Time/APICTimer.cpp
         Arch/x86_64/Time/HPET.cpp
         Arch/x86_64/Time/HPETComparator.cpp
@@ -446,9 +447,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/RTC.cpp
         Arch/x86_64/Shutdown.cpp
         Arch/x86_64/SmapDisabler.cpp
-
-        # TODO: Share this with the aarch64 build
-        Interrupts/SpuriousInterruptHandler.cpp
     )
 
     set(KERNEL_SOURCES
