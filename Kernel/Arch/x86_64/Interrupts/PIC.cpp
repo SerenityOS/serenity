@@ -219,12 +219,4 @@ u16 PIC::get_isr() const
     return (isr1 << 8) | isr0;
 }
 
-u16 PIC::get_irr() const
-{
-    IO::out8(PIC0_CTL, 0x0a);
-    IO::out8(PIC1_CTL, 0x0a);
-    u8 irr0 = IO::in8(PIC0_CTL);
-    u8 irr1 = IO::in8(PIC1_CTL);
-    return (irr1 << 8) | irr0;
-}
 }
