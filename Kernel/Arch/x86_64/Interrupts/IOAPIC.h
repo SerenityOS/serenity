@@ -47,7 +47,6 @@ public:
     virtual void spurious_eoi(GenericInterruptHandler const&) const override;
     virtual bool is_vector_enabled(InterruptNumber number) const override;
     virtual bool is_enabled() const override;
-    virtual u16 get_isr() const override;
     virtual u16 get_irr() const override;
     virtual u32 gsi_base() const override { return m_gsi_base; }
     virtual size_t interrupt_vectors_count() const override { return m_redirection_entries_count; }
