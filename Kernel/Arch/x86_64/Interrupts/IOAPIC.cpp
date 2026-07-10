@@ -236,12 +236,6 @@ void IOAPIC::eoi(GenericInterruptHandler const& handler) const
     APIC::the().eoi();
 }
 
-u16 IOAPIC::get_irr() const
-{
-    InterruptDisabler disabler;
-    VERIFY_NOT_REACHED();
-}
-
 void IOAPIC::write_register(u32 index, u32 value) const
 {
     InterruptDisabler disabler;

@@ -25,7 +25,6 @@ public:
     virtual bool is_vector_enabled(InterruptNumber number) const override;
     virtual bool is_enabled() const override;
     virtual void spurious_eoi(GenericInterruptHandler const&) const override;
-    virtual u16 get_irr() const override;
     virtual u32 gsi_base() const override { return 0; }
     virtual size_t interrupt_vectors_count() const override { return 16; }
     virtual StringView model() const override { return "Dual i8259"sv; }
