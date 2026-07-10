@@ -486,8 +486,10 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_efi(MemoryManager::GlobalD
 
     // SMBIOS data can be in a BootServicesData memory region (see https://uefi.org/specs/UEFI/2.10/02_Overview.html#x64-platforms, the same requirement is listed for AArch64 and RISC-V as well).
     // BootServices* memory regions are treated as normal main memory after ExitBootServices, so we need to explicitly mark its ranges as used.
-    global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.entry_point_paddr, g_boot_info.smbios.entry_point_paddr.offset(g_boot_info.smbios.entry_point_length) }).release_value_but_fixme_should_propagate_errors();
-    global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.structure_table_paddr, g_boot_info.smbios.structure_table_paddr.offset(g_boot_info.smbios.maximum_structure_table_length) }).release_value_but_fixme_should_propagate_errors();
+    if (!g_boot_info.smbios.entry_point_paddr.is_null())
+        global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.entry_point_paddr, g_boot_info.smbios.entry_point_paddr.offset(g_boot_info.smbios.entry_point_length) }).release_value_but_fixme_should_propagate_errors();
+    if (!g_boot_info.smbios.structure_table_paddr.is_null())
+        global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.structure_table_paddr, g_boot_info.smbios.structure_table_paddr.offset(g_boot_info.smbios.maximum_structure_table_length) }).release_value_but_fixme_should_propagate_errors();
 }
 
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalData& global_data, u8 const* fdt_addr)
