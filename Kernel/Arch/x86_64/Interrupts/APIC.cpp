@@ -16,7 +16,6 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/ACPI/StaticParsing.h>
-#include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -117,6 +116,31 @@ public:
     virtual bool is_shared_handler() const override { return false; }
 
 private:
+};
+
+class APICSpuriousInterruptHandler final : public GenericInterruptHandler {
+public:
+    explicit APICSpuriousInterruptHandler(InterruptNumber interrupt_vector)
+        : GenericInterruptHandler(interrupt_vector, true)
+    {
+    }
+
+    static void initialize(InterruptNumber interrupt_number)
+    {
+        auto* handler = new APICSpuriousInterruptHandler(interrupt_number);
+        handler->register_interrupt_handler();
+    }
+
+    virtual bool handle_interrupt() override;
+
+    virtual bool eoi() override;
+
+    virtual HandlerType type() const override { return HandlerType::IRQHandler; }
+    virtual StringView purpose() const override { return "APIC Spurious Interrupt Handler"sv; }
+    virtual StringView controller() const override { return {}; }
+
+    virtual size_t sharing_devices_count() const override { return 0; }
+    virtual bool is_shared_handler() const override { return false; }
 };
 
 bool APIC::initialized()
@@ -485,7 +509,7 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
     dbgln_if(APIC_DEBUG, "Enabling local APIC for CPU #{}, logical APIC ID: {}", cpu, apic_id);
 
     if (cpu == 0) {
-        SpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
+        APICSpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
 
         APICErrInterruptHandler::initialize(IRQ_APIC_ERR);
 
@@ -663,6 +687,18 @@ bool APICErrInterruptHandler::handle_interrupt()
 }
 
 bool APICErrInterruptHandler::eoi()
+{
+    APIC::the().eoi();
+    return true;
+}
+
+bool APICSpuriousInterruptHandler::handle_interrupt()
+{
+    dbgln("APIC: Spurious interrupt");
+    return true;
+}
+
+bool APICSpuriousInterruptHandler::eoi()
 {
     APIC::the().eoi();
     return true;
