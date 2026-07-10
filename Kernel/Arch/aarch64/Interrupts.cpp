@@ -214,11 +214,6 @@ void register_generic_interrupt_handler(InterruptNumber interrupt_number, Generi
         return;
     }
     if (!handler_slot->is_shared_handler()) {
-        if (handler_slot->type() == HandlerType::SpuriousInterruptHandler) {
-            // FIXME: Add support for spurious interrupts on aarch64
-            TODO_AARCH64();
-        }
-
         VERIFY(handler_slot->type() == HandlerType::IRQHandler);
         auto& previous_handler = *handler_slot;
 

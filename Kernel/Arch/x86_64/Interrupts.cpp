@@ -9,11 +9,12 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/x86_64/InterruptManagement.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
+#include <Kernel/Arch/x86_64/Interrupts/PICSpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
-#include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
@@ -429,7 +430,12 @@ void register_generic_interrupt_handler(InterruptNumber interrupt_number, Generi
     }
     if (!handler_slot->is_shared_handler()) {
         if (handler_slot->type() == HandlerType::SpuriousInterruptHandler) {
-            static_cast<SpuriousInterruptHandler*>(handler_slot)->register_handler(handler);
+            auto controller = InterruptManagement::the().get_responsible_irq_controller(interrupt_number);
+
+            // Only PICs should ever have spurious interrupts that are shared with real interrupts.
+            VERIFY(controller->type() == IRQControllerType::i8259);
+            static_cast<PICSpuriousInterruptHandler*>(handler_slot)->register_handler(handler);
+
             return;
         }
 

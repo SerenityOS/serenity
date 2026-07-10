@@ -6,42 +6,42 @@
 
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/x86_64/Interrupts.h>
-#include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Arch/x86_64/Interrupts/PICSpuriousInterruptHandler.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT void SpuriousInterruptHandler::initialize(InterruptNumber interrupt_number)
+UNMAP_AFTER_INIT void PICSpuriousInterruptHandler::initialize(InterruptNumber interrupt_number)
 {
-    auto* handler = new SpuriousInterruptHandler(interrupt_number);
+    auto* handler = new PICSpuriousInterruptHandler(interrupt_number);
     handler->register_interrupt_handler();
 }
 
-void SpuriousInterruptHandler::initialize_for_disabled_master_pic()
+void PICSpuriousInterruptHandler::initialize_for_disabled_master_pic()
 {
-    auto* handler = new SpuriousInterruptHandler(7);
+    auto* handler = new PICSpuriousInterruptHandler(7);
     register_disabled_interrupt_handler(7, *handler);
     handler->enable_interrupt_vector_for_disabled_pic();
 }
 
-void SpuriousInterruptHandler::initialize_for_disabled_slave_pic()
+void PICSpuriousInterruptHandler::initialize_for_disabled_slave_pic()
 {
-    auto* handler = new SpuriousInterruptHandler(15);
+    auto* handler = new PICSpuriousInterruptHandler(15);
     register_disabled_interrupt_handler(15, *handler);
     handler->enable_interrupt_vector_for_disabled_pic();
 }
 
-void SpuriousInterruptHandler::register_handler(GenericInterruptHandler& handler)
+void PICSpuriousInterruptHandler::register_handler(GenericInterruptHandler& handler)
 {
     VERIFY(!m_real_handler);
     m_real_handler = adopt_own_if_nonnull(&handler);
 }
-void SpuriousInterruptHandler::unregister_handler(GenericInterruptHandler&)
+void PICSpuriousInterruptHandler::unregister_handler(GenericInterruptHandler&)
 {
     TODO();
 }
 
-bool SpuriousInterruptHandler::eoi()
+bool PICSpuriousInterruptHandler::eoi()
 {
     // Actually check if IRQ7 or IRQ15 are spurious, and if not, call EOI with the correct interrupt number.
     if (m_real_irq) {
@@ -53,22 +53,22 @@ bool SpuriousInterruptHandler::eoi()
     return false;
 }
 
-StringView SpuriousInterruptHandler::purpose() const
+StringView PICSpuriousInterruptHandler::purpose() const
 {
     if (!m_real_handler)
         return "Spurious Interrupt Handler"sv;
     return m_real_handler->purpose();
 }
 
-SpuriousInterruptHandler::SpuriousInterruptHandler(InterruptNumber irq)
+PICSpuriousInterruptHandler::PICSpuriousInterruptHandler(InterruptNumber irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
 }
 
-SpuriousInterruptHandler::~SpuriousInterruptHandler() = default;
+PICSpuriousInterruptHandler::~PICSpuriousInterruptHandler() = default;
 
-bool SpuriousInterruptHandler::handle_interrupt()
+bool PICSpuriousInterruptHandler::handle_interrupt()
 {
     // Actually check if IRQ7 or IRQ15 are spurious, and if not, call the real handler to handle the IRQ.
     if (m_responsible_irq_controller->get_isr() & (1 << interrupt_number().value())) {
@@ -83,13 +83,13 @@ bool SpuriousInterruptHandler::handle_interrupt()
     return true;
 }
 
-void SpuriousInterruptHandler::enable_interrupt_vector_for_disabled_pic()
+void PICSpuriousInterruptHandler::enable_interrupt_vector_for_disabled_pic()
 {
     m_enabled = true;
     m_responsible_irq_controller = InterruptManagement::the().get_responsible_irq_controller(IRQControllerType::i8259, interrupt_number());
 }
 
-void SpuriousInterruptHandler::enable_interrupt_vector()
+void PICSpuriousInterruptHandler::enable_interrupt_vector()
 {
     if (m_enabled)
         return;
@@ -97,7 +97,7 @@ void SpuriousInterruptHandler::enable_interrupt_vector()
     m_responsible_irq_controller->enable(*this);
 }
 
-void SpuriousInterruptHandler::disable_interrupt_vector()
+void PICSpuriousInterruptHandler::disable_interrupt_vector()
 {
     VERIFY(!m_real_irq); // this flag should not be set when we call this method
     if (!m_enabled)
@@ -106,7 +106,7 @@ void SpuriousInterruptHandler::disable_interrupt_vector()
     m_responsible_irq_controller->disable(*this);
 }
 
-StringView SpuriousInterruptHandler::controller() const
+StringView PICSpuriousInterruptHandler::controller() const
 {
     if (m_responsible_irq_controller->type() == IRQControllerType::i82093AA)
         return ""sv;

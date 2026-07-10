@@ -17,7 +17,9 @@ enum class HandlerType : u8 {
     IRQHandler = 1,
     SharedIRQHandler = 2,
     UnhandledInterruptHandler = 3,
+#if ARCH(X86_64)
     SpuriousInterruptHandler = 4
+#endif
 };
 
 class GenericInterruptHandler {

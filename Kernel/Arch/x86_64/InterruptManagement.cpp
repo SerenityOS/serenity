@@ -11,11 +11,11 @@
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
+#include <Kernel/Arch/x86_64/Interrupts/PICSpuriousInterruptHandler.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/StaticParsing.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
-#include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
@@ -138,8 +138,8 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
     m_interrupt_controllers.try_append(adopt_lock_ref(*new PIC())).release_value_but_fixme_should_propagate_errors();
-    SpuriousInterruptHandler::initialize(7);
-    SpuriousInterruptHandler::initialize(15);
+    PICSpuriousInterruptHandler::initialize(7);
+    PICSpuriousInterruptHandler::initialize(15);
     dbgln("Interrupts: Detected {}", m_interrupt_controllers[0]->model());
 }
 
@@ -169,8 +169,8 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
         if (irq_controller->type() == IRQControllerType::i8259) {
             irq_controller->hard_disable();
             dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
-            SpuriousInterruptHandler::initialize_for_disabled_master_pic();
-            SpuriousInterruptHandler::initialize_for_disabled_slave_pic();
+            PICSpuriousInterruptHandler::initialize_for_disabled_master_pic();
+            PICSpuriousInterruptHandler::initialize_for_disabled_slave_pic();
         } else {
             dbgln("Interrupts: Detected {}", irq_controller->model());
         }
