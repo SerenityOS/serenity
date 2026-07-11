@@ -44,10 +44,11 @@ UNMAP_AFTER_INIT void initialize()
         g_pci_access_is_disabled_from_commandline.set();
 
     Optional<PhysicalAddress> possible_mcfg;
-    // FIXME: There are other arch-specific methods to find the memory range
-    // for accessing the PCI configuration space.
-    // For example, the QEMU microvm machine type might expose an FDT so we could
-    // parse it to find a PCI host bridge.
+
+    // FIXME: Support accessing the PCI configuration space via the
+    //        _CBA ACPI method. To do so, we likely also need to assign
+    //        resources specified by the _CRS method, similar to the devicetree code.
+
     if (ACPI::is_enabled()) {
         possible_mcfg = ACPI::Parser::the()->find_table("MCFG"sv);
         if ((!test_pci_io()) && (!possible_mcfg.has_value()))
