@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/Span.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibArchive/TarStream.h>
 #include <LibCompress/Gzip.h>
@@ -42,6 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView directory;
     Vector<ByteString> paths;
     u32 strip_components {};
+    StringView mtime_or_file;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');
@@ -56,6 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
     args_parser.add_option(dereference, "Follow symlinks", "dereference", 'h');
     args_parser.add_option(strip_components, "Strip the first NUMBER path components from each file path", "strip-components", {}, "NUMBER");
+    args_parser.add_option(mtime_or_file, "Set mtime for added files", "mtime", {}, "NUMBER or FILE");
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -243,6 +246,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
+        Optional<time_t> mtime;
+        if (!mtime_or_file.is_null()) {
+            if (auto time = mtime_or_file.to_number<time_t>(); time.has_value()) {
+                mtime = time;
+            } else {
+                auto statbuf = TRY(Core::System::lstat(mtime_or_file));
+                mtime = statbuf.st_mtime;
+            }
+        }
+
         NonnullOwnPtr<Stream> output_stream = TRY(Core::File::standard_output());
 
         if (!archive_file.is_empty())
@@ -271,6 +284,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto file = file_or_error.release_value();
 
             auto statbuf = TRY(Core::System::lstat(path));
+            if (mtime.has_value())
+                statbuf.st_mtime = *mtime;
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             // FIXME: We should stream instead of reading the entire file in one go, but TarOutputStream does not have any interface to do so.
             auto file_content = TRY(file->read_until_eof());
@@ -283,6 +298,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto add_link = [&](ByteString path) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
+            if (mtime.has_value())
+                statbuf.st_mtime = *mtime;
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             TRY(tar_stream.add_link(canonicalized_path, statbuf, TRY(Core::System::readlink(path))));
@@ -294,6 +311,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto add_directory = [&](ByteString path, auto handle_directory) -> ErrorOr<void> {
             auto statbuf = TRY(Core::System::lstat(path));
+            if (mtime.has_value())
+                statbuf.st_mtime = *mtime;
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             TRY(tar_stream.add_directory(canonicalized_path, statbuf));
