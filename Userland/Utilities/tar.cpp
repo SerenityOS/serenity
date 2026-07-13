@@ -193,6 +193,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto absolute_path = TRY(FileSystem::absolute_path(filename));
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
+                auto header_timestamp = TRY(header.timestamp());
+
+                struct timeval times[2] = { { header_timestamp, 0 }, { header_timestamp, 0 } };
 
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
@@ -207,6 +210,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         TRY(Core::System::write(fd, slice));
                     }
 
+                    if (futimes(fd, times) < 0)
+                        warnln("failed to set timestamps for {}", header.filename());
+
                     TRY(Core::System::close(fd));
                     break;
                 }
@@ -214,6 +220,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
                     TRY(Core::System::symlink(header.link_name(), absolute_path));
+                    if (lutimes(absolute_path.characters(), times) < 0)
+                        warnln("failed to set timestamps for {}", header.filename());
                     break;
                 }
                 case Archive::TarFileType::Directory: {
@@ -222,6 +230,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     auto result_or_error = Core::System::mkdir(absolute_path, header_mode);
                     if (result_or_error.is_error() && result_or_error.error().code() != EEXIST)
                         return result_or_error.release_error();
+                    if (utimes(absolute_path.characters(), times) < 0)
+                        warnln("failed to set timestamps for {}", header.filename());
                     break;
                 }
                 default:
