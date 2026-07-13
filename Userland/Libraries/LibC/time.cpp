@@ -109,7 +109,7 @@ int futimes(int fd, struct timeval const times[2])
     timespec ts[2];
     TIMEVAL_TO_TIMESPEC(&times[0], &ts[0]);
     TIMEVAL_TO_TIMESPEC(&times[1], &ts[1]);
-    return utimensat(fd, nullptr, ts, 0);
+    return futimens(fd, ts);
 }
 
 char* ctime(time_t const* t)
