@@ -145,6 +145,7 @@ ErrorOr<void> TarOutputStream::add_directory(StringView path, struct stat const&
     VERIFY(!m_finished);
     TarFileHeader header {};
     TRY(header.set_size(0));
+    TRY(header.set_timestamp(statbuf.st_mtime));
     header.set_filename_and_prefix(TRY(String::formatted("{}/", path))); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
     TRY(header.set_mode(statbuf.st_mode));
@@ -162,6 +163,7 @@ ErrorOr<void> TarOutputStream::add_file(StringView path, struct stat const& stat
     VERIFY(!m_finished);
     TarFileHeader header {};
     TRY(header.set_size(bytes.size()));
+    TRY(header.set_timestamp(statbuf.st_mtime));
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::NormalFile);
     TRY(header.set_mode(statbuf.st_mode));
@@ -184,6 +186,7 @@ ErrorOr<void> TarOutputStream::add_link(StringView path, struct stat const& stat
     VERIFY(!m_finished);
     TarFileHeader header {};
     TRY(header.set_size(0));
+    TRY(header.set_timestamp(statbuf.st_mtime));
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::SymLink);
     TRY(header.set_mode(statbuf.st_mode));
