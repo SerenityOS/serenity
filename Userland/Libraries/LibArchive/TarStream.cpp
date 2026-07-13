@@ -140,14 +140,14 @@ TarOutputStream::TarOutputStream(MaybeOwned<Stream> stream)
 {
 }
 
-ErrorOr<void> TarOutputStream::add_directory(StringView path, mode_t mode)
+ErrorOr<void> TarOutputStream::add_directory(StringView path, struct stat const& statbuf)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
     TRY(header.set_size(0));
     header.set_filename_and_prefix(TRY(String::formatted("{}/", path))); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
-    TRY(header.set_mode(mode));
+    TRY(header.set_mode(statbuf.st_mode));
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     TRY(header.calculate_checksum());
@@ -157,14 +157,14 @@ ErrorOr<void> TarOutputStream::add_directory(StringView path, mode_t mode)
     return {};
 }
 
-ErrorOr<void> TarOutputStream::add_file(StringView path, mode_t mode, ReadonlyBytes bytes)
+ErrorOr<void> TarOutputStream::add_file(StringView path, struct stat const& statbuf, ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
     TRY(header.set_size(bytes.size()));
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::NormalFile);
-    TRY(header.set_mode(mode));
+    TRY(header.set_mode(statbuf.st_mode));
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     TRY(header.calculate_checksum());
@@ -179,14 +179,14 @@ ErrorOr<void> TarOutputStream::add_file(StringView path, mode_t mode, ReadonlyBy
     return {};
 }
 
-ErrorOr<void> TarOutputStream::add_link(StringView path, mode_t mode, StringView link_name)
+ErrorOr<void> TarOutputStream::add_link(StringView path, struct stat const& statbuf, StringView link_name)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
     TRY(header.set_size(0));
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::SymLink);
-    TRY(header.set_mode(mode));
+    TRY(header.set_mode(statbuf.st_mode));
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     header.set_link_name(link_name);

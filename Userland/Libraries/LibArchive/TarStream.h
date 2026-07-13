@@ -11,6 +11,7 @@
 #include <AK/Span.h>
 #include <AK/Stream.h>
 #include <LibArchive/Tar.h>
+#include <sys/stat.h>
 
 namespace Archive {
 
@@ -60,9 +61,9 @@ private:
 class TarOutputStream {
 public:
     TarOutputStream(MaybeOwned<Stream>);
-    ErrorOr<void> add_file(StringView path, mode_t, ReadonlyBytes);
-    ErrorOr<void> add_link(StringView path, mode_t, StringView);
-    ErrorOr<void> add_directory(StringView path, mode_t);
+    ErrorOr<void> add_file(StringView path, struct stat const&, ReadonlyBytes);
+    ErrorOr<void> add_link(StringView path, struct stat const&, StringView);
+    ErrorOr<void> add_directory(StringView path, struct stat const&);
     ErrorOr<void> finish();
 
 private:

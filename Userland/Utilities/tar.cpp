@@ -274,7 +274,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             // FIXME: We should stream instead of reading the entire file in one go, but TarOutputStream does not have any interface to do so.
             auto file_content = TRY(file->read_until_eof());
-            TRY(tar_stream.add_file(canonicalized_path, statbuf.st_mode, file_content));
+            TRY(tar_stream.add_file(canonicalized_path, statbuf, file_content));
             if (verbose)
                 outln("{}", canonicalized_path);
 
@@ -285,7 +285,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto statbuf = TRY(Core::System::lstat(path));
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
-            TRY(tar_stream.add_link(canonicalized_path, statbuf.st_mode, TRY(Core::System::readlink(path))));
+            TRY(tar_stream.add_link(canonicalized_path, statbuf, TRY(Core::System::readlink(path))));
             if (verbose)
                 outln("{}", canonicalized_path);
 
@@ -296,7 +296,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto statbuf = TRY(Core::System::lstat(path));
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
-            TRY(tar_stream.add_directory(canonicalized_path, statbuf.st_mode));
+            TRY(tar_stream.add_directory(canonicalized_path, statbuf));
             if (verbose)
                 outln("{}", canonicalized_path);
 
