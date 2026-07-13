@@ -10,7 +10,7 @@
 #include <AK/SetOnce.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
-#include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Security/Random.h>
@@ -71,7 +71,7 @@ protected:
 
     bool handle_interrupt();
 
-    class InterruptHandler final : public IRQHandler {
+    class InterruptHandler final : public PCI::IRQHandler {
     public:
         static ErrorOr<NonnullOwnPtr<InterruptHandler>> create(E1000NetworkAdapter& network_adapter, InterruptNumber interrupt_number)
         {
@@ -83,7 +83,7 @@ protected:
 
     private:
         InterruptHandler(E1000NetworkAdapter& network_adapter, InterruptNumber interrupt_number)
-            : IRQHandler(interrupt_number)
+            : PCI::IRQHandler(network_adapter, interrupt_number)
             , m_network_adapter(network_adapter)
         {
         }
