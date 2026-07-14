@@ -16,6 +16,7 @@
 #include <LibCompress/Lzma.h>
 #include <LibCompress/Xz.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
@@ -27,6 +28,35 @@
 #include <unistd.h>
 
 constexpr size_t buffer_size = 4096;
+
+static Optional<time_t> parse_time(StringView time_string)
+{
+    // TODO: Handle more time formats that GNU tar supports.
+
+    time_string = time_string.trim_whitespace();
+    if (time_string.is_empty())
+        // Handle an empty string as if "0" was passed.
+        time_string = "0"sv;
+    // Handle a UNIX timestamp.
+    if (time_string.starts_with('@')) {
+        if (auto maybe_timestamp = time_string.substring_view(1).to_number<time_t>(); maybe_timestamp.has_value()) {
+            return maybe_timestamp.release_value();
+        }
+        return {};
+    }
+    // Assume that this represents an hour + (optional) minute offset
+    // from the start of the current day (the hour takes precedence,
+    // i.e. 123 should be parsed as 12:03).
+    if (!time_string.to_number<time_t>().has_value() || time_string.length() > 4)
+        return {};
+    time_t hour = *time_string.substring_view(0, min(time_string.length(), 2)).to_number<time_t>();
+    time_t minute = time_string.length() > 2 ? *time_string.substring_view(2).to_number<time_t>() : 0;
+    if (hour >= 24 || minute >= 60)
+        return {};
+    auto time = Core::DateTime::now();
+    time.set_time_only(hour, minute, 0);
+    return time.timestamp();
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -258,9 +288,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Optional<time_t> mtime;
         if (!mtime_or_file.is_null()) {
-            if (auto time = mtime_or_file.to_number<time_t>(); time.has_value()) {
-                mtime = time;
-            } else {
+            mtime = parse_time(mtime_or_file);
+            if (!mtime.has_value()) {
                 auto statbuf = TRY(Core::System::lstat(mtime_or_file));
                 mtime = statbuf.st_mtime;
             }
