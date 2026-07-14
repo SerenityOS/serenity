@@ -110,7 +110,6 @@ ErrorOr<InterruptType> Device::reserve_irqs(size_t number_of_irqs, AllowedInterr
         m_interrupt_range.m_irq_count = number_of_irqs;
         m_interrupt_range.m_type = InterruptType::MSI;
         disable_pin_based_interrupts();
-        enable_message_signalled_interrupts();
         return m_interrupt_range.m_type;
     }
 
