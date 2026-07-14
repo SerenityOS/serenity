@@ -149,8 +149,8 @@ ErrorOr<void> TarOutputStream::add_directory(StringView path, struct stat const&
     header.set_filename_and_prefix(TRY(String::formatted("{}/", path))); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
     TRY(header.set_mode(statbuf.st_mode));
-    header.set_magic(gnu_magic);
-    header.set_version(gnu_version);
+    MUST(header.set_magic(gnu_magic));
+    MUST(header.set_version(gnu_version));
     TRY(header.calculate_checksum());
     TRY(m_stream->write_until_depleted(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
@@ -167,8 +167,8 @@ ErrorOr<void> TarOutputStream::add_file(StringView path, struct stat const& stat
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::NormalFile);
     TRY(header.set_mode(statbuf.st_mode));
-    header.set_magic(gnu_magic);
-    header.set_version(gnu_version);
+    MUST(header.set_magic(gnu_magic));
+    MUST(header.set_version(gnu_version));
     TRY(header.calculate_checksum());
     TRY(m_stream->write_until_depleted(ReadonlyBytes { &header, sizeof(header) }));
     constexpr Array<u8, block_size> padding { 0 };
@@ -190,9 +190,9 @@ ErrorOr<void> TarOutputStream::add_link(StringView path, struct stat const& stat
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::SymLink);
     TRY(header.set_mode(statbuf.st_mode));
-    header.set_magic(gnu_magic);
-    header.set_version(gnu_version);
-    header.set_link_name(link_name);
+    MUST(header.set_magic(gnu_magic));
+    MUST(header.set_version(gnu_version));
+    TRY(header.set_link_name(link_name));
     TRY(header.calculate_checksum());
     TRY(m_stream->write_until_depleted(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
