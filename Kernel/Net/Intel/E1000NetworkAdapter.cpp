@@ -223,7 +223,13 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_interrupts()
     out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
     in32(REG_INTERRUPT_CAUSE_READ);
 
-    m_interrupt_handler = TRY(InterruptHandler::create(*this, device_identifier().interrupt_line().value()));
+    // FIXME: Support MSI-X on newer controllers. This requires allocating one or more MSI-X vectors
+    //        and using the IVAR register to configure interrupt vector routing.
+    TRY(reserve_irqs(1, PCI::AllowedInterruptTypes::Pin | PCI::AllowedInterruptTypes::MSI));
+
+    auto interrupt_number = TRY(allocate_irq(0));
+
+    m_interrupt_handler = TRY(InterruptHandler::create(*this, interrupt_number));
 
     return {};
 }
