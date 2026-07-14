@@ -58,6 +58,53 @@ static Optional<time_t> parse_time(StringView time_string)
     return time.timestamp();
 }
 
+template<typename IDType>
+struct NameMapping {
+    StringView name;
+    Optional<IDType> id;
+};
+
+enum class IDTypeName {
+    UID,
+    GID,
+};
+
+template<typename IDType>
+static Optional<NameMapping<IDType>> parse_mapping(StringView argument, IDTypeName type_name)
+{
+    auto maybe_index = argument.find(':');
+    if (maybe_index.has_value()) {
+        StringView name = argument.substring_view(0, *maybe_index);
+        if (argument.length() <= *maybe_index + 1)
+            return {};
+        auto maybe_numeric = argument.substring_view(*maybe_index + 1).to_number<IDType>();
+        if (!maybe_numeric.has_value()) {
+            return {};
+        }
+        return NameMapping<IDType> { name, *maybe_numeric };
+    }
+
+    if (auto maybe_numeric = argument.to_number<IDType>(); maybe_numeric.has_value())
+        return NameMapping<IDType> { {}, *maybe_numeric };
+
+    switch (type_name) {
+    case IDTypeName::UID: {
+        auto maybe_passwd = Core::System::getpwnam(argument);
+        if (!maybe_passwd.is_error() && maybe_passwd.value().has_value())
+            return NameMapping<IDType> { argument, maybe_passwd.value()->pw_uid };
+        break;
+    }
+    case IDTypeName::GID: {
+        auto maybe_group = Core::System::getgrnam(argument);
+        if (!maybe_group.is_error() && maybe_group.value().has_value())
+            return NameMapping<IDType> { argument, maybe_group.value()->gr_gid };
+        break;
+    }
+    }
+
+    return NameMapping<IDType> { argument, {} };
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool create = false;
@@ -74,6 +121,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<ByteString> paths;
     u32 strip_components {};
     StringView mtime_or_file;
+    StringView group_string;
+    StringView owner_string;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');
@@ -89,6 +138,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dereference, "Follow symlinks", "dereference", 'h');
     args_parser.add_option(strip_components, "Strip the first NUMBER path components from each file path", "strip-components", {}, "NUMBER");
     args_parser.add_option(mtime_or_file, "Set mtime for added files", "mtime", {}, "NUMBER or FILE");
+    args_parser.add_option(group_string, "Set group for added files", "group", {}, "NAME:[GID]");
+    args_parser.add_option(owner_string, "Set owner for added files", "owner", {}, "NAME:[UID]");
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -295,6 +346,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
+        Optional<NameMapping<gid_t>> group;
+        StringView group_name;
+        if (!group_string.is_null()) {
+            group = parse_mapping<gid_t>(group_string, IDTypeName::GID);
+            if (!group.has_value())
+                return Error::from_string_literal("Could not parse the provided group string");
+            group_name = group->name;
+        }
+
+        Optional<NameMapping<uid_t>> owner;
+        StringView owner_name;
+        if (!owner_string.is_null()) {
+            owner = parse_mapping<uid_t>(owner_string, IDTypeName::UID);
+            if (!owner.has_value())
+                return Error::from_string_literal("Could not parse the provided owner string");
+            owner_name = owner->name;
+        }
+
         if (archive_file.is_empty())
             archive_file = "-"sv;
 
@@ -325,10 +394,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto statbuf = TRY(Core::System::lstat(path));
             if (mtime.has_value())
                 statbuf.st_mtime = *mtime;
+            // If a group/owner string was provided, but a relevant ID
+            // was neither provided nor could be resolved, then set the
+            // ID to 1000.
+            if (group.has_value())
+                statbuf.st_gid = group->id.has_value() ? *group->id : 1000;
+            if (owner.has_value())
+                statbuf.st_uid = owner->id.has_value() ? *owner->id : 1000;
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             // FIXME: We should stream instead of reading the entire file in one go, but TarOutputStream does not have any interface to do so.
             auto file_content = TRY(file->read_until_eof());
-            TRY(tar_stream.add_file(canonicalized_path, statbuf, file_content));
+            TRY(tar_stream.add_file(canonicalized_path, statbuf, file_content, group_name, owner_name));
             if (verbose)
                 outln("{}", canonicalized_path);
 
@@ -339,9 +415,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto statbuf = TRY(Core::System::lstat(path));
             if (mtime.has_value())
                 statbuf.st_mtime = *mtime;
+            if (group.has_value())
+                statbuf.st_gid = group->id.has_value() ? *group->id : 1000;
+            if (owner.has_value())
+                statbuf.st_uid = owner->id.has_value() ? *owner->id : 1000;
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
-            TRY(tar_stream.add_link(canonicalized_path, statbuf, TRY(Core::System::readlink(path))));
+            TRY(tar_stream.add_link(canonicalized_path, statbuf, TRY(Core::System::readlink(path)), group_name, owner_name));
             if (verbose)
                 outln("{}", canonicalized_path);
 
@@ -352,9 +432,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto statbuf = TRY(Core::System::lstat(path));
             if (mtime.has_value())
                 statbuf.st_mtime = *mtime;
+            if (group.has_value())
+                statbuf.st_gid = group->id.has_value() ? *group->id : 1000;
+            if (owner.has_value())
+                statbuf.st_uid = owner->id.has_value() ? *owner->id : 1000;
 
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
-            TRY(tar_stream.add_directory(canonicalized_path, statbuf));
+            TRY(tar_stream.add_directory(canonicalized_path, statbuf, group_name, owner_name));
             if (verbose)
                 outln("{}", canonicalized_path);
 

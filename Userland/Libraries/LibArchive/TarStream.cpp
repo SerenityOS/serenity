@@ -140,7 +140,7 @@ TarOutputStream::TarOutputStream(MaybeOwned<Stream> stream)
 {
 }
 
-ErrorOr<void> TarOutputStream::add_directory(StringView path, struct stat const& statbuf)
+ErrorOr<void> TarOutputStream::add_directory(StringView path, struct stat const& statbuf, StringView group_name, StringView owner_name)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
@@ -149,6 +149,12 @@ ErrorOr<void> TarOutputStream::add_directory(StringView path, struct stat const&
     header.set_filename_and_prefix(TRY(String::formatted("{}/", path))); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
     TRY(header.set_mode(statbuf.st_mode));
+
+    TRY(header.set_gid(statbuf.st_gid));
+    TRY(header.set_group_name(group_name));
+    TRY(header.set_uid(statbuf.st_uid));
+    TRY(header.set_owner_name(owner_name));
+
     MUST(header.set_magic(gnu_magic));
     MUST(header.set_version(gnu_version));
     TRY(header.calculate_checksum());
@@ -158,7 +164,7 @@ ErrorOr<void> TarOutputStream::add_directory(StringView path, struct stat const&
     return {};
 }
 
-ErrorOr<void> TarOutputStream::add_file(StringView path, struct stat const& statbuf, ReadonlyBytes bytes)
+ErrorOr<void> TarOutputStream::add_file(StringView path, struct stat const& statbuf, ReadonlyBytes bytes, StringView group_name, StringView owner_name)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
@@ -167,6 +173,12 @@ ErrorOr<void> TarOutputStream::add_file(StringView path, struct stat const& stat
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::NormalFile);
     TRY(header.set_mode(statbuf.st_mode));
+
+    TRY(header.set_gid(statbuf.st_gid));
+    TRY(header.set_group_name(group_name));
+    TRY(header.set_uid(statbuf.st_uid));
+    TRY(header.set_owner_name(owner_name));
+
     MUST(header.set_magic(gnu_magic));
     MUST(header.set_version(gnu_version));
     TRY(header.calculate_checksum());
@@ -181,7 +193,7 @@ ErrorOr<void> TarOutputStream::add_file(StringView path, struct stat const& stat
     return {};
 }
 
-ErrorOr<void> TarOutputStream::add_link(StringView path, struct stat const& statbuf, StringView link_name)
+ErrorOr<void> TarOutputStream::add_link(StringView path, struct stat const& statbuf, StringView link_name, StringView group_name, StringView owner_name)
 {
     VERIFY(!m_finished);
     TarFileHeader header {};
@@ -190,6 +202,12 @@ ErrorOr<void> TarOutputStream::add_link(StringView path, struct stat const& stat
     header.set_filename_and_prefix(path);
     header.set_type_flag(TarFileType::SymLink);
     TRY(header.set_mode(statbuf.st_mode));
+
+    TRY(header.set_gid(statbuf.st_gid));
+    TRY(header.set_group_name(group_name));
+    TRY(header.set_uid(statbuf.st_uid));
+    TRY(header.set_owner_name(owner_name));
+
     MUST(header.set_magic(gnu_magic));
     MUST(header.set_version(gnu_version));
     TRY(header.set_link_name(link_name));
