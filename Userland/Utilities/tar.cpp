@@ -266,10 +266,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        NonnullOwnPtr<Stream> output_stream = TRY(Core::File::standard_output());
+        if (archive_file.is_empty())
+            archive_file = "-"sv;
 
-        if (!archive_file.is_empty())
-            output_stream = TRY(Core::File::open(archive_file, Core::File::OpenMode::Write));
+        NonnullOwnPtr<Stream> output_stream = TRY(Core::File::open_file_or_standard_stream(archive_file, Core::File::OpenMode::Write));
 
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
