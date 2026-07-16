@@ -11,6 +11,7 @@
 #include "ImageEditor.h"
 #include <AK/Result.h>
 #include <AK/Vector.h>
+#include <LibCore/Resource.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/MessageBox.h>
@@ -129,7 +130,7 @@ PaletteWidget::PaletteWidget()
     bottom_color_container.set_name("bottom_color_container");
     bottom_color_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 1);
 
-    auto result = load_palette_path("/res/color-palettes/default.palette");
+    auto result = load_palette_path("resource://color-palettes/default.palette");
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), MUST(String::formatted("Loading default palette failed: {}", result.release_error())));
         display_color_list(fallback_colors());
@@ -216,11 +217,11 @@ Vector<Color> PaletteWidget::colors()
     return colors;
 }
 
-ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::File> file)
+ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<SeekableStream> stream)
 {
     Vector<Color> palette;
-    Array<u8, PAGE_SIZE> buffer;
-    auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
+    Array<u8, 4096> buffer;
+    auto buffered_file = TRY(AK::InputBufferedSeekable<SeekableStream>::create(move(stream)));
 
     while (TRY(buffered_file->can_read_line())) {
         auto line = TRY(buffered_file->read_line(buffer));
@@ -244,8 +245,9 @@ ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::File
 
 ErrorOr<Vector<Color>> PaletteWidget::load_palette_path(ByteString const& file_path)
 {
-    auto file = TRY(Core::File::open(file_path, Core::File::OpenMode::Read));
-    return load_palette_file(move(file));
+    auto resource = TRY(Core::Resource::load_from_uri(file_path));
+    auto stream = make<FixedMemoryStream>(resource->data());
+    return load_palette_file(move(stream));
 }
 
 ErrorOr<void> PaletteWidget::save_palette_file(Vector<Color> palette, NonnullOwnPtr<Core::File> file)
