@@ -55,7 +55,7 @@ void dump_registers(RegisterState const& regs)
     dbgln("x30={:p}", regs.x[30]);
 }
 
-static ErrorOr<PageFault> page_fault_from_exception_syndrome_register(VirtualAddress fault_address, Aarch64::ESR_EL1 esr_el1)
+static ErrorOr<PageFault> page_fault_from_exception_syndrome_register(VirtualAddress fault_address, Aarch64::ESR_EL1 esr_el1, Aarch64::SPSR_EL1 spsr_el1)
 {
     PageFault fault { fault_address };
 
@@ -72,7 +72,7 @@ static ErrorOr<PageFault> page_fault_from_exception_syndrome_register(VirtualAdd
     fault.set_access((esr_el1.ISS & (1 << 6)) == (1 << 6) ? PageFault::Access::Write : PageFault::Access::Read);
 
     fault.set_mode(Aarch64::exception_class_is_data_or_instruction_abort_from_lower_exception_level(esr_el1.EC) ? ExecutionMode::User : ExecutionMode::Kernel);
-    fault.set_was_smap_disabled(true); // We don't support SMAP protection on AArch64 yet, so it's always disabled.
+    fault.set_was_smap_disabled(spsr_el1.PAN == 0);
 
     if (Aarch64::exception_class_is_instruction_abort(esr_el1.EC))
         fault.set_instruction_fetch(true);
@@ -86,6 +86,7 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     Processor::current().enter_trap(*trap_frame, false);
 
     auto esr_el1 = bit_cast<Aarch64::ESR_EL1>(trap_frame->regs->esr_el1);
+    auto spsr_el1 = bit_cast<Aarch64::SPSR_EL1>(trap_frame->regs->spsr_el1);
     auto fault_address = Aarch64::FAR_EL1::read().virtual_address;
     if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
         // When breakpoint instruction exception is triggered, the pc is set to the address of the
@@ -96,11 +97,11 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
 
     // Only enable interrupts if they were enabled when the exception happened
     // (spsr_el1.I specifiers an interrupt mask, so it's 0 if interrupts were enabled).
-    if (bit_cast<Aarch64::SPSR_EL1>(trap_frame->regs->spsr_el1).I == 0)
+    if (spsr_el1.I == 0)
         Processor::enable_interrupts();
 
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
-        auto page_fault_or_error = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
+        auto page_fault_or_error = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1, spsr_el1);
         if (page_fault_or_error.is_error()) {
             handle_crash(*trap_frame->regs, "Unknown page fault", SIGSEGV, false);
         } else {

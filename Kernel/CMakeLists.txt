@@ -517,6 +517,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PSCI.cpp
         Arch/aarch64/PageDirectory.cpp
+        Arch/aarch64/PrivilegedAccessNever.S
         Arch/aarch64/Processor.cpp
         Arch/aarch64/PowerState.cpp
         Arch/aarch64/SafeMem.cpp

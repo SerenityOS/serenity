@@ -107,7 +107,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     // Make sure SMAP protection is enabled on syscall entry.
     clac();
 #elif ARCH(AARCH64)
-    // FIXME: Implement the security mechanism for aarch64
+    // SCTLR_EL1.SPAN == 0 ensures that PAN is set on syscall entry when the CPU has FEAT_PAN
 #elif ARCH(RISCV64)
     RISCV64::CSR::clear_bits<RISCV64::CSR::Address::SSTATUS>(RISCV64::CSR::SSTATUS::Bit::SUM);
 #else

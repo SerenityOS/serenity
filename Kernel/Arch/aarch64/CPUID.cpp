@@ -244,9 +244,9 @@ CPUFeature::Type detect_cpu_features()
     if (memory_model_feature_register_1.PAN == 0b0001)
         features |= CPUFeature::PAN;
     if (memory_model_feature_register_1.PAN == 0b0010)
-        features |= CPUFeature::PAN2;
+        features |= CPUFeature::PAN2 | CPUFeature::PAN;
     if (memory_model_feature_register_1.PAN == 0b0011)
-        features |= CPUFeature::PAN3;
+        features |= CPUFeature::PAN3 | CPUFeature::PAN2 | CPUFeature::PAN;
     if (memory_model_feature_register_1.XNX == 0b0001)
         features |= CPUFeature::XNX;
     if (memory_model_feature_register_1.TWED == 0b0001)

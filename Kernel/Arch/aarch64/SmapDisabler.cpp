@@ -5,17 +5,19 @@
  */
 
 #include <Kernel/Arch/SmapDisabler.h>
+#include <Kernel/Arch/aarch64/PrivilegedAccessNever.h>
 
 namespace Kernel {
-
 SmapDisabler::SmapDisabler()
-    : m_flags(0)
+    : m_flags(Aarch64::Asm::is_pan_set())
 {
-    // FIXME: Implement this using FEAT_PAN.
-    //        Once implemented, make sure to use PageFault::set_was_smap_disabled()
-    //        appropriately in the page fault handler.
+    Aarch64::Asm::clear_pan();
 }
 
-SmapDisabler::~SmapDisabler() = default;
+SmapDisabler::~SmapDisabler()
+{
+    if (m_flags)
+        Aarch64::Asm::set_pan();
+}
 
 }
