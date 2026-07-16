@@ -10,6 +10,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Directory.h>
+#include <LibCore/Resource.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <pwd.h>
@@ -40,6 +41,9 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_system(ByteString const&
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(ByteString const& filename, AllowWriting allow_altering)
 {
+    if (filename.starts_with("resource://"sv))
+        return ConfigFile::open(TRY(Resource::load_from_uri(filename)));
+
     auto maybe_file = File::open(filename, allow_altering == AllowWriting::Yes ? File::OpenMode::ReadWrite : File::OpenMode::Read);
     OwnPtr<InputBufferedFile> buffered_file;
     if (maybe_file.is_error()) {
@@ -72,6 +76,19 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(ByteString const& filename, 
     return config_file;
 }
 
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(NonnullRefPtr<Resource> resource)
+{
+    auto config_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(move(resource))));
+    TRY(config_file->reparse());
+    return config_file;
+}
+
+ConfigFile::ConfigFile(NonnullRefPtr<Resource> resource)
+    : m_filename(resource->filename())
+    , m_resource(move(resource))
+{
+}
+
 ConfigFile::ConfigFile(ByteString const& filename, OwnPtr<InputBufferedFile> open_file)
     : m_filename(filename)
     , m_file(move(open_file))
@@ -86,14 +103,30 @@ ConfigFile::~ConfigFile()
 ErrorOr<void> ConfigFile::reparse()
 {
     m_groups.clear();
-    if (!m_file)
+    OwnPtr<InputBufferedSeekable<SeekableStream>> resource_stream;
+    if (!m_file && !m_resource)
         return {};
+
+    if (m_resource)
+        resource_stream = TRY(InputBufferedSeekable<SeekableStream>::create(TRY(try_make<FixedMemoryStream>(m_resource->stream()))));
+
+    auto can_read_line = [&]() -> ErrorOr<bool> {
+        if (m_file)
+            return m_file->can_read_line();
+        return resource_stream->can_read_line();
+    };
+
+    auto read_line = [&](Bytes bytes) -> ErrorOr<StringView> {
+        if (m_file)
+            return m_file->read_line(bytes);
+        return resource_stream->read_line(bytes);
+    };
 
     HashMap<ByteString, ByteString>* current_group = nullptr;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
-    while (TRY(m_file->can_read_line())) {
-        auto line = TRY(m_file->read_line(buffer));
+    while (TRY(can_read_line())) {
+        auto line = TRY(read_line(buffer));
         size_t i = 0;
 
         while (i < line.length() && (line[i] == ' ' || line[i] == '\t' || line[i] == '\n'))
@@ -140,7 +173,7 @@ ErrorOr<void> ConfigFile::reparse()
     return {};
 }
 
-Optional<ByteString> ConfigFile::read_entry_optional(const AK::ByteString& group, const AK::ByteString& key) const
+Optional<ByteString> ConfigFile::read_entry_optional(AK::ByteString const& group, AK::ByteString const& key) const
 {
     if (!has_key(group, key))
         return {};
