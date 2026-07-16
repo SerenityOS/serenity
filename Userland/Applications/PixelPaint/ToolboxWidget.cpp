@@ -52,7 +52,8 @@ ToolboxWidget::ToolboxWidget()
 void ToolboxWidget::setup_tools()
 {
     auto add_tool = [&](StringView icon_name, GUI::Shortcut const& shortcut, NonnullOwnPtr<Tool> tool, bool is_default_tool = false) {
-        auto action = GUI::Action::create_checkable(tool->tool_name(), shortcut, Gfx::Bitmap::load_from_file(ByteString::formatted("/res/icons/pixelpaint/{}.png", icon_name)).release_value_but_fixme_should_propagate_errors(),
+        auto icon_path = ByteString::formatted("resource://icons/pixelpaint/{}.png", icon_name);
+        auto action = GUI::Action::create_checkable(tool->tool_name(), shortcut, MUST(Gfx::Bitmap::load_from_uri(icon_path.view())),
             [this, tool = tool.ptr()](auto& action) {
                 if (action.is_checked()) {
                     m_active_tool = tool;
