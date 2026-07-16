@@ -15,6 +15,7 @@
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/CPUID.h>
+#include <Kernel/Arch/aarch64/PrivilegedAccessNever.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>
@@ -67,6 +68,9 @@ void ProcessorBase::initialize(u32)
 
     store_fpu_state(s_clean_fpu_state);
 
+    Aarch64::Asm::clear_sctlr_el1_span();
+    Aarch64::Asm::set_pan();
+
     Aarch64::Asm::load_el1_vector_table(+vector_table_el1);
 
     initialize_interrupts();
@@ -105,6 +109,8 @@ void ProcessorBase::flush_data_cache(VirtualAddress vaddr, size_t byte_count)
 {
     // NOTE: This assumes that all processors have the same cache line size,
     //       as a context switch can happen during execution of this function.
+
+    SmapDisabler disabler;
 
     auto const cache_line_size = Aarch64::Asm::get_cache_line_size();
     for (FlatPtr addr = align_down_to(vaddr.get(), cache_line_size); addr < vaddr.get() + byte_count; addr += cache_line_size)
