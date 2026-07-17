@@ -166,7 +166,7 @@ UNMAP_AFTER_INIT ErrorOr<void> AHCIController::initialize_hba(PCI::DeviceIdentif
 
     hba().control_regs.ghc = 0x80000000; // Ensure that HBA knows we are AHCI aware.
     PCI::enable_bus_mastering(device_identifier());
-    TRY(reserve_irqs(1, true));
+    TRY(reserve_irqs(1, PCI::AllowedInterruptTypes::PinAndMSIAndMSIX));
     auto irq = MUST(allocate_irq(0));
     enable_global_interrupts();
 

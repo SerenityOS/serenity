@@ -89,31 +89,36 @@ PCI::InterruptType Device::get_interrupt_type()
 
 // Reserve `numbers_of_irqs` for this device. Returns the interrupt type
 // that was reserved. It is a noop for pin based interrupts as there
-// is nothing left to do. The second parameter `msi` is used by the
-// driver to indicate its intent to use message signalled interrupts.
-// MSI(x) is preferred over MSI if the device supports both.
-ErrorOr<InterruptType> Device::reserve_irqs(size_t number_of_irqs, bool msi)
+// is nothing left to do.
+ErrorOr<InterruptType> Device::reserve_irqs(size_t number_of_irqs, AllowedInterruptTypes allowed_interrupt_types)
 {
     // Let us not allow partial allocation of IRQs for MSIx.
-    if (msi && is_msix_capable()) {
+    if (has_flag(allowed_interrupt_types, AllowedInterruptTypes::MSIX) && is_msix_capable()) {
         m_interrupt_range.m_start_irq = TRY(reserve_interrupt_handlers(number_of_irqs));
         m_interrupt_range.m_irq_count = number_of_irqs;
         m_interrupt_range.m_type = InterruptType::MSIX;
         // If MSIx is available, disable the pin based interrupts
         disable_pin_based_interrupts();
         enable_extended_message_signalled_interrupts();
-    } else if (msi && is_msi_capable()) {
-        // TODO: Add MME support. Fallback to pin-based until this support is added.
-        if (number_of_irqs > 1)
-            return m_interrupt_range.m_type;
+        return m_interrupt_range.m_type;
+    }
 
+    if (has_flag(allowed_interrupt_types, AllowedInterruptTypes::MSI) && is_msi_capable()
+        && number_of_irqs == 1 // TODO: Add MME support. Fallback to pin-based until this support is added.
+    ) {
         m_interrupt_range.m_start_irq = TRY(reserve_interrupt_handlers(number_of_irqs));
         m_interrupt_range.m_irq_count = number_of_irqs;
         m_interrupt_range.m_type = InterruptType::MSI;
         disable_pin_based_interrupts();
         enable_message_signalled_interrupts();
+        return m_interrupt_range.m_type;
     }
-    return m_interrupt_range.m_type;
+
+    if (has_flag(allowed_interrupt_types, AllowedInterruptTypes::Pin)) {
+        return m_interrupt_range.m_type;
+    }
+
+    return ENOTSUP;
 }
 
 PhysicalAddress Device::msix_table_entry_address(InterruptNumber irq)

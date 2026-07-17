@@ -21,6 +21,15 @@ enum class InterruptType {
     MSIX
 };
 
+enum class AllowedInterruptTypes {
+    Pin = 1u << 0,
+    MSI = 1u << 1,
+    MSIX = 1u << 2,
+
+    PinAndMSIAndMSIX = Pin | MSI | MSIX,
+};
+AK_ENUM_BITWISE_OPERATORS(AllowedInterruptTypes);
+
 struct InterruptRange {
     InterruptNumber m_start_irq { 0 };
     InterruptNumber m_irq_count { 0 };
@@ -53,7 +62,7 @@ public:
 
     void enable_extended_message_signalled_interrupts();
     void disable_extended_message_signalled_interrupts();
-    ErrorOr<InterruptType> reserve_irqs(size_t number_of_irqs, bool msi);
+    ErrorOr<InterruptType> reserve_irqs(size_t number_of_irqs, AllowedInterruptTypes);
     ErrorOr<InterruptNumber> allocate_irq(size_t index);
     PCI::InterruptType get_interrupt_type();
     void enable_interrupt(InterruptNumber irq);

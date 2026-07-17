@@ -57,7 +57,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     calculate_doorbell_stride();
     if (queue_type == QueueType::IRQ) {
         // IO queues + 1 admin queue
-        m_irq_type = TRY(reserve_irqs(nr_of_queues + 1, true));
+        m_irq_type = TRY(reserve_irqs(nr_of_queues + 1, PCI::AllowedInterruptTypes::PinAndMSIAndMSIX));
     }
 
     TRY(create_admin_queue(queue_type));
