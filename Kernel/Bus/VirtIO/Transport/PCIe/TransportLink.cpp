@@ -62,7 +62,7 @@ StringView PCIeTransportLink::determine_device_class_name() const
 
 ErrorOr<void> PCIeTransportLink::create_interrupt_handler(VirtIO::Device& parent_device)
 {
-    TRY(reserve_irqs(1, false));
+    TRY(reserve_irqs(1, PCI::AllowedInterruptTypes::Pin));
     auto irq = MUST(allocate_irq(0));
     m_irq_handler = TRY(PCIeTransportInterruptHandler::create(*this, parent_device, irq));
     return {};
