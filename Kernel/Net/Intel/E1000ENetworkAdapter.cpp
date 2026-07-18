@@ -14,14 +14,9 @@
 
 namespace Kernel {
 
-#define REG_CTRL 0x0000
 #define REG_EECD 0x0010
 #define REG_EEPROM 0x0014
 #define REG_MDIC 0x0020
-
-// CTRL Register
-
-#define REG_CTRL_SLU (1 << 6)
 
 // EECD Register
 
@@ -273,18 +268,6 @@ UNMAP_AFTER_INIT E1000ENetworkAdapter::~E1000ENetworkAdapter()
         ErrorOr<siginfo_t> result = siginfo_t {};
         (void)Thread::current()->block<Thread::WaitBlocker>({}, WEXITED, m_mdio_handling_process.release_nonnull(), result);
     }
-}
-
-void E1000ENetworkAdapter::on_phy_link_status_change(MDIO::LinkStatus link_status)
-{
-    auto ctrl = in32(REG_CTRL);
-
-    if (link_status == MDIO::LinkStatus::Up)
-        ctrl |= REG_CTRL_SLU;
-    else
-        ctrl &= ~REG_CTRL_SLU;
-
-    out32(REG_CTRL, ctrl);
 }
 
 u16 E1000ENetworkAdapter::read_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address)

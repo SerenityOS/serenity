@@ -30,7 +30,6 @@ public:
 
 protected:
     // ^MDIO::Clause22::Interface
-    virtual void on_phy_link_status_change(MDIO::LinkStatus) override;
     virtual u16 read_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address) override;
     virtual void write_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address, u16 value) override;
 
