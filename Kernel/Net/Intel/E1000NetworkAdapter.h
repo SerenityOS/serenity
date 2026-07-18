@@ -12,13 +12,17 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Library/IOWindow.h>
+#include <Kernel/Net/MDIO.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Security/Random.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 
-class E1000NetworkAdapter : public NetworkAdapter
+class E1000NetworkAdapter
+    : public NetworkAdapter
+    , public MDIO::Clause22::Interface
     , public PCI::Device {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
@@ -35,7 +39,7 @@ public:
     virtual StringView device_name() const override { return "E1000"sv; }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
-protected:
+private:
     static constexpr size_t rx_buffer_size = 8192;
     static constexpr size_t tx_buffer_size = 8192;
 
@@ -59,6 +63,15 @@ protected:
         uint16_t special { 0 };
     };
     static_assert(AssertSize<TxDescriptor, 16>());
+
+    enum class HardwareFeatures {
+        None = 0u,
+
+        MDIOAccess = 1u << 0,
+    };
+    AK_ENUM_BITWISE_FRIEND_OPERATORS(E1000NetworkAdapter::HardwareFeatures);
+
+    HardwareFeatures determine_hardware_features();
 
     ErrorOr<void> setup_interrupts();
     void setup_link();
@@ -99,6 +112,10 @@ protected:
 
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
+    // ^MDIO::Clause22::Interface
+    virtual u16 read_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address) override;
+    virtual void write_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address, u16 value) override;
+
     void read_mac_address();
 
     void initialize_rx_descriptors();
@@ -111,6 +128,8 @@ protected:
 
     static constexpr size_t number_of_rx_descriptors = 256;
     static constexpr size_t number_of_tx_descriptors = 256;
+
+    HardwareFeatures m_hardware_features;
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
@@ -129,5 +148,7 @@ protected:
     WaitQueue m_wait_queue;
 
     OwnPtr<InterruptHandler> m_interrupt_handler;
+    RefPtr<Process> m_mdio_handling_process;
 };
+
 }

@@ -18,6 +18,7 @@ namespace Kernel {
 #define REG_STATUS 0x0008
 #define REG_EEPROM 0x0014
 #define REG_CTRL_EXT 0x0018
+#define REG_MDIC 0x0020
 #define REG_INTERRUPT_CAUSE_READ 0x00C0
 #define REG_INTERRUPT_RATE 0x00C4
 #define REG_INTERRUPT_MASK_SET 0x00D0
@@ -123,13 +124,22 @@ namespace Kernel {
 #define INTERRUPT_TXD_LOW (1 << 15)
 #define INTERRUPT_SRPD (1 << 16)
 
+// MDIC Register
+
+#define MDIC_DATA_MASK (0xffff << 0)
+#define MDIC_DATA_OFFSET 0
+#define MDIC_REGADD_OFFSET 16
+#define MDIC_R (1 << 28)
+#define MDIC_OP_WRITE (0b01 << 26)
+#define MDIC_OP_READ (0b10 << 26)
+#define MDIC_PHYADD_OFFSET 21
+
+#define GIGABIT_PHY_ID 1
+
 // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
 UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
 {
-    // FIXME: It would be nice to distinguish which particular device it is.
-    //        Especially since it's needed to determine which registers we can access.
-    //        The reason I haven't done it now is because there's some IDs with multiple devices
-    //        and some devices with multiple IDs.
+    // FIXME: Merge this function with determine_hardware_features().
     switch (device_id) {
     case 0x1019: // 82547EI-A0, 82547EI-A1, 82547EI-B0, 82547GI-B0
     case 0x101A: // 82547EI-B0
@@ -155,6 +165,7 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
     case 0x1016: // 82540EP-A
     case 0x100E: // 82540EM-A
     case 0x1015: // 82540EM-A
+    case 0x10D3: // 82574L
         return true;
     default:
         return false;
@@ -199,6 +210,9 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     auto const& mac = mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac.to_string());
 
+    if (has_flag(m_hardware_features, HardwareFeatures::MDIOAccess))
+        m_mdio_handling_process = TRY(spawn_mdio_handling_task(GIGABIT_PHY_ID));
+
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
@@ -215,6 +229,17 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
 {
     u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
+}
+
+E1000NetworkAdapter::HardwareFeatures E1000NetworkAdapter::determine_hardware_features()
+{
+    auto device_id = device_identifier().hardware_id().device_id;
+    switch (device_id) {
+    case 0x10D3: // 82574L
+        return HardwareFeatures::MDIOAccess;
+    default:
+        return HardwareFeatures::None;
+    }
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_interrupts()
@@ -282,6 +307,37 @@ bool E1000NetworkAdapter::handle_interrupt()
 
     out32(REG_INTERRUPT_CAUSE_READ, 0xffffffff);
     return true;
+}
+
+u16 E1000NetworkAdapter::read_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address)
+{
+    VERIFY(has_flag(m_hardware_features, HardwareFeatures::MDIOAccess));
+
+    // FIXME: Newer controllers (like the I211) don't have a PHYADD field in the MDIC register.
+    //        They instead have it in a separate register.
+    out32(REG_MDIC, MDIC_OP_READ | (to_underlying(address) << MDIC_REGADD_OFFSET) | (phy_id << MDIC_PHYADD_OFFSET));
+
+    for (;;) {
+        u32 mdic = in32(REG_MDIC);
+        if ((mdic & MDIC_R) == 0) {
+            Processor::wait_check();
+            continue;
+        }
+
+        return (mdic & MDIC_DATA_MASK) >> MDIC_DATA_OFFSET;
+    }
+}
+
+void E1000NetworkAdapter::write_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address, u16 value)
+{
+    VERIFY(has_flag(m_hardware_features, HardwareFeatures::MDIOAccess));
+
+    // FIXME: Newer controllers (like the I211) don't have a PHYADD field in the MDIC register.
+    //        They instead have it in a separate register.
+    out32(REG_MDIC, MDIC_OP_WRITE | (to_underlying(address) << MDIC_REGADD_OFFSET) | (value << MDIC_DATA_OFFSET) | (phy_id << MDIC_PHYADD_OFFSET));
+
+    while ((in32(REG_MDIC) & MDIC_R) == 0)
+        Processor::wait_check();
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
