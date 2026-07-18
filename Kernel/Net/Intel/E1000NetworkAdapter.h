@@ -99,8 +99,6 @@ protected:
 
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
-    virtual void detect_eeprom();
-    virtual u32 read_eeprom(u8 address);
     void read_mac_address();
 
     void initialize_rx_descriptors();
@@ -124,7 +122,6 @@ protected:
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
 
-    SetOnce m_has_eeprom;
     bool m_link_up { false };
     EntropySource m_entropy_source;
 
