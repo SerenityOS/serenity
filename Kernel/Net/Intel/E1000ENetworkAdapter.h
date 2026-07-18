@@ -28,8 +28,6 @@ public:
 
     virtual ~E1000ENetworkAdapter() override;
 
-    virtual StringView purpose() const override { return class_name(); }
-
 protected:
     // ^MDIO::Clause22::Interface
     virtual void on_phy_link_status_change(MDIO::LinkStatus) override;
@@ -37,7 +35,7 @@ protected:
     virtual void write_phy_register(u8 phy_id, MDIO::Clause22::RegisterAddress address, u16 value) override;
 
 private:
-    E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&, InterruptNumber irq,
+    E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
         Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors);

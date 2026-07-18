@@ -168,7 +168,6 @@ UNMAP_AFTER_INIT ErrorOr<bool> E1000NetworkAdapter::probe(PCI::DeviceIdentifier 
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    InterruptNumber irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
 
@@ -180,7 +179,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000NetworkAdapter::cre
 
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) E1000NetworkAdapter(interface_name.representable_view(),
         pci_device_identifier,
-        irq, move(registers_io_window),
+        move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
         move(rx_descriptors),
@@ -194,7 +193,6 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     enable_bus_mastering(device_identifier());
 
     dmesgln_pci(*this, "IO base: {}", m_registers_io_window);
-    dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
     detect_eeprom();
     dmesgln_pci(*this, "Has EEPROM? {}", m_has_eeprom.was_set());
     read_mac_address();
@@ -205,7 +203,7 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     initialize_tx_descriptors();
 
     setup_link();
-    setup_interrupts();
+    TRY(setup_interrupts());
 
     m_link_up = ((in32(REG_STATUS) & STATUS_LU) != 0);
     autoconfigure_link_local_ipv6();
@@ -219,22 +217,24 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
     out32(REG_CTRL, flags | ECTRL_SLU);
 }
 
-UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
+UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_interrupts()
 {
     out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
     out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
     in32(REG_INTERRUPT_CAUSE_READ);
-    enable_irq();
+
+    m_interrupt_handler = TRY(InterruptHandler::create(*this, device_identifier().interrupt_line().value()));
+
+    return {};
 }
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(StringView interface_name,
-    PCI::DeviceIdentifier const& device_identifier, InterruptNumber irq,
+    PCI::DeviceIdentifier const& device_identifier,
     NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
     NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
     Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors)
     : NetworkAdapter(interface_name)
     , PCI::Device(device_identifier)
-    , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
     , m_rx_descriptors(move(rx_descriptors))
     , m_tx_descriptors(move(tx_descriptors))
@@ -245,7 +245,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(StringView interface_n
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter() = default;
 
-bool E1000NetworkAdapter::handle_irq()
+bool E1000NetworkAdapter::handle_interrupt()
 {
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 

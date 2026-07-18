@@ -214,7 +214,6 @@ UNMAP_AFTER_INIT ErrorOr<bool> E1000ENetworkAdapter::probe(PCI::DeviceIdentifier
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000ENetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    InterruptNumber irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
 
@@ -225,7 +224,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000ENetworkAdapter::cr
 
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) E1000ENetworkAdapter(interface_name.representable_view(),
         pci_device_identifier,
-        irq, move(registers_io_window),
+        move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
         move(rx_descriptors_region),
@@ -238,7 +237,6 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<Networking
     enable_bus_mastering(device_identifier());
 
     dmesgln("E1000e: IO base: {}", m_registers_io_window);
-    dmesgln("E1000e: Interrupt line: {}", interrupt_number());
     detect_eeprom();
     dmesgln("E1000e: Has EEPROM? {}", m_has_eeprom.was_set());
     read_mac_address();
@@ -251,17 +249,17 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<Networking
     initialize_tx_descriptors();
 
     setup_link();
-    setup_interrupts();
+    TRY(setup_interrupts());
     autoconfigure_link_local_ipv6();
     return {};
 }
 
 UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(StringView interface_name,
-    PCI::DeviceIdentifier const& device_identifier, InterruptNumber irq,
+    PCI::DeviceIdentifier const& device_identifier,
     NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
     NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
     Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors)
-    : E1000NetworkAdapter(interface_name, device_identifier, irq, move(registers_io_window),
+    : E1000NetworkAdapter(interface_name, device_identifier, move(registers_io_window),
           move(rx_buffer_region),
           move(tx_buffer_region),
           move(rx_descriptors),
