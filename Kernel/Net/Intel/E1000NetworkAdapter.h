@@ -19,8 +19,7 @@
 namespace Kernel {
 
 class E1000NetworkAdapter : public NetworkAdapter
-    , public PCI::Device
-    , public IRQHandler {
+    , public PCI::Device {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
     static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
@@ -33,7 +32,6 @@ public:
     virtual i32 link_speed() override;
     virtual bool link_full_duplex() override;
 
-    virtual StringView purpose() const override { return class_name(); }
     virtual StringView device_name() const override { return "E1000"sv; }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
@@ -62,16 +60,43 @@ protected:
     };
     static_assert(AssertSize<TxDescriptor, 16>());
 
-    void setup_interrupts();
+    ErrorOr<void> setup_interrupts();
     void setup_link();
 
-    E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, InterruptNumber irq,
+    E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region,
         Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
         Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors);
 
-    virtual bool handle_irq() override;
+    bool handle_interrupt();
+
+    class InterruptHandler final : public IRQHandler {
+    public:
+        static ErrorOr<NonnullOwnPtr<InterruptHandler>> create(E1000NetworkAdapter& network_adapter, InterruptNumber interrupt_number)
+        {
+            auto interrupt_handler = TRY(adopt_nonnull_own_or_enomem(new (nothrow) InterruptHandler(network_adapter, interrupt_number)));
+            dmesgln_pci(network_adapter, "Interrupt number: {}", interrupt_number);
+            interrupt_handler->enable_irq();
+            return interrupt_handler;
+        }
+
+    private:
+        InterruptHandler(E1000NetworkAdapter& network_adapter, InterruptNumber interrupt_number)
+            : IRQHandler(interrupt_number)
+            , m_network_adapter(network_adapter)
+        {
+        }
+
+        virtual StringView purpose() const override { return "E1000 Interrupt Handler"sv; }
+        virtual bool handle_irq() override
+        {
+            return m_network_adapter.handle_interrupt();
+        }
+
+        E1000NetworkAdapter& m_network_adapter;
+    };
+
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
     virtual void detect_eeprom();
@@ -105,5 +130,7 @@ protected:
 
     Mutex m_write_lock;
     WaitQueue m_wait_queue;
+
+    OwnPtr<InterruptHandler> m_interrupt_handler;
 };
 }
