@@ -39,6 +39,8 @@ namespace Kernel {
 #define REG_RADV 0x282C             // RX Int. Absolute Delay Timer
 #define REG_RSRPD 0x2C00            // RX Small Packet Detect Interrupt
 #define REG_TIPG 0x0410             // Transmit Inter Packet Gap
+#define REG_RAL0 0x5400             // Receive Address 0 Low
+#define REG_RAH0 0x5404             // Receive Address 0 High
 #define ECTRL_SLU 0x40              // set link up
 #define RCTL_EN (1 << 1)            // Receiver Enable
 #define RCTL_SBP (1 << 2)           // Store Bad Packets
@@ -193,8 +195,6 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     enable_bus_mastering(device_identifier());
 
     dmesgln_pci(*this, "IO base: {}", m_registers_io_window);
-    detect_eeprom();
-    dmesgln_pci(*this, "Has EEPROM? {}", m_has_eeprom.was_set());
     read_mac_address();
     auto const& mac = mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac.to_string());
@@ -284,52 +284,18 @@ bool E1000NetworkAdapter::handle_interrupt()
     return true;
 }
 
-UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
-{
-    out32(REG_EEPROM, 0x1);
-    for (int i = 0; i < 999; ++i) {
-        u32 data = in32(REG_EEPROM);
-        if (data & 0x10) {
-            m_has_eeprom.set();
-            return;
-        }
-    }
-}
-
-UNMAP_AFTER_INIT u32 E1000NetworkAdapter::read_eeprom(u8 address)
-{
-    u16 data = 0;
-    u32 tmp = 0;
-    if (m_has_eeprom.was_set()) {
-        out32(REG_EEPROM, ((u32)address << 8) | 1);
-        while (!((tmp = in32(REG_EEPROM)) & (1 << 4)))
-            Processor::wait_check();
-    } else {
-        out32(REG_EEPROM, ((u32)address << 2) | 1);
-        while (!((tmp = in32(REG_EEPROM)) & (1 << 1)))
-            Processor::wait_check();
-    }
-    data = (tmp >> 16) & 0xffff;
-    return data;
-}
-
 UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 {
-    if (m_has_eeprom.was_set()) {
-        MACAddress mac {};
-        u32 tmp = read_eeprom(0);
-        mac[0] = tmp & 0xff;
-        mac[1] = tmp >> 8;
-        tmp = read_eeprom(1);
-        mac[2] = tmp & 0xff;
-        mac[3] = tmp >> 8;
-        tmp = read_eeprom(2);
-        mac[4] = tmp & 0xff;
-        mac[5] = tmp >> 8;
-        set_mac_address(mac);
-    } else {
-        VERIFY_NOT_REACHED();
-    }
+    auto ral0 = in32(REG_RAL0);
+    auto rah0 = in32(REG_RAH0);
+    MACAddress mac(
+        (ral0 >> 0) & 0xff,
+        (ral0 >> 8) & 0xff,
+        (ral0 >> 16) & 0xff,
+        (ral0 >> 24) & 0xff,
+        (rah0 >> 0) & 0xff,
+        (rah0 >> 8) & 0xff);
+    set_mac_address(mac);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
