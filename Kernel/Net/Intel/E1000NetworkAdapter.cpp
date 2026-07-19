@@ -36,7 +36,8 @@ namespace Kernel {
 #define REG_TXDESCHEAD 0x3810
 #define REG_TXDESCTAIL 0x3818
 #define REG_RDTR 0x2820             // RX Delay Timer Register
-#define REG_RXDCTL 0x3828           // RX Descriptor Control
+#define REG_RXDCTL 0x2828           // RX Descriptor Control
+#define REG_TXDCTL 0x3828           // TX Descriptor Control
 #define REG_RADV 0x282C             // RX Int. Absolute Delay Timer
 #define REG_RSRPD 0x2C00            // RX Small Packet Detect Interrupt
 #define REG_TIPG 0x0410             // Transmit Inter Packet Gap
@@ -136,6 +137,14 @@ namespace Kernel {
 
 #define GIGABIT_PHY_ID 1
 
+// RXDCTL Register
+
+#define RXDCTL_ENABLE (1u << 25)
+
+// TXDCTL Register
+
+#define TXDCTL_ENABLE (1u << 25)
+
 // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
 UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
 {
@@ -166,6 +175,7 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
     case 0x100E: // 82540EM-A
     case 0x1015: // 82540EM-A
     case 0x10D3: // 82574L
+    case 0x1539: // I211
         return true;
     default:
         return false;
@@ -214,8 +224,12 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     auto const& mac = mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac.to_string());
 
-    if (has_flag(m_hardware_features, HardwareFeatures::MDIOAccess))
-        m_mdio_handling_process = TRY(spawn_mdio_handling_task(GIGABIT_PHY_ID));
+    if (has_flag(m_hardware_features, HardwareFeatures::MDIOAccess)) {
+        if (has_flag(m_hardware_features, HardwareFeatures::HasPreconfiguredPHYAddress))
+            m_mdio_handling_process = TRY(spawn_mdio_handling_task(0)); // This PHY ID will be ignored.
+        else
+            m_mdio_handling_process = TRY(spawn_mdio_handling_task(GIGABIT_PHY_ID));
+    }
 
     initialize_rx_descriptors();
     initialize_tx_descriptors();
@@ -239,10 +253,13 @@ E1000NetworkAdapter::HardwareFeatures E1000NetworkAdapter::determine_hardware_fe
 {
     auto device_id = device_identifier().hardware_id().device_id;
     switch (device_id) {
+        using enum HardwareFeatures;
     case 0x10D3: // 82574L
-        return HardwareFeatures::MDIOAccess;
+        return MDIOAccess;
+    case 0x1539: // I211
+        return MDIOAccess | HasQueueEnableBit | HasPreconfiguredPHYAddress;
     default:
-        return HardwareFeatures::None;
+        return None;
     }
 }
 
@@ -317,9 +334,10 @@ u16 E1000NetworkAdapter::read_phy_register(u8 phy_id, MDIO::Clause22::RegisterAd
 {
     VERIFY(has_flag(m_hardware_features, HardwareFeatures::MDIOAccess));
 
-    // FIXME: Newer controllers (like the I211) don't have a PHYADD field in the MDIC register.
-    //        They instead have it in a separate register.
-    out32(REG_MDIC, MDIC_OP_READ | (to_underlying(address) << MDIC_REGADD_OFFSET) | (phy_id << MDIC_PHYADD_OFFSET));
+    u32 mdic = MDIC_OP_READ | (to_underlying(address) << MDIC_REGADD_OFFSET);
+    if (!has_flag(m_hardware_features, HardwareFeatures::HasPreconfiguredPHYAddress))
+        mdic |= phy_id << MDIC_PHYADD_OFFSET;
+    out32(REG_MDIC, mdic);
 
     for (;;) {
         u32 mdic = in32(REG_MDIC);
@@ -336,9 +354,10 @@ void E1000NetworkAdapter::write_phy_register(u8 phy_id, MDIO::Clause22::Register
 {
     VERIFY(has_flag(m_hardware_features, HardwareFeatures::MDIOAccess));
 
-    // FIXME: Newer controllers (like the I211) don't have a PHYADD field in the MDIC register.
-    //        They instead have it in a separate register.
-    out32(REG_MDIC, MDIC_OP_WRITE | (to_underlying(address) << MDIC_REGADD_OFFSET) | (value << MDIC_DATA_OFFSET) | (phy_id << MDIC_PHYADD_OFFSET));
+    u32 mdic = MDIC_OP_WRITE | (to_underlying(address) << MDIC_REGADD_OFFSET) | (value << MDIC_DATA_OFFSET);
+    if (!has_flag(m_hardware_features, HardwareFeatures::HasPreconfiguredPHYAddress))
+        mdic |= phy_id << MDIC_PHYADD_OFFSET;
+    out32(REG_MDIC, mdic);
 
     while ((in32(REG_MDIC) & MDIC_R) == 0)
         Processor::wait_check();
@@ -375,6 +394,10 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
     out32(REG_RXDESCHI, 0);
     out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(RxDescriptor));
     out32(REG_RXDESCHEAD, 0);
+
+    if (has_flag(m_hardware_features, HardwareFeatures::HasQueueEnableBit))
+        out32(REG_RXDCTL, in32(REG_RXDCTL) | RXDCTL_ENABLE);
+
     out32(REG_RXDESCTAIL, number_of_rx_descriptors - 1);
 
     VERIFY(rx_buffer_size >= mtu() + sizeof(EthernetFrameHeader) + 4); // + 4 for the CRC
@@ -406,6 +429,9 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
     out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(TxDescriptor));
     out32(REG_TXDESCHEAD, 0);
     out32(REG_TXDESCTAIL, 0);
+
+    if (has_flag(m_hardware_features, HardwareFeatures::HasQueueEnableBit))
+        out32(REG_TXDCTL, in32(REG_TXDCTL) | TXDCTL_ENABLE);
 
     out32(REG_TCTRL, in32(REG_TCTRL) | TCTL_EN | TCTL_PSP);
     out32(REG_TIPG, 0x0060200A);
