@@ -206,6 +206,9 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     PCI::enable_memory_space(device_identifier());
     PCI::enable_bus_mastering(device_identifier());
 
+    // Ensure that interrupts are disabled during initialization.
+    out32(REG_INTERRUPT_MASK_CLEAR, 0xffff'ffff);
+
     dmesgln_pci(*this, "IO base: {}", m_registers_io_window);
     read_mac_address();
     auto const& mac = mac_address();
@@ -246,7 +249,6 @@ E1000NetworkAdapter::HardwareFeatures E1000NetworkAdapter::determine_hardware_fe
 UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_interrupts()
 {
     out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
 
     // FIXME: Support MSI-X on newer controllers. This requires allocating one or more MSI-X vectors
     //        and using the IVAR register to configure interrupt vector routing.
@@ -255,6 +257,8 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_interrupts()
     auto interrupt_number = TRY(allocate_irq(0));
 
     m_interrupt_handler = TRY(InterruptHandler::create(*this, interrupt_number));
+
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
 
     return {};
 }
