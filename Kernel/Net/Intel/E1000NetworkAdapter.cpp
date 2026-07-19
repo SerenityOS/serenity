@@ -356,11 +356,14 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 {
-    constexpr auto rx_buffer_page_count = rx_buffer_size / PAGE_SIZE;
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
+        auto offset = rx_buffer_size * i;
+        auto page_index = offset / PAGE_SIZE;
+        auto page_offset = offset % PAGE_SIZE;
+
         auto& descriptor = m_rx_descriptors[i];
-        m_rx_buffers[i] = m_rx_buffer_region->vaddr().as_ptr() + rx_buffer_size * i;
-        descriptor.addr = m_rx_buffer_region->physical_page(rx_buffer_page_count * i)->paddr().get();
+        m_rx_buffers[i] = m_rx_buffer_region->vaddr().as_ptr() + offset;
+        descriptor.addr = m_rx_buffer_region->physical_page(page_index)->paddr().offset(page_offset).get();
         descriptor.status = 0;
     }
 
@@ -375,12 +378,14 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 {
-    constexpr auto tx_buffer_page_count = tx_buffer_size / PAGE_SIZE;
-
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
+        auto offset = tx_buffer_size * i;
+        auto page_index = offset / PAGE_SIZE;
+        auto page_offset = offset % PAGE_SIZE;
+
         auto& descriptor = m_tx_descriptors[i];
-        m_tx_buffers[i] = m_tx_buffer_region->vaddr().as_ptr() + tx_buffer_size * i;
-        descriptor.addr = m_tx_buffer_region->physical_page(tx_buffer_page_count * i)->paddr().get();
+        m_tx_buffers[i] = m_tx_buffer_region->vaddr().as_ptr() + offset;
+        descriptor.addr = m_tx_buffer_region->physical_page(page_index)->paddr().offset(page_offset).get();
         descriptor.cmd = 0;
         descriptor.status = TSTA_DD;
     }
