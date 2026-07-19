@@ -68,6 +68,8 @@ private:
         None = 0u,
 
         MDIOAccess = 1u << 0,
+        HasQueueEnableBit = 1u << 1,
+        HasPreconfiguredPHYAddress = 1u << 2,
     };
     AK_ENUM_BITWISE_FRIEND_OPERATORS(E1000NetworkAdapter::HardwareFeatures);
 
