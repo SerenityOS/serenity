@@ -203,7 +203,7 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
 {
     dmesgln_pci(*this, "Found @ {}", device_identifier().address());
 
-    enable_bus_mastering(device_identifier());
+    PCI::enable_bus_mastering(device_identifier());
 
     dmesgln_pci(*this, "IO base: {}", m_registers_io_window);
     read_mac_address();

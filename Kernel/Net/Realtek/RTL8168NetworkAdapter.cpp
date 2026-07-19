@@ -345,7 +345,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     // software reset
     reset();
 
-    enable_bus_mastering(device_identifier());
+    PCI::enable_bus_mastering(device_identifier());
 
     read_mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac_address().to_string());
