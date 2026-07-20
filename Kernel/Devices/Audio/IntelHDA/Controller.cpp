@@ -37,7 +37,8 @@ UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_
 
 UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize(Badge<AudioManagement>)
 {
-    // Enable DMA and interrupts
+    // Enable MMIO, DMA and interrupts
+    PCI::enable_memory_space(device_identifier());
     PCI::enable_bus_mastering(device_identifier());
 
     // 255 means "unknown" or "no connection".
