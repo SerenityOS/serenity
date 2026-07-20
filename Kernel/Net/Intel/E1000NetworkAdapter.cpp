@@ -247,7 +247,6 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_interrupts()
 {
     out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
     out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
-    in32(REG_INTERRUPT_CAUSE_READ);
 
     // FIXME: Support MSI-X on newer controllers. This requires allocating one or more MSI-X vectors
     //        and using the IVAR register to configure interrupt vector routing.
