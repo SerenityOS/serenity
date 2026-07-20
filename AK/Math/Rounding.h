@@ -31,9 +31,8 @@ constexpr T ceil(T num)
     }
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintp, num);
-#else
-    CALL_BUILTIN(ceil, num);
 #endif
+    CALL_BUILTIN(ceil, num);
 }
 
 template<FloatingPoint T>
@@ -49,9 +48,8 @@ constexpr T floor(T num)
     }
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintm, num);
-#else
-    CALL_BUILTIN(floor, num);
 #endif
+    CALL_BUILTIN(floor, num);
 }
 
 template<FloatingPoint T>
@@ -133,8 +131,6 @@ constexpr T rint(T x)
             : "f"(x));
         return copysign(static_cast<double>(r), x);
     }
-    if constexpr (IsSame<T, long double>)
-        TODO_RISCV64();
 #endif
 
     // Move the value out of the sub integer precision range and back,
