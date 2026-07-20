@@ -17,16 +17,16 @@ class InterruptHandler
     : public PCI::IRQHandler
     , public RefCounted<InterruptHandler> {
 public:
-    static ErrorOr<NonnullRefPtr<InterruptHandler>> create(Controller& controller)
+    static ErrorOr<NonnullRefPtr<InterruptHandler>> create(Controller& controller, InterruptNumber interrupt_number)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) InterruptHandler(controller));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) InterruptHandler(controller, interrupt_number));
     }
 
     // ^PCI::IRQHandler
     virtual StringView purpose() const override { return "IntelHDA IRQ Handler"sv; }
 
 private:
-    InterruptHandler(Controller& controller);
+    InterruptHandler(Controller& controller, InterruptNumber interrupt_number);
 
     // ^PCI::IRQHandler
     virtual bool handle_irq() override;

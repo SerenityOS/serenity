@@ -41,14 +41,17 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize(Badge<AudioManagement>)
     PCI::enable_memory_space(device_identifier());
     PCI::enable_bus_mastering(device_identifier());
 
+    auto interrupt_type = TRY(reserve_irqs(1, PCI::AllowedInterruptTypes::Pin | PCI::AllowedInterruptTypes::MSI));
+
     // 255 means "unknown" or "no connection".
     // FIXME: This not the best place to catch this. We should probably make interrupt_line() return an Optional<>.
     //        Or even better, support getting PCI interrupt lines from AML code, which would remove the
     //        need for us to rely on the firmware setting the correct interrupt line in PCI config space.
-    if (device_identifier().interrupt_line().value() == 255)
+    if (interrupt_type == PCI::InterruptType::PIN && device_identifier().interrupt_line().value() == 255)
         return ENOTSUP;
 
-    m_interrupt_handler = TRY(InterruptHandler::create(*this));
+    auto interrupt_number = TRY(allocate_irq(0));
+    m_interrupt_handler = TRY(InterruptHandler::create(*this, interrupt_number));
 
     // 3.3.3, 3.3.4: Controller version
     auto version_minor = m_controller_io_window->read8(ControllerRegister::VersionMinor);
