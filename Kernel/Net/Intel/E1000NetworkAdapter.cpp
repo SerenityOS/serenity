@@ -66,13 +66,13 @@ namespace Kernel {
 #define RCTL_SECRC (1 << 26)        // Strip Ethernet CRC
 
 // Buffer Sizes
+// Sizes larger than 2048 are requested differently across hardware revisions.
+// The I211 has a separate field BSIZEPACKET in the SRRCTL register, whereas older controllers have a BSEX field
+// in the RCTL register to multiply the BSIZE by 16.
 #define RCTL_BSIZE_256 (3 << 16)
 #define RCTL_BSIZE_512 (2 << 16)
 #define RCTL_BSIZE_1024 (1 << 16)
 #define RCTL_BSIZE_2048 (0 << 16)
-#define RCTL_BSIZE_4096 ((3 << 16) | (1 << 25))
-#define RCTL_BSIZE_8192 ((2 << 16) | (1 << 25))
-#define RCTL_BSIZE_16384 ((1 << 16) | (1 << 25))
 
 // Transmit Command
 
@@ -373,11 +373,18 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
     out32(REG_RXDESCHEAD, 0);
     out32(REG_RXDESCTAIL, number_of_rx_descriptors - 1);
 
-    out32(REG_RCTRL, RCTL_EN | RCTL_SBP | RCTL_UPE | RCTL_MPE | RCTL_LBM_NONE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_SECRC | RCTL_BSIZE_8192);
+    VERIFY(rx_buffer_size >= mtu() + sizeof(EthernetFrameHeader) + 4); // + 4 for the CRC
+
+    VERIFY(rx_buffer_size == 2048);
+    auto bsize_field = RCTL_BSIZE_2048;
+
+    out32(REG_RCTRL, RCTL_EN | RCTL_SBP | RCTL_UPE | RCTL_MPE | RCTL_LBM_NONE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_SECRC | bsize_field);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 {
+    VERIFY(tx_buffer_size >= mtu() + sizeof(EthernetFrameHeader) + 4); // + 4 for the CRC
+
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
         auto offset = tx_buffer_size * i;
         auto page_index = offset / PAGE_SIZE;
@@ -429,7 +436,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
             .release_value_but_fixme_should_propagate_errors();
     }
 
-    VERIFY(payload.size() <= 8192);
+    VERIFY(payload.size() <= tx_buffer_size);
     auto* vptr = (void*)m_tx_buffers[tx_current];
     memcpy(vptr, payload.data(), payload.size());
     descriptor.length = payload.size();
@@ -452,7 +459,7 @@ void E1000NetworkAdapter::receive()
             break;
         auto* buffer = m_rx_buffers[rx_current];
         u16 length = m_rx_descriptors[rx_current].length;
-        VERIFY(length <= 8192);
+        VERIFY(length <= rx_buffer_size);
         dbgln_if(E1000_DEBUG, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
         did_receive({ buffer, length });
         m_rx_descriptors[rx_current].status = 0;
