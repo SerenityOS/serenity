@@ -40,8 +40,8 @@ public:
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
 private:
-    static constexpr size_t rx_buffer_size = 8192;
-    static constexpr size_t tx_buffer_size = 8192;
+    static constexpr size_t rx_buffer_size = 2048;
+    static constexpr size_t tx_buffer_size = 2048;
 
     struct RxDescriptor {
         uint64_t addr { 0 };
