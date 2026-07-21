@@ -43,7 +43,7 @@ SSHClient::~SSHClient()
     Core::EventLoop::unregister_signal(m_sigchld_handler_id);
 }
 
-ErrorOr<SSHClient::BehaviorControl> SSHClient::handle_data(ByteBuffer& data)
+ErrorOr<BehaviorControl> SSHClient::handle_data(ByteBuffer& data)
 {
     if (m_state != State::Constructed) {
         if (!is_buffer_containing_a_full_packet(data))
@@ -483,7 +483,7 @@ ErrorOr<void> SSHClient::send_user_authentication_success()
     return {};
 }
 
-ErrorOr<SSHClient::BehaviorControl> SSHClient::handle_generic_packet(GenericMessage&& message)
+ErrorOr<BehaviorControl> SSHClient::handle_generic_packet(GenericMessage&& message)
 {
     switch (message.type) {
     case MessageID::DISCONNECT:
