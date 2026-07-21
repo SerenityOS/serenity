@@ -71,8 +71,8 @@ ErrorOr<void> InodeWatcher::close()
 {
     m_watch_maps.with([this](auto& watch_maps) {
         for (auto& entry : watch_maps.wd_to_watches) {
-            auto& inode = entry.value->inode;
-            inode.unregister_watcher({}, *this);
+            if (auto inode = entry.value->inode.strong_ref())
+                inode->unregister_watcher({}, *this);
         }
 
         watch_maps.inode_to_watches.clear();
@@ -99,7 +99,7 @@ void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, In
         if (!(watcher.event_mask & static_cast<unsigned>(event_type)))
             return;
 
-        m_queue.with([watcher, event_type, name](auto& queue) {
+        m_queue.with([&watcher, event_type, name](auto& queue) {
             OwnPtr<KString> path;
             if (!name.is_null())
                 path = KString::try_create(name).release_value_but_fixme_should_propagate_errors();
@@ -152,10 +152,10 @@ ErrorOr<void> InodeWatcher::unregister_by_wd(int wd)
         if (it == watch_maps.wd_to_watches.end())
             return ENOENT;
 
-        auto& inode = it->value->inode;
-        inode.unregister_watcher({}, *this);
+        if (auto inode = it->value->inode.strong_ref())
+            inode->unregister_watcher({}, *this);
 
-        watch_maps.inode_to_watches.remove(inode.identifier());
+        watch_maps.inode_to_watches.remove(it->value->inode_identifier);
         watch_maps.wd_to_watches.remove(it);
         return {};
     }));

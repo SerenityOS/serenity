@@ -14,6 +14,8 @@
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/FileSystem/Inode.h>
+#include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -23,7 +25,8 @@ namespace Kernel {
 // A specific description of a watch.
 struct WatchDescription {
     int wd;
-    Inode& inode;
+    LockWeakPtr<Inode> inode;
+    InodeIdentifier inode_identifier;
     unsigned event_mask;
 
     static ErrorOr<NonnullOwnPtr<WatchDescription>> create(int wd, Inode& inode, unsigned event_mask)
@@ -35,6 +38,7 @@ private:
     WatchDescription(int wd, Inode& inode, unsigned event_mask)
         : wd(wd)
         , inode(inode)
+        , inode_identifier(inode.identifier())
         , event_mask(event_mask)
     {
     }
