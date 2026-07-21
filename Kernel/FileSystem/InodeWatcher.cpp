@@ -71,7 +71,7 @@ ErrorOr<void> InodeWatcher::close()
 {
     m_watch_maps.with([this](auto& watch_maps) {
         for (auto& entry : watch_maps.wd_to_watches) {
-            auto& inode = const_cast<Inode&>(entry.value->inode);
+            auto& inode = entry.value->inode;
             inode.unregister_watcher({}, *this);
         }
 
