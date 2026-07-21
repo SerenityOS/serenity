@@ -55,11 +55,11 @@ ErrorOr<void> TCPClient::on_ready_to_read()
     while (!m_read_buffer.is_empty()) {
         auto next_behavior = TRY(m_ssh_client.handle_data(m_read_buffer));
         switch (next_behavior) {
-        case SSHClient::BehaviorControl::ContinueExecution:
+        case SSH::BehaviorControl::ContinueExecution:
             continue;
-        case SSHClient::BehaviorControl::WaitForMoreData:
+        case SSH::BehaviorControl::WaitForMoreData:
             return {};
-        case SSHClient::BehaviorControl::Disconnect:
+        case SSH::BehaviorControl::Disconnect:
             die();
         }
     }

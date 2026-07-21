@@ -8,6 +8,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <LibCore/Forward.h>
+#include <LibSSH/BehaviorControl.h>
 #include <LibSSH/KeyExchangeData.h>
 #include <LibSSH/Peer.h>
 #include <LibSSH/Session.h>
@@ -43,12 +44,6 @@ class SSHClient : public Peer {
 public:
     explicit SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect);
     ~SSHClient();
-
-    enum class BehaviorControl : u8 {
-        ContinueExecution,
-        WaitForMoreData,
-        Disconnect,
-    };
 
     ErrorOr<BehaviorControl> handle_data(ByteBuffer& data);
 
