@@ -938,6 +938,36 @@ public:
         set_y(other.center().y() - height() / 2);
     }
 
+    // Like CSS's `object-fit: contain`.
+    [[nodiscard]] Rect<T> scaled_to_fit_within(Rect<T> const& other) const
+    {
+        if (is_empty())
+            return {};
+
+        double width_ratio = static_cast<double>(other.width()) / static_cast<double>(width());
+        double height_ratio = static_cast<double>(other.height()) / static_cast<double>(height());
+        Size<T> size {
+            width_ratio <= height_ratio ? other.width() : scale_dimension(width(), height_ratio),
+            height_ratio <= width_ratio ? other.height() : scale_dimension(height(), width_ratio),
+        };
+        return Rect<T> { {}, size }.centered_within(other);
+    }
+
+    // Like CSS's `object-fit: cover`.
+    [[nodiscard]] Rect<T> scaled_to_cover(Rect<T> const& other) const
+    {
+        if (is_empty())
+            return {};
+
+        double width_ratio = static_cast<double>(other.width()) / static_cast<double>(width());
+        double height_ratio = static_cast<double>(other.height()) / static_cast<double>(height());
+        Size<T> size {
+            width_ratio >= height_ratio ? other.width() : scale_dimension(width(), height_ratio),
+            height_ratio >= width_ratio ? other.height() : scale_dimension(height(), width_ratio),
+        };
+        return Rect<T> { {}, size }.centered_within(other);
+    }
+
     template<typename U>
     requires(!IsSame<T, U>)
     [[nodiscard]] ALWAYS_INLINE Rect<U> to_type() const
@@ -994,6 +1024,15 @@ public:
     [[nodiscard]] ByteString to_byte_string() const;
 
 private:
+    static T scale_dimension(T dimension, double scale)
+    {
+        auto scaled = static_cast<double>(dimension) * scale;
+        if constexpr (Integral<T>)
+            return round_to<T>(scaled);
+        else
+            return static_cast<T>(scaled);
+    }
+
     Point<T> m_location;
     Size<T> m_size;
 };
