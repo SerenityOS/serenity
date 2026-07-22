@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
+#include <AK/ByteBuffer.h>
 #include <AK/ByteString.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICC/Profile.h>
@@ -227,6 +229,25 @@ TEST_CASE(test_ilbm)
     auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 320, 200 }));
 
     EXPECT_EQ(frame.image->get_pixel(8, 0), Gfx::Color(0xee, 0xbb, 0, 255));
+}
+
+TEST_CASE(test_ilbm_camg_chunk_too_small)
+{
+    // A CAMG chunk that declares fewer than four bytes must not read past the end of the input.
+    Array<u8, 48> const data {
+        'F', 'O', 'R', 'M', 0x00, 0x00, 0x00, 0x28, // FORM, size 40
+        'I', 'L', 'B', 'M',
+        'B', 'M', 'H', 'D', 0x00, 0x00, 0x00, 0x14, // BMHD, size 20
+        0x00, 0x01, 0x00, 0x01,                     // width 1, height 1
+        0x00, 0x00, 0x00, 0x00,                     // x 0, y 0
+        0x01, 0x00, 0x00, 0x00,                     // planes 1, mask 0, compression 0, pad 0
+        0x00, 0x00, 0x00, 0x00,                     // transparent color 0, x/y aspect 0
+        0x00, 0x00, 0x00, 0x00,                     // page width/height 0
+        'C', 'A', 'M', 'G', 0x00, 0x00, 0x00, 0x00, // CAMG, size 0, last chunk in the file
+    };
+    auto buffer = TRY_OR_FAIL(ByteBuffer::copy(data));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::ILBMImageDecoderPlugin::create(buffer.bytes()));
+    EXPECT(plugin_decoder->frame(0).is_error());
 }
 
 TEST_CASE(test_ilbm_uncompressed)
