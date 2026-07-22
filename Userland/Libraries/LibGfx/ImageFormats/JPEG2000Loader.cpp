@@ -2061,40 +2061,38 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
         int h = output.size.height();
         VERIFY(w * h == static_cast<int>(input.size()));
 
+        // E.1 Inverse quantization procedure
+        // The coefficients store qbar_b.
+
+        float step_size = 1.0f;
+        if (quantization_parameters.quantization_style != QuantizationDefault::QuantizationStyle::NoQuantization) {
+            // E.1.1 Irreversible transformation
+            auto R_I = context.siz.components[component_index].bit_depth();
+
+            // Table E.1 – Sub-band gains
+            auto log_2_gain_b = sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass ? 0 : (sub_band_type == JPEG2000::SubBand::HorizontalHighpassVerticalLowpass || sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalHighpass ? 1 : 2);
+            auto R_b = R_I + log_2_gain_b; // (E-4)
+
+            u16 mantissa;
+            if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
+                // (E-5)
+                mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[0].mantissa;
+            } else {
+                if (r == 0)
+                    mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[0].mantissa;
+                else
+                    mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[3 * (r - 1) + (int)sub_band_type].mantissa;
+            }
+
+            // (E-3)
+            auto exponent = get_exponent(quantization_parameters, sub_band_type, r, N_L);
+            step_size = powf(2.0f, R_b - exponent) * (1.0f + mantissa / powf(2.0f, 11.0f));
+        }
+
+        // (E-6), with r chosen as 0 (see NOTE below (E-6)).
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
-                float value = input[y * w + x];
-
-                // E.1 Inverse quantization procedure
-                // The coefficients store qbar_b.
-                if (quantization_parameters.quantization_style != QuantizationDefault::QuantizationStyle::NoQuantization) {
-                    // E.1.1 Irreversible transformation
-                    auto R_I = context.siz.components[component_index].bit_depth();
-
-                    // Table E.1 – Sub-band gains
-                    auto log_2_gain_b = sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass ? 0 : (sub_band_type == JPEG2000::SubBand::HorizontalHighpassVerticalLowpass || sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalHighpass ? 1 : 2);
-                    auto R_b = R_I + log_2_gain_b; // (E-4)
-
-                    u16 mantissa;
-                    if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
-                        // (E-5)
-                        mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[0].mantissa;
-                    } else {
-                        if (r == 0)
-                            mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[0].mantissa;
-                        else
-                            mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[3 * (r - 1) + (int)sub_band_type].mantissa;
-                    }
-
-                    // (E-3)
-                    auto exponent = get_exponent(quantization_parameters, sub_band_type, r, N_L);
-                    float step_size = powf(2.0f, R_b - exponent) * (1.0f + mantissa / powf(2.0f, 11.0f));
-
-                    // (E-6), with r chosen as 0 (see NOTE below (E-6)).
-                    value *= step_size;
-                }
-
-                output.data[y * output.pitch + x] = value;
+                output.data[y * output.pitch + x] = input[y * w + x] * step_size;
             }
         }
     };
