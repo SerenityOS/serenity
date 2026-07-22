@@ -276,10 +276,8 @@ ErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPtr<E
                 encoding->set(0, ".notdef");
                 continue;
             }
-            if (i - 1 >= encoding_codes.size() || i - 1 >= charset_names.size()) {
-                dbgln("CFF: No encoding for glyph {} onwards, encoding_codes size {} charset_names size {}", i, encoding_codes.size(), charset_names.size());
+            if (i - 1 >= encoding_codes.size() || i - 1 >= charset_names.size())
                 break;
-            }
             auto code = encoding_codes[i - 1];
             auto char_name = charset_names[i - 1];
             encoding->set(code, char_name);
