@@ -56,16 +56,16 @@ void TarFileHeader::set_filename_and_prefix(StringView filename)
     VERIFY(filename.length() <= sizeof(m_filename) + sizeof(m_prefix));
 
     if (filename.length() <= sizeof(m_filename)) {
-        set_prefix(""sv);
-        set_filename(filename);
+        MUST(set_prefix(""sv));
+        MUST(set_filename(filename));
         return;
     }
 
     Optional<size_t> slash = filename.find('/', filename.length() - sizeof(m_filename));
 
     VERIFY(slash.has_value());
-    set_prefix(filename.substring_view(0, slash.value() + 1));
-    set_filename(filename.substring_view(slash.value() + 1));
+    MUST(set_prefix(filename.substring_view(0, slash.value() + 1)));
+    MUST(set_filename(filename.substring_view(slash.value() + 1)));
 }
 
 }
