@@ -6,6 +6,7 @@
 
 #import "View.h"
 
+#include <LibGfx/Rect.h>
 #include <LibMedia/PlaybackManager.h>
 
 @interface View ()
@@ -15,6 +16,16 @@
     NSString* _errorMessage;
 }
 @end
+
+static Gfx::FloatRect gfx_rect_from_ns_rect(NSRect rect)
+{
+    return Gfx::FloatRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+}
+
+static NSRect ns_rect_from_gfx_rect(Gfx::FloatRect rect)
+{
+    return NSMakeRect(rect.x(), rect.y(), rect.width(), rect.height());
+}
 
 static NSBitmapImageRep* ns_from_gfx(RefPtr<Gfx::Bitmap> bitmap_p)
 {
@@ -106,22 +117,9 @@ static NSBitmapImageRep* ns_from_gfx(RefPtr<Gfx::Bitmap> bitmap_p)
     if (!_currentFrame)
         return;
 
-    NSSize view_size = self.bounds.size;
     NSSize image_size = [_currentFrame size];
-
-    CGFloat view_aspect = view_size.width / view_size.height;
-    CGFloat image_aspect = image_size.width / image_size.height;
-
-    NSRect destination_rect;
-    if (image_aspect > view_aspect) {
-        CGFloat height = view_size.width / image_aspect;
-        destination_rect = NSMakeRect(0, (view_size.height - height) / 2, view_size.width, height);
-    } else {
-        CGFloat width = view_size.height * image_aspect;
-        destination_rect = NSMakeRect((view_size.width - width) / 2, 0, width, view_size.height);
-    }
-
-    [_currentFrame drawInRect:destination_rect];
+    auto image_rect = gfx_rect_from_ns_rect(NSMakeRect(0, 0, image_size.width, image_size.height));
+    [_currentFrame drawInRect:ns_rect_from_gfx_rect(image_rect.scaled_to_fit_within(gfx_rect_from_ns_rect(self.bounds)))];
 }
 
 @end

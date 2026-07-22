@@ -864,10 +864,7 @@ void Compositor::update_wallpaper_bitmap()
 
             if (m_wallpaper_mode == WallpaperMode::Fill) {
                 auto wallpaper_rect = m_wallpaper->rect();
-                auto scale_x = static_cast<float>(screen.width()) / wallpaper_rect.width();
-                auto scale_y = static_cast<float>(screen.height()) / wallpaper_rect.height();
-                auto new_size = (wallpaper_rect.size().to_type<float>() * max(scale_x, scale_y)).to_type<int>();
-                auto stretched_rect = Gfx::IntRect({}, new_size).centered_within(screen.rect());
+                auto stretched_rect = wallpaper_rect.scaled_to_cover(screen.rect());
                 painter.draw_scaled_bitmap(stretched_rect, *m_wallpaper, wallpaper_rect, 1.0f, Gfx::ScalingMode::BilinearBlend);
             }
 

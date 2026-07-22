@@ -728,8 +728,7 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 
     auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, thumbnail_size));
 
-    double scale = min(thumbnail_size.width() / (double)bitmap->width(), thumbnail_size.height() / (double)bitmap->height());
-    auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
+    auto destination = bitmap->rect().scaled_to_fit_within(thumbnail->rect());
 
     Painter painter(thumbnail);
     painter.draw_scaled_bitmap(destination, *bitmap, bitmap->rect(), 1.f, Gfx::ScalingMode::BoxSampling);
