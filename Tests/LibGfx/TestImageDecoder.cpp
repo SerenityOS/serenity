@@ -406,6 +406,8 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-32bit-arithint.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-big-segmentid.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-context-reuse.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-context-reuse-refagg.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-context-reuse-huffman-refagg.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-empty.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-global.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-manyrefs.jbig2"sv),
