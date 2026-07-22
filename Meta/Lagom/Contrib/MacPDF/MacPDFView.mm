@@ -7,6 +7,7 @@
 #import "MacPDFView.h"
 
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Rect.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Renderer.h>
 
@@ -19,6 +20,16 @@
     PDF::RenderingPreferences _preferences;
 }
 @end
+
+static Gfx::FloatRect gfx_rect_from_ns_rect(NSRect rect)
+{
+    return Gfx::FloatRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+}
+
+static NSRect ns_rect_from_gfx_rect(Gfx::FloatRect rect)
+{
+    return NSMakeRect(rect.x(), rect.y(), rect.width(), rect.height());
+}
 
 static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document, int page_index, NSSize size, PDF::RenderingPreferences const& preferences)
 {
@@ -121,12 +132,26 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     [self setNeedsDisplay:YES];
 }
 
-- (void)ensureCachedBitmapIsUpToDate
+- (NSRect)pageRect:(PDF::Page const&)page
+{
+    Gfx::FloatSize page_size { page.media_box.width(), page.media_box.height() };
+    if (int rotation_count = (page.rotate / 90) % 4; rotation_count % 2 == 1)
+        page_size = Gfx::FloatSize { page_size.height(), page_size.width() };
+
+    auto page_rect = Gfx::FloatRect { {}, page_size };
+    auto safe_area_rect = gfx_rect_from_ns_rect(self.safeAreaRect);
+    auto scaled_page_rect = page_rect.scaled_to_fit_within(safe_area_rect);
+    return ns_rect_from_gfx_rect(scaled_page_rect);
+}
+
+- (void)ensureCachedBitmapIsUpToDateForSize:(NSSize)size
 {
     if (!_doc || _doc->get_page_count() == 0)
         return;
 
-    NSSize pixel_size = [self convertSizeToBacking:self.safeAreaRect.size];
+    NSSize pixel_size = [self convertSizeToBacking:size];
+    if (pixel_size.width < 1 || pixel_size.height < 1)
+        return;
     if (NSEqualSizes([_cachedBitmap size], pixel_size))
         return;
 
@@ -136,8 +161,24 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 - (void)drawRect:(NSRect)rect
 {
-    [self ensureCachedBitmapIsUpToDate];
-    [_cachedBitmap drawInRect:self.safeAreaRect];
+    if (self.window.styleMask & NSWindowStyleMaskFullScreen)
+        [[NSColor blackColor] setFill];
+    else
+        [[NSColor underPageBackgroundColor] setFill];
+    NSRectFill(rect);
+
+    if (!_doc || _doc->get_page_count() == 0)
+        return;
+
+    auto page_or_error = _doc->get_page(_page_index);
+    if (page_or_error.is_error())
+        return;
+
+    auto page = page_or_error.release_value();
+    NSRect page_rect = [self pageRect:page];
+    page_rect = NSIntegralRect(page_rect);
+    [self ensureCachedBitmapIsUpToDateForSize:page_rect.size];
+    [_cachedBitmap drawInRect:page_rect];
 }
 
 #pragma mark - Keyboard handling
