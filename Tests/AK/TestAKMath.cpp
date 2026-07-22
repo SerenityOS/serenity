@@ -39,17 +39,134 @@ TEST_CASE(pow)
     EXPECT_EQ(AK::pow(1., -9223372036854777856.0), 1.);
 }
 
+TEST_CASE(ceil)
+{
+    EXPECT_EQ(AK::ceil(0.5f), 1);
+    EXPECT_EQ(AK::ceil(0.5), 1);
+    EXPECT_EQ(AK::ceil(0.5L), 1);
+    EXPECT_EQ(AK::ceil(-0.5f), -0);
+    EXPECT_EQ(AK::ceil(-0.5), -0);
+    EXPECT_EQ(AK::ceil(-0.5L), -0);
+
+    EXPECT_EQ(FloatExtractor<float>::from_float(AK::ceil(-0.5f)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<double>::from_float(AK::ceil(-0.5)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<long double>::from_float(AK::ceil(-0.5L)).sign, 1u);
+
+    EXPECT_EQ(AK::ceil(1.5f), 2);
+    EXPECT_EQ(AK::ceil(1.5), 2);
+    EXPECT_EQ(AK::ceil(1.5L), 2);
+    EXPECT_EQ(AK::ceil(-1.5f), -1);
+    EXPECT_EQ(AK::ceil(-1.5), -1);
+    EXPECT_EQ(AK::ceil(-1.5L), -1);
+
+    EXPECT_EQ(AK::ceil((float)FloatExtractor<float>::mantissa_max), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::ceil((float)FloatExtractor<float>::mantissa_max + 0.5f), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::ceil((float)FloatExtractor<float>::mantissa_max + 1), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::ceil((float)FloatExtractor<float>::mantissa_max - 0.5f), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::ceil((float)FloatExtractor<float>::mantissa_max - 1), FloatExtractor<float>::mantissa_max - 1);
+}
+TEST_CASE(floor)
+{
+    EXPECT_EQ(AK::floor(0.5f), 0);
+    EXPECT_EQ(AK::floor(0.5), 0);
+    EXPECT_EQ(AK::floor(0.5L), 0);
+    EXPECT_EQ(AK::floor(-0.5f), -1);
+    EXPECT_EQ(AK::floor(-0.5), -1);
+    EXPECT_EQ(AK::floor(-0.5L), -1);
+
+    EXPECT_EQ(AK::floor(1.5f), 1);
+    EXPECT_EQ(AK::floor(1.5), 1);
+    EXPECT_EQ(AK::floor(1.5L), 1);
+    EXPECT_EQ(AK::floor(-1.5f), -2);
+    EXPECT_EQ(AK::floor(-1.5), -2);
+    EXPECT_EQ(AK::floor(-1.5L), -2);
+
+    EXPECT_EQ(AK::floor((float)FloatExtractor<float>::mantissa_max), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::floor((float)FloatExtractor<float>::mantissa_max + 0.5f), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::floor((float)FloatExtractor<float>::mantissa_max + 1), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::floor((float)FloatExtractor<float>::mantissa_max - 0.5f), FloatExtractor<float>::mantissa_max - 1);
+    EXPECT_EQ(AK::floor((float)FloatExtractor<float>::mantissa_max - 1), FloatExtractor<float>::mantissa_max - 1);
+}
+
 TEST_CASE(rint)
 {
+    EXPECT_EQ(AK::rint(0.5f), 0);
     EXPECT_EQ(AK::rint(0.5), 0);
-    EXPECT_EQ(AK::rint(0.2), 0);
-    EXPECT_EQ(AK::rint(1.0), 1);
+    EXPECT_EQ(AK::rint(0.5L), 0);
+    EXPECT_EQ(AK::rint(-0.5f), -0);
+    EXPECT_EQ(AK::rint(-0.5), -0);
+    EXPECT_EQ(AK::rint(-0.5L), -0);
+
+    EXPECT_EQ(FloatExtractor<float>::from_float(AK::rint(-0.5f)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<double>::from_float(AK::rint(-0.5)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<long double>::from_float(AK::rint(-0.5L)).sign, 1u);
+
+    EXPECT_EQ(AK::rint(1.5f), 2);
     EXPECT_EQ(AK::rint(1.5), 2);
-    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max), FloatExtractor<float>::mantissa_max);
-    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max + 1), FloatExtractor<float>::mantissa_max + 1);
-    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max - 1), FloatExtractor<float>::mantissa_max - 1);
-    EXPECT_EQ(AK::rint(-0.5), 0);
+    EXPECT_EQ(AK::rint(1.5L), 2);
+    EXPECT_EQ(AK::rint(-1.5f), -2);
     EXPECT_EQ(AK::rint(-1.5), -2);
+    EXPECT_EQ(AK::rint(-1.5L), -2);
+
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max + 0.5f), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max + 1), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max - 0.5f), FloatExtractor<float>::mantissa_max - 1);
+    EXPECT_EQ(AK::rint((float)FloatExtractor<float>::mantissa_max - 1), FloatExtractor<float>::mantissa_max - 1);
+}
+
+TEST_CASE(round)
+{
+    EXPECT_EQ(AK::round(0.5f), 1);
+    EXPECT_EQ(AK::round(0.5), 1);
+    EXPECT_EQ(AK::round(0.5L), 1);
+    EXPECT_EQ(AK::round(-0.5f), -1);
+    EXPECT_EQ(AK::round(-0.5), -1);
+    EXPECT_EQ(AK::round(-0.5L), -1);
+
+    EXPECT_EQ(FloatExtractor<float>::from_float(AK::round(-0.5f)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<double>::from_float(AK::round(-0.5)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<long double>::from_float(AK::round(-0.5L)).sign, 1u);
+
+    EXPECT_EQ(AK::round(1.5f), 2);
+    EXPECT_EQ(AK::round(1.5), 2);
+    EXPECT_EQ(AK::round(1.5L), 2);
+    EXPECT_EQ(AK::round(-1.5f), -2);
+    EXPECT_EQ(AK::round(-1.5), -2);
+    EXPECT_EQ(AK::round(-1.5L), -2);
+
+    EXPECT_EQ(AK::round((float)FloatExtractor<float>::mantissa_max), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::round((float)FloatExtractor<float>::mantissa_max + 0.5f), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::round((float)FloatExtractor<float>::mantissa_max + 1), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::round((float)FloatExtractor<float>::mantissa_max - 0.5f), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::round((float)FloatExtractor<float>::mantissa_max - 1), FloatExtractor<float>::mantissa_max - 1);
+}
+
+TEST_CASE(trunc)
+{
+    EXPECT_EQ(AK::trunc(0.5f), 0);
+    EXPECT_EQ(AK::trunc(0.5), 0);
+    EXPECT_EQ(AK::trunc(0.5L), 0);
+    EXPECT_EQ(AK::trunc(-0.5f), -0);
+    EXPECT_EQ(AK::trunc(-0.5), -0);
+    EXPECT_EQ(AK::trunc(-0.5L), -0);
+
+    EXPECT_EQ(FloatExtractor<float>::from_float(AK::trunc(-0.5f)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<double>::from_float(AK::trunc(-0.5)).sign, 1u);
+    EXPECT_EQ(FloatExtractor<long double>::from_float(AK::trunc(-0.5L)).sign, 1u);
+
+    EXPECT_EQ(AK::trunc(1.5f), 1);
+    EXPECT_EQ(AK::trunc(1.5), 1);
+    EXPECT_EQ(AK::trunc(1.5L), 1);
+    EXPECT_EQ(AK::trunc(-1.5f), -1);
+    EXPECT_EQ(AK::trunc(-1.5), -1);
+    EXPECT_EQ(AK::trunc(-1.5L), -1);
+
+    EXPECT_EQ(AK::trunc((float)FloatExtractor<float>::mantissa_max), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::trunc((float)FloatExtractor<float>::mantissa_max + 0.5f), FloatExtractor<float>::mantissa_max);
+    EXPECT_EQ(AK::trunc((float)FloatExtractor<float>::mantissa_max + 1), FloatExtractor<float>::mantissa_max + 1);
+    EXPECT_EQ(AK::trunc((float)FloatExtractor<float>::mantissa_max - 0.5f), FloatExtractor<float>::mantissa_max - 1);
+    EXPECT_EQ(AK::trunc((float)FloatExtractor<float>::mantissa_max - 1), FloatExtractor<float>::mantissa_max - 1);
 }
 
 TEST_CASE(wrap_to_range)
