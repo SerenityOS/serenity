@@ -115,19 +115,8 @@ void PresenterWidget::resize_web_view(Gfx::IntSize const& size)
     if (!m_current_presentation)
         return;
 
-    auto normative_size = m_current_presentation->normative_size().to_type<float>();
-    float widget_ratio = static_cast<float>(size.width()) / static_cast<float>(size.height());
-    float wh_ratio = normative_size.width() / normative_size.height();
-
-    Gfx::IntRect rect;
-    if (widget_ratio >= wh_ratio) {
-        rect.set_width(static_cast<int>(ceilf(static_cast<float>(size.height()) * wh_ratio)));
-        rect.set_height(size.height());
-    } else {
-        float hw_ratio = normative_size.height() / normative_size.width();
-        rect.set_width(size.width());
-        rect.set_height(static_cast<int>(ceilf(static_cast<float>(size.width()) * hw_ratio)));
-    }
+    auto normative_rect = Gfx::IntRect { {}, m_current_presentation->normative_size() };
+    auto rect = normative_rect.scaled_to_fit_within({ {}, size });
     m_web_view->set_relative_rect(rect.centered_within(this->rect()));
 }
 

@@ -24,15 +24,7 @@ void AlbumCoverVisualizationWidget::paint_event(GUI::PaintEvent& event)
 
     auto const& cover = m_file_cover ? m_file_cover : m_album_cover;
     if (cover) {
-        auto album_cover_rect = cover->rect();
-
-        auto height_ratio = frame_inner_rect().height() / (float)album_cover_rect.height();
-        auto width_ratio = frame_inner_rect().width() / (float)album_cover_rect.width();
-        auto scale = min(height_ratio, width_ratio);
-
-        Gfx::IntRect fitted_rect = { 0, 0, (int)(album_cover_rect.width() * scale), (int)(album_cover_rect.height() * scale) };
-        fitted_rect.center_within(frame_inner_rect());
-
+        auto fitted_rect = cover->rect().scaled_to_fit_within(frame_inner_rect());
         painter.draw_scaled_bitmap(fitted_rect, *cover, cover->rect(), 1.0f);
     } else {
         if (!m_serenity_bg)
