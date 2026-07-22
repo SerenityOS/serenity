@@ -10,6 +10,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+#define PR_SET_PDEATHSIG 1
+
 __BEGIN_DECLS
 
 int prctl(int option, ...);
