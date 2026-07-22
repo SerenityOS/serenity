@@ -535,7 +535,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath tty sigaction map_fixed"));
+    TRY(Core::System::pledge("stdio rpath wpath cpath fattr tty sigaction map_fixed"));
 
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
