@@ -8,6 +8,10 @@ set(SOURCES
     DirIterator.cpp
     Environment.cpp
     File.cpp
+    MappedFile.cpp
+    Resource.cpp
+    ResourceImplementation.cpp
+    ResourceImplementationFile.cpp
     SessionManagement.cpp
     StandardPaths.cpp
     System.cpp
@@ -50,14 +54,10 @@ set(SOURCES
     AnonymousBuffer.cpp
     Command.cpp
     LockFile.cpp
-    MappedFile.cpp
     MimeData.cpp
     NetworkJob.cpp
     Process.cpp
     ProcessStatisticsReader.cpp
-    Resource.cpp
-    ResourceImplementation.cpp
-    ResourceImplementationFile.cpp
     SecretString.cpp
     Socket.cpp
     SOCKSProxyClient.cpp
