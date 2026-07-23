@@ -18,7 +18,7 @@
     @GUI::Button {
         name: "path_picker_button"
         fixed_width: 22
-        icon: "/res/icons/16x16/open.png"
+        icon: "icons/16x16/open.png"
         tooltip: "Choose..."
     }
 }

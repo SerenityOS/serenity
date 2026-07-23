@@ -91,13 +91,13 @@
             @GUI::Button {
                 name: "help_button"
                 text: "Help Contents"
-                icon_from_path: "/res/icons/16x16/book-open.png"
+                icon_from_resource: "icons/16x16/book-open.png"
             }
 
             @GUI::Button {
                 name: "next_button"
                 text: "Next Tip"
-                icon_from_path: "/res/icons/16x16/go-forward.png"
+                icon_from_resource: "icons/16x16/go-forward.png"
             }
 
             @GUI::Layout::Spacer {}

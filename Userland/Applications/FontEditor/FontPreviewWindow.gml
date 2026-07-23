@@ -26,7 +26,7 @@
 
         @GUI::Button {
             name: "reload_button"
-            icon: "/res/icons/16x16/reload.png"
+            icon: "icons/16x16/reload.png"
             fixed_width: 22
         }
     }
