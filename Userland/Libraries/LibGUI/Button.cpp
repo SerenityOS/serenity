@@ -42,7 +42,7 @@ Button::Button(String text)
         { Gfx::ButtonStyle::Normal, "Normal" },
         { Gfx::ButtonStyle::Coolbar, "Coolbar" });
 
-    REGISTER_WRITE_ONLY_STRING_PROPERTY("icon", set_icon_from_path);
+    REGISTER_WRITE_ONLY_STRING_PROPERTY("icon", set_icon_from_resource);
     REGISTER_BOOL_PROPERTY("default", is_default, set_default);
 }
 
@@ -186,11 +186,12 @@ void Button::set_icon(RefPtr<Gfx::Bitmap const> icon)
     update();
 }
 
-void Button::set_icon_from_path(ByteString const& path)
+void Button::set_icon_from_resource(ByteString const& name)
 {
-    auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
+    auto const uri = ByteString::formatted("resource://{}", name);
+    auto maybe_bitmap = Gfx::Bitmap::load_from_uri(uri);
     if (maybe_bitmap.is_error()) {
-        dbgln("Unable to load bitmap `{}` for button icon", path);
+        dbgln("Unable to load bitmap `{}` for button icon", uri);
         return;
     }
     set_icon(maybe_bitmap.release_value());
