@@ -5,6 +5,7 @@
  */
 
 #include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
 #include <LibCore/File.h>
 #include <LibTest/TestCase.h>
 #include <netinet/in.h>
@@ -128,16 +129,28 @@ TEST_CASE(tcp_bind_connect)
 
     // Hacky check to make sure there are no registered TCP sockets, if the sockets were closed properly, there should
     // be none left, but if the early-bind caused a desync in sockets_by_tuple a UAF'd socket will be left in there.
-    // NOTE: We have to loop since the TimedWait stage during socket close means the socket might not close immediately
-    // after our close(2) call. This also means that on failure we will loop here forever.
-    while (true) {
+    // NOTE: We have to give it multiple tries since the TimedWait stage during socket close means the socket might not
+    // close immediately after our close(2) call.
+    static constexpr u32 max_tries = 2000;
+    for (u32 i = 0; i < max_tries; ++i) {
         auto file = MUST(Core::File::open("/sys/kernel/net/tcp"sv, Core::File::OpenMode::Read));
         auto file_contents = MUST(file->read_until_eof());
         auto json = MUST(JsonValue::from_string(file_contents));
         EXPECT(json.is_array());
-        if (json.as_array().size() == 0)
-            return;
-        sched_yield();
+        u32 leaked_sockets = 0;
+        for (auto const& entry : json.as_array().values()) {
+            auto const& object = entry.as_object();
+            if (object.get_i64("origin_pid"sv) == getpid())
+                leaked_sockets++;
+        }
+
+        if (leaked_sockets == 0)
+            break;
+
+        if (i == max_tries - 1)
+            EXPECT_EQ(leaked_sockets, 0u);
+        else
+            sched_yield();
     }
 }
 
