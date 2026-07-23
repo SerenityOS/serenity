@@ -16,6 +16,10 @@
 #    include <string.h>
 #endif
 
+#ifndef ESUCCESS
+#    define ESUCCESS 0
+#endif
+
 namespace AK {
 
 class [[nodiscard]] Error {

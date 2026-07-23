@@ -32,6 +32,7 @@ public:
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(ByteString const& filename, AllowWriting = AllowWriting::No);
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(ByteString const& filename, int fd);
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(ByteString const& filename, NonnullOwnPtr<Core::File>);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(NonnullRefPtr<Resource>);
     ~ConfigFile();
 
     bool has_group(ByteString const&) const;
@@ -81,11 +82,13 @@ public:
 
 private:
     ConfigFile(ByteString const& filename, OwnPtr<InputBufferedFile> open_file);
+    explicit ConfigFile(NonnullRefPtr<Resource> resource);
 
     ErrorOr<void> reparse();
 
     ByteString m_filename;
     OwnPtr<InputBufferedFile> m_file;
+    RefPtr<Resource> m_resource { nullptr };
     HashMap<ByteString, HashMap<ByteString, ByteString>> m_groups;
     bool m_dirty { false };
 };

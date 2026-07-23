@@ -63,7 +63,7 @@ ImageProcessor* ImageProcessor::the()
 ErrorOr<void> ImageProcessor::enqueue_command(NonnullRefPtr<ImageProcessingCommand> command)
 {
     if (auto queue_status = m_command_queue.enqueue(move(command)); queue_status.is_error())
-        return ENOSPC;
+        return Error::from_errno(ENOSPC);
 
     if (!m_processor_thread->is_started()) {
         m_processor_thread->start();

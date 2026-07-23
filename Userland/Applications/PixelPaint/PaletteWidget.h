@@ -31,7 +31,7 @@ public:
 
     Vector<Color> colors();
 
-    static ErrorOr<Vector<Color>> load_palette_file(NonnullOwnPtr<Core::File>);
+    static ErrorOr<Vector<Color>> load_palette_file(NonnullOwnPtr<SeekableStream>);
     static ErrorOr<Vector<Color>> load_palette_path(ByteString const&);
     static ErrorOr<void> save_palette_file(Vector<Color>, NonnullOwnPtr<Core::File>);
 
