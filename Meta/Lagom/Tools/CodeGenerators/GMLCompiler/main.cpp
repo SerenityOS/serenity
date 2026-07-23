@@ -75,7 +75,7 @@ static bool takes_byte_string(StringView property)
 {
     static HashTable<StringView> byte_string_properties;
     if (byte_string_properties.is_empty()) {
-        byte_string_properties.set("icon_from_path"sv);
+        byte_string_properties.set("icon_from_resource"sv);
         byte_string_properties.set("name"sv);
     }
     return byte_string_properties.contains(property);

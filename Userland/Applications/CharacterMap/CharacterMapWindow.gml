@@ -52,7 +52,7 @@
 
                 @GUI::Button {
                     name: "copy_output_button"
-                    icon: "/res/icons/16x16/edit-copy.png"
+                    icon: "icons/16x16/edit-copy.png"
                     fixed_width: 22
                 }
             }
