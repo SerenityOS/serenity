@@ -376,16 +376,16 @@ long double truncl(long double x) NOEXCEPT
         // This is 1.6 times faster than the implementation using the "internal_to_integer"
         // helper (on x86_64)
         // https://quick-bench.com/q/xBmxuY8am9qibSYVna90Y6PIvqA
+        long double res;
         u64 temp;
         asm(
             "fisttpq %[temp]\n"
             "fildq %[temp]"
-            : "+t"(x)
-            : [temp] "m"(temp));
-        return x;
+            : "=t"(res)
+            : "0"(x), [temp] "m"(temp));
+        return AK::copysign(res, x);
     }
 #endif
-
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
@@ -393,13 +393,14 @@ double trunc(double x) NOEXCEPT
 {
 #if ARCH(X86_64)
     if (fabs(x) < LONG_LONG_MAX) {
+        double res;
         u64 temp;
         asm(
             "fisttpq %[temp]\n"
             "fildq %[temp]"
-            : "+t"(x)
-            : [temp] "m"(temp));
-        return x;
+            : "=t"(res)
+            : "0"(x), [temp] "m"(temp));
+        return AK::copysign(res, x);
     }
 #elif ARCH(RISCV64)
     if (fabs(x) < LONG_LONG_MAX) {
@@ -407,7 +408,7 @@ double trunc(double x) NOEXCEPT
         asm("fcvt.l.d %0, %1, rtz"
             : "=r"(output)
             : "f"(x));
-        return static_cast<double>(output);
+        return AK::copysign(static_cast<double>(output), x);
     }
 #endif
 
@@ -418,13 +419,14 @@ float truncf(float x) NOEXCEPT
 {
 #if ARCH(X86_64)
     if (fabsf(x) < LONG_LONG_MAX) {
+        float res;
         u64 temp;
         asm(
             "fisttpq %[temp]\n"
             "fildq %[temp]"
-            : "+t"(x)
-            : [temp] "m"(temp));
-        return x;
+            : "=t"(res)
+            : "0"(x), [temp] "m"(temp));
+        return AK::copysign(res, x);
     }
 #elif ARCH(RISCV64)
     if (fabsf(x) < LONG_LONG_MAX) {
@@ -432,7 +434,7 @@ float truncf(float x) NOEXCEPT
         asm("fcvt.l.s %0, %1, rtz"
             : "=r"(output)
             : "f"(x));
-        return static_cast<float>(output);
+        return AK::copysign(static_cast<float>(output), x);
     }
 #endif
 
