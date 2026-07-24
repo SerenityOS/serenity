@@ -13,6 +13,7 @@
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
 #include <LibGfx/ImageFormats/JPEG2000BitplaneDecoding.h>
 #include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
+#include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransformReference.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000ProgressionIterators.h>
 #include <LibGfx/ImageFormats/JPEG2000TagTree.h>
@@ -2189,6 +2190,13 @@ static ErrorOr<void> run_inverse_discrete_wavelet_transform(JPEG2000LoadingConte
             }
 
             auto output = TRY(JPEG2000::IDWT(input));
+
+#if JPEG2000_DEBUG
+            auto reference_output = TRY(JPEG2000::Reference::IDWT(input));
+            if (output != reference_output)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: IDWT output does not match reference implementation");
+#endif
+
             VERIFY(component.rect == output.rect);
             component.samples = move(output.data);
 

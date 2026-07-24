@@ -1,60 +1,17 @@
 /*
- * Copyright (c) 2025-2026, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Enumerate.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Vector.h>
-#include <LibGfx/ImageFormats/JPEG2000Span2D.h>
-#include <LibGfx/Rect.h>
+#include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
 
-// Optimized IDWT implementation.
-// A version written closer to the spec text is in JPEG2000InverseDiscreteWaveletTransformReference.h.
-// If JPEG2000_DEBUG is defined, we run both and check that they produce the same results.
+// Reference implementation written to be close to the spec.
+// Used to verify the optimized version when JPEG2000_DEBUG is defined.
 
-namespace Gfx::JPEG2000 {
-
-enum class Transformation {
-    Irreversible_9_7_Filter,
-    Reversible_5_3_Filter,
-};
-
-struct IDWTSubBand {
-    IntRect rect;
-    Span2D<float const> data;
-};
-
-struct IDWTDecomposition {
-    IntRect ll_rect;
-    IDWTSubBand hl;
-    IDWTSubBand lh;
-    IDWTSubBand hh;
-};
-
-struct IDWTInput {
-    Transformation transformation;
-    IDWTSubBand LL;
-    Vector<IDWTDecomposition> decompositions;
-};
-
-struct IDWTOutput {
-    // Will be identical to IDWTInput::decomposition[0].ll_rect, or IDWTInput::nLL_rect if there are no decompositions.
-    IntRect rect;
-    Vector<float> data;
-
-    bool operator==(IDWTOutput const& other) const = default;
-};
-
-struct IDWTInternalBuffers {
-    Vector<float> scanline_buffer;
-    Vector<float> scanline_buffer2;
-    int scanline_runway { 0 };
-    int scanline_start { 0 };
-};
+namespace Gfx::JPEG2000::Reference {
 
 // F.3 Inverse discrete wavelet transformation
 
@@ -88,7 +45,7 @@ inline ErrorOr<IDWTOutput> IDWT(IDWTInput const& input)
         VERIFY(decomposition.hl.rect.size() == decomposition.hl.data.size);
         VERIFY(decomposition.lh.rect.size() == decomposition.lh.data.size);
         VERIFY(decomposition.hh.rect.size() == decomposition.hh.data.size);
-        output = TRY(_2D_SR(input.transformation, move(output), decomposition));
+        output = TRY(Reference::_2D_SR(input.transformation, move(output), decomposition));
     }
 
     return output;
@@ -98,23 +55,17 @@ inline ErrorOr<IDWTOutput> IDWT(IDWTInput const& input)
 inline ErrorOr<IDWTOutput> _2D_SR(Transformation transformation, IDWTOutput ll, IDWTDecomposition const& decomposition)
 {
     // Figure F.6 – The 2D_SR procedure
-    auto a = TRY(_2D_INTERLEAVE(move(ll), decomposition));
+    auto a = TRY(Reference::_2D_INTERLEAVE(move(ll), decomposition));
     if (a.rect.is_empty())
         return a;
 
-    // Leave enough room for max expansion in _1D_EXTR (+ 8), and for a whole scanline before it (* 2).
-    // The latter is to make it valid to form a pointer offset by -i0 in _1D_FILTR.
-    // (The first of these two scanlines in each buffer is always empty and completely unused,
-    // but it's invalid to even form a pointer to before the buffer's start, even if we always offset
-    // it enough later on to make it valid again.)
+    // Leave enough room for max expansion in _1D_EXTR.
     IDWTInternalBuffers buffers;
-    buffers.scanline_runway = max(a.rect.left(), a.rect.top());
-    auto scanline_length = max(a.rect.width(), a.rect.height()) + 8;
-    buffers.scanline_buffer.resize(buffers.scanline_runway + scanline_length);
-    buffers.scanline_buffer2.resize(buffers.scanline_runway + scanline_length);
+    buffers.scanline_buffer.resize(max(a.rect.width(), a.rect.height()) + 8);
+    buffers.scanline_buffer2.resize(max(a.rect.width(), a.rect.height()) + 8);
 
-    a = TRY(HOR_SR(transformation, move(a), buffers));
-    return VER_SR(transformation, move(a), buffers);
+    a = TRY(Reference::HOR_SR(transformation, move(a), buffers));
+    return Reference::VER_SR(transformation, move(a), buffers);
 }
 
 // F.3.3 The 2D_INTERLEAVE procedure
@@ -208,7 +159,7 @@ inline ErrorOr<IDWTOutput> HOR_SR(Transformation transformation, IDWTOutput a, I
     int i0 = u0;
     int i1 = u1;
     for (int v = v0; v < v1; ++v)
-        _1D_SR(transformation, a, (v - v0) * a.rect.width(), i0, i1, 1, buffers);
+        Reference::_1D_SR(transformation, a, (v - v0) * a.rect.width(), i0, i1, 1, buffers);
 
     return a;
 }
@@ -225,7 +176,7 @@ inline ErrorOr<IDWTOutput> VER_SR(Transformation transformation, IDWTOutput a, I
     int i0 = v0;
     int i1 = v1;
     for (int u = u0; u < u1; ++u)
-        _1D_SR(transformation, a, (u - u0), i0, i1, a.rect.width(), buffers);
+        Reference::_1D_SR(transformation, a, (u - u0), i0, i1, a.rect.width(), buffers);
 
     return a;
 }
@@ -244,8 +195,8 @@ inline void _1D_SR(Transformation transformation, IDWTOutput& a, int start, int 
     }
 
     // Figure F.14 – The 1D_SR procedure
-    _1D_EXTR(transformation, a, start, i0, i1, delta, buffers);
-    _1D_FILTR(transformation, a, start, i0, i1, delta, buffers);
+    Reference::_1D_EXTR(transformation, a, start, i0, i1, delta, buffers);
+    Reference::_1D_FILTR(transformation, a, start, i0, i1, delta, buffers);
 }
 
 // F.3.7 The 1D_EXTR procedure
@@ -275,45 +226,32 @@ inline void _1D_EXTR(Transformation transformation, IDWTOutput& a, int start, in
         return i0 + min(mod(i - i0, 2 * (i1 - i0 - 1)), 2 * (i1 - i0 - 1) - mod(i - i0, 2 * (i1 - i0 - 1)));
     };
 
-    VERIFY(static_cast<int>(buffers.scanline_buffer.size()) >= buffers.scanline_runway + (i1 - i0) + 8);
-    float* dst = buffers.scanline_buffer.data() + buffers.scanline_runway;
+    for (int l = i0 - i_left, i = 0; l < i1 + i_right; ++l, ++i)
+        buffers.scanline_buffer[i] = a.data[start + (PSE(l, i0, i1) - i0) * delta];
 
-    VERIFY(start + (i1 - 1 - i0) * delta <= static_cast<int>(a.data.size()));
-    float const* src = a.data.data() + start;
-
-    // PSE is the identity function for i0 <= i < i1, so only call it on the edges.
-    int i = 0;
-    for (int l = i0 - i_left; l < i0; ++l, ++i)
-        dst[i] = src[(PSE(l, i0, i1) - i0) * delta];
-    for (int l = i0; l < i1; ++l, ++i)
-        dst[i] = src[(l - i0) * delta];
-    for (int l = i1; l < i1 + i_right; ++l, ++i)
-        dst[i] = src[(PSE(l, i0, i1) - i0) * delta];
-
-    buffers.scanline_start = buffers.scanline_runway + i_left;
+    buffers.scanline_start = i_left;
 }
 
 // F.3.8 The 1D_FILTR procedure
 inline void _1D_FILTR(Transformation transformation, IDWTOutput& a, int start, int i0, int i1, int delta, IDWTInternalBuffers& buffers)
 {
-    VERIFY(buffers.scanline_start >= i0);
-    VERIFY(static_cast<int>(buffers.scanline_buffer.size()) >= buffers.scanline_runway + (i1 - i0) + 8);
-    VERIFY(static_cast<int>(buffers.scanline_buffer2.size()) >= buffers.scanline_runway + (i1 - i0) + 8);
-    float const* y_ext = buffers.scanline_buffer.data() + (buffers.scanline_start - i0);
-    float* x = buffers.scanline_buffer2.data() + (buffers.scanline_start - i0);
+    auto y_ext = [&](int i) {
+        return buffers.scanline_buffer[i + buffers.scanline_start - i0];
+    };
 
-    int const N0 = floor_div(i0, 2);
-    int const N1 = floor_div(i1, 2);
+    auto x = [&](int i) -> float& {
+        return buffers.scanline_buffer2[i + buffers.scanline_start - i0];
+    };
 
     if (transformation == Transformation::Reversible_5_3_Filter) {
         // F.3.8.1 The 1D_FILTR_5-3R procedure
         // (F-5)
-        for (int n = N0; n < N1 + 1; ++n)
-            x[2 * n] = y_ext[2 * n] - floorf((y_ext[2 * n - 1] + y_ext[2 * n + 1] + 2) / 4.0f);
+        for (int n = floor_div(i0, 2); n < floor_div(i1, 2) + 1; ++n)
+            x(2 * n) = y_ext(2 * n) - floorf((y_ext(2 * n - 1) + y_ext(2 * n + 1) + 2) / 4.0f);
 
         // (F-6)
-        for (int n = N0; n < N1; ++n)
-            x[2 * n + 1] = y_ext[2 * n + 1] + floorf((x[2 * n] + x[2 * n + 2]) / 2.0f);
+        for (int n = floor_div(i0, 2); n < floor_div(i1, 2); ++n)
+            x(2 * n + 1) = y_ext(2 * n + 1) + floorf((x(2 * n) + x(2 * n + 2)) / 2.0f);
     } else {
         VERIFY(transformation == Transformation::Irreversible_9_7_Filter);
 
@@ -326,30 +264,28 @@ inline void _1D_FILTR(Transformation transformation, IDWTOutput& a, int start, i
 
         // F.3.8.2 The 1D_FILTR_9-7I procedure
         // "Firstly, step 1 is performed for all values of n such that..."
+        for (int n = floor_div(i0, 2) - 1; n < floor_div(i1, 2) + 2; ++n)
+            x(2 * n) = kappa * y_ext(2 * n); // [STEP1]
+
         // "and step 2 is performed for all values of n such that..."
-        // Steps 1 and 2 independently update even and odd samples, so do them in the same loop.
-        // Step 2 starts one sample earlier, do that one before the loop/
-        x[2 * (N0 - 2) + 1] = (1 / kappa) * y_ext[2 * (N0 - 2) + 1]; // [STEP2]
-        for (int n = N0 - 1; n < N1 + 2; ++n) {
-            x[2 * n] = kappa * y_ext[2 * n];               // [STEP1]
-            x[2 * n + 1] = (1 / kappa) * y_ext[2 * n + 1]; // [STEP2]
-        }
+        for (int n = floor_div(i0, 2) - 2; n < floor_div(i1, 2) + 2; ++n)
+            x(2 * n + 1) = (1 / kappa) * y_ext(2 * n + 1); // [STEP2]
 
-        for (int n = N0 - 1; n < N1 + 2; ++n)
-            x[2 * n] = x[2 * n] - delta * (x[2 * n - 1] + x[2 * n + 1]); // [STEP3]
+        for (int n = floor_div(i0, 2) - 1; n < floor_div(i1, 2) + 2; ++n)
+            x(2 * n) = x(2 * n) - delta * (x(2 * n - 1) + x(2 * n + 1)); // [STEP3]
 
-        for (int n = N0 - 1; n < N1 + 1; ++n)
-            x[2 * n + 1] = x[2 * n + 1] - gamma * (x[2 * n] + x[2 * n + 2]); // [STEP4]
+        for (int n = floor_div(i0, 2) - 1; n < floor_div(i1, 2) + 1; ++n)
+            x(2 * n + 1) = x(2 * n + 1) - gamma * (x(2 * n) + x(2 * n + 2)); // [STEP4]
 
-        for (int n = N0; n < N1 + 1; ++n)
-            x[2 * n] = x[2 * n] - beta * (x[2 * n - 1] + x[2 * n + 1]); // [STEP5]
+        for (int n = floor_div(i0, 2); n < floor_div(i1, 2) + 1; ++n)
+            x(2 * n) = x(2 * n) - beta * (x(2 * n - 1) + x(2 * n + 1)); // [STEP5]
 
-        for (int n = N0; n < N1; ++n)
-            x[2 * n + 1] = x[2 * n + 1] - alpha * (x[2 * n] + x[2 * n + 2]); // [STEP6]
+        for (int n = floor_div(i0, 2); n < floor_div(i1, 2); ++n)
+            x(2 * n + 1) = x(2 * n + 1) - alpha * (x(2 * n) + x(2 * n + 2)); // [STEP6]
     }
 
     for (int i = i0; i < i1; ++i)
-        a.data[start + (i - i0) * delta] = x[i];
+        a.data[start + (i - i0) * delta] = x(i);
 }
 
 }
