@@ -18,6 +18,7 @@
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000BitplaneDecoding.h>
 #include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
+#include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransformReference.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000ProgressionIterators.h>
 #include <LibGfx/ImageFormats/JPEG2000TagTree.h>
@@ -767,7 +768,7 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10_inverse_discrete_wavelet_transform)
     decomposition.hh = { { 0, 0, 0, 4 }, { {}, { 0, 4 }, 0 } };
     input.decompositions.append(decomposition);
 
-    auto output = TRY_OR_FAIL(Gfx::JPEG2000::IDWT(input));
+    auto output = TRY_OR_FAIL(Gfx::JPEG2000::Reference::IDWT(input));
 
     EXPECT_EQ(output.rect, Gfx::IntRect(0, 0, 1, 9));
     EXPECT_EQ(output.data.size(), 9u);
@@ -776,6 +777,9 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10_inverse_discrete_wavelet_transform)
     constexpr Array expected = to_array<float>({ 101, 103, 104, 105, 96, 97, 96, 102, 109 });
     for (int i = 0; i < 9; ++i)
         EXPECT_EQ(output.data[i] + 128, expected[i]);
+
+    auto optimized_output = TRY_OR_FAIL(Gfx::JPEG2000::IDWT(input));
+    EXPECT_EQ(optimized_output, output);
 }
 
 TEST_CASE(test_jpeg2000_spec_annex_j_10)

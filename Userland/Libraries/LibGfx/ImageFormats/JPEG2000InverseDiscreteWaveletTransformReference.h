@@ -1,59 +1,17 @@
 /*
- * Copyright (c) 2025-2026, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Enumerate.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Vector.h>
-#include <LibGfx/ImageFormats/JPEG2000Span2D.h>
-#include <LibGfx/Rect.h>
+#include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
 
-// Optimized IDWT implementation.
-// A version written closer to the spec text is in JPEG2000InverseDiscreteWaveletTransformReference.h.
-// If JPEG2000_DEBUG is defined, we run both and check that they produce the same results.
+// Reference implementation written to be close to the spec.
+// Used to verify the optimized version when JPEG2000_DEBUG is defined.
 
-namespace Gfx::JPEG2000 {
-
-enum class Transformation {
-    Irreversible_9_7_Filter,
-    Reversible_5_3_Filter,
-};
-
-struct IDWTSubBand {
-    IntRect rect;
-    Span2D<float const> data;
-};
-
-struct IDWTDecomposition {
-    IntRect ll_rect;
-    IDWTSubBand hl;
-    IDWTSubBand lh;
-    IDWTSubBand hh;
-};
-
-struct IDWTInput {
-    Transformation transformation;
-    IDWTSubBand LL;
-    Vector<IDWTDecomposition> decompositions;
-};
-
-struct IDWTOutput {
-    // Will be identical to IDWTInput::decomposition[0].ll_rect, or IDWTInput::nLL_rect if there are no decompositions.
-    IntRect rect;
-    Vector<float> data;
-
-    bool operator==(IDWTOutput const& other) const = default;
-};
-
-struct IDWTInternalBuffers {
-    Vector<float> scanline_buffer;
-    Vector<float> scanline_buffer2;
-    int scanline_start { 0 };
-};
+namespace Gfx::JPEG2000::Reference {
 
 // F.3 Inverse discrete wavelet transformation
 
@@ -87,7 +45,7 @@ inline ErrorOr<IDWTOutput> IDWT(IDWTInput const& input)
         VERIFY(decomposition.hl.rect.size() == decomposition.hl.data.size);
         VERIFY(decomposition.lh.rect.size() == decomposition.lh.data.size);
         VERIFY(decomposition.hh.rect.size() == decomposition.hh.data.size);
-        output = TRY(_2D_SR(input.transformation, move(output), decomposition));
+        output = TRY(Reference::_2D_SR(input.transformation, move(output), decomposition));
     }
 
     return output;
@@ -97,7 +55,7 @@ inline ErrorOr<IDWTOutput> IDWT(IDWTInput const& input)
 inline ErrorOr<IDWTOutput> _2D_SR(Transformation transformation, IDWTOutput ll, IDWTDecomposition const& decomposition)
 {
     // Figure F.6 – The 2D_SR procedure
-    auto a = TRY(_2D_INTERLEAVE(move(ll), decomposition));
+    auto a = TRY(Reference::_2D_INTERLEAVE(move(ll), decomposition));
     if (a.rect.is_empty())
         return a;
 
@@ -106,8 +64,8 @@ inline ErrorOr<IDWTOutput> _2D_SR(Transformation transformation, IDWTOutput ll, 
     buffers.scanline_buffer.resize(max(a.rect.width(), a.rect.height()) + 8);
     buffers.scanline_buffer2.resize(max(a.rect.width(), a.rect.height()) + 8);
 
-    a = TRY(HOR_SR(transformation, move(a), buffers));
-    return VER_SR(transformation, move(a), buffers);
+    a = TRY(Reference::HOR_SR(transformation, move(a), buffers));
+    return Reference::VER_SR(transformation, move(a), buffers);
 }
 
 // F.3.3 The 2D_INTERLEAVE procedure
@@ -201,7 +159,7 @@ inline ErrorOr<IDWTOutput> HOR_SR(Transformation transformation, IDWTOutput a, I
     int i0 = u0;
     int i1 = u1;
     for (int v = v0; v < v1; ++v)
-        _1D_SR(transformation, a, (v - v0) * a.rect.width(), i0, i1, 1, buffers);
+        Reference::_1D_SR(transformation, a, (v - v0) * a.rect.width(), i0, i1, 1, buffers);
 
     return a;
 }
@@ -218,7 +176,7 @@ inline ErrorOr<IDWTOutput> VER_SR(Transformation transformation, IDWTOutput a, I
     int i0 = v0;
     int i1 = v1;
     for (int u = u0; u < u1; ++u)
-        _1D_SR(transformation, a, (u - u0), i0, i1, a.rect.width(), buffers);
+        Reference::_1D_SR(transformation, a, (u - u0), i0, i1, a.rect.width(), buffers);
 
     return a;
 }
@@ -237,8 +195,8 @@ inline void _1D_SR(Transformation transformation, IDWTOutput& a, int start, int 
     }
 
     // Figure F.14 – The 1D_SR procedure
-    _1D_EXTR(transformation, a, start, i0, i1, delta, buffers);
-    _1D_FILTR(transformation, a, start, i0, i1, delta, buffers);
+    Reference::_1D_EXTR(transformation, a, start, i0, i1, delta, buffers);
+    Reference::_1D_FILTR(transformation, a, start, i0, i1, delta, buffers);
 }
 
 // F.3.7 The 1D_EXTR procedure
