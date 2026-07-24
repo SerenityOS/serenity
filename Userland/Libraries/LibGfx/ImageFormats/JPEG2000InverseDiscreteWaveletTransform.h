@@ -275,14 +275,20 @@ inline void _1D_EXTR(Transformation transformation, IDWTOutput& a, int start, in
         return i0 + min(mod(i - i0, 2 * (i1 - i0 - 1)), 2 * (i1 - i0 - 1) - mod(i - i0, 2 * (i1 - i0 - 1)));
     };
 
+    VERIFY(static_cast<int>(buffers.scanline_buffer.size()) >= buffers.scanline_runway + (i1 - i0) + 8);
+    float* dst = buffers.scanline_buffer.data() + buffers.scanline_runway;
+
+    VERIFY(start + (i1 - 1 - i0) * delta <= static_cast<int>(a.data.size()));
+    float const* src = a.data.data() + start;
+
     // PSE is the identity function for i0 <= i < i1, so only call it on the edges.
     int i = 0;
     for (int l = i0 - i_left; l < i0; ++l, ++i)
-        buffers.scanline_buffer[buffers.scanline_runway + i] = a.data[start + (PSE(l, i0, i1) - i0) * delta];
+        dst[i] = src[(PSE(l, i0, i1) - i0) * delta];
     for (int l = i0; l < i1; ++l, ++i)
-        buffers.scanline_buffer[buffers.scanline_runway + i] = a.data[start + (l - i0) * delta];
+        dst[i] = src[(l - i0) * delta];
     for (int l = i1; l < i1 + i_right; ++l, ++i)
-        buffers.scanline_buffer[buffers.scanline_runway + i] = a.data[start + (PSE(l, i0, i1) - i0) * delta];
+        dst[i] = src[(PSE(l, i0, i1) - i0) * delta];
 
     buffers.scanline_start = buffers.scanline_runway + i_left;
 }
