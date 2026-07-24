@@ -326,12 +326,14 @@ inline void _1D_FILTR(Transformation transformation, IDWTOutput& a, int start, i
 
         // F.3.8.2 The 1D_FILTR_9-7I procedure
         // "Firstly, step 1 is performed for all values of n such that..."
-        for (int n = N0 - 1; n < N1 + 2; ++n)
-            x[2 * n] = kappa * y_ext[2 * n]; // [STEP1]
-
         // "and step 2 is performed for all values of n such that..."
-        for (int n = N0 - 2; n < N1 + 2; ++n)
+        // Steps 1 and 2 independently update even and odd samples, so do them in the same loop.
+        // Step 2 starts one sample earlier, do that one before the loop/
+        x[2 * (N0 - 2) + 1] = (1 / kappa) * y_ext[2 * (N0 - 2) + 1]; // [STEP2]
+        for (int n = N0 - 1; n < N1 + 2; ++n) {
+            x[2 * n] = kappa * y_ext[2 * n];               // [STEP1]
             x[2 * n + 1] = (1 / kappa) * y_ext[2 * n + 1]; // [STEP2]
+        }
 
         for (int n = N0 - 1; n < N1 + 2; ++n)
             x[2 * n] = x[2 * n] - delta * (x[2 * n - 1] + x[2 * n + 1]); // [STEP3]
