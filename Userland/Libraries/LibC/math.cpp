@@ -271,22 +271,22 @@ template<typename FloatT>
 static FloatT internal_gamma(FloatT x) NOEXCEPT
 {
     if (isnan(x))
-        return (FloatT)NAN;
+        return AK::NaN<FloatT>;
 
     if (x == (FloatT)0.0)
-        return signbit(x) ? (FloatT)-INFINITY : (FloatT)INFINITY;
+        return AK::copysign(AK::Infinity<FloatT>, x);
 
-    if (x < (FloatT)0 && (rintl(x) == x || isinf(x)))
-        return (FloatT)NAN;
+    if (x < 0 && (AK::rint(x) == x || isinf(x)))
+        return AK::NaN<FloatT>;
 
     if (isinf(x))
-        return (FloatT)INFINITY;
+        return AK::Infinity<FloatT>;
 
     using Extractor = FloatExtractor<FloatT>;
     // These constants were obtained through use of WolframAlpha
     constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
     static_assert(max_integer_whose_factorial_fits != 0, "internal_gamma needs to be aware of the integer factorial that fits in this floating point type.");
-    if ((int)x == x && x <= max_integer_whose_factorial_fits + 1) {
+    if ((long long)x == x && x <= max_integer_whose_factorial_fits + 1) {
         long long result = 1;
         for (long long cursor = 2; cursor < (long long)x; cursor++)
             result *= cursor;
@@ -294,7 +294,7 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
     }
 
     // Stirling approximation
-    return sqrtl(2.0 * M_PIl / static_cast<long double>(x)) * powl(static_cast<long double>(x) / M_El, static_cast<long double>(x));
+    return AK::sqrt(2 * AK::Pi<FloatT> / x) * AK::pow(x / AK::E<FloatT>, x);
 }
 
 extern "C" {
@@ -376,16 +376,16 @@ long double truncl(long double x) NOEXCEPT
         // This is 1.6 times faster than the implementation using the "internal_to_integer"
         // helper (on x86_64)
         // https://quick-bench.com/q/xBmxuY8am9qibSYVna90Y6PIvqA
+        long double res;
         u64 temp;
         asm(
             "fisttpq %[temp]\n"
             "fildq %[temp]"
-            : "+t"(x)
-            : [temp] "m"(temp));
-        return x;
+            : "=t"(res)
+            : "0"(x), [temp] "m"(temp));
+        return AK::copysign(res, x);
     }
 #endif
-
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
@@ -393,13 +393,14 @@ double trunc(double x) NOEXCEPT
 {
 #if ARCH(X86_64)
     if (fabs(x) < LONG_LONG_MAX) {
+        double res;
         u64 temp;
         asm(
             "fisttpq %[temp]\n"
             "fildq %[temp]"
-            : "+t"(x)
-            : [temp] "m"(temp));
-        return x;
+            : "=t"(res)
+            : "0"(x), [temp] "m"(temp));
+        return AK::copysign(res, x);
     }
 #elif ARCH(RISCV64)
     if (fabs(x) < LONG_LONG_MAX) {
@@ -407,7 +408,7 @@ double trunc(double x) NOEXCEPT
         asm("fcvt.l.d %0, %1, rtz"
             : "=r"(output)
             : "f"(x));
-        return static_cast<double>(output);
+        return AK::copysign(static_cast<double>(output), x);
     }
 #endif
 
@@ -418,13 +419,14 @@ float truncf(float x) NOEXCEPT
 {
 #if ARCH(X86_64)
     if (fabsf(x) < LONG_LONG_MAX) {
+        float res;
         u64 temp;
         asm(
             "fisttpq %[temp]\n"
             "fildq %[temp]"
-            : "+t"(x)
-            : [temp] "m"(temp));
-        return x;
+            : "=t"(res)
+            : "0"(x), [temp] "m"(temp));
+        return AK::copysign(res, x);
     }
 #elif ARCH(RISCV64)
     if (fabsf(x) < LONG_LONG_MAX) {
@@ -432,142 +434,20 @@ float truncf(float x) NOEXCEPT
         asm("fcvt.l.s %0, %1, rtz"
             : "=r"(output)
             : "f"(x));
-        return static_cast<float>(output);
+        return AK::copysign(static_cast<float>(output), x);
     }
 #endif
 
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
-long lrintl(long double value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
-#elif ARCH(X86_64)
-    long res;
-    asm(
-        "fistpl %0\n"
-        : "+m"(res)
-        : "t"(value)
-        : "st");
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
-long lrint(double value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    i64 output;
-    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
-    asm("fcvt.l.d %0, %1, dyn"
-        : "=r"(output)
-        : "f"(value));
-    return output;
-#elif ARCH(X86_64)
-    long res;
-    asm(
-        "fistpl %0\n"
-        : "+m"(res)
-        : "t"(value)
-        : "st");
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
-long lrintf(float value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    i64 output;
-    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
-    asm("fcvt.l.s %0, %1, dyn"
-        : "=r"(output)
-        : "f"(value));
-    return output;
-#elif ARCH(X86_64)
-    long res;
-    asm(
-        "fistpl %0\n"
-        : "+m"(res)
-        : "t"(value)
-        : "st");
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
+long lrintl(long double value) { return AK::round_to<long>(value); }
+long lrint(double value) { return AK::round_to<long>(value); }
+long lrintf(float value) { return AK::round_to<long>(value); }
 
-long long llrintl(long double value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    // NOTE: RISC-V LP64 specifies long long == long.
-    return static_cast<long long>(lrintl(value));
-#elif ARCH(X86_64)
-    long long res;
-    asm(
-        "fistpq %0\n"
-        : "+m"(res)
-        : "t"(value)
-        : "st");
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
-long long llrint(double value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    // NOTE: RISC-V LP64 specifies long long == long.
-    return static_cast<long long>(lrint(value));
-#elif ARCH(X86_64)
-    long long res;
-    asm(
-        "fistpq %0\n"
-        : "+m"(res)
-        : "t"(value)
-        : "st");
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
-long long llrintf(float value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    // NOTE: RISC-V LP64 specifies long long == long.
-    return static_cast<long long>(lrintf(value));
-#elif ARCH(X86_64)
-    long long res;
-    asm(
-        "fistpq %0\n"
-        : "+m"(res)
-        : "t"(value)
-        : "st");
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
+long long llrintl(long double value) { return AK::round_to<long long>(value); }
+long long llrint(double value) { return AK::round_to<long long>(value); }
+long long llrintf(float value) { return AK::round_to<long long>(value); }
 
 // On systems where FLT_RADIX == 2, ldexp is equivalent to scalbn
 long double ldexpl(long double x, int exp) NOEXCEPT
