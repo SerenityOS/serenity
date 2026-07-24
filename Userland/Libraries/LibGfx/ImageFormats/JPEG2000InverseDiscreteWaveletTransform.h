@@ -275,7 +275,13 @@ inline void _1D_EXTR(Transformation transformation, IDWTOutput& a, int start, in
         return i0 + min(mod(i - i0, 2 * (i1 - i0 - 1)), 2 * (i1 - i0 - 1) - mod(i - i0, 2 * (i1 - i0 - 1)));
     };
 
-    for (int l = i0 - i_left, i = 0; l < i1 + i_right; ++l, ++i)
+    // PSE is the identity function for i0 <= i < i1, so only call it on the edges.
+    int i = 0;
+    for (int l = i0 - i_left; l < i0; ++l, ++i)
+        buffers.scanline_buffer[buffers.scanline_runway + i] = a.data[start + (PSE(l, i0, i1) - i0) * delta];
+    for (int l = i0; l < i1; ++l, ++i)
+        buffers.scanline_buffer[buffers.scanline_runway + i] = a.data[start + (l - i0) * delta];
+    for (int l = i1; l < i1 + i_right; ++l, ++i)
         buffers.scanline_buffer[buffers.scanline_runway + i] = a.data[start + (PSE(l, i0, i1) - i0) * delta];
 
     buffers.scanline_start = buffers.scanline_runway + i_left;
