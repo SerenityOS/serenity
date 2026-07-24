@@ -302,14 +302,17 @@ inline void _1D_FILTR(Transformation transformation, IDWTOutput& a, int start, i
     float const* y_ext = buffers.scanline_buffer.data() + (buffers.scanline_start - i0);
     float* x = buffers.scanline_buffer2.data() + (buffers.scanline_start - i0);
 
+    int const N0 = floor_div(i0, 2);
+    int const N1 = floor_div(i1, 2);
+
     if (transformation == Transformation::Reversible_5_3_Filter) {
         // F.3.8.1 The 1D_FILTR_5-3R procedure
         // (F-5)
-        for (int n = floor_div(i0, 2); n < floor_div(i1, 2) + 1; ++n)
+        for (int n = N0; n < N1 + 1; ++n)
             x[2 * n] = y_ext[2 * n] - floorf((y_ext[2 * n - 1] + y_ext[2 * n + 1] + 2) / 4.0f);
 
         // (F-6)
-        for (int n = floor_div(i0, 2); n < floor_div(i1, 2); ++n)
+        for (int n = N0; n < N1; ++n)
             x[2 * n + 1] = y_ext[2 * n + 1] + floorf((x[2 * n] + x[2 * n + 2]) / 2.0f);
     } else {
         VERIFY(transformation == Transformation::Irreversible_9_7_Filter);
@@ -323,23 +326,23 @@ inline void _1D_FILTR(Transformation transformation, IDWTOutput& a, int start, i
 
         // F.3.8.2 The 1D_FILTR_9-7I procedure
         // "Firstly, step 1 is performed for all values of n such that..."
-        for (int n = floor_div(i0, 2) - 1; n < floor_div(i1, 2) + 2; ++n)
+        for (int n = N0 - 1; n < N1 + 2; ++n)
             x[2 * n] = kappa * y_ext[2 * n]; // [STEP1]
 
         // "and step 2 is performed for all values of n such that..."
-        for (int n = floor_div(i0, 2) - 2; n < floor_div(i1, 2) + 2; ++n)
+        for (int n = N0 - 2; n < N1 + 2; ++n)
             x[2 * n + 1] = (1 / kappa) * y_ext[2 * n + 1]; // [STEP2]
 
-        for (int n = floor_div(i0, 2) - 1; n < floor_div(i1, 2) + 2; ++n)
+        for (int n = N0 - 1; n < N1 + 2; ++n)
             x[2 * n] = x[2 * n] - delta * (x[2 * n - 1] + x[2 * n + 1]); // [STEP3]
 
-        for (int n = floor_div(i0, 2) - 1; n < floor_div(i1, 2) + 1; ++n)
+        for (int n = N0 - 1; n < N1 + 1; ++n)
             x[2 * n + 1] = x[2 * n + 1] - gamma * (x[2 * n] + x[2 * n + 2]); // [STEP4]
 
-        for (int n = floor_div(i0, 2); n < floor_div(i1, 2) + 1; ++n)
+        for (int n = N0; n < N1 + 1; ++n)
             x[2 * n] = x[2 * n] - beta * (x[2 * n - 1] + x[2 * n + 1]); // [STEP5]
 
-        for (int n = floor_div(i0, 2); n < floor_div(i1, 2); ++n)
+        for (int n = N0; n < N1; ++n)
             x[2 * n + 1] = x[2 * n + 1] - alpha * (x[2 * n] + x[2 * n + 2]); // [STEP6]
     }
 
