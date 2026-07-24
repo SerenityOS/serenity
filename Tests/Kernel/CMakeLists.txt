@@ -62,6 +62,7 @@ set(LIBTEST_BASED_SOURCES
     TestSigAltStack.cpp
     TestSigHandler.cpp
     TestSignalDispatch.cpp
+    TestSymlink.cpp
     TestTCPSocket.cpp
     TestWXProtection.cpp
 )
