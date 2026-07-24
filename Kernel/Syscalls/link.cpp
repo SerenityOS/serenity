@@ -30,7 +30,7 @@ ErrorOr<FlatPtr> Process::sys$symlink(Userspace<Syscall::SC_symlink_params const
 
     auto target = TRY(get_syscall_path_argument(params.target));
     auto linkpath = TRY(get_syscall_path_argument(params.linkpath));
-    CustodyBase base(params.dirfd, target->view());
+    CustodyBase base(params.dirfd, linkpath->view());
     TRY(VirtualFileSystem::symlink(vfs_root_context(), credentials(), target->view(), linkpath->view(), base));
     return 0;
 }
