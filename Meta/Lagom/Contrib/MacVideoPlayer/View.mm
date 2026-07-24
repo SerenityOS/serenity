@@ -119,7 +119,9 @@ static NSBitmapImageRep* ns_from_gfx(RefPtr<Gfx::Bitmap> bitmap_p)
 
     NSSize image_size = [_currentFrame size];
     auto image_rect = gfx_rect_from_ns_rect(NSMakeRect(0, 0, image_size.width, image_size.height));
-    [_currentFrame drawInRect:ns_rect_from_gfx_rect(image_rect.scaled_to_fit_within(gfx_rect_from_ns_rect(self.bounds)))];
+    auto frame_draw_rect = ns_rect_from_gfx_rect(image_rect.scaled_to_fit_within(gfx_rect_from_ns_rect(self.bounds)));
+    frame_draw_rect = NSIntegralRect(frame_draw_rect);
+    [_currentFrame drawInRect:frame_draw_rect];
 }
 
 @end
