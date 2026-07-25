@@ -274,6 +274,10 @@ public:
     {
         if (alpha() == other.alpha() || with_alpha(0) == other.with_alpha(0))
             return interpolate(other, weight);
+        if (weight == 0)
+            return *this;
+        if (weight == 1)
+            return other;
         // Fallback to slower, but more visually pleasing premultiplied alpha mix.
         // This is needed for linear-gradient()s in LibWeb.
         auto mixed_alpha = mix<float>(alpha(), other.alpha(), weight);
