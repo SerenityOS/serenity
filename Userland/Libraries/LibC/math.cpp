@@ -292,7 +292,7 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
             result *= cursor;
         return (FloatT)result;
     }
-
+    // FIXME: This only works for positive numbers....
     // Stirling approximation
     return AK::sqrt(2 * AK::Pi<FloatT> / x) * AK::pow(x / AK::E<FloatT>, x);
 }
@@ -908,6 +908,8 @@ long double lgammal_r(long double value, int* sign) NOEXCEPT
         *sign = 1;
         return INFINITY;
     }
+    // FIXME: Use an approximation for the log(gamma) directly
+    //        This will likely help to support negative inputs
     long double result = logl(internal_gamma(value));
     *sign = signbit(result) ? -1 : 1;
     return result;
@@ -923,6 +925,8 @@ double lgamma_r(double value, int* sign) NOEXCEPT
         *sign = 1;
         return INFINITY;
     }
+    // FIXME: Use an approximation for the log(gamma) directly
+    //        This will likely help to support negative inputs
     double result = log(internal_gamma(value));
     *sign = signbit(result) ? -1 : 1;
     return result;
@@ -938,6 +942,8 @@ float lgammaf_r(float value, int* sign) NOEXCEPT
         *sign = 1;
         return INFINITY;
     }
+    // FIXME: Use an approximation for the log(gamma) directly
+    //        This will likely help to support negative inputs
     float result = logf(internal_gamma(value));
     *sign = signbit(result) ? -1 : 1;
     return result;
