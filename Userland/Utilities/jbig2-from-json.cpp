@@ -370,15 +370,15 @@ static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject c
     return flags;
 }
 
-struct RegionSegmentInformatJSON {
+struct RegionSegmentInformationJSON {
     Gfx::JBIG2::RegionSegmentInformationField region_segment_information {};
     bool use_width_from_image { false };
     bool use_height_from_image { false };
 };
 
-static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_json(JsonObject const& object)
+static ErrorOr<RegionSegmentInformationJSON> jbig2_region_segment_information_from_json(JsonObject const& object)
 {
-    RegionSegmentInformatJSON result;
+    RegionSegmentInformationJSON result;
     result.use_width_from_image = true;
     result.use_height_from_image = true;
 
@@ -2002,7 +2002,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     if (!object.has_value())
         return Error::from_string_literal("generic_region segment should have \"data\" object");
 
-    RegionSegmentInformatJSON region_segment_information;
+    RegionSegmentInformationJSON region_segment_information;
     region_segment_information.use_width_from_image = true;
     region_segment_information.use_height_from_image = true;
     Optional<u32> real_height_for_generic_region_of_initially_unknown_size;
@@ -2164,7 +2164,7 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
     if (!object.has_value())
         return Error::from_string_literal("generic_refinement_region segment should have \"data\" object");
 
-    RegionSegmentInformatJSON region_segment_information;
+    RegionSegmentInformationJSON region_segment_information;
     region_segment_information.use_width_from_image = true;
     region_segment_information.use_height_from_image = true;
     u8 flags = 0;
