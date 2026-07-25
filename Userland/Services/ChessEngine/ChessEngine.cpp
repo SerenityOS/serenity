@@ -65,7 +65,7 @@ void ChessEngine::handle_go(GoCommand const& command)
 void ChessEngine::handle_quit()
 {
     if (on_quit)
-        on_quit(ESUCCESS);
+        on_quit(0);
 }
 
 void ChessEngine::handle_unexpected_eof()
