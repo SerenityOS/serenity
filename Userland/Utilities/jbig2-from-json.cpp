@@ -189,8 +189,6 @@ static ErrorOr<JSONRect> jbig2_rect_from_json(JsonObject const& object)
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_load_bitmap(ToJSONOptions const& options, ByteString const& base_name)
 {
-    RefPtr<Gfx::Bitmap> bitmap;
-
     ByteString base_directory = LexicalPath { options.input_path }.dirname();
     auto path = LexicalPath::absolute_path(base_directory, base_name);
     auto file_or_error = Core::MappedFile::map(path);
