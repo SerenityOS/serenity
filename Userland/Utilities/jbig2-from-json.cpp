@@ -29,7 +29,7 @@ static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue 
     if (!value.is_string())
         return Error::from_string_literal("expected string for \"organization\"");
 
-    auto string = value.as_string();
+    auto const& string = value.as_string();
     if (string == "sequential")
         return Gfx::JBIG2::Organization::Sequential;
     if (string == "random_access")
@@ -2664,7 +2664,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_extension_from_json(Gfx::JBIG2::Se
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "type"sv) {
             if (value.is_string()) {
-                auto type = value.as_string();
+                auto const& type = value.as_string();
                 if (type == "single_byte_coded_comment"sv) {
                     data.type = Gfx::JBIG2::ExtensionType::SingleByteCodedComment;
                     return {};
@@ -2902,7 +2902,7 @@ static ErrorOr<Gfx::JBIG2::FileData> jbig2_data_from_json(ToJSONOptions const& o
 
     if (!json.is_object())
         return Error::from_string_literal("top-level should be object");
-    auto object = json.as_object();
+    auto const& object = json.as_object();
 
     if (auto global_header = object.get_object("global_header"sv); global_header.has_value())
         jbig2.header = TRY(jbig2_header_from_json(global_header.value()));
