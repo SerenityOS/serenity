@@ -117,13 +117,13 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
 
     if (ipc_file.has_value()) {
         if (FileSystem::is_device(ipc_file->fd()))
-            error = is_silencing_devices() ? ESUCCESS : EINVAL;
+            error = is_silencing_devices() ? 0 : EINVAL;
         else if (FileSystem::is_directory(ipc_file->fd()))
-            error = is_silencing_directories() ? ESUCCESS : EISDIR;
+            error = is_silencing_directories() ? 0 : EISDIR;
     }
 
     switch (error) {
-    case ESUCCESS:
+    case 0:
     case ECANCELED:
         break;
     case ENOENT:
@@ -140,7 +140,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
             (void)GUI::MessageBox::try_show_error(request_data.parent_window, maybe_message.release_value());
     }
 
-    if (error != ESUCCESS)
+    if (error != 0)
         return (void)request_data.promise->resolve(Error::from_errno(error));
 
     auto file_or_error = [&]() -> ErrorOr<File> {
