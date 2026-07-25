@@ -101,17 +101,18 @@ void NetworkTask_main(void*)
             auto timeout = Thread::BlockTimeout { false, &timeout_time };
             [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask"sv);
             continue;
-        } else {
-            NetworkingManagement::the().for_each([&](auto& adapter) {
-                if (packet_size || !adapter.has_queued_packets()) {
-                    return;
-                }
-                packet_size = adapter.dequeue_packet(meta.buffer, buffer_size, meta.packet_timestamp);
-                pending_packets--;
-                dbgln_if(NETWORK_TASK_DEBUG, "NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
-                meta.adapter = adapter;
-            });
         }
+
+        NetworkingManagement::the().for_each([&](auto& adapter) {
+            if (packet_size || !adapter.has_queued_packets()) {
+                return;
+            }
+            packet_size = adapter.dequeue_packet(meta.buffer, buffer_size, meta.packet_timestamp);
+            pending_packets--;
+            dbgln_if(NETWORK_TASK_DEBUG, "NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
+            meta.adapter = adapter;
+        });
+
         if (packet_size < sizeof(EthernetFrameHeader)) {
             dbgln("NetworkTask: Packet is too small to be an Ethernet packet! ({})", packet_size);
             continue;
