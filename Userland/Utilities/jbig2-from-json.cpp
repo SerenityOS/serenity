@@ -60,8 +60,8 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
             return {};
         }
 
-        dbgln("key {}", key);
-        return Error::from_string_literal("unknown key");
+        dbgln("global_header key {}", key);
+        return Error::from_string_literal("unknown global_header key");
     }));
 
     return header;
@@ -688,7 +688,7 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
                 image = move(refined_symbol);
                 return {};
             }
-            return Error::from_string_literal("expected object for \"instance_refines_symbol_to\"");
+            return Error::from_string_literal("expected object for \"refines_symbol_to\"");
         }
 
         if (key == "refines_using_strips"sv) {
@@ -1040,7 +1040,7 @@ static ErrorOr<u16> jbig2_text_region_huffman_flags_from_json(JsonObject const& 
                 }
             }
             // FIXME: Also allow names "standard_table_6", "standard_table_7", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 2 for \"huffman_table_selection_for_first_s\"");
+            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_first_s\"");
         }
 
         if (key == "huffman_table_selection_for_subsequent_s"sv) {
@@ -1693,7 +1693,7 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
                 flags |= ht_template.value() << 1;
                 return {};
             }
-            return Error::from_string_literal("expected uint for \"gb_template\"");
+            return Error::from_string_literal("expected uint for \"ht_template\"");
         }
 
         if (key == "enable_skip"sv) {
@@ -2579,7 +2579,7 @@ static ErrorOr<Vector<Gfx::JBIG2::TablesData::Entry>> jbig2_tables_entries_from_
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
 {
     if (!object.has_value())
-        return Error::from_string_literal("page_information segment should have \"data\" object");
+        return Error::from_string_literal("tables segment should have \"data\" object");
 
     Gfx::JBIG2::TablesData data {};
 
@@ -2927,8 +2927,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView out_path;
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Creates JBIG2 test files from JSON descriptions.");
-    args_parser.add_positional_argument(in_path, "Path to input image file", "FILE");
-    args_parser.add_option(out_path, "Path to output image file", "output", 'o', "FILE");
+    args_parser.add_positional_argument(in_path, "Path to input json file", "FILE");
+    args_parser.add_option(out_path, "Path to output jbig2 file", "output", 'o', "FILE");
     args_parser.parse(arguments);
     if (out_path.is_empty())
         return Error::from_string_literal("-o is required");
