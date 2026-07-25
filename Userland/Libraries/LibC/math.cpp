@@ -900,10 +900,14 @@ float lgammaf(float value) NOEXCEPT
 
 long double lgammal_r(long double value, int* sign) NOEXCEPT
 {
-    if (value == 1.0 || value == 2.0)
+    if (value == 1.0 || value == 2.0) {
+        *sign = 1;
         return 0.0;
-    if (isinf(value) || value == 0.0)
+    }
+    if (isinf(value) || value == 0.0) {
+        *sign = 1;
         return INFINITY;
+    }
     long double result = logl(internal_gamma(value));
     *sign = signbit(result) ? -1 : 1;
     return result;
@@ -911,10 +915,14 @@ long double lgammal_r(long double value, int* sign) NOEXCEPT
 
 double lgamma_r(double value, int* sign) NOEXCEPT
 {
-    if (value == 1.0 || value == 2.0)
+    if (value == 1.0 || value == 2.0) {
+        *sign = 1;
         return 0.0;
-    if (isinf(value) || value == 0.0)
+    }
+    if (isinf(value) || value == 0.0) {
+        *sign = 1;
         return INFINITY;
+    }
     double result = log(internal_gamma(value));
     *sign = signbit(result) ? -1 : 1;
     return result;
@@ -922,10 +930,14 @@ double lgamma_r(double value, int* sign) NOEXCEPT
 
 float lgammaf_r(float value, int* sign) NOEXCEPT
 {
-    if (value == 1.0f || value == 2.0f)
+    if (value == 1.0f || value == 2.0f) {
+        *sign = 1;
         return 0.0;
-    if (isinf(value) || value == 0.0f)
+    }
+    if (isinf(value) || value == 0.0f) {
+        *sign = 1;
         return INFINITY;
+    }
     float result = logf(internal_gamma(value));
     *sign = signbit(result) ? -1 : 1;
     return result;
