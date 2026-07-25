@@ -8,7 +8,7 @@
 #pragma once
 
 #define ENUMERATE_ERRNO_CODES(E)                                      \
-    E(ESUCCESS, "Success (not an error)")                             \
+    E(__ESUCCESS, "Success (not an error)")                           \
     E(EPERM, "Operation not permitted")                               \
     E(ENOENT, "No such file or directory")                            \
     E(ESRCH, "No such process")                                       \

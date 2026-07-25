@@ -9,7 +9,7 @@
 #include <Kernel/API/POSIX/errno.h>
 
 // NOTE: You can't define with a macro, so these have to be duplicated.
-#define ESUCCESS ESUCCESS
+// __ESUCCESS omitted intentionally
 #define EPERM EPERM
 #define ENOENT ENOENT
 #define ESRCH ESRCH
