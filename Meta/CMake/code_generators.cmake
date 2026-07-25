@@ -2,13 +2,14 @@
 # Functions for generating sources using host tools
 #
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 function(embed_as_string name source_file output source_variable_name)
     cmake_parse_arguments(PARSE_ARGV 4 EMBED_STRING_VIEW "" "NAMESPACE" "")
     set(namespace_arg "")
     if (EMBED_STRING_VIEW_NAMESPACE)
         set(namespace_arg "-s ${EMBED_STRING_VIEW_NAMESPACE}")
     endif()
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_custom_command(
         OUTPUT "${output}"
         COMMAND "${Python3_EXECUTABLE}" "${SerenityOS_SOURCE_DIR}/Meta/embed_as_string.py" "${source_file}" -o "${output}.tmp" -n "${source_variable_name}" ${namespace_arg}
@@ -29,7 +30,6 @@ function(embed_as_string_view name source_file output source_variable_name)
     if (EMBED_STRING_VIEW_NAMESPACE)
         set(namespace_arg "-s ${EMBED_STRING_VIEW_NAMESPACE}")
     endif()
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_custom_command(
         OUTPUT "${output}"
         COMMAND "${Python3_EXECUTABLE}" "${SerenityOS_SOURCE_DIR}/Meta/embed_as_string.py" --type=string-view "${source_file}" -o "${output}.tmp" -n "${source_variable_name}" ${namespace_arg}
