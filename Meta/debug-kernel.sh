@@ -40,7 +40,7 @@ fi
 #
 if [ "$SERENITY_ARCH" = "x86_64" ]; then
     gdb_arch=i386:x86-64
-    prekernel_image=Prekernel64
+    prekernel_image=kernel_x86-64
     kernel_image=Kernel_shared_object
     kernel_base=0x2000200000
 elif [ "$SERENITY_ARCH" = "aarch64" ]; then
