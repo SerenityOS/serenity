@@ -39,6 +39,16 @@ NonnullRefPtr<NetworkAdapter> NetworkingManagement::loopback_adapter() const
     return *m_loopback_adapter;
 }
 
+ErrorOr<void> NetworkingManagement::register_adapter(NetworkAdapter const& adapter)
+{
+    // FIXME: This function currently only works if it is called before NetworkTask is spawned,
+    //        so it won't work for hot-plugged adapters.
+
+    return m_adapters.with([&](auto& adapters) {
+        return adapters.try_append(adapter);
+    });
+}
+
 void NetworkingManagement::for_each(Function<void(NetworkAdapter&)> callback)
 {
     m_adapters.for_each([&](auto& adapter) {
