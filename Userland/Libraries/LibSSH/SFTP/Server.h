@@ -52,6 +52,8 @@ private:
     ErrorOr<void> handle_stat(FixedMemoryStream& stream, StatType);
     ErrorOr<void> send_file_attribute_message(u32 id, struct ::stat const&);
 
+    ErrorOr<void> handle_setstat(FixedMemoryStream&, StatType);
+
     ErrorOr<void> handle_open(FixedMemoryStream& stream);
     ErrorOr<void> send_file_handle(u32, File const&);
 
