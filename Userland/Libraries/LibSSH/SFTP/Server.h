@@ -47,6 +47,7 @@ private:
     enum class StatType : u8 {
         Normal,
         LStat,
+        FStat,
     };
     ErrorOr<void> handle_stat(FixedMemoryStream& stream, StatType);
     ErrorOr<void> send_file_attribute_message(u32 id, struct ::stat const&);

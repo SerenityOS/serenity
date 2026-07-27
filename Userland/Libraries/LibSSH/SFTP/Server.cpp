@@ -93,6 +93,8 @@ ErrorOr<void> Server::handle_packet(FixedMemoryStream& stream)
         return handle_stat(stream, StatType::Normal);
     case FXPMessageID::LSTAT:
         return handle_stat(stream, StatType::LStat);
+    case FXPMessageID::FSTAT:
+        return handle_stat(stream, StatType::FStat);
     case FXPMessageID::WRITE:
         return handle_write(stream);
     case FXPMessageID::CLOSE:
@@ -108,15 +110,19 @@ ErrorOr<void> Server::handle_packet(FixedMemoryStream& stream)
 ErrorOr<void> Server::handle_stat(FixedMemoryStream& stream, StatType type)
 {
     u32 id = TRY(stream.read_value<NetworkOrdered<u32>>());
-    auto path = TRY(decode_string(stream));
+    auto path_or_handle = TRY(decode_string(stream));
 
     // "The server responds to this request with either SSH_FXP_ATTRS or SSH_FXP_STATUS."
-    auto maybe_stat = [&]() {
+    auto maybe_stat = [&] -> ErrorOr<struct stat> {
         switch (type) {
         case StatType::LStat:
-            return Core::System::lstat(path);
+            return Core::System::lstat(path_or_handle);
+        case StatType::FStat: {
+            auto fd = TRY(find_file(path_or_handle))->file->fd();
+            return Core::System::fstat(fd);
+        }
         case StatType::Normal:
-            return Core::System::stat(path);
+            return Core::System::stat(path_or_handle);
         }
         VERIFY_NOT_REACHED();
     }();
