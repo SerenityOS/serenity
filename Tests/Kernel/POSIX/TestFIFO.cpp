@@ -21,6 +21,13 @@ ErrorOr<ByteString> make_fifo()
 
 }
 
+TEST_CASE(empty_path)
+{
+    auto error = Core::System::mkfifo(""sv, 0600);
+    EXPECT(error.is_error());
+    EXPECT_EQ(error.error().code(), ENOENT);
+}
+
 TEST_CASE(read_nonblock)
 {
     auto path = TRY_OR_FAIL(make_fifo());
