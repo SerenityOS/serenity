@@ -28,7 +28,7 @@ TEST_CASE(test_argument_validation)
 
     res = unveil("", "r");
     EXPECT_EQ(res, -1);
-    EXPECT_EQ(errno, EINVAL);
+    EXPECT_EQ(errno, ENOENT);
 
     res = unveil("test", "r");
     EXPECT_EQ(res, -1);

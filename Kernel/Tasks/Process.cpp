@@ -806,7 +806,7 @@ NonnullRefPtr<Custody> Process::current_directory()
 ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length)
 {
     if (path_length == 0)
-        return EINVAL;
+        return ENOENT;
     if (path_length > PATH_MAX)
         return ENAMETOOLONG;
     return try_copy_kstring_from_user(user_path, path_length);
