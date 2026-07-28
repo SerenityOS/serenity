@@ -128,6 +128,32 @@ TEST_CASE(stable_session_id)
     EXPECT_EQ(peer.session_id(), session_id);
 }
 
+TEST_CASE(packet_without_payload)
+{
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket);
+
+    // packet_length only covers padding_length and the padding, leaving no payload.
+    auto raw_message = "\x00\x00\x00\x05\x04\x00\x00\x00\x00"sv;
+    auto message = TRY_OR_FAIL(ByteBuffer::copy(raw_message.bytes()));
+
+    EXPECT(peer.read_packet(message).is_error());
+}
+
+TEST_CASE(padding_longer_than_packet)
+{
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket);
+
+    // padding_length is bigger than packet_length, which used to underflow the payload length.
+    auto raw_message = "\x00\x00\x00\x04\xff\x00\x00\x00\x00"sv;
+    auto message = TRY_OR_FAIL(ByteBuffer::copy(raw_message.bytes()));
+
+    EXPECT(peer.read_packet(message).is_error());
+}
+
 TEST_CASE(is_buffer_containing_a_full_packet)
 {
     // A session ID is stable, even after the peers rekeyed.
