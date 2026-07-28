@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (S_ISLNK(stat.st_mode)) {
             // Symlinks don't get processed unless they are explicitly listed on the command line.
             if (!paths.contains_slow(path))
-                return false;
+                return true;
 
             // The chmod syscall changes the file that a link points to, so we will have to get
             // the correct mode to base our modifications on.
