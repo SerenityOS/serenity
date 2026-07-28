@@ -608,6 +608,15 @@ static ErrorOr<void> format_stat(FormattedSyscallBuilder& builder, Syscall::SC_s
     return {};
 }
 
+static ErrorOr<void> format_link(FormattedSyscallBuilder& builder, Syscall::SC_link_params* params_p)
+{
+    auto params = TRY(copy_from_process(params_p));
+    builder.add_arguments(
+        StringArgument { params.old_path },
+        StringArgument { params.new_path });
+    return {};
+}
+
 static void format_lseek(FormattedSyscallBuilder& builder, int fd, off_t offset, int whence)
 {
     builder.add_arguments(fd, offset, whence_name(whence));
@@ -810,6 +819,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_kill:
         format_kill(builder, (pid_t)arg1, (int)arg2);
+        break;
+    case SC_link:
+        TRY(format_link(builder, (Syscall::SC_link_params*)arg1));
         break;
     case SC_lseek:
         format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
