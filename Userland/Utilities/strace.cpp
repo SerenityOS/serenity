@@ -382,6 +382,32 @@ struct Formatter<StringArgument> : StandardFormatter {
 };
 }
 
+struct DirFDArgument {
+    int dirfd {};
+};
+
+namespace AK {
+template<>
+struct Formatter<DirFDArgument> : StandardFormatter {
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    ErrorOr<void> format(FormatBuilder& format_builder, DirFDArgument const& dirfd_argument)
+    {
+        auto& builder = format_builder.builder();
+        if (dirfd_argument.dirfd == AT_FDCWD)
+            builder.append("AT_FDCWD"sv);
+        else
+            builder.appendff("{}", dirfd_argument.dirfd);
+
+        return {};
+    }
+};
+}
+
 class FormattedSyscallBuilder {
 public:
     void add_name(StringView syscall_name)
@@ -502,12 +528,9 @@ static ErrorOr<void> format_open(FormattedSyscallBuilder& builder, Syscall::SC_o
 {
     auto params = TRY(copy_from_process(params_p));
 
-    if (params.dirfd == AT_FDCWD)
-        builder.add_argument("AT_FDCWD");
-    else
-        builder.add_argument(params.dirfd);
-
-    builder.add_arguments(StringArgument { params.path }, OpenOptions { params.options });
+    builder.add_arguments(DirFDArgument { params.dirfd },
+        StringArgument { params.path },
+        OpenOptions { params.options });
 
     if (params.options & O_CREAT)
         builder.add_argument("{:04o}", params.mode);
@@ -578,11 +601,10 @@ static void format_fstat(FormattedSyscallBuilder& builder, int fd, struct stat* 
 static ErrorOr<void> format_stat(FormattedSyscallBuilder& builder, Syscall::SC_stat_params* params_p)
 {
     auto params = TRY(copy_from_process(params_p));
-    if (params.dirfd == AT_FDCWD)
-        builder.add_argument("AT_FDCWD");
-    else
-        builder.add_argument(params.dirfd);
-    builder.add_arguments(StringArgument { params.path }, TRY(copy_from_process(params.statbuf)), params.follow_symlinks);
+    builder.add_arguments(
+        DirFDArgument { params.dirfd },
+        StringArgument { params.path }, TRY(copy_from_process(params.statbuf)),
+        params.follow_symlinks);
     return {};
 }
 
