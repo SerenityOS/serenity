@@ -625,9 +625,13 @@ PDFErrorOr<void> Renderer::set_font(NonnullRefPtr<DictObject> font_dictionary, f
 RENDERER_HANDLER(text_set_font)
 {
     auto resources = extra_resources.value_or(m_page.resources);
+    if (!resources->contains(CommonNames::Font))
+        return Error::malformed_error("Font resource dictionary missing");
     auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
 
     auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
+    if (!fonts_dictionary->contains(target_font_name))
+        return Error::malformed_error("Font resource dictionary does not contain {}", target_font_name);
     auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
 
     return set_font(font_dictionary, args[1].to_float());
@@ -1056,13 +1060,13 @@ RENDERER_HANDLER(paint_xobject)
     auto resources = extra_resources.value_or(m_page.resources);
     if (!resources->contains(CommonNames::XObject))
         return Error::malformed_error("XObject resource dictionary missing");
+    auto xobjects_dict = TRY(resources->get_dict(m_document, CommonNames::XObject));
 
     auto xobject_name = args[0].get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-    auto xobjects_dict = TRY(resources->get_dict(m_document, CommonNames::XObject));
     if (!xobjects_dict->contains(xobject_name))
         return Error::malformed_error("XObject resource dictionary does not contain {}", xobject_name);
-
     auto xobject = TRY(xobjects_dict->get_stream(m_document, xobject_name));
+
     auto subtype = MUST(xobject->dict()->get_name(m_document, CommonNames::Subtype))->name();
     if (subtype == CommonNames::Image) {
         TRY(paint_image_xobject(xobject));
@@ -1835,11 +1839,11 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
             return ColorSpace::create(color_space_name, *this, resources);
         }
     }
+    if (!resources->contains(CommonNames::ColorSpace))
+        return Error::malformed_error("ColorSpace resource dictionary missing");
     auto color_space_resource_dict = TRY(resources->get_dict(m_document, CommonNames::ColorSpace));
-    if (!color_space_resource_dict->contains(color_space_name)) {
-        dbgln("missing key {}", color_space_name);
-        return Error::rendering_unsupported_error("Missing entry for color space name");
-    }
+    if (!color_space_resource_dict->contains(color_space_name))
+        return Error::malformed_error("ColorSpace resource dictionary does not contain {}", color_space_name);
     return get_color_space_from_document(TRY(color_space_resource_dict->get_object(m_document, color_space_name)));
 }
 

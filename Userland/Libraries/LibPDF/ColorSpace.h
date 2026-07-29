@@ -79,9 +79,15 @@ public:
 
     PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const override
     {
+        if (number_of_components() != static_cast<int>(arguments.size()))
+            return Error::malformed_error("Color space expected {} arguments, got {}", number_of_components(), arguments.size());
+
         Vector<float, 4> float_arguments;
-        for (auto& argument : arguments)
+        for (auto& argument : arguments) {
+            if (!argument.has_number())
+                return Error::malformed_error("Color space expected numeric arguments, got {}", argument);
             float_arguments.append(argument.to_float());
+        }
         return style(float_arguments);
     }
 };
