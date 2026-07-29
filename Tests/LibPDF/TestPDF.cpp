@@ -152,7 +152,7 @@ TEST_CASE(invalid_operator)
     auto page_size = Gfx::IntSize { 612, 792 };
     auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
     auto result = PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {});
-    // Shouldn't crash.
+    EXPECT(!result.is_error());
 }
 
 TEST_CASE(invalid_paint_objects)
