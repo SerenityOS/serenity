@@ -398,6 +398,15 @@ public:
     }
 
     template<typename T>
+    void add_argument(T* arg)
+    {
+        if (!arg)
+            add_argument("{}", "NULL"sv);
+        else
+            add_argument("{}", arg);
+    }
+
+    template<typename T>
     void add_argument(T&& arg)
     {
         add_argument("{}", forward<T>(arg));
