@@ -1,4 +1,3 @@
-
 Builds [openssh-portable](https://github.com/openssh/openssh-portable) for Serenity.
 
 # Known limitations
