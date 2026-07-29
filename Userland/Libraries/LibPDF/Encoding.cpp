@@ -23,15 +23,19 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
         auto name = obj->cast<NameObject>()->name();
         if (name == "StandardEncoding")
             return standard_encoding();
-
-        // FIXME: MacExpertEncoding
-
         if (name == "MacRomanEncoding")
             return mac_encoding();
         if (name == "WinAnsiEncoding")
             return windows_encoding();
 
-        VERIFY_NOT_REACHED();
+        // FIXME: MacExpertEncoding
+
+        // FIXME: 5.5.5 and Table 5.11 only mention MacRomanEncoding, MacExportEncoding, and WinAnsiEncoding.
+        // But some files in the wild use "Symbol" too, and 5.5.5 refers to appendix D, which also mentions the
+        // named encodings PDFDocEncoding, Symbol, and ZapfDingbats. So we probably want to support all three of those as a quirk?
+
+        // FIXME: Change this to malformed_error() once the FIXMEd encodings above are implemented.
+        return Error::rendering_unsupported_error("Named encoding not yet supported: {}", name);
     }
 
     // Make a custom encoding
