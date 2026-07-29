@@ -155,6 +155,22 @@ TEST_CASE(invalid_operator)
     // Shouldn't crash.
 }
 
+TEST_CASE(invalid_paint_objects)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("invalid-paint-objects.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+    MUST(document->initialize());
+    EXPECT_EQ(document->get_page_count(), 3U);
+
+    for (size_t i = 0; i < document->get_page_count(); ++i) {
+        auto page = MUST(document->get_page(i));
+        auto page_size = Gfx::IntSize { 612, 792 };
+        auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
+        auto result = PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {});
+        // Shouldn't crash.
+    }
+}
+
 TEST_CASE(jbig2_embedded_organization_cross_chunk_reference)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map("jbig2-globals.pdf"sv));
