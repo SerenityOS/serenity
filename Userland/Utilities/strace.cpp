@@ -384,7 +384,7 @@ struct Formatter<StringArgument> : StandardFormatter {
 
 class FormattedSyscallBuilder {
 public:
-    FormattedSyscallBuilder(StringView syscall_name)
+    void add_name(StringView syscall_name)
     {
         m_builder.append(syscall_name);
         m_builder.append('(');
@@ -452,6 +452,11 @@ public:
     StringView string_view()
     {
         return m_builder.string_view();
+    }
+
+    void clear()
+    {
+        m_builder.clear();
     }
 
 private:
@@ -750,6 +755,76 @@ static void format_prctl(FormattedSyscallBuilder& builder, int option, size_t ar
     }
 }
 
+static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, [[maybe_unused]] syscall_arg_t arg4)
+{
+    switch (syscall_function) {
+    case SC_chdir:
+        format_chdir(builder, (char const*)arg1, (size_t)arg2);
+        break;
+    case SC_close:
+        format_close(builder, (int)arg1);
+        break;
+    case SC_exit:
+        format_exit(builder, (int)arg1);
+        break;
+    case SC_kill:
+        format_kill(builder, (pid_t)arg1, (int)arg2);
+        break;
+    case SC_lseek:
+        format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
+        break;
+    case SC_mmap:
+        TRY(format_mmap(builder, (Syscall::SC_mmap_params*)arg1));
+        break;
+    case SC_mprotect:
+        format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
+        break;
+    case SC_munmap:
+        format_munmap(builder, (void*)arg1, (size_t)arg2);
+        break;
+    case SC_open:
+        TRY(format_open(builder, (Syscall::SC_open_params*)arg1));
+        break;
+    case SC_socket:
+        format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
+        break;
+    case SC_pledge:
+        TRY(format_pledge(builder, (Syscall::SC_pledge_params*)arg1));
+        break;
+    case SC_write:
+        format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
+        break;
+    case SC_getuid:
+    case SC_geteuid:
+    case SC_getgid:
+    case SC_getegid:
+    case SC_getpid:
+    case SC_getppid:
+    case SC_gettid:
+        // These syscalls don't take arguments.
+        break;
+    case SC_connect:
+    case SC_clock_gettime:
+    case SC_dbgputstr:
+    case SC_fstat:
+    case SC_getrandom:
+    case SC_ioctl:
+    case SC_poll:
+    case SC_prctl:
+    case SC_read:
+    case SC_realpath:
+    case SC_recvmsg:
+    case SC_set_mmap_name:
+    case SC_stat:
+        // These ones need late-formating of args.
+        break;
+    default:
+        builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3, (void*)arg4);
+    }
+
+    return {};
+}
+
 static void format_result(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t res)
 {
     switch (syscall_function) {
@@ -771,14 +846,11 @@ static void format_result(FormattedSyscallBuilder& builder, Syscall::Function sy
     }
 }
 
-static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t arg4, syscall_arg_t res)
+static ErrorOr<void> format_syscall_final(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t arg4, syscall_arg_t res)
 {
     switch (syscall_function) {
     case SC_clock_gettime:
         format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
-        break;
-    case SC_close:
-        format_close(builder, (int)arg1);
         break;
     case SC_connect:
         format_connect(builder, (int)arg1, (const struct sockaddr*)arg2, (socklen_t)arg3);
@@ -786,38 +858,14 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
     case SC_dbgputstr:
         format_dbgputstr(builder, (char*)arg1, (size_t)arg2);
         break;
-    case SC_exit:
-        format_exit(builder, (int)arg1);
-        break;
     case SC_fstat:
         format_fstat(builder, (int)arg1, (struct stat*)arg2);
-        break;
-    case SC_chdir:
-        format_chdir(builder, (char const*)arg1, (size_t)arg2);
         break;
     case SC_getrandom:
         format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
         break;
     case SC_ioctl:
         format_ioctl(builder, (int)arg1, (unsigned)arg2, (void*)arg3);
-        break;
-    case SC_lseek:
-        format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
-        break;
-    case SC_mmap:
-        TRY(format_mmap(builder, (Syscall::SC_mmap_params*)arg1));
-        break;
-    case SC_mprotect:
-        format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
-        break;
-    case SC_munmap:
-        format_munmap(builder, (void*)arg1, (size_t)arg2);
-        break;
-    case SC_open:
-        TRY(format_open(builder, (Syscall::SC_open_params*)arg1));
-        break;
-    case SC_pledge:
-        TRY(format_pledge(builder, (Syscall::SC_pledge_params*)arg1));
         break;
     case SC_poll:
         TRY(format_poll(builder, (Syscall::SC_poll_params*)arg1));
@@ -834,31 +882,14 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
     case SC_set_mmap_name:
         TRY(format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1));
         break;
-    case SC_socket:
-        format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
-        break;
     case SC_stat:
         TRY(format_stat(builder, (Syscall::SC_stat_params*)arg1));
-        break;
-    case SC_write:
-        format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
-        break;
-    case SC_kill:
-        format_kill(builder, (pid_t)arg1, (int)arg2);
         break;
     case SC_prctl:
         format_prctl(builder, (int)arg1, (size_t)arg2, (size_t)arg3, (size_t)arg4);
         break;
-    case SC_getuid:
-    case SC_geteuid:
-    case SC_getgid:
-    case SC_getegid:
-    case SC_getpid:
-    case SC_getppid:
-    case SC_gettid:
-        break;
     default:
-        builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3, (void*)arg4);
+        break;
     }
 
     format_result(builder, syscall_function, res);
@@ -966,6 +997,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #    error Unknown architecture
 #endif
 
+        auto syscall_function = (Syscall::Function)syscall_index;
+        auto syscall_name = to_string(syscall_function);
+        bool do_print = !exclude_syscalls.contains(syscall_name) && (include_syscalls.is_empty() || include_syscalls.contains(syscall_name));
+
+        FormattedSyscallBuilder builder;
+
+        if (do_print) {
+            builder.add_name(syscall_name);
+            TRY(format_syscall_early(builder, syscall_function, arg1, arg2, arg3, arg4));
+            TRY(trace_file->write_until_depleted(builder.string_view().bytes()));
+            builder.clear();
+        }
+
         TRY(Core::System::ptrace(PT_SYSCALL, g_pid, 0, 0));
         if (waitpid(g_pid, &status, WSTOPPED | WEXITED) != g_pid || !WIFSTOPPED(status)) {
             perror("wait_pid");
@@ -984,16 +1028,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #    error Unknown architecture
 #endif
 
-        auto syscall_function = (Syscall::Function)syscall_index;
-        auto syscall_name = to_string(syscall_function);
-        if (exclude_syscalls.contains(syscall_name))
-            continue;
-        if (!include_syscalls.is_empty() && !include_syscalls.contains(syscall_name))
-            continue;
-
-        FormattedSyscallBuilder builder(syscall_name);
-        TRY(format_syscall(builder, syscall_function, arg1, arg2, arg3, arg4, res));
-
-        TRY(trace_file->write_until_depleted(builder.string_view().bytes()));
+        if (do_print) {
+            TRY(format_syscall_final(builder, syscall_function, arg1, arg2, arg3, arg4, res));
+            TRY(trace_file->write_until_depleted(builder.string_view().bytes()));
+        }
     }
 }
