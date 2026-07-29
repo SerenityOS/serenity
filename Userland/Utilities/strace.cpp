@@ -721,6 +721,12 @@ struct ModeFlags : BitflagBase {
     };
 };
 
+static ErrorOr<void> format_mkdir(FormattedSyscallBuilder& builder, int dirfd, char const* path, size_t length, mode_t mode)
+{
+    builder.add_arguments(DirFDArgument { dirfd }, StringArgument { { path, length } }, ModeFlags { mode });
+    return {};
+}
+
 static ErrorOr<void> format_mknod(FormattedSyscallBuilder& builder, Syscall::SC_mknod_params* params_p)
 {
     auto params = TRY(copy_from_process(params_p));
@@ -825,6 +831,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_lseek:
         format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
+        break;
+    case SC_mkdir:
+        TRY(format_mkdir(builder, (int)arg1, (char const*)arg2, arg3, arg4));
         break;
     case SC_mknod:
         TRY(format_mknod(builder, (Syscall::SC_mknod_params*)arg1));
