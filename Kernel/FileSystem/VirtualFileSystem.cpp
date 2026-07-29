@@ -408,21 +408,24 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
     }
 
     if (metadata.is_fifo()) {
+        if (!(options & (O_RDONLY | O_WRONLY)))
+            return EINVAL;
+
         auto fifo = TRY(inode.fifo());
-        if (options & O_WRONLY) {
-            auto description = TRY(fifo->open_direction_blocking(FIFO::Direction::Writer));
-            description->set_rw_mode(options);
-            description->set_file_flags(options);
-            description->set_original_inode(inode);
-            return description;
-        } else if (options & O_RDONLY) {
-            auto description = TRY(fifo->open_direction_blocking(FIFO::Direction::Reader));
-            description->set_rw_mode(options);
-            description->set_file_flags(options);
-            description->set_original_inode(inode);
-            return description;
-        }
-        return EINVAL;
+
+        auto description = TRY(([&fifo, &options] -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
+            if (options & O_WRONLY)
+                return TRY(fifo->open_direction_blocking(FIFO::Direction::Writer));
+            if (options & O_RDONLY)
+                return TRY(fifo->open_direction_blocking(FIFO::Direction::Reader));
+            VERIFY_NOT_REACHED();
+        }()));
+
+        description->set_rw_mode(options);
+        description->set_file_flags(options);
+        description->set_original_inode(inode);
+
+        return description;
     }
 
     if (metadata.is_device()) {
