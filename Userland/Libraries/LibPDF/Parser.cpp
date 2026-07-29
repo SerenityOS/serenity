@@ -602,6 +602,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 //        but we ignore them everywhere. All other engines seem to do that too, so some files depend on it.
                 //        (Usually accidentally, e.g. containing "QQ" instead of "Q Q" or similar.)
                 dbgln("ignoring unknown operator \"{}\"", operator_string);
+                operator_args.clear();
                 continue;
             }
             auto operator_type = maybe_operator_type.release_value();
