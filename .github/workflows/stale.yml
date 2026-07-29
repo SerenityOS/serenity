@@ -15,7 +15,7 @@ jobs:
       actions: write  # required for cache management (see https://github.com/actions/stale/issues/1133)
       pull-requests: write
     steps:
-      - uses: actions/stale@v10
+      - uses: actions/stale@v11
         with:
           operations-per-run: 30
 
