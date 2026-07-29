@@ -700,6 +700,25 @@ static void format_recvmsg(FormattedSyscallBuilder& builder, int socket, struct 
     builder.add_arguments(socket, message, MsgOptions { flags });
 }
 
+struct ModeFlags : BitflagBase {
+    static constexpr auto options = {
+        BITFLAG(S_IFMT), BITFLAG(S_IFDIR), BITFLAG(S_IFCHR), BITFLAG(S_IFBLK),
+        BITFLAG(S_IFREG), BITFLAG(S_IFIFO), BITFLAG(S_IFLNK), BITFLAG(S_IFSOCK),
+        BITFLAG(S_ISUID), BITFLAG(S_ISGID), BITFLAG(S_ISVTX), BITFLAG(S_IRUSR),
+        BITFLAG(S_IWUSR), BITFLAG(S_IXUSR), BITFLAG(S_IREAD), BITFLAG(S_IWRITE),
+        BITFLAG(S_IEXEC), BITFLAG(S_IRGRP), BITFLAG(S_IWGRP), BITFLAG(S_IXGRP),
+        BITFLAG(S_IROTH), BITFLAG(S_IWOTH), BITFLAG(S_IXOTH), BITFLAG(S_IRWXU),
+        BITFLAG(S_IRWXG), BITFLAG(S_IRWXO)
+    };
+};
+
+static ErrorOr<void> format_mknod(FormattedSyscallBuilder& builder, Syscall::SC_mknod_params* params_p)
+{
+    auto params = TRY(copy_from_process(params_p));
+    builder.add_arguments(StringArgument { params.path }, ModeFlags { params.mode }, params.dev, DirFDArgument { params.dirfd });
+    return {};
+}
+
 struct MmapFlags : BitflagBase {
     static constexpr auto options = {
         BITFLAG(MAP_SHARED), BITFLAG(MAP_PRIVATE), BITFLAG(MAP_FIXED), BITFLAG(MAP_ANONYMOUS),
@@ -794,6 +813,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_lseek:
         format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
+        break;
+    case SC_mknod:
+        TRY(format_mknod(builder, (Syscall::SC_mknod_params*)arg1));
         break;
     case SC_mmap:
         TRY(format_mmap(builder, (Syscall::SC_mmap_params*)arg1));
