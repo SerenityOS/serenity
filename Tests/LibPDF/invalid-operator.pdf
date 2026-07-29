@@ -14,10 +14,13 @@ endobj
 endobj
 
 4 0 obj
-<</Length 5>>
+<</Length 52>>
 stream
 q
 QQ
+
+() anotherunknownopwithanarg
+0 0 100 100 re f
 
 endstream
 endobj
@@ -33,5 +36,5 @@ xref
 trailer
 <</Size 5/Root 1 0 R>>
 startxref
-248
+296
 %%EOF
