@@ -597,8 +597,13 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
             m_reader.consume_whitespace();
 
             auto maybe_operator_type = Operator::operator_type_from_symbol(operator_string);
-            if (!maybe_operator_type.has_value())
-                return error(ByteString::formatted("unsupported operator {}", operator_string));
+            if (!maybe_operator_type.has_value()) {
+                // Quirk: Some PDFs contain invalid operators. Per spec, they should only be ignored in BX/EX blocks,
+                //        but we ignore them everywhere. All other engines seem to do that too, so some files depend on it.
+                //        (Usually accidentally, e.g. containing "QQ" instead of "Q Q" or similar.)
+                dbgln("ignoring unknown operator \"{}\"", operator_string);
+                continue;
+            }
             auto operator_type = maybe_operator_type.release_value();
 
             if (operator_type == OperatorType::InlineImageBegin) {
