@@ -24,13 +24,17 @@ public:
         Writer
     };
 
+    enum class ShouldBlock : u8 {
+        No,
+        Yes,
+    };
+
     static ErrorOr<NonnullRefPtr<FIFO>> try_create(UserID);
     virtual ~FIFO() override;
 
     UserID uid() const { return m_uid; }
 
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction);
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction, ShouldBlock);
 
 private:
     // ^File

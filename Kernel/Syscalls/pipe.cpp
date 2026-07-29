@@ -22,8 +22,8 @@ ErrorOr<FlatPtr> Process::sys$pipe(Userspace<int*> pipefd, int flags)
     auto credentials = this->credentials();
     auto fifo = TRY(FIFO::try_create(credentials->uid()));
 
-    auto reader_description = TRY(fifo->open_direction(FIFO::Direction::Reader));
-    auto writer_description = TRY(fifo->open_direction(FIFO::Direction::Writer));
+    auto reader_description = TRY(fifo->open_direction(FIFO::Direction::Reader, FIFO::ShouldBlock::No));
+    auto writer_description = TRY(fifo->open_direction(FIFO::Direction::Writer, FIFO::ShouldBlock::No));
 
     reader_description->set_readable(true);
     writer_description->set_writable(true);
