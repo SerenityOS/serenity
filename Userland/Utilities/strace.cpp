@@ -750,16 +750,29 @@ static void format_prctl(FormattedSyscallBuilder& builder, int option, size_t ar
     }
 }
 
+static void format_result(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t res)
+{
+    switch (syscall_function) {
+    case SC_fstat:
+    case SC_read:
+    case SC_recvmsg:
+    case SC_write:
+        builder.format_result((ssize_t)res);
+        break;
+    case SC_mmap:
+        builder.format_result((void*)res);
+        break;
+    case SC_exit:
+        builder.format_result();
+        break;
+    default:
+        builder.format_result((int)res);
+        break;
+    }
+}
+
 static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t arg4, syscall_arg_t res)
 {
-    enum ResultType {
-        Int,
-        Ssize,
-        VoidP,
-        Void
-    };
-
-    ResultType result_type { Int };
     switch (syscall_function) {
     case SC_clock_gettime:
         format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
@@ -775,15 +788,12 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
         break;
     case SC_exit:
         format_exit(builder, (int)arg1);
-        result_type = Void;
         break;
     case SC_fstat:
         format_fstat(builder, (int)arg1, (struct stat*)arg2);
-        result_type = Ssize;
         break;
     case SC_chdir:
         format_chdir(builder, (char const*)arg1, (size_t)arg2);
-        result_type = Int;
         break;
     case SC_getrandom:
         format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
@@ -796,7 +806,6 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
         break;
     case SC_mmap:
         TRY(format_mmap(builder, (Syscall::SC_mmap_params*)arg1));
-        result_type = VoidP;
         break;
     case SC_mprotect:
         format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
@@ -815,14 +824,12 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
         break;
     case SC_read:
         format_read(builder, (int)arg1, (void*)arg2, (size_t)arg3);
-        result_type = Ssize;
         break;
     case SC_realpath:
         TRY(format_realpath(builder, (Syscall::SC_realpath_params*)arg1, (size_t)res));
         break;
     case SC_recvmsg:
         format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
-        result_type = Ssize;
         break;
     case SC_set_mmap_name:
         TRY(format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1));
@@ -835,7 +842,6 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
         break;
     case SC_write:
         format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
-        result_type = Ssize;
         break;
     case SC_kill:
         format_kill(builder, (pid_t)arg1, (int)arg2);
@@ -853,23 +859,10 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
         break;
     default:
         builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3, (void*)arg4);
-        result_type = VoidP;
     }
 
-    switch (result_type) {
-    case Int:
-        builder.format_result((int)res);
-        break;
-    case Ssize:
-        builder.format_result((ssize_t)res);
-        break;
-    case VoidP:
-        builder.format_result((void*)res);
-        break;
-    case Void:
-        builder.format_result();
-        break;
-    }
+    format_result(builder, syscall_function, res);
+
     return {};
 }
 
