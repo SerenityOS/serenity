@@ -690,6 +690,16 @@ static void format_socket(FormattedSyscallBuilder& builder, int domain, int type
     builder.add_arguments(domain_name(domain), socket_type_name(type & SOCK_TYPE_MASK), protocol_name(protocol));
 }
 
+static ErrorOr<void> format_symlink(FormattedSyscallBuilder& builder, Syscall::SC_symlink_params* params_p)
+{
+    auto params = TRY(copy_from_process(params_p));
+    builder.add_arguments(
+        StringArgument { params.target },
+        StringArgument { params.linkpath },
+        DirFDArgument { params.dirfd });
+    return {};
+}
+
 static void format_connect(FormattedSyscallBuilder& builder, int socket, const struct sockaddr* address_p, socklen_t address_len)
 {
     builder.add_arguments(socket, copy_from_process(address_p).release_value_but_fixme_should_propagate_errors(), address_len);
@@ -852,6 +862,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_socket:
         format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
+        break;
+    case SC_symlink:
+        TRY(format_symlink(builder, (Syscall::SC_symlink_params*)arg1));
         break;
     case SC_pledge:
         TRY(format_pledge(builder, (Syscall::SC_pledge_params*)arg1));
