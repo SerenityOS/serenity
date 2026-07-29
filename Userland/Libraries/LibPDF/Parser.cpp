@@ -596,7 +596,10 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
             auto operator_string = StringView(m_reader.bytes().slice(operator_start, m_reader.offset() - operator_start));
             m_reader.consume_whitespace();
 
-            auto operator_type = Operator::operator_type_from_symbol(operator_string);
+            auto maybe_operator_type = Operator::operator_type_from_symbol(operator_string);
+            if (!maybe_operator_type.has_value())
+                return error(ByteString::formatted("unsupported operator {}", operator_string));
+            auto operator_type = maybe_operator_type.release_value();
 
             if (operator_type == OperatorType::InlineImageBegin) {
                 if (!operator_args.is_empty())

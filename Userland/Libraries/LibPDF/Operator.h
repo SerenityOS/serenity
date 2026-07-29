@@ -96,7 +96,7 @@ enum class OperatorType {
 
 class Operator {
 public:
-    static OperatorType operator_type_from_symbol(StringView symbol_string)
+    static Optional<OperatorType> operator_type_from_symbol(StringView symbol_string)
     {
 #define V(name, snake_name, symbol) \
     if (symbol_string == #symbol)   \
@@ -109,8 +109,7 @@ public:
         if (symbol_string == "\"")
             return OperatorType::TextNextLineShowStringSetSpacing;
 
-        dbgln("unsupported graphics symbol {}", symbol_string);
-        VERIFY_NOT_REACHED();
+        return {};
     }
 
     static char const* operator_name(OperatorType operator_type)
