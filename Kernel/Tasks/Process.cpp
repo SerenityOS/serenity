@@ -809,7 +809,15 @@ ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<cha
         return ENOENT;
     if (path_length > PATH_MAX)
         return ENAMETOOLONG;
-    return try_copy_kstring_from_user(user_path, path_length);
+    auto string = TRY(try_copy_kstring_from_user(user_path, path_length));
+
+    TRY(string->view().for_each_split_view('/', SplitBehavior::Nothing, [](StringView component) -> ErrorOr<void> {
+        if (component.length() > NAME_MAX)
+            return ENAMETOOLONG;
+        return {};
+    }));
+
+    return string;
 }
 
 ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::StringArgument const& path)
