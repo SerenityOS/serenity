@@ -412,12 +412,13 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
             return EINVAL;
 
         auto fifo = TRY(inode.fifo());
+        auto should_block = options & O_NONBLOCK ? FIFO::ShouldBlock::No : FIFO::ShouldBlock::Yes;
 
-        auto description = TRY(([&fifo, &options] -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
+        auto description = TRY(([&fifo, options, should_block] -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
             if (options & O_WRONLY)
-                return TRY(fifo->open_direction_blocking(FIFO::Direction::Writer));
+                return TRY(fifo->open_direction(FIFO::Direction::Writer, should_block));
             if (options & O_RDONLY)
-                return TRY(fifo->open_direction_blocking(FIFO::Direction::Reader));
+                return TRY(fifo->open_direction(FIFO::Direction::Reader, should_block));
             VERIFY_NOT_REACHED();
         }()));
 
