@@ -318,6 +318,9 @@ ErrorOr<void> RAMFSInode::add_child(Inode& child, StringView name, mode_t)
     m_children.append(*child_entry);
     TRY(child_entry->inode->increment_link_count());
 
+    // Update ctime and mtime.
+    did_modify_contents();
+
     did_add_child(child.identifier(), name);
     return {};
 }

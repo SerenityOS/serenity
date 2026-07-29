@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Time.h>
 #include <LibCore/System.h>
 #include <LibTest/TestCase.h>
 
@@ -35,4 +36,28 @@ TEST_CASE(link_count)
     (void)Core::System::unlink(FILE_PATH);
     link_stat = TRY_OR_FAIL(Core::System::stat(LINK_PATH));
     EXPECT_EQ(link_stat.st_nlink, static_cast<nlink_t>(1));
+}
+
+TEST_CASE(child_updates_time)
+{
+    static constexpr StringView DIRECTORY_PATH = "/tmp/test_directory"sv;
+    static constexpr StringView CHILD_PATH = "/tmp/test_directory/child"sv;
+
+    (void)Core::System::unlink(CHILD_PATH);
+    (void)Core::System::rmdir(DIRECTORY_PATH);
+
+    TRY_OR_FAIL(Core::System::mkdir(DIRECTORY_PATH, 0755));
+
+    auto before = TRY_OR_FAIL(Core::System::stat(DIRECTORY_PATH));
+
+    usleep(10'000); // Sleep 10ms to ensure that the Kernel's internal time has updated.
+    int fd = TRY_OR_FAIL(Core::System::open(CHILD_PATH, O_CREAT | O_WRONLY, 0600));
+    close(fd);
+
+    auto after = TRY_OR_FAIL(Core::System::stat(DIRECTORY_PATH));
+
+    EXPECT_EQ(Duration::from_timespec(before.st_atim), Duration::from_timespec(after.st_atim));
+    EXPECT(Duration::from_timespec(before.st_mtim) < Duration::from_timespec(after.st_mtim));
+    EXPECT(Duration::from_timespec(before.st_ctim) < Duration::from_timespec(after.st_ctim));
+    EXPECT_EQ(Duration::from_timespec(after.st_mtim), Duration::from_timespec(after.st_ctim));
 }
