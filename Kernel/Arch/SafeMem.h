@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
+#include <AK/Fences.h>
 #include <AK/Optional.h>
 #include <AK/Types.h>
 
