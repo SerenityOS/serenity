@@ -515,6 +515,11 @@ static void format_exit(FormattedSyscallBuilder& builder, int status)
     builder.add_argument(status);
 }
 
+static void format_ftruncate(FormattedSyscallBuilder& builder, int fd, off_t length)
+{
+    builder.add_arguments(fd, length);
+}
+
 struct OpenOptions : BitflagBase {
     static constexpr auto options = {
         BITFLAG(O_RDWR), BITFLAG(O_RDONLY), BITFLAG(O_WRONLY),
@@ -845,6 +850,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_exit:
         format_exit(builder, (int)arg1);
+        break;
+    case SC_ftruncate:
+        format_ftruncate(builder, (int)arg1, (off_t)arg2);
         break;
     case SC_kill:
         format_kill(builder, (pid_t)arg1, (int)arg2);
