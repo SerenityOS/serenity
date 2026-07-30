@@ -295,7 +295,15 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(StringView interface_n
 {
 }
 
-UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter() = default;
+UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
+{
+    if (m_mdio_handling_process) {
+        m_mdio_handling_process->die();
+        // Block until all threads exited to prevent UAF
+        ErrorOr<siginfo_t> result = siginfo_t {};
+        (void)Thread::current()->block<Thread::WaitBlocker>({}, WEXITED, m_mdio_handling_process.release_nonnull(), result);
+    }
+}
 
 bool E1000NetworkAdapter::handle_interrupt()
 {
