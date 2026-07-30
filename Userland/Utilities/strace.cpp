@@ -537,6 +537,19 @@ static ErrorOr<void> format_open(FormattedSyscallBuilder& builder, Syscall::SC_o
     return {};
 }
 
+static ErrorOr<void> format_rename(FormattedSyscallBuilder& builder, Syscall::SC_rename_params* params_p)
+{
+    auto params = TRY(copy_from_process(params_p));
+
+    builder.add_arguments(
+        DirFDArgument { params.olddirfd },
+        StringArgument { params.old_path },
+        DirFDArgument { params.newdirfd },
+        StringArgument { params.new_path });
+
+    return {};
+}
+
 static void format_ioctl(FormattedSyscallBuilder& builder, int fd, unsigned request, void* arg)
 {
     builder.add_arguments(fd, ioctl_request_name(request));
@@ -859,6 +872,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_open:
         TRY(format_open(builder, (Syscall::SC_open_params*)arg1));
+        break;
+    case SC_rename:
+        TRY(format_rename(builder, (Syscall::SC_rename_params*)arg1));
         break;
     case SC_socket:
         format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
