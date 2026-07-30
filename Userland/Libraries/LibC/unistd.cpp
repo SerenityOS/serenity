@@ -896,7 +896,7 @@ int ftruncate(int fd, off_t length)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/truncate.html
 int truncate(char const* path, off_t length)
 {
-    int fd = open(path, O_RDWR | O_CREAT, 0666);
+    int fd = open(path, O_RDWR, 0666);
     if (fd < 0)
         return fd;
     int rc = ftruncate(fd, length);
