@@ -7,7 +7,7 @@ configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/llvm/llvm-project/archive/$version.zip#374416b18414e8bf966623ae89a8a46e6753c28d3e23e699ab485bb6e31e86cd"
+    "https://github.com/llvm/llvm-project/archive/$version.tar.gz#cd299f10e8bcb4f0f1731588ceeef2f9a3cf4e043e55222307b9867ef2ee2fb7"
 )
 depends=(
     "ncurses"
