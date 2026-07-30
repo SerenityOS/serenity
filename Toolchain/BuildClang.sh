@@ -64,9 +64,9 @@ echo PREFIX is "$PREFIX"
 mkdir -p "$DIR/Tarballs"
 
 LLVM_COMMIT='9edf0e73b59540ccec25b355268ebff6d3bba4ef' # LLVM 23.0.0 28/04/2026
-LLVM_MD5SUM="f2a8ac1900fa550613fad2dd20483985"
+LLVM_MD5SUM="492044407d5a76e630104bfb88c695e5"
 LLVM_NAME="llvm-project-$LLVM_COMMIT"
-LLVM_PKG="$LLVM_COMMIT.zip"
+LLVM_PKG="$LLVM_COMMIT.tar.gz"
 LLVM_URL="https://github.com/llvm/llvm-project/archive/$LLVM_PKG"
 
 buildstep() {
@@ -181,7 +181,7 @@ pushd "$DIR/Tarballs"
         rm -rf "$DIR/Build/clang"
 
         echo "Extracting LLVM..."
-        unzip -qq "$LLVM_PKG"
+        tar -xf "$LLVM_PKG"
 
         pushd "$LLVM_NAME"
             if [ "$dev" = "1" ]; then
