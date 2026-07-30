@@ -16,7 +16,7 @@ it, and the ELF sections that store version data would just waste space.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index e469270e75e1ed456a5440a95e31c654c500c65f..0a09dd9c4d70e15fe55b7b8eb95e8f75f9d1cf82 100644
+index 7e239dca4104ec8a401a8d6e2028e66bfc1292b8..62554c082271b30c9647cd732671f0f404ecdae8 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
 @@ -247,7 +247,7 @@ if(WIN32)

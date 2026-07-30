@@ -1,13 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='llvm'
 useconfigure='true'
-version='9edf0e73b59540ccec25b355268ebff6d3bba4ef'
+version='fcf4bb1af7450f618504201610ef8c3ef52844d7'
 workdir="llvm-project-${version}"
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/llvm/llvm-project/archive/$version.tar.gz#cd299f10e8bcb4f0f1731588ceeef2f9a3cf4e043e55222307b9867ef2ee2fb7"
+    "https://github.com/llvm/llvm-project/archive/$version.tar.gz#f2b9558f4f9896c7734211668b1a0626fabd3b6a4aa00d2c64baf200f2ec1a76"
 )
 depends=(
     "ncurses"

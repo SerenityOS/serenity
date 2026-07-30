@@ -1,49 +1,43 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Daniel Bertalan <dani@danielbertalan.dev>
-Date: Thu, 14 Apr 2022 10:17:13 +0200
+From: Lucas Chollet <lucas.chollet@free.fr>
+Date: Wed, 8 Jul 2026 11:25:46 +0200
 Subject: [PATCH] [libcxx] Add support for SerenityOS
 
 This commit teaches libc++ about what features are available in our
 LibC, namely:
-* We do not have locale support, so no-op shims should be used in place
-  of the C locale API.
-* The number of errno constants defined by us is given by the value of
-  the `ELAST` macro.
+* locale support, by providing __locale_dir/support/serenity.h
 * Multithreading is implemented though the pthread library.
 * Use libc++'s builtin character type table instead of the one provided
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
+
+Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
 ---
- libcxx/include/CMakeLists.txt                 |  1 +
- libcxx/include/__config                       |  5 +++--
- .../__cxx03/__support/ibm/locale_mgmt_zos.h   |  2 +-
- libcxx/include/__locale_dir/locale_base_api.h |  2 ++
- .../__locale_dir/locale_base_api/serenity.h   | 22 +++++++++++++++++++
- libcxx/include/__locale_dir/messages.h        |  2 +-
- .../include/__support/ibm/locale_mgmt_zos.h   |  2 +-
- libcxx/src/CMakeLists.txt                     |  4 ++++
- libcxx/src/include/config_elast.h             |  2 ++
- libcxx/src/support/ibm/xlocale_zos.cpp        |  2 ++
- 10 files changed, 39 insertions(+), 5 deletions(-)
- create mode 100644 libcxx/include/__locale_dir/locale_base_api/serenity.h
+ libcxx/include/CMakeLists.txt                 |   1 +
+ libcxx/include/__config                       |   5 +-
+ libcxx/include/__locale_dir/locale_base_api.h |   2 +
+ libcxx/include/__locale_dir/messages.h        |   2 +-
+ .../include/__locale_dir/support/serenity.h   | 273 ++++++++++++++++++
+ 5 files changed, 280 insertions(+), 3 deletions(-)
+ create mode 100644 libcxx/include/__locale_dir/support/serenity.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index 69a6590d18f859babf3c2bcc195987ce0eb10df5..82b71ab9285a37918bf4a989cb4d848d03cc0b63 100644
+index 5034d5f6fe95b22545b3088a880f1a99eb96754c..8ec5e33466d7f487767db08523d2943f06060621 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -532,6 +532,7 @@ set(files
-   __locale_dir/locale_base_api/bsd_locale_fallbacks.h
-   __locale_dir/locale_base_api/ibm.h
-   __locale_dir/locale_base_api/openbsd.h
-+  __locale_dir/locale_base_api/serenity.h
-   __locale_dir/messages.h
-   __locale_dir/money.h
-   __locale_dir/num.h
+@@ -559,6 +559,7 @@ set(files
+   __locale_dir/support/no_locale/formatting.h
+   __locale_dir/support/no_locale/strtonum.h
+   __locale_dir/support/openbsd.h
++  __locale_dir/support/serenity.h
+   __locale_dir/support/windows.h
+   __locale_dir/time.h
+   __locale_dir/wbuffer_convert.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 6cf96523272366d8d847f68af64b375808ef3f30..e74a23d0eafb3ab250d522ef2f879c6c13eb69b6 100644
+index 2faca50f969bafc65c773130057d9166293cd99a..75110e2ac1f2a8ae19ceb44e33b51f30ffeae7ad 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -301,7 +301,8 @@ typedef __char32_t char32_t;
+@@ -219,7 +219,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -53,7 +47,7 @@ index 6cf96523272366d8d847f68af64b375808ef3f30..e74a23d0eafb3ab250d522ef2f879c6c
  // clang-format on
  #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
-@@ -380,7 +381,7 @@ typedef __char32_t char32_t;
+@@ -298,7 +299,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -62,62 +56,21 @@ index 6cf96523272366d8d847f68af64b375808ef3f30..e74a23d0eafb3ab250d522ef2f879c6c
  #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
  #  endif
  
-diff --git a/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h b/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
-index 9fa8f8c9088e1fc42408dca5b8d046668a0fc101..2a9cbec71ea6e6692152cf787891762c39f65625 100644
---- a/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
-+++ b/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
-@@ -10,7 +10,7 @@
- #ifndef _LIBCPP___CXX03___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
- #define _LIBCPP___CXX03___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
- 
--#if defined(__MVS__)
-+#if defined(__MVS__) || defined(__serenity__)
- #  include <__cxx03/locale.h>
- #  include <__cxx03/string>
- 
 diff --git a/libcxx/include/__locale_dir/locale_base_api.h b/libcxx/include/__locale_dir/locale_base_api.h
-index 26a6069315b33ecdcfaebd9b11ca0d23fd14e021..bd5aa72488c758bcdf6332b0d4a751cdf90c6e41 100644
+index f973d95ef244d58dafc774d6ceb9a68ceeb08300..1ee2e5eba0ab0b5b9cfdd99e5e47807adb0647d9 100644
 --- a/libcxx/include/__locale_dir/locale_base_api.h
 +++ b/libcxx/include/__locale_dir/locale_base_api.h
-@@ -132,6 +132,8 @@
- #      include <__locale_dir/locale_base_api/ibm.h>
- #    elif defined(__OpenBSD__)
- #      include <__locale_dir/locale_base_api/openbsd.h>
-+#    elif defined(__serenity__)
-+#      include <__locale_dir/locale_base_api/serenity.h>
- #    endif
+@@ -128,6 +128,8 @@
+ #    include <__locale_dir/support/newlib.h>
+ #  elif defined(_AIX)
+ #    include <__locale_dir/support/aix.h>
++#  elif defined(__serenity__)
++#    include <__locale_dir/support/serenity.h>
+ #  else
  
- #    include <__locale_dir/locale_base_api/bsd_locale_fallbacks.h>
-diff --git a/libcxx/include/__locale_dir/locale_base_api/serenity.h b/libcxx/include/__locale_dir/locale_base_api/serenity.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..13abb601dcb75d1459df0b943ef6ca3e911c8e46
---- /dev/null
-+++ b/libcxx/include/__locale_dir/locale_base_api/serenity.h
-@@ -0,0 +1,22 @@
-+//===----------------------------------------------------------------------===//
-+//
-+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-+// See https://llvm.org/LICENSE.txt for license information.
-+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-+//
-+//===----------------------------------------------------------------------===//
-+
-+#ifndef _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
-+#define _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
-+
-+#include <stddef.h>
-+
-+#include <__support/ibm/locale_mgmt_zos.h>
-+#include <__support/xlocale/__posix_l_fallback.h>
-+#include <__support/xlocale/__strtonum_fallback.h>
-+#include <clocale>
-+#include <cstdlib>
-+#include <ctype.h>
-+#include <cwctype>
-+
-+#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
+ // TODO: This is a temporary definition to bridge between the old way we defined the locale base API
 diff --git a/libcxx/include/__locale_dir/messages.h b/libcxx/include/__locale_dir/messages.h
-index 686f472840c222226b2e53fa1e3757c47ded8f13..b2c4a6fc3c60084e2450c7fb210d6eb021c05911 100644
+index 986a57d8b17b23bf4867ac7908623bb867c0667c..76a839093b11c611d7a35c3370417b217efea8c1 100644
 --- a/libcxx/include/__locale_dir/messages.h
 +++ b/libcxx/include/__locale_dir/messages.h
 @@ -22,7 +22,7 @@
@@ -129,58 +82,282 @@ index 686f472840c222226b2e53fa1e3757c47ded8f13..b2c4a6fc3c60084e2450c7fb210d6eb0
  #      define _LIBCPP_HAS_CATOPEN 1
  #      include <nl_types.h>
  #    else
-diff --git a/libcxx/include/__support/ibm/locale_mgmt_zos.h b/libcxx/include/__support/ibm/locale_mgmt_zos.h
-index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d1467c3565cf 100644
---- a/libcxx/include/__support/ibm/locale_mgmt_zos.h
-+++ b/libcxx/include/__support/ibm/locale_mgmt_zos.h
-@@ -10,7 +10,7 @@
- #ifndef _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
- #define _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
- 
--#if defined(__MVS__)
-+#if defined(__MVS__) || defined(__serenity__)
- #  include <locale.h>
- #  include <string>
- 
-diff --git a/libcxx/src/CMakeLists.txt b/libcxx/src/CMakeLists.txt
-index de7817ad69f265f9e2b27b87c4110b6ad7cf5ed5..687d22519537991f2560256a5b17d03fcc5c9b5e 100644
---- a/libcxx/src/CMakeLists.txt
-+++ b/libcxx/src/CMakeLists.txt
-@@ -112,6 +112,10 @@ elseif(ZOS)
-     support/ibm/wcsnrtombs.cpp
-     support/ibm/xlocale_zos.cpp
-     )
-+elseif(SERENITYOS)
-+  list(APPEND LIBCXX_SOURCES
-+    support/ibm/xlocale_zos.cpp
-+    )
- endif()
- 
- if (LIBCXX_ENABLE_FILESYSTEM)
-diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
-index daec2429de8eb5953ac48425dd0a8568bb2cb2ea..53f461303b337f45f5c774668b1a87125836cb0f 100644
---- a/libcxx/src/include/config_elast.h
-+++ b/libcxx/src/include/config_elast.h
-@@ -37,6 +37,8 @@
- #  define _LIBCPP_ELAST 4095
- #elif defined(__APPLE__)
- // No _LIBCPP_ELAST needed on Apple
-+#elif defined(__serenity__)
-+// No _LIBCPP_ELAST needed on SerenityOS
- #elif defined(__MVS__)
- #  define _LIBCPP_ELAST 1160
- #elif defined(_LIBCPP_MSVCRT_LIKE)
-diff --git a/libcxx/src/support/ibm/xlocale_zos.cpp b/libcxx/src/support/ibm/xlocale_zos.cpp
-index 136999ec0b02f8171bbd8d170aca2b68f7d65681..23a56c0f586728e37ee89bba608b1853983bcb94 100644
---- a/libcxx/src/support/ibm/xlocale_zos.cpp
-+++ b/libcxx/src/support/ibm/xlocale_zos.cpp
-@@ -7,7 +7,9 @@
- //===----------------------------------------------------------------------===//
- 
- #include <__assert>
-+#ifndef __serenity__
- #include <__support/ibm/xlocale.h>
+diff --git a/libcxx/include/__locale_dir/support/serenity.h b/libcxx/include/__locale_dir/support/serenity.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..5067257e2816d9aa3787bfe80c5933031e79b180
+--- /dev/null
++++ b/libcxx/include/__locale_dir/support/serenity.h
+@@ -0,0 +1,273 @@
++// -*- C++ -*-
++//===-----------------------------------------------------------------------===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef _LIBCPP___LOCALE_DIR_LOCALE_BASE_API_SERENITY_H
++#define _LIBCPP___LOCALE_DIR_LOCALE_BASE_API_SERENITY_H
++
++#include <__config>
++#include <__cstddef/size_t.h>
++#include <__std_mbstate_t.h>
++#include <__utility/forward.h>
++#include <clocale> // std::lconv
++#include <ctype.h>
++#include <langinfo.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <time.h>
++#if _LIBCPP_HAS_WIDE_CHARACTERS
++#  include <wchar.h>
++#  include <wctype.h>
 +#endif
- #include <sstream>
- #include <vector>
- 
++
++#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
++#  pragma GCC system_header
++#endif
++
++_LIBCPP_BEGIN_NAMESPACE_STD
++namespace __locale {
++
++struct __locale_guard {
++  __locale_guard(locale_t& __loc) : __old_loc_(::uselocale(__loc)) {}
++
++  ~__locale_guard() {
++    if (__old_loc_)
++      ::uselocale(__old_loc_);
++  }
++
++  locale_t __old_loc_;
++
++  __locale_guard(__locale_guard const&)            = delete;
++  __locale_guard& operator=(__locale_guard const&) = delete;
++};
++
++//
++// Locale management
++//
++#define _LIBCPP_COLLATE_MASK LC_COLLATE_MASK
++#define _LIBCPP_CTYPE_MASK LC_CTYPE_MASK
++#define _LIBCPP_MONETARY_MASK LC_MONETARY_MASK
++#define _LIBCPP_NUMERIC_MASK LC_NUMERIC_MASK
++#define _LIBCPP_TIME_MASK LC_TIME_MASK
++#define _LIBCPP_MESSAGES_MASK LC_MESSAGES_MASK
++#define _LIBCPP_ALL_MASK LC_ALL_MASK
++#define _LIBCPP_LC_ALL LC_ALL
++
++using __locale_t _LIBCPP_NODEBUG = ::locale_t;
++#if defined(_LIBCPP_BUILDING_LIBRARY)
++using __lconv_t _LIBCPP_NODEBUG = std::lconv;
++
++inline __locale_t __newlocale(int __category_mask, const char* __locale, __locale_t __base) {
++  return ::newlocale(__category_mask, __locale, __base);
++}
++
++inline void __freelocale(__locale_t __loc) { ::freelocale(__loc); }
++
++inline char* __setlocale(int __category, char const* __locale) { return ::setlocale(__category, __locale); }
++
++inline __lconv_t* __localeconv(__locale_t& __loc) {
++  __locale_guard __current(__loc);
++  return ::localeconv();
++}
++#endif // _LIBCPP_BUILDING_LIBRARY
++
++//
++// Strtonum functions
++//
++inline float __strtof(const char* __nptr, char** __endptr, __locale_t) { return ::strtof(__nptr, __endptr); }
++
++inline double __strtod(const char* __nptr, char** __endptr, __locale_t) { return ::strtod(__nptr, __endptr); }
++
++inline long double __strtold(const char* __nptr, char** __endptr, __locale_t) { return ::strtold(__nptr, __endptr); }
++
++//
++// Character manipulation functions
++//
++#if defined(_LIBCPP_BUILDING_LIBRARY)
++inline int __toupper(int __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::toupper(__c);
++}
++
++inline int __tolower(int __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::tolower(__c);
++}
++
++inline int __strcoll(const char* __s1, const char* __s2, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::strcoll(__s1, __s2);
++}
++
++inline size_t __strxfrm(char* __dest, const char* __src, size_t __n, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::strxfrm(__dest, __src, __n);
++}
++
++#  if _LIBCPP_HAS_WIDE_CHARACTERS
++inline int __iswctype(wint_t __c, wctype_t __type, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswctype(__c, __type); }
++
++inline int __iswspace(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswspace(__c); }
++
++inline int __iswprint(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswprint(__c); }
++
++inline int __iswcntrl(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswcntrl(__c); }
++
++inline int __iswupper(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswupper(__c); }
++
++inline int __iswlower(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswlower(__c); }
++
++inline int __iswalpha(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswalpha(__c); }
++
++inline int __iswblank(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswblank(__c); }
++
++inline int __iswdigit(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswdigit(__c); }
++
++inline int __iswpunct(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswpunct(__c); }
++
++inline int __iswxdigit(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::iswxdigit(__c); }
++
++inline wint_t __towupper(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::towupper(__c); }
++
++inline wint_t __towlower(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::towlower(__c); }
++
++inline int __wcscoll(const wchar_t* __ws1, const wchar_t* __ws2, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::wcscoll(__ws1, __ws2);
++}
++
++inline size_t __wcsxfrm(wchar_t* __dest, const wchar_t* __src, size_t __n, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::wcsxfrm(__dest, __src, __n);
++}
++#  endif // _LIBCPP_HAS_WIDE_CHARACTERS
++
++inline _LIBCPP_HIDE_FROM_ABI const char* __get_locale_encoding(__locale_t __loc) {
++  return ::nl_langinfo_l(CODESET, __loc);
++}
++
++inline _LIBCPP_ATTRIBUTE_FORMAT(__strftime__, 3, 0) size_t
++    __strftime(char* __s, size_t __max, const char* __format, const struct tm* __tm, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return ::strftime(__s, __max, __format, __tm);
++}
++
++//
++// Other functions
++//
++inline decltype(MB_CUR_MAX) __mb_len_max(__locale_t __loc) {
++  __locale_guard __current(__loc);
++  return MB_CUR_MAX;
++}
++
++#  if _LIBCPP_HAS_WIDE_CHARACTERS
++inline wint_t __btowc(int __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return btowc(__c);
++}
++
++inline int __wctob(wint_t __c, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return wctob(__c);
++}
++
++inline size_t
++__wcsnrtombs(char* __dest, const wchar_t** __src, size_t __nwc, size_t __len, mbstate_t* __ps, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return wcsnrtombs(__dest, __src, __nwc, __len, __ps); // wcsnrtombs is a POSIX extension
++}
++
++inline size_t __wcrtomb(char* __s, wchar_t __wc, mbstate_t* __ps, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return wcrtomb(__s, __wc, __ps);
++}
++
++inline size_t
++__mbsnrtowcs(wchar_t* __dest, const char** __src, size_t __nms, size_t __len, mbstate_t* __ps, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return mbsnrtowcs(__dest, __src, __nms, __len, __ps); // mbsnrtowcs is a POSIX extension
++}
++
++inline size_t __mbrtowc(wchar_t* __pwc, const char* __s, size_t __n, mbstate_t* __ps, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return mbrtowc(__pwc, __s, __n, __ps);
++}
++
++inline int __mbtowc(wchar_t* __pwc, const char* __pmb, size_t __max, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return mbtowc(__pwc, __pmb, __max);
++}
++
++inline size_t __mbrlen(const char* __s, size_t __n, mbstate_t* __ps, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return mbrlen(__s, __n, __ps);
++}
++
++inline size_t __mbsrtowcs(wchar_t* __dest, const char** __src, size_t __len, mbstate_t* __ps, __locale_t __loc) {
++  __locale_guard __current(__loc);
++  return mbsrtowcs(__dest, __src, __len, __ps);
++}
++#  endif // _LIBCPP_HAS_WIDE_CHARACTERS
++#endif   // _LIBCPP_BUILDING_LIBRARY
++
++_LIBCPP_DIAGNOSTIC_PUSH
++_LIBCPP_CLANG_DIAGNOSTIC_IGNORED("-Wgcc-compat")
++_LIBCPP_GCC_DIAGNOSTIC_IGNORED("-Wformat-nonliteral") // GCC doesn't support [[gnu::format]] on variadic templates
++#ifdef _LIBCPP_COMPILER_CLANG_BASED
++#  define _LIBCPP_VARIADIC_ATTRIBUTE_FORMAT(...) _LIBCPP_ATTRIBUTE_FORMAT(__VA_ARGS__)
++#else
++#  define _LIBCPP_VARIADIC_ATTRIBUTE_FORMAT(...) /* nothing */
++#endif
++
++template <class... _Args>
++_LIBCPP_VARIADIC_ATTRIBUTE_FORMAT(__printf__, 4, 5)
++int __snprintf(char* __s, size_t __n, __locale_t __loc, const char* __format, _Args&&... __args) {
++  __locale_guard __current(__loc);
++  return ::snprintf(__s, __n, __format, std::forward<_Args>(__args)...);
++}
++
++template <class... _Args>
++_LIBCPP_VARIADIC_ATTRIBUTE_FORMAT(__printf__, 3, 4)
++int __asprintf(char** __s, __locale_t __loc, const char* __format, _Args&&... __args) {
++  __locale_guard __current(__loc);
++  return ::asprintf(__s, __format, std::forward<_Args>(__args)...); // non-standard
++}
++_LIBCPP_DIAGNOSTIC_POP
++#undef _LIBCPP_VARIADIC_ATTRIBUTE_FORMAT
++
++} // namespace __locale
++_LIBCPP_END_NAMESPACE_STD
++
++#endif // _LIBCPP___LOCALE_DIR_LOCALE_BASE_API_SERENITY_H

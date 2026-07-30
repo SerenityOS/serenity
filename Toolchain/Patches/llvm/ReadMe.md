@@ -4,8 +4,8 @@
 
 Add /usr/local to the default search path
 
-This includes both /usr/local/include for compiler and /usr/local/lib
-for the linker.
+This includes both /usr/local/include for the compiler and
+/usr/local/lib for the linker.
 
 These paths are needed to build Ports with Clang. More precisely, it
 allows ports to find installed dependencies.
@@ -49,14 +49,13 @@ Add support for SerenityOS
 
 This commit teaches libc++ about what features are available in our
 LibC, namely:
-* We do not have locale support, so no-op shims should be used in place
-  of the C locale API.
-* The number of errno constants defined by us is given by the value of
-  the `ELAST` macro.
+* locale support, by providing __locale_dir/support/serenity.h
 * Multithreading is implemented though the pthread library.
 * Use libc++'s builtin character type table instead of the one provided
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
+
+Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
 
 ## `0006-RISCV-Implement-__init_riscv_feature_bits-for-Sereni.patch`
 
