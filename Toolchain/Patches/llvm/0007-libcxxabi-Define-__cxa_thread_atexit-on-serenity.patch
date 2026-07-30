@@ -9,10 +9,10 @@ Subject: [PATCH] [libcxxabi] Define __cxa_thread_atexit on serenity
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/libcxxabi/include/cxxabi.h b/libcxxabi/include/cxxabi.h
-index 2874d14a4ad4d84240c593d27b7120071b9dcc89..f4208f652224fd8c506aba3fd070e80acbc9996f 100644
+index 66301d308282de49dbdce111db3402e0b7343bc0..845698efbdedef3f914b052001b5fe96eb9eff52 100644
 --- a/libcxxabi/include/cxxabi.h
 +++ b/libcxxabi/include/cxxabi.h
-@@ -180,7 +180,7 @@ __cxa_decrement_exception_refcount(void *primary_exception) _LIBCXXABI_NOEXCEPT;
+@@ -179,7 +179,7 @@ __cxa_decrement_exception_refcount(void *primary_exception) _LIBCXXABI_NOEXCEPT;
  extern _LIBCXXABI_FUNC_VIS bool __cxa_uncaught_exception() _LIBCXXABI_NOEXCEPT;
  extern _LIBCXXABI_FUNC_VIS unsigned int __cxa_uncaught_exceptions() _LIBCXXABI_NOEXCEPT;
  

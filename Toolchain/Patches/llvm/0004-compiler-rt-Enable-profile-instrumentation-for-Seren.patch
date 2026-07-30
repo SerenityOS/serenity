@@ -14,10 +14,10 @@ enough to linux to use the pre-canned InstrProfiling implementation.
  5 files changed, 26 insertions(+), 2 deletions(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
-index b55ac5c5f1ff8d9d183d24b8b0137143487b1ffb..2b227a8a8a0fc16ca628822f911a459b038c1d5b 100644
+index 4a3146fbe7c70ded76cca17551458ce5f513113e..a68341c95c4bb5344a996045b6f2f5d50fd3b083 100644
 --- a/clang/lib/Driver/ToolChains/Serenity.cpp
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -163,6 +163,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
+@@ -161,6 +161,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
      CmdArgs.push_back(Args.MakeArgString(crtend_path));
    }
  
@@ -66,10 +66,10 @@ index 25b185bcd209de175f6a0ff2ec6506fdb4e6de3b..65818a4845f4e8747b37b706636af8d8
  // RUN:     --target=x86_64-apple-darwin14 -fprofile-instr-generate -fuse-ld=ld \
  // RUN:     -resource-dir=%S/Inputs/resource_dir \
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index 82104c8caffd1d8384e25301befa1cf94979b7a1..ebb6f3d5feeb091f41a9d58cfa100ebe0f1818ed 100644
+index 083f1c98d0f169da99d28fafbe808b4c4e5a7fdc..0690fbae0e2ba29ba36b3a500c428af094c7bd49 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
-@@ -853,7 +853,7 @@ else()
+@@ -847,7 +847,7 @@ else()
  endif()
  
  if (PROFILE_SUPPORTED_ARCH AND NOT LLVM_USE_SANITIZER AND

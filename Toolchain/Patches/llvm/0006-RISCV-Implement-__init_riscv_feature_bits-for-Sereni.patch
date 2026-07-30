@@ -8,15 +8,15 @@ The SerenityOS dynamic linker provides a magic function
 and __riscv_cpu_model.
 ---
  .../clang/Basic/DiagnosticFrontendKinds.td    |  2 +-
- clang/lib/CodeGen/CodeGenFunction.cpp         |  5 +++--
- compiler-rt/lib/builtins/cpu_model/riscv.c    | 22 +++++++++++++++++--
- 3 files changed, 24 insertions(+), 5 deletions(-)
+ clang/lib/CodeGen/CodeGenFunction.cpp         |  5 ++-
+ compiler-rt/lib/builtins/cpu_model/riscv.c    | 44 +++++++++++++++++++
+ 3 files changed, 48 insertions(+), 3 deletions(-)
 
 diff --git a/clang/include/clang/Basic/DiagnosticFrontendKinds.td b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-index f384a97b6825edec28bc7949296a7ca9f0497e88..0cef9d3f235b0eb7fa2ccdab2f8a9a76a2801acc 100644
+index a688b298f2bbd88f1af3db877a12e8a0f1716cc0..fb520dc8c8756def52779ae89e69e428ecf90a73 100644
 --- a/clang/include/clang/Basic/DiagnosticFrontendKinds.td
 +++ b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-@@ -437,7 +437,7 @@ def err_ast_action_on_llvm_ir : Error<
+@@ -478,7 +478,7 @@ def err_ast_action_on_llvm_ir : Error<
  def err_invalid_llvm_ir : Error<"invalid LLVM IR input: %0">;
  
  def err_os_unsupport_riscv_fmv : Error<
@@ -26,10 +26,10 @@ index f384a97b6825edec28bc7949296a7ca9f0497e88..0cef9d3f235b0eb7fa2ccdab2f8a9a76
  def warn_unreachable_version
      : Warning<"function version '%0' is unreachable; ignoring version">,
 diff --git a/clang/lib/CodeGen/CodeGenFunction.cpp b/clang/lib/CodeGen/CodeGenFunction.cpp
-index b920266b59808e25b74c711fd2ab478453e09da9..f26a79e23736b801ffc17763311ecb3c20b8c34f 100644
+index 119aebb673789fec3dcda0c1d8f82340d7ae274f..b199c440125430e70a55cebe4b12ef8147aa1a7b 100644
 --- a/clang/lib/CodeGen/CodeGenFunction.cpp
 +++ b/clang/lib/CodeGen/CodeGenFunction.cpp
-@@ -3160,8 +3160,9 @@ void CodeGenFunction::EmitPPCAIXMultiVersionResolver(
+@@ -3176,8 +3176,9 @@ void CodeGenFunction::EmitPPCAIXMultiVersionResolver(
  void CodeGenFunction::EmitRISCVMultiVersionResolver(
      llvm::Function *Resolver, ArrayRef<FMVResolverOption> Options) {
  
@@ -42,14 +42,13 @@ index b920266b59808e25b74c711fd2ab478453e09da9..f26a79e23736b801ffc17763311ecb3c
      return;
    }
 diff --git a/compiler-rt/lib/builtins/cpu_model/riscv.c b/compiler-rt/lib/builtins/cpu_model/riscv.c
-index 1c729c8bd7e05365c3532de14f12cf4af5c3ddc5..57bab62e68e7c28971b7dc98c8633b0b8906da14 100644
+index 8b4cc957a97840d72b2b4f3d47bf2cb5b2d6c8d4..85dcf8b8b494624ec027217c451d8bfbcfb150ad 100644
 --- a/compiler-rt/lib/builtins/cpu_model/riscv.c
 +++ b/compiler-rt/lib/builtins/cpu_model/riscv.c
-@@ -345,7 +345,23 @@ static void initRISCVFeature(struct riscv_hwprobe Hwprobes[]) {
-   __riscv_feature_bits.length = RISCV_FEATURE_BITS_LENGTH;
- }
- 
--#endif // defined(__linux__)
+@@ -28,6 +28,50 @@ struct {
+ // clang-format off
+ #if defined(__linux__)
+ #include "riscv/hwprobe.inc"
 +#elif defined(__serenity__)
 +
 +extern void __get_riscv_feature_bits(void *, void *) __attribute__((weak));
@@ -66,18 +65,34 @@ index 1c729c8bd7e05365c3532de14f12cf4af5c3ddc5..57bab62e68e7c28971b7dc98c8633b0b
 +  }
 +}
 +
-+#endif
- 
- static int FeaturesBitCached = 0;
- 
-@@ -380,7 +396,9 @@ void __init_riscv_feature_bits(void *PlatformArgs) {
-     return;
- 
-   initRISCVFeature(Hwprobes);
--#endif // defined(__linux__)
-+#elif defined(__serenity__)
++static int FeaturesBitCached = 0;
++
++void __init_riscv_feature_bits(void *);
++static void __init_riscv_feature_bits_ctor(void) CONSTRUCTOR_ATTRIBUTE;
++
++// A constructor function that sets __riscv_feature_bits
++// to the right values.  This needs to run only once.  This constructor is given
++// the highest priority and it should run before constructors without the
++// priority set.  However, it still runs after ifunc initializers and needs to
++// be called explicitly there.
++
++static void CONSTRUCTOR_ATTRIBUTE __init_riscv_feature_bits_ctor(void) {
++  __init_riscv_feature_bits(0);
++}
++
++// PlatformArgs allows the platform to provide pre-computed data and access it
++// without extra effort. For example, Linux could pass the vDSO object to avoid
++// an extra system call.
++void __init_riscv_feature_bits(void *PlatformArgs) {
++
++  if (FeaturesBitCached)
++    return;
++
 +  initRISCVFeature();
-+#endif
- 
-   FeaturesBitCached = 1;
- }
++
++  FeaturesBitCached = 1;
++}
++
+ #else
+ #include "riscv/unimplemented.inc"
+ #endif
