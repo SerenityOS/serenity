@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Fences.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/API/POSIX/sys/stat.h>
@@ -145,11 +146,6 @@ NAKED void _start(int, char**, char**)
 #else
 #    error "Unknown architecture"
 #endif
-}
-
-ALWAYS_INLINE static void optimizer_fence()
-{
-    asm("" ::: "memory");
 }
 
 [[gnu::no_stack_protector]] void _entry(int argc, char** argv, char** envp)
