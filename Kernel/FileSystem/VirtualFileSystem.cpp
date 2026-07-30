@@ -636,6 +636,9 @@ ErrorOr<void> VirtualFileSystem::rename(VFSRootContext const& vfs_root_context, 
     if (!new_custody_or_error.is_error()) {
         auto& new_inode = new_custody_or_error.value()->inode();
 
+        if (old_inode.is_directory() && !new_inode.is_directory())
+            return ENOTDIR;
+
         if (old_inode.index() != new_inode.index() && old_inode.is_directory() && new_inode.is_directory()) {
             size_t child_count = 0;
             TRY(new_inode.traverse_as_directory([&child_count](auto&) -> ErrorOr<void> {
