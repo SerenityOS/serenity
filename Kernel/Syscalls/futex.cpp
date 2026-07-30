@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Fences.h>
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Memory/InodeVMObject.h>

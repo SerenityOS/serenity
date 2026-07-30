@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Atomic.h>
+#include <AK/Fences.h>
 #include <Kernel/Arch/Processor.h>
 
 namespace Kernel {

@@ -10,7 +10,7 @@
 
 // This header provides architecture-agnostic abstractions for memory fences.
 // These fences should only be used to enforce memory ordering constraints when interacting with device memory.
-// When no device memory is involved, use atomic_thread_fence() from <AK/Atomic.h>.
+// When no device memory is involved, use atomic_thread_fence() from <AK/Fences.h>.
 // atomic_thread_fence() is generally not strong enough when interacting with device memory.
 
 namespace Kernel {
