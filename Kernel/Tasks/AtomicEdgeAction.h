@@ -69,7 +69,7 @@ public:
             }
         }
 
-        AK::atomic_thread_fence(AK::memory_order_release);
+        atomic_thread_fence(AK::memory_order_release);
 
         if (expected == 1 << 1) {
             last_ref_action();

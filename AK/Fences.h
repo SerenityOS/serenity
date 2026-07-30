@@ -21,3 +21,8 @@ static inline void atomic_thread_fence(MemoryOrder order) noexcept
 }
 
 }
+
+#if USING_AK_GLOBALLY
+using AK::atomic_signal_fence;
+using AK::atomic_thread_fence;
+#endif
