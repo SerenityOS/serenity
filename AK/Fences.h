@@ -20,9 +20,15 @@ static inline void atomic_thread_fence(MemoryOrder order) noexcept
     return __atomic_thread_fence(order);
 }
 
+static inline void optimizer_fence()
+{
+    asm volatile("" ::: "memory");
+}
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::atomic_signal_fence;
 using AK::atomic_thread_fence;
+using AK::optimizer_fence;
 #endif
