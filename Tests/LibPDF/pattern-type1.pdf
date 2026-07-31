@@ -10,7 +10,7 @@ endobj
 endobj
 
 5 0 obj
-<</Type/Page/Parent 3 0 R/Resources 10 0 R/Contents 30 0 R/MediaBox[0 0 225 225]>>
+<</Type/Page/Parent 3 0 R/Resources 10 0 R/Contents 30 0 R/MediaBox[0 0 225 325]>>
 endobj
 
 10 0 obj
@@ -55,8 +55,9 @@ endobj
 endobj
 
 30 0 obj
-<</Length 1086>>
+<</Length 1279>>
 stream
+% Based on Example 4.23 in the PDF 1.7 spec.
 0.0 G % Set stroking colour to black
 1.0 1.0 0.0 rg % Set nonstroking colour to yellow
 25 175 175 -150 re % Construct rectangular path
@@ -85,6 +86,17 @@ B % Fill and stroke path
 175 50 l % Construct triangular path
 112.5 158.253 l
 b % Close, fill, and stroke path 
+
+% Extension to the spec example: Using a type 1 pattern as stroke.
+1 0 0 1 25 225 cm
+/Pattern CS
+/P1 SCN
+1.0 1.0 0.0 rg 
+0 0 175 75 re
+30 w
+1 j
+b
+
 endstream
 endobj
 
@@ -125,5 +137,5 @@ xref
 trailer
 <</Size 31/Root 1 0 R>>
 startxref
-2433
+2626
 %%EOF
