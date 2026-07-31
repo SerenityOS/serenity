@@ -136,6 +136,18 @@ PDFErrorsOr<void> Renderer::render()
     return {};
 }
 
+PDFErrorOr<NonnullRefPtr<Object>> Renderer::get_resource(NonnullRefPtr<DictObject> resources, ByteString const& resource_type, Value const& resource)
+{
+    if (!resources->contains(resource_type))
+        return Error::malformed_error("{} resource dictionary missing", resource_type);
+    auto resource_dictionary = TRY(resources->get_dict(m_document, resource_type));
+
+    auto resource_name = TRY(m_document->resolve_to<NameObject>(resource))->name();
+    if (!resource_dictionary->contains(resource_name))
+        return Error::malformed_error("{} resource dictionary does not contain {}", resource_type, resource_name);
+    return resource_dictionary->get_object(m_document, resource_name);
+}
+
 PDFErrorOr<void> Renderer::handle_operator(Operator const& op, Optional<NonnullRefPtr<DictObject>> extra_resources)
 {
     switch (op.type()) {
@@ -240,9 +252,7 @@ RENDERER_HANDLER(set_flatness_tolerance)
 RENDERER_HANDLER(set_graphics_state_from_dict)
 {
     auto resources = extra_resources.value_or(m_page.resources);
-    auto dict_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
-    auto ext_gstate_dict = MUST(resources->get_dict(m_document, CommonNames::ExtGState));
-    auto target_dict = MUST(ext_gstate_dict->get_dict(m_document, dict_name));
+    auto target_dict = TRY(get_resource(resources, CommonNames::ExtGState, args[0]))->cast<DictObject>();
     TRY(set_graphics_state_from_dict(target_dict));
     return {};
 }
@@ -628,15 +638,7 @@ PDFErrorOr<void> Renderer::set_font(NonnullRefPtr<DictObject> font_dictionary, f
 RENDERER_HANDLER(text_set_font)
 {
     auto resources = extra_resources.value_or(m_page.resources);
-    if (!resources->contains(CommonNames::Font))
-        return Error::malformed_error("Font resource dictionary missing");
-    auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
-
-    auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
-    if (!fonts_dictionary->contains(target_font_name))
-        return Error::malformed_error("Font resource dictionary does not contain {}", target_font_name);
-    auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
-
+    auto font_dictionary = TRY(get_resource(resources, CommonNames::Font, args[0]))->cast<DictObject>();
     return set_font(font_dictionary, args[1].to_float());
 }
 
@@ -881,15 +883,8 @@ RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 RENDERER_HANDLER(shade)
 {
     VERIFY(args.size() == 1);
-    auto shading_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
     auto resources = extra_resources.value_or(m_page.resources);
-    auto shading_resource_dict = TRY(resources->get_dict(m_document, CommonNames::Shading));
-    if (!shading_resource_dict->contains(shading_name)) {
-        dbgln("missing shade {}", shading_name);
-        return Error::malformed_error("Missing entry for shade name");
-    }
-
-    auto shading_dict_or_stream = TRY(shading_resource_dict->get_object(m_document, shading_name));
+    auto shading_dict_or_stream = TRY(get_resource(resources, CommonNames::Shading, args[0]));
     auto shading = TRY(Shading::create(m_document, shading_dict_or_stream, *this));
 
     Optional<ScopedState> scoped_state;
@@ -1061,15 +1056,7 @@ RENDERER_HANDLER(paint_xobject)
 {
     VERIFY(args.size() > 0);
     auto resources = extra_resources.value_or(m_page.resources);
-    if (!resources->contains(CommonNames::XObject))
-        return Error::malformed_error("XObject resource dictionary missing");
-    auto xobjects_dict = TRY(resources->get_dict(m_document, CommonNames::XObject));
-
-    auto xobject_name = args[0].get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-    if (!xobjects_dict->contains(xobject_name))
-        return Error::malformed_error("XObject resource dictionary does not contain {}", xobject_name);
-    auto xobject = TRY(xobjects_dict->get_stream(m_document, xobject_name));
-
+    auto xobject = TRY(get_resource(resources, CommonNames::XObject, args[0]))->cast<StreamObject>();
     auto subtype = MUST(xobject->dict()->get_name(m_document, CommonNames::Subtype))->name();
     if (subtype == CommonNames::Image) {
         TRY(paint_image_xobject(xobject));
@@ -1842,12 +1829,8 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
             return ColorSpace::create(color_space_name, *this, resources);
         }
     }
-    if (!resources->contains(CommonNames::ColorSpace))
-        return Error::malformed_error("ColorSpace resource dictionary missing");
-    auto color_space_resource_dict = TRY(resources->get_dict(m_document, CommonNames::ColorSpace));
-    if (!color_space_resource_dict->contains(color_space_name))
-        return Error::malformed_error("ColorSpace resource dictionary does not contain {}", color_space_name);
-    return get_color_space_from_document(TRY(color_space_resource_dict->get_object(m_document, color_space_name)), resources);
+    auto color_space_object = TRY(get_resource(resources, CommonNames::ColorSpace, value));
+    return get_color_space_from_document(color_space_object, resources);
 }
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(NonnullRefPtr<Object> color_space_object, Optional<NonnullRefPtr<DictObject>> resources)
