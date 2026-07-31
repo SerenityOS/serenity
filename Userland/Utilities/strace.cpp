@@ -444,12 +444,6 @@ public:
         (add_argument(forward<Ts>(args)), ...);
     }
 
-    template<typename T>
-    void format_result_no_error(T res)
-    {
-        m_builder.appendff(") = {}\n", res);
-    }
-
     void format_result(Integral auto res)
     {
         m_builder.append(") = "sv);
