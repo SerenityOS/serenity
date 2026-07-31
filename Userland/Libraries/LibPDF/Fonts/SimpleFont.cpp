@@ -125,7 +125,14 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_transformed_glyphs(Gfx::Painter& pa
         Gfx::AffineTransform {}
             .set_scale(1 / text_rendering_matrix.x_scale() * horizontal_scaling,
                 -1 / text_rendering_matrix.x_scale() * horizontal_scaling)));
-    Renderer::fill_path_with_style(aa_painter, text_path, renderer.state().paint_style, renderer.state().paint_alpha_constant);
+    TRY(renderer.state().paint_style.visit(
+        [&](ColorOrStyle const& style) -> PDFErrorOr<void> {
+            Renderer::fill_path_with_style(aa_painter, text_path, style, renderer.state().paint_alpha_constant);
+            return {};
+        },
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
+            return Error::rendering_unsupported_error("Cannot draw text with a pattern yet");
+        }));
     return end_position;
 }
 
