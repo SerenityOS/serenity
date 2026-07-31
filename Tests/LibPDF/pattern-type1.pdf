@@ -18,7 +18,7 @@ endobj
 endobj
 
 15 0 obj
-<</Type/Pattern/PatternType 1/PaintType 1/TilingType 2/BBox[0 0 100 100]/XStep 100/YStep 100/Matrix[.4 0 0 .4 0 0]/Length 632>>
+<</Type/Pattern/PatternType 1/PaintType 1/TilingType 2/BBox[0 0 100 100]/XStep 100/YStep 100/Matrix[.4 0 0 .4 0 0]/Resources 16 0 R/Length 643>>
 stream
 BT % Begin text object
 0.0 -0.05 TD % Move text position
@@ -27,24 +27,27 @@ BT % Begin text object
 0 Tc % Set character spacing
 0 Tw % Set word spacing
 1.0 0.0 0.0 rg % Set nonstroking colour to red
-( a ) Tj % Show spade glyph
+( \001 ) Tj % Show spade glyph
 0.7478 -0.007 TD % Move text position
 0.0 1.0 0.0 rg % Set nonstroking colour to green
-( b ) Tj % Show heart glyph
+( \002 ) Tj % Show heart glyph
 -0.7323 0.7813 TD % Move text position
 0.0 0.0 1.0 rg % Set nonstroking colour to blue
-( c ) Tj % Show diamond glyph
+( \003 ) Tj % Show diamond glyph
 0.6913 0.007 TD % Move text position
 0.0 0.0 0.0 rg % Set nonstroking colour to black
-( d ) Tj % Show club glyph
+( \004 ) Tj % Show club glyph
 ET % End text object
-
 
 endstream
 endobj
 
+16 0 obj
+<</Font<</F1 20 0 R>>>>
+endobj
+
 20 0 obj
-<</Type/Font/Subtype/Type1/Encoding 21 0 R/BaseFont/Helvevtica>>
+<</Type/Font/Subtype/Type1/Encoding 21 0 R/BaseFont/ZapfDingbats>>
 endobj
 
 21 0 obj
@@ -87,40 +90,40 @@ endobj
 
 xref
 0 31
-0000000002 00001 f 
+0000000002 65536 f 
 0000000016 00000 n 
-0000000004 00003 f 
+0000000004 00002 f 
 0000000062 00000 n 
-0000000006 00003 f 
+0000000006 00002 f 
 0000000114 00000 n 
-0000000007 00003 f 
-0000000008 00003 f 
-0000000009 00003 f 
-0000000011 00003 f 
+0000000007 00002 f 
+0000000008 00002 f 
+0000000009 00002 f 
+0000000011 00002 f 
 0000000213 00000 n 
-0000000012 00003 f 
-0000000013 00003 f 
-0000000014 00003 f 
-0000000016 00003 f 
+0000000012 00002 f 
+0000000013 00002 f 
+0000000014 00002 f 
+0000000017 00002 f 
 0000000276 00000 n 
-0000000017 00003 f 
-0000000018 00003 f 
-0000000019 00003 f 
-0000000022 00003 f 
-0000001071 00000 n 
-0000001153 00000 n 
-0000000023 00003 f 
-0000000024 00003 f 
-0000000025 00003 f 
-0000000026 00003 f 
-0000000027 00003 f 
-0000000028 00003 f 
-0000000029 00003 f 
-0000000000 00003 f 
+0000001099 00000 n 
+0000000018 00002 f 
+0000000019 00002 f 
+0000000022 00002 f 
+0000001140 00000 n 
 0000001224 00000 n 
+0000000023 00002 f 
+0000000024 00002 f 
+0000000025 00002 f 
+0000000026 00002 f 
+0000000027 00002 f 
+0000000028 00002 f 
+0000000029 00002 f 
+0000000000 00002 f 
+0000001295 00000 n 
 
 trailer
 <</Size 31/Root 1 0 R>>
 startxref
-2362
+2433
 %%EOF
