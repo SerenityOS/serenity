@@ -83,7 +83,7 @@ PDFErrorOr<ColorOrStyle> Pattern::style(Document*, NonnullRefPtr<Object> pattern
     initial_ctm.set_translation(0, 0);
     initial_ctm.set_scale(initial_ctm.x_scale(), initial_ctm.y_scale());
 
-    auto pattern_bounding_box = pattern_dict->get_array(renderer.m_document, "BBox").value()->elements();
+    auto pattern_bounding_box = pattern_dict->get_array(renderer.m_document, CommonNames::BBox).value()->elements();
 
     auto pattern_space_lower_left = Gfx::FloatPoint { pattern_bounding_box[0].to_int(), pattern_bounding_box[1].to_int() };
     auto pattern_space_upper_right = Gfx::FloatPoint { pattern_bounding_box[2].to_int(), pattern_bounding_box[3].to_int() };
