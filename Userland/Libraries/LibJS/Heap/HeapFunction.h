@@ -42,7 +42,7 @@ private:
 };
 
 template<typename Callable, typename T = EquivalentFunctionType<Callable>>
-static NonnullGCPtr<HeapFunction<T>> create_heap_function(Heap& heap, Callable&& function)
+NonnullGCPtr<HeapFunction<T>> create_heap_function(Heap& heap, Callable&& function)
 {
     return HeapFunction<T>::create(heap, Function<T> { forward<Callable>(function) });
 }

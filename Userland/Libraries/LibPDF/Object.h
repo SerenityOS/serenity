@@ -15,8 +15,6 @@
 #include <LibPDF/Forward.h>
 
 #ifdef PDF_DEBUG
-namespace {
-
 template<PDF::IsObject T>
 char const* object_name()
 {
@@ -28,8 +26,6 @@ char const* object_name()
 #    undef ENUMERATE_TYPE
 
     VERIFY_NOT_REACHED();
-}
-
 }
 #endif
 

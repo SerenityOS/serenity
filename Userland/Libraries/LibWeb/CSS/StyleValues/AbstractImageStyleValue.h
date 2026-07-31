@@ -70,7 +70,7 @@ struct ColorStopListElement {
 using LinearColorStopListElement = ColorStopListElement<LengthPercentage>;
 using AngularColorStopListElement = ColorStopListElement<AnglePercentage>;
 
-static void serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
+void serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
 {
     bool first = true;
     for (auto const& element : color_stop_list) {

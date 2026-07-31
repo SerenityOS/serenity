@@ -16,7 +16,7 @@
 namespace Web::WebDriver {
 
 template<typename PropertyType = ByteString>
-static ErrorOr<PropertyType, WebDriver::Error> get_property(JsonObject const& payload, StringView key)
+ErrorOr<PropertyType, WebDriver::Error> get_property(JsonObject const& payload, StringView key)
 {
     auto property = payload.get(key);
 
@@ -68,7 +68,7 @@ static ErrorOr<PropertyType, WebDriver::Error> get_property(JsonObject const& pa
 }
 
 template<typename PropertyType = ByteString>
-static ErrorOr<PropertyType, WebDriver::Error> get_property(JsonValue const& payload, StringView key)
+ErrorOr<PropertyType, WebDriver::Error> get_property(JsonValue const& payload, StringView key)
 {
     if (!payload.is_object())
         return WebDriver::Error::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
@@ -76,7 +76,7 @@ static ErrorOr<PropertyType, WebDriver::Error> get_property(JsonValue const& pay
 }
 
 template<typename PropertyType = ByteString>
-static ErrorOr<Optional<PropertyType>, WebDriver::Error> get_optional_property(JsonObject const& object, StringView key)
+ErrorOr<Optional<PropertyType>, WebDriver::Error> get_optional_property(JsonObject const& object, StringView key)
 {
     if (!object.has(key))
         return OptionalNone {};
@@ -84,7 +84,7 @@ static ErrorOr<Optional<PropertyType>, WebDriver::Error> get_optional_property(J
 }
 
 template<Arithmetic PropertyType>
-static ErrorOr<PropertyType, WebDriver::Error> get_property_with_limits(JsonObject const& object, StringView key, Optional<PropertyType> min, Optional<PropertyType> max)
+ErrorOr<PropertyType, WebDriver::Error> get_property_with_limits(JsonObject const& object, StringView key, Optional<PropertyType> min, Optional<PropertyType> max)
 {
     auto value = TRY(get_property<PropertyType>(object, key));
 
@@ -97,7 +97,7 @@ static ErrorOr<PropertyType, WebDriver::Error> get_property_with_limits(JsonObje
 }
 
 template<Arithmetic PropertyType>
-static ErrorOr<Optional<PropertyType>, WebDriver::Error> get_optional_property_with_limits(JsonObject const& object, StringView key, Optional<PropertyType> min, Optional<PropertyType> max)
+ErrorOr<Optional<PropertyType>, WebDriver::Error> get_optional_property_with_limits(JsonObject const& object, StringView key, Optional<PropertyType> min, Optional<PropertyType> max)
 {
     if (!object.has(key))
         return OptionalNone {};

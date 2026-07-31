@@ -353,7 +353,7 @@ private:
 };
 
 template<typename GlobalObjectType, typename... Args>
-[[nodiscard]] static NonnullOwnPtr<ExecutionContext> create_simple_execution_context(VM& vm, Args&&... args)
+[[nodiscard]] NonnullOwnPtr<ExecutionContext> create_simple_execution_context(VM& vm, Args&&... args)
 {
     auto root_execution_context = MUST(Realm::initialize_host_defined_realm(
         vm,

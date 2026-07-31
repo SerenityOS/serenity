@@ -56,7 +56,7 @@ static inline ErrorOr<u16> read_number(SeekableStream& stream)
 }
 
 template<typename TContext>
-static ErrorOr<void> read_comment(TContext& context)
+ErrorOr<void> read_comment(TContext& context)
 {
     auto& stream = *context.stream;
     bool is_first_char = true;
@@ -76,7 +76,7 @@ static ErrorOr<void> read_comment(TContext& context)
 }
 
 template<typename TContext>
-static ErrorOr<void> read_magic_number(TContext& context)
+ErrorOr<void> read_magic_number(TContext& context)
 {
     if (TRY(context.stream->size()) < 2) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "There is no enough data for {}", TContext::FormatDetails::image_type);
@@ -103,7 +103,7 @@ static ErrorOr<void> read_magic_number(TContext& context)
 }
 
 template<typename TContext>
-static ErrorOr<void> read_whitespace(TContext& context)
+ErrorOr<void> read_whitespace(TContext& context)
 {
     auto& stream = *context.stream;
     bool is_first_char = true;
@@ -135,21 +135,21 @@ static ErrorOr<void> read_whitespace(TContext& context)
 }
 
 template<typename TContext>
-static ErrorOr<void> read_width(TContext& context)
+ErrorOr<void> read_width(TContext& context)
 {
     context.width = TRY(read_number(*context.stream));
     return {};
 }
 
 template<typename TContext>
-static ErrorOr<void> read_height(TContext& context)
+ErrorOr<void> read_height(TContext& context)
 {
     context.height = TRY(read_number(*context.stream));
     return {};
 }
 
 template<typename TContext>
-static ErrorOr<void> read_max_val(TContext& context)
+ErrorOr<void> read_max_val(TContext& context)
 {
     context.format_details.max_val = TRY(read_number(*context.stream));
 
@@ -165,14 +165,14 @@ static ErrorOr<void> read_max_val(TContext& context)
 }
 
 template<typename TContext>
-static ErrorOr<void> create_bitmap(TContext& context)
+ErrorOr<void> create_bitmap(TContext& context)
 {
     context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.width, context.height }));
     return {};
 }
 
 template<typename Context>
-static ErrorOr<void> read_header(Context& context)
+ErrorOr<void> read_header(Context& context)
 {
     TRY(read_magic_number(context));
 
@@ -195,10 +195,10 @@ static ErrorOr<void> read_header(Context& context)
 }
 
 template<typename Context>
-static ErrorOr<void> read_pam_header(Context& context);
+ErrorOr<void> read_pam_header(Context& context);
 
 template<typename TContext>
-static ErrorOr<void> decode(TContext& context)
+ErrorOr<void> decode(TContext& context)
 {
     VERIFY(context.state == TContext::State::HeaderDecoded);
 

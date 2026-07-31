@@ -101,6 +101,7 @@ UNMAP_AFTER_INIT SysFSSMBIOSDirectory::SysFSSMBIOSDirectory(SysFSFirmwareDirecto
     initialize_smbios_exposer();
 }
 
+#if ARCH(X86_64)
 template<typename EntryPoint>
 static bool is_entry_point_valid(ReadonlyBytes entry_point)
 {
@@ -117,6 +118,7 @@ static bool is_entry_point_valid(ReadonlyBytes entry_point)
 
     return checksum == 0;
 }
+#endif
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_entry64bit_point()
 {

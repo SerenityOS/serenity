@@ -19,7 +19,7 @@ UnsignedBigInteger ModularPower(UnsignedBigInteger const& b, UnsignedBigInteger 
 //       it will allocate and free a lot of memory!
 //       Please use |ModularPower| if your use-case is modexp.
 template<typename IntegerType>
-static IntegerType Power(IntegerType const& b, IntegerType const& e)
+IntegerType Power(IntegerType const& b, IntegerType const& e)
 {
     IntegerType ep { e };
     IntegerType base { b };
