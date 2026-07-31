@@ -442,25 +442,27 @@ PDFErrorOr<void> Renderer::end_path_paint()
     return {};
 }
 
-void Renderer::stroke_current_path()
+PDFErrorOr<void> Renderer::stroke_current_path()
 {
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
         anti_aliasing_painter().stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style(), state().stroke_alpha_constant);
     } else {
         anti_aliasing_painter().stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
     }
+    return {};
 }
 
-void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
+PDFErrorOr<void> Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
     fill_path_with_style(anti_aliasing_painter(), m_current_path, state().paint_style, state().paint_alpha_constant, winding_rule);
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
+    return {};
 }
 
-void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
+PDFErrorOr<void> Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
 {
     // Note: Just drawing the stroke on top of the fill is incorrect if the stroke is not opaque.
     // See "Special Path-Painting Considerations" on page 569 of the PDF 1.7 spec:
@@ -468,14 +470,15 @@ void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
     // (The spec says this in the language of knockout groups.)
     // Having said that, while Acrobat Reader and PDFium get this right, PDF.js and Preview.app do not.
     // FIXME: Once we have support for transparency groups, do this per spec.
-    fill_current_path(winding_rule);
-    stroke_current_path();
+    TRY(fill_current_path(winding_rule));
+    TRY(stroke_current_path());
+    return {};
 }
 
 RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
-    stroke_current_path();
+    TRY(stroke_current_path());
     TRY(end_path_paint());
     return {};
 }
@@ -490,7 +493,7 @@ RENDERER_HANDLER(path_close_and_stroke)
 RENDERER_HANDLER(path_fill_nonzero)
 {
     begin_path_paint();
-    fill_current_path(Gfx::WindingRule::Nonzero);
+    TRY(fill_current_path(Gfx::WindingRule::Nonzero));
     TRY(end_path_paint());
     return {};
 }
@@ -503,7 +506,7 @@ RENDERER_HANDLER(path_fill_nonzero_deprecated)
 RENDERER_HANDLER(path_fill_evenodd)
 {
     begin_path_paint();
-    fill_current_path(Gfx::WindingRule::EvenOdd);
+    TRY(fill_current_path(Gfx::WindingRule::EvenOdd));
     TRY(end_path_paint());
     return {};
 }
@@ -511,7 +514,7 @@ RENDERER_HANDLER(path_fill_evenodd)
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     begin_path_paint();
-    fill_and_stroke_current_path(Gfx::WindingRule::Nonzero);
+    TRY(fill_and_stroke_current_path(Gfx::WindingRule::Nonzero));
     TRY(end_path_paint());
     return {};
 }
@@ -519,7 +522,7 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     begin_path_paint();
-    fill_and_stroke_current_path(Gfx::WindingRule::EvenOdd);
+    TRY(fill_and_stroke_current_path(Gfx::WindingRule::EvenOdd));
     TRY(end_path_paint());
     return {};
 }
