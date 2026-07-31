@@ -106,7 +106,13 @@ void Type1Font::set_font_size(float font_size)
 
 PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
-    auto style = renderer.state().paint_style;
+    auto style = TRY(renderer.state().paint_style.visit(
+        [&](ColorOrStyle const& style) -> PDFErrorOr<ColorOrStyle> {
+            return style;
+        },
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<ColorOrStyle> {
+            return Error::rendering_unsupported_error("Cannot draw type1 glyph with a pattern yet");
+        }));
 
     if (!m_font_program)
         return m_fallback_font_painter->draw_glyph(painter, point, width, char_code, renderer);

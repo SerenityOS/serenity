@@ -425,11 +425,11 @@ PDFErrorOr<void> Renderer::restore_previous_clip_after_graphics_state_restore()
 void Renderer::begin_path_paint()
 {
     m_current_path.transform(state().ctm);
-    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+    if (state().paint_style.has<ColorOrStyle>() && state().paint_style.get<ColorOrStyle>().has<NonnullRefPtr<Gfx::PaintStyle>>()) {
         VERIFY(!m_original_paint_style);
-        m_original_paint_style = state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>();
+        m_original_paint_style = state().paint_style.get<ColorOrStyle>().get<NonnullRefPtr<Gfx::PaintStyle>>();
         auto translation = Gfx::AffineTransform().translate(m_current_path.bounding_box().x(), m_current_path.bounding_box().y());
-        state().paint_style = { MUST(Gfx::OffsetPaintStyle::create(state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), translation)) };
+        state().paint_style = ColorOrStyle { MUST(Gfx::OffsetPaintStyle::create(state().paint_style.get<ColorOrStyle>().get<NonnullRefPtr<Gfx::PaintStyle>>(), translation)) };
     }
 }
 
@@ -441,7 +441,7 @@ PDFErrorOr<void> Renderer::end_path_paint()
     }
 
     if (m_original_paint_style) {
-        state().paint_style = m_original_paint_style.release_nonnull();
+        state().paint_style = ColorOrStyle { m_original_paint_style.release_nonnull() };
         m_original_paint_style = nullptr;
     }
 
@@ -454,11 +454,18 @@ PDFErrorOr<void> Renderer::end_path_paint()
 
 PDFErrorOr<void> Renderer::stroke_current_path()
 {
-    if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        anti_aliasing_painter().stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style(), state().stroke_alpha_constant);
-    } else {
-        anti_aliasing_painter().stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
-    }
+    TRY(state().stroke_style.visit(
+        [&](ColorOrStyle const& style) -> PDFErrorOr<void> {
+            if (style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+                anti_aliasing_painter().stroke_path(m_current_path, style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style(), state().stroke_alpha_constant);
+            } else {
+                anti_aliasing_painter().stroke_path(m_current_path, style.get<Color>(), stroke_style());
+            }
+            return {};
+        },
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
+            return Error::rendering_unsupported_error("Cannot stroke path with pattern yet");
+        }));
     return {};
 }
 
@@ -466,7 +473,14 @@ PDFErrorOr<void> Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
-    fill_path_with_style(anti_aliasing_painter(), m_current_path, state().paint_style, state().paint_alpha_constant, winding_rule);
+    TRY(state().paint_style.visit(
+        [&](ColorOrStyle const& style) -> PDFErrorOr<void> {
+            fill_path_with_style(anti_aliasing_painter(), m_current_path, style, state().paint_alpha_constant, winding_rule);
+            return {};
+        },
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
+            return Error::rendering_unsupported_error("Cannot fill path with pattern yet");
+        }));
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
     return {};
@@ -821,7 +835,15 @@ RENDERER_HANDLER(set_stroking_color)
 
 RENDERER_HANDLER(set_stroking_color_extended)
 {
-    // FIXME: Pattern color spaces might need extra resources
+    if (state().stroke_color_space->family() == ColorSpaceFamily::Pattern) {
+        auto resources = extra_resources.value_or(m_page.resources);
+        auto pattern_object = TRY(get_resource(resources, CommonNames::Pattern, args.last()));
+        if (TRY(Pattern::is_type2(m_document, pattern_object))) {
+            state().stroke_style = TRY(Pattern::create(m_document, pattern_object, *this));
+            return {};
+        }
+    }
+
     state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
     return {};
 }
@@ -834,6 +856,15 @@ RENDERER_HANDLER(set_painting_color)
 
 RENDERER_HANDLER(set_painting_color_extended)
 {
+    if (state().paint_color_space->family() == ColorSpaceFamily::Pattern) {
+        auto resources = extra_resources.value_or(m_page.resources);
+        auto pattern_object = TRY(get_resource(resources, CommonNames::Pattern, args.last()));
+        if (TRY(Pattern::is_type2(m_document, pattern_object))) {
+            state().paint_style = TRY(Pattern::create(m_document, pattern_object, *this));
+            return {};
+        }
+    }
+
     state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);
     return {};
 }
@@ -1782,11 +1813,11 @@ PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image
         // PDF 1.7 spec, 4.8.5 Masked Images, Stencil Masking:
         // "An image mask (an image XObject whose ImageMask entry is true) [...] is treated as a stencil mask [...].
         //  Sample values [...] designate places on the page that should either be marked with the current color or masked out (not marked at all)."
-        if (!state().paint_style.has<Gfx::Color>())
+        if (!state().paint_style.has<ColorOrStyle>() || !state().paint_style.get<ColorOrStyle>().has<Gfx::Color>())
             return Error(Error::Type::RenderingUnsupported, "Image masks with pattern fill not yet implemented");
 
         // Move mask to alpha channel, and put current color in RGB.
-        auto current_color = state().paint_style.get<Gfx::Color>();
+        auto current_color = state().paint_style.get<ColorOrStyle>().get<Gfx::Color>();
         for (auto& pixel : *image_bitmap.bitmap) {
             // "a sample value of 0 marks the page with the current color, and a 1 leaves the previous contents unchanged."
             // That's opposite of the normal alpha convention, and we're upsampling masks to 8 bit and use that as normal alpha.

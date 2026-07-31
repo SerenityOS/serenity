@@ -21,6 +21,7 @@
 #include <LibPDF/Document.h>
 #include <LibPDF/Fonts/PDFFont.h>
 #include <LibPDF/Object.h>
+#include <LibPDF/Pattern.h>
 
 namespace PDF {
 
@@ -108,8 +109,8 @@ struct GraphicsState {
     ClippingState clipping_state;
     RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
-    ColorOrStyle stroke_style { Color::Black };
-    ColorOrStyle paint_style { Color::Black };
+    Variant<ColorOrStyle, NonnullRefPtr<Pattern>> stroke_style { ColorOrStyle { Color::Black } };
+    Variant<ColorOrStyle, NonnullRefPtr<Pattern>> paint_style { ColorOrStyle { Color::Black } };
     ByteString color_rendering_intent { "RelativeColorimetric"sv };
     float flatness_tolerance { 1.0f };
     float line_width { 1.0f };
@@ -233,11 +234,11 @@ private:
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>, Optional<NonnullRefPtr<DictObject>> = {});
 
-    static ColorOrStyle style_with_alpha(ColorOrStyle style, float alpha)
+    static Variant<ColorOrStyle, NonnullRefPtr<Pattern>> style_with_alpha(Variant<ColorOrStyle, NonnullRefPtr<Pattern>> style, float alpha)
     {
-        if (style.has<Color>())
-            return style.get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255)));
-        return style;
+        if (!style.has<ColorOrStyle>() || !style.get<ColorOrStyle>().has<Color>())
+            return style;
+        return ColorOrStyle { style.get<ColorOrStyle>().get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255))) };
     }
 
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
@@ -422,16 +423,24 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         StringBuilder builder;
         builder.append("GraphicsState {\n"sv);
         builder.appendff("  ctm={}\n", state.ctm);
-        if (state.stroke_style.has<Color>()) {
-            builder.appendff("  stroke_style={}\n", state.stroke_style.get<Color>());
-        } else {
-            builder.appendff("  stroke_style={}\n", state.stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>());
-        }
-        if (state.paint_style.has<Color>()) {
-            builder.appendff("  paint_style={}\n", state.paint_style.get<Color>());
-        } else {
-            builder.appendff("  paint_style={}\n", state.paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>());
-        }
+        state.stroke_style.visit(
+            [&](PDF::ColorOrStyle const& style) {
+                if (style.has<Color>()) {
+                    builder.appendff("  stroke_style={}\n", style.get<Color>());
+                } else {
+                    builder.appendff("  stroke_style={}\n", style.get<NonnullRefPtr<Gfx::PaintStyle>>());
+                }
+            },
+            [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  stroke_style=pattern\n"); });
+        state.paint_style.visit(
+            [&](PDF::ColorOrStyle const& style) {
+                if (style.has<Color>()) {
+                    builder.appendff("  paint_style={}\n", style.get<Color>());
+                } else {
+                    builder.appendff("  paint_style={}\n", style.get<NonnullRefPtr<Gfx::PaintStyle>>());
+                }
+            },
+            [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  paint_style=pattern\n"); });
         builder.appendff("  color_rendering_intent={}\n", state.color_rendering_intent);
         builder.appendff("  flatness_tolerance={}\n", state.flatness_tolerance);
         builder.appendff("  line_width={}\n", state.line_width);

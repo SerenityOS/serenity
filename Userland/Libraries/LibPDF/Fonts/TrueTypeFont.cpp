@@ -143,8 +143,16 @@ PDFErrorOr<TrueTypePainter::GlyphID> TrueTypePainter::resolve_glyph_id_for_char_
 PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto glyph_id = TRY(resolve_glyph_id_for_char_code(char_code));
-    if (glyph_id.has_value())
-        do_draw_glyph(painter, *glyph_id, point, width, m_font, renderer.state().paint_style);
+    if (glyph_id.has_value()) {
+        TRY(renderer.state().paint_style.visit(
+            [&](ColorOrStyle const& style) -> PDFErrorOr<void> {
+                do_draw_glyph(painter, *glyph_id, point, width, m_font, style);
+                return {};
+            },
+            [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
+                return Error::rendering_unsupported_error("Cannot draw TrueType glyph with a pattern yet");
+            }));
+    }
     return {};
 }
 
