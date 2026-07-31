@@ -25,7 +25,7 @@ set(TEST_FILES
     oss-fuzz-testcase-62065.pdf
     password-is-sup.pdf
     paths.pdf
-    pattern.pdf
+    pattern-type1.pdf
     rotate.pdf
     shade-coons.pdf
     shade-function.pdf
