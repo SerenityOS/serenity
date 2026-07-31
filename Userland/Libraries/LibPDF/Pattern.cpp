@@ -57,6 +57,8 @@ class ShadingPattern final : public Pattern {
 public:
     static PDFErrorOr<NonnullRefPtr<ShadingPattern>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries, Renderer&);
 
+    virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
+
 private:
     ShadingPattern(CommonEntries common_entries, NonnullRefPtr<Shading> shading)
         : m_common_entries(common_entries)
@@ -85,6 +87,13 @@ PDFErrorOr<NonnullRefPtr<ShadingPattern>> ShadingPattern::create(Document* docum
 
     auto shading = TRY(Shading::create(document, shading_object, renderer));
     return adopt_ref(*new ShadingPattern(common_entries, move(shading)));
+}
+
+PDFErrorOr<void> ShadingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransform const& transform)
+{
+    auto pattern_space_transform = transform;
+    pattern_space_transform.multiply(m_common_entries.matrix);
+    return m_shading->draw(painter, pattern_space_transform);
 }
 
 }
