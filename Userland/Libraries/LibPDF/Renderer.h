@@ -214,6 +214,7 @@ private:
 
     void begin_path_paint();
     PDFErrorOr<void> end_path_paint();
+    PDFErrorOr<void> fill_path_with_pattern(Gfx::Path const& path, NonnullRefPtr<Pattern> const& pattern, float paint_style_opacity, Gfx::WindingRule winding_rule);
     PDFErrorOr<void> stroke_current_path();
     PDFErrorOr<void> fill_current_path(Gfx::WindingRule);
     PDFErrorOr<void> fill_and_stroke_current_path(Gfx::WindingRule);
@@ -294,6 +295,7 @@ private:
     };
     AddPathAsClip m_add_path_as_clip { AddPathAsClip::No };
 
+    Gfx::AffineTransform m_userspace_matrix;
     Vector<GraphicsState> m_graphics_state_stack;
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;

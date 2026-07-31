@@ -97,6 +97,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
 
     auto initial_clipping_path = bitmap->rect();
     m_graphics_state_stack.append(GraphicsState { userspace_matrix, { initial_clipping_path } });
+    m_userspace_matrix = userspace_matrix;
 
     m_bitmap->fill(background_color);
 }
@@ -452,6 +453,22 @@ PDFErrorOr<void> Renderer::end_path_paint()
     return {};
 }
 
+PDFErrorOr<void> Renderer::fill_path_with_pattern(Gfx::Path const& path, NonnullRefPtr<Pattern> const& pattern, float paint_style_opacity, Gfx::WindingRule winding_rule)
+{
+    (void)paint_style_opacity; // FIXME: Use.
+
+    ScopedState scoped_state { *this };
+    TRY(add_clip_path(path, winding_rule));
+
+    // FIXME: Add pattern's bounding box to clip.
+
+    // "Changes to the page’s
+    //  transformation matrix that occur within the page’s content stream, such as rota-
+    //  tion and scaling, have no effect on the pattern; it maintains its original relation-
+    //  ship to the page no matter where on the page it is used."
+    return pattern->draw(painter(), m_userspace_matrix);
+}
+
 PDFErrorOr<void> Renderer::stroke_current_path()
 {
     TRY(state().stroke_style.visit(
@@ -463,8 +480,9 @@ PDFErrorOr<void> Renderer::stroke_current_path()
             }
             return {};
         },
-        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
-            return Error::rendering_unsupported_error("Cannot stroke path with pattern yet");
+        [&](NonnullRefPtr<Pattern> const& pattern) -> PDFErrorOr<void> {
+            auto stroke_path = m_current_path.stroke_to_fill(stroke_style());
+            return fill_path_with_pattern(stroke_path, pattern, state().stroke_alpha_constant, Gfx::WindingRule::Nonzero);
         }));
     return {};
 }
@@ -478,8 +496,8 @@ PDFErrorOr<void> Renderer::fill_current_path(Gfx::WindingRule winding_rule)
             fill_path_with_style(anti_aliasing_painter(), m_current_path, style, state().paint_alpha_constant, winding_rule);
             return {};
         },
-        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
-            return Error::rendering_unsupported_error("Cannot fill path with pattern yet");
+        [&](NonnullRefPtr<Pattern> const& pattern) -> PDFErrorOr<void> {
+            return fill_path_with_pattern(m_current_path, pattern, state().paint_alpha_constant, winding_rule);
         }));
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
