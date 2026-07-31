@@ -21,6 +21,7 @@ set(SOURCES
     ObjectDerivatives.cpp
     Page.cpp
     Parser.cpp
+    Pattern.cpp
     Reader.cpp
     Renderer.cpp
     Shading.cpp

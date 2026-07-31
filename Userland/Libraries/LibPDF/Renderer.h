@@ -156,6 +156,7 @@ struct RenderingPreferences {
 };
 
 class Renderer {
+    friend class Pattern;
     friend class PatternColorSpace;
 
 public:
