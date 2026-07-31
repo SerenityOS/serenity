@@ -1225,14 +1225,13 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     Processor::store_fpu_state(from_thread->fpu_state());
 
-    if (from_thread->process().is_traced())
+    if (from_thread->process().is_traced()) {
         read_debug_registers_into(from_thread->debug_register_state());
-
-    if (to_thread->process().is_traced()) {
-        write_debug_registers_from(to_thread->debug_register_state());
-    } else {
         clear_debug_registers();
     }
+
+    if (to_thread->process().is_traced())
+        write_debug_registers_from(to_thread->debug_register_state());
 
     auto& processor = Processor::current();
     Processor::set_fs_base(to_thread->arch_specific_data().fs_base);
