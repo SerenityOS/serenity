@@ -13,14 +13,17 @@ LibC stub.
 
 ## How to generate LibC stub?
 
-First, you need to compile the LLVM toolchain and the SerenityOS's LibC. This will be a bit awkward
-(see discussion at https://github.com/SerenityOS/serenity/pull/23960) until (unless) we solve the
-dependency cycle between LibC and libunwind. Then, using the `llvm-ifs` tool,
-`Userland/Libraries/LibC/libc.so` can be converted into a stripped-down stub form. To do that, run
-the following command:
+If you want to have a Clang-only approach, you first need to compile Clang and then use it to compile SerenityOS's LibC.
+This will be a bit awkward (see discussion at https://github.com/SerenityOS/serenity/pull/23960) until (unless) we solve the
+dependency cycle between LibC and libunwind.
+
+More easily, you can just use the GCC toolchain to build the LibC with a simple `Meta/serenity.sh build $arch`.
+
+Independently of your toolchain choice, `Userland/Libraries/LibC/libc.so` can be converted into a stripped-down stub form using `llvm-ifs`.
+To do that, run the following command:
 
 ```sh
-Toolchain/Local/clang/bin/llvm-ifs --output-elf=<path-to-stub> <path-to-original>
+llvm-ifs --output-elf=<path-to-stub> <path-to-original>
 ```
 
 ## How to generate `empty.so`?
