@@ -833,6 +833,15 @@ PDFErrorOr<ColorOrStyle> PatternColorSpace::style(ReadonlySpan<Value> arguments)
         return pattern->cast<StreamObject>()->dict();
     }();
 
+    // PDF 1.7 spec, 4.6 Patterns
+    // TABLE 4.25 Additional entries specific to a type 1 pattern dictionary
+    // TABLE 4.26 Entries in a type 2 pattern dictionary
+    // Both have:
+    // - /Type (optional)
+    // - /PatternType (required)
+    // - /Matrix (optional)
+    // The other entries are specific to the pattern type.
+
     // PatternType (Required) A code identifying the type of pattern that this dictionary describes;
     // shall be 1 for a tiling pattern
     auto const pattern_type = pattern_dict->get(CommonNames::PatternType)->get_u16();
