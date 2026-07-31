@@ -10,6 +10,7 @@
 #include <LibPDF/Document.h>
 #include <LibPDF/Pattern.h>
 #include <LibPDF/Renderer.h>
+#include <LibPDF/Shading.h>
 
 namespace PDF {
 
@@ -52,6 +53,74 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
     return common_entries;
 }
 
+class ShadingPattern final : public Pattern {
+public:
+    static PDFErrorOr<NonnullRefPtr<ShadingPattern>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries, Renderer&);
+
+private:
+    ShadingPattern(CommonEntries common_entries, NonnullRefPtr<Shading> shading)
+        : m_common_entries(common_entries)
+        , m_shading(move(shading))
+    {
+    }
+
+    CommonEntries m_common_entries;
+    NonnullRefPtr<Shading> m_shading;
+};
+
+PDFErrorOr<NonnullRefPtr<ShadingPattern>> ShadingPattern::create(Document* document, NonnullRefPtr<DictObject> pattern_dict, CommonEntries common_entries, Renderer& renderer)
+{
+    // PDF 1.7 spec, 4.6.3 Shading Patterns
+
+    // "(Required) A shading object ([...]]) defining the shading pattern’s gradi-
+    //  ent fill."
+    auto shading_object = TRY(pattern_dict->get_object(document, CommonNames::Shading));
+
+    // "(Optional) A graphics state parameter dictionary (see Section 4.3.4, “Graph-
+    //  ics State Parameter Dictionaries”) containing graphics state parameters to be
+    //  put into effect temporarily while the shading pattern is painted."
+    if (pattern_dict->contains(CommonNames::ExtGState)) {
+        // FIXME: Implement.
+    }
+
+    auto shading = TRY(Shading::create(document, shading_object, renderer));
+    return adopt_ref(*new ShadingPattern(common_entries, move(shading)));
+}
+
+}
+
+PDFErrorOr<bool> Pattern::is_type2(Document* document, NonnullRefPtr<Object> pattern)
+{
+    if (!pattern->is<DictObject>())
+        return false;
+    auto pattern_dict = pattern->cast<DictObject>();
+    auto const pattern_type = TRY(document->resolve(pattern_dict->get_value(CommonNames::PatternType))).to_int();
+    return pattern_type == 2;
+}
+
+PDFErrorOr<NonnullRefPtr<Pattern>> Pattern::create(Document* document, NonnullRefPtr<Object> pattern, Renderer& renderer)
+{
+    auto pattern_dict = TRY([&]() -> PDFErrorOr<NonnullRefPtr<DictObject>> {
+        if (pattern->is<DictObject>())
+            return pattern->cast<DictObject>();
+        if (pattern->is<StreamObject>())
+            return pattern->cast<StreamObject>()->dict();
+        return Error::malformed_error("Pattern must be a dictionary or stream");
+    }());
+
+    int pattern_type = TRY(document->resolve(pattern_dict->get_value(CommonNames::PatternType))).to_int();
+    auto common_entries = TRY(read_common_entries(document, *pattern_dict));
+
+    switch (pattern_type) {
+    case 1:
+        VERIFY_NOT_REACHED(); // Tiling patterns use PatternColorSpace::style() for now.
+    case 2:
+        if (!pattern->is<DictObject>())
+            return Error::malformed_error("Type 2 pattern has wrong type");
+        return ShadingPattern::create(document, pattern_dict, common_entries, renderer);
+    }
+    dbgln("Pattern type {}", pattern_type);
+    return Error::malformed_error("Invalid pattern type");
 }
 
 PDFErrorOr<ColorOrStyle> Pattern::style(Document*, NonnullRefPtr<Object> pattern, Renderer& renderer)
