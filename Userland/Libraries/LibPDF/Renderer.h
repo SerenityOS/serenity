@@ -194,6 +194,8 @@ private:
 
     PDFErrorsOr<void> render();
 
+    PDFErrorOr<NonnullRefPtr<Object>> get_resource(NonnullRefPtr<DictObject> resources, ByteString const& resource_type, Value const& resource);
+
     PDFErrorOr<void> handle_operator(Operator const&, Optional<NonnullRefPtr<DictObject>> = {});
 #define V(name, snake_name, symbol) \
     PDFErrorOr<void> handle_##snake_name(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
