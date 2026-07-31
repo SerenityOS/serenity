@@ -58,7 +58,7 @@ struct TypedMapping<T[]> {
 };
 
 template<typename T>
-static ErrorOr<NonnullOwnPtr<TypedMapping<T>>> adopt_new_nonnull_own_typed_mapping(PhysicalAddress paddr, size_t length, Region::Access access = Region::Access::Read)
+ErrorOr<NonnullOwnPtr<TypedMapping<T>>> adopt_new_nonnull_own_typed_mapping(PhysicalAddress paddr, size_t length, Region::Access access = Region::Access::Read)
 {
     auto mapping_length = TRY(page_round_up(paddr.offset_in_page() + length));
     auto region = TRY(MM.allocate_mmio_kernel_region(paddr.page_base(), mapping_length, {}, access));
@@ -71,7 +71,7 @@ static ErrorOr<NonnullOwnPtr<TypedMapping<T>>> adopt_new_nonnull_own_typed_mappi
 }
 
 template<typename T>
-static ErrorOr<TypedMapping<T>> map_typed(PhysicalAddress paddr, size_t length, Region::Access access = Region::Access::Read)
+ErrorOr<TypedMapping<T>> map_typed(PhysicalAddress paddr, size_t length, Region::Access access = Region::Access::Read)
 {
     TypedMapping<T> table;
     auto mapping_length = TRY(page_round_up(paddr.offset_in_page() + length));
@@ -83,19 +83,19 @@ static ErrorOr<TypedMapping<T>> map_typed(PhysicalAddress paddr, size_t length, 
 }
 
 template<typename T>
-static ErrorOr<TypedMapping<T>> map_typed(PhysicalAddress paddr)
+ErrorOr<TypedMapping<T>> map_typed(PhysicalAddress paddr)
 {
     return map_typed<T>(paddr, sizeof(T));
 }
 
 template<typename T>
-static ErrorOr<TypedMapping<T>> map_typed_writable(PhysicalAddress paddr)
+ErrorOr<TypedMapping<T>> map_typed_writable(PhysicalAddress paddr)
 {
     return map_typed<T>(paddr, sizeof(T), Region::Access::Read | Region::Access::Write);
 }
 
 template<typename T>
-static ErrorOr<NonnullOwnPtr<TypedMapping<T[]>>> adopt_new_nonnull_own_typed_mapping_array(PhysicalAddress paddr, size_t items, Region::Access access = Region::Access::Read)
+ErrorOr<NonnullOwnPtr<TypedMapping<T[]>>> adopt_new_nonnull_own_typed_mapping_array(PhysicalAddress paddr, size_t items, Region::Access access = Region::Access::Read)
 {
     size_t length_in_bytes = items * sizeof(T);
     auto mapping_length = TRY(page_round_up(paddr.offset_in_page() + length_in_bytes));
@@ -109,14 +109,14 @@ static ErrorOr<NonnullOwnPtr<TypedMapping<T[]>>> adopt_new_nonnull_own_typed_map
 }
 
 template<typename T>
-static ErrorOr<TypedMapping<T[]>> map_typed_array(PhysicalAddress paddr, size_t items, Region::Access access = Region::Access::Read)
+ErrorOr<TypedMapping<T[]>> map_typed_array(PhysicalAddress paddr, size_t items, Region::Access access = Region::Access::Read)
 {
     size_t length_in_bytes = items * sizeof(T);
     return map_typed<T[]>(paddr, length_in_bytes, access);
 }
 
 template<typename T>
-static ErrorOr<TypedMapping<T[]>> allocate_dma_region_as_typed_array(size_t items, StringView name, Region::Access access, MemoryType memory_type = MemoryType::NonCacheable)
+ErrorOr<TypedMapping<T[]>> allocate_dma_region_as_typed_array(size_t items, StringView name, Region::Access access, MemoryType memory_type = MemoryType::NonCacheable)
 {
     size_t length_in_bytes = items * sizeof(T);
     size_t mapping_length = TRY(page_round_up(length_in_bytes));

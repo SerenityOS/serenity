@@ -12,7 +12,7 @@
 namespace Spreadsheet {
 
 template<typename Callable>
-static auto propagate_failure(Cell& cell, Callable&& steps)
+auto propagate_failure(Cell& cell, Callable&& steps)
 {
     auto result_or_error = steps();
     if (result_or_error.is_error())

@@ -2156,8 +2156,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
     return returned_pending_response;
 }
 
-#if defined(WEB_FETCH_DEBUG)
-static void log_load_request(auto const& load_request)
+[[maybe_unused]] static void log_load_request(auto const& load_request)
 {
     dbgln("Fetch: Invoking ResourceLoader");
     dbgln("> {} {} HTTP/1.1", load_request.method(), load_request.url());
@@ -2168,7 +2167,7 @@ static void log_load_request(auto const& load_request)
         dbgln("> {}", line);
 }
 
-static void log_response(auto const& status_code, auto const& headers, auto const& data)
+[[maybe_unused]] static void log_response(auto const& status_code, auto const& headers, auto const& data)
 {
     dbgln("< HTTP/1.1 {}", status_code.value_or(0));
     for (auto const& [name, value] : headers.headers())
@@ -2177,7 +2176,6 @@ static void log_response(auto const& status_code, auto const& headers, auto cons
     for (auto line : StringView { data }.split_view('\n', SplitBehavior::KeepEmpty))
         dbgln("< {}", line);
 }
-#endif
 
 // https://fetch.spec.whatwg.org/#concept-http-network-fetch
 // Drop-in replacement for 'HTTP-network fetch', but obviously non-standard :^)

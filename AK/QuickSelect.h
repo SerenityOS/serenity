@@ -101,7 +101,7 @@ size_t median_of_medians(Collection& collection, size_t left, size_t right, Less
 // This is the Lomuto Partition scheme which is simpler but less efficient than Hoare's partitioning scheme that is traditionally used with quicksort
 // https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme
 template<typename Collection, typename PivotFn, typename LessThan>
-static size_t partition(Collection& collection, size_t left, size_t right, PivotFn pivot_fn, LessThan less_than)
+size_t partition(Collection& collection, size_t left, size_t right, PivotFn pivot_fn, LessThan less_than)
 {
     auto pivot_index = pivot_fn(collection, left, right, less_than);
     auto pivot_value = collection.at(pivot_index);
