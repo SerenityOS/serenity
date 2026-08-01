@@ -93,6 +93,8 @@ PDFErrorOr<void> ShadingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransfor
 {
     auto pattern_space_transform = transform;
     pattern_space_transform.multiply(m_common_entries.matrix);
+    if (auto background = TRY(m_shading->background_for_pattern()); background.has_value())
+        painter.fill_rect(painter.clip_rect(), background.value());
     return m_shading->draw(painter, pattern_space_transform);
 }
 
