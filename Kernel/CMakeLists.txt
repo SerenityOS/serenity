@@ -702,6 +702,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     add_compile_options(-mgeneral-regs-only)
 endif()
 
+add_compile_options(-include "${CMAKE_CURRENT_SOURCE_DIR}/HiddenVisibility.h")
 add_compile_options(-fno-asynchronous-unwind-tables)
 add_compile_options(-fstack-protector-strong)
 add_compile_options(-fno-exceptions)

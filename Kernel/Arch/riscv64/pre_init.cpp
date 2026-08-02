@@ -71,7 +71,7 @@ static UNMAP_AFTER_INIT PhysicalPtr dynamic_section_addr()
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void pre_init(FlatPtr boot_hart_id, PhysicalPtr flattened_devicetree_paddr)
 {
     // Apply relative relocations as if we were running at KERNEL_MAPPING_BASE.
-    // This means that all global variables must be accessed with adjust_by_mapping_base, since we are still running identity mapped.
+    // This means that we shouldn't access anything during pre_init that relies on relocations (e.g. vtables).
     // Otherwise, we would have to relocate twice: once while running identity mapped, and again when we enable the MMU.
     if (!ELF::perform_relative_relocations(physical_load_base(), KERNEL_MAPPING_BASE, dynamic_section_addr()))
         panic_without_mmu("Failed to perform relative relocations"sv);

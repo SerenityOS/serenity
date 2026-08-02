@@ -76,12 +76,6 @@ static UNMAP_AFTER_INIT FlatPtr calculate_physical_to_link_time_address_offset()
     return link_time_address - physical_address;
 }
 
-template<typename T>
-inline T* adjust_by_mapping_base(T* ptr)
-{
-    return bit_cast<T*>(bit_cast<FlatPtr>(ptr) - calculate_physical_to_link_time_address_offset());
-}
-
 static UNMAP_AFTER_INIT bool page_table_entry_valid(u64 entry)
 {
     return (entry & to_underlying(PageTableEntryBits::Valid)) != 0;
@@ -142,18 +136,18 @@ static UNMAP_AFTER_INIT void insert_entries_for_memory_range(PageBumpAllocator& 
 
 static UNMAP_AFTER_INIT void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_table)
 {
-    auto kernel_pt1024_base = VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) + KERNEL_PT1024_OFFSET };
+    auto kernel_pt1024_base = VirtualAddress { g_boot_info.kernel_mapping_base + KERNEL_PT1024_OFFSET };
 
     auto quickmap_page_table = PhysicalAddress { bit_cast<PhysicalPtr>(insert_page_table(allocator, root_table, kernel_pt1024_base)) };
-    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel_pt1023) = bit_cast<PageTableEntry*>(quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get());
+    g_boot_info.boot_pd_kernel_pt1023 = bit_cast<PageTableEntry*>(quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get());
 }
 
 static UNMAP_AFTER_INIT void build_mappings(PageBumpAllocator& allocator, u64* root_table)
 {
-    auto start_of_kernel_range = VirtualAddress { bit_cast<FlatPtr>(+start_of_kernel_image) };
-    auto end_of_kernel_range = VirtualAddress { bit_cast<FlatPtr>(+end_of_kernel_image) };
+    auto start_of_kernel_range = VirtualAddress { KERNEL_MAPPING_BASE };
+    auto end_of_kernel_range = start_of_kernel_range.offset((+end_of_kernel_image) - (+start_of_kernel_image));
 
-    auto start_of_physical_kernel_range = PhysicalAddress { start_of_kernel_range.get() }.offset(-calculate_physical_to_link_time_address_offset());
+    auto start_of_physical_kernel_range = PhysicalAddress { bit_cast<PhysicalPtr>(+start_of_kernel_image) };
 
     // FIXME: dont map everything RWX
 
@@ -163,16 +157,16 @@ static UNMAP_AFTER_INIT void build_mappings(PageBumpAllocator& allocator, u64* r
 
 static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
 {
-    auto kernel_page_directory = bit_cast<PhysicalPtr>(get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) }));
+    auto kernel_page_directory = bit_cast<PhysicalPtr>(get_page_directory(root_table, VirtualAddress { g_boot_info.kernel_mapping_base }));
     if (kernel_page_directory == 0)
         panic_without_mmu("Could not find kernel page directory!"sv);
 
-    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel) = PhysicalAddress { kernel_page_directory };
+    g_boot_info.boot_pd_kernel = PhysicalAddress { kernel_page_directory };
 
     // There is no level 4 table in Sv39
-    *adjust_by_mapping_base(&g_boot_info.boot_pml4t) = PhysicalAddress { 0 };
+    g_boot_info.boot_pml4t = PhysicalAddress { 0 };
 
-    *adjust_by_mapping_base(&g_boot_info.boot_pdpt) = PhysicalAddress { bit_cast<PhysicalPtr>(root_table) };
+    g_boot_info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(root_table) };
 }
 
 // This function has to fit into one page as it will be identity mapped.
@@ -181,7 +175,7 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
     // Switch current root page table to argument 1. This will immediately take effect, but we won't not crash as this function is identity mapped.
     // Also, set up a temporary trap handler to catch any traps while switching page tables.
     auto offset = calculate_physical_to_link_time_address_offset();
-    register FlatPtr a0 asm("a0") = bit_cast<FlatPtr>(&info);
+    register FlatPtr a0 asm("a0") = bit_cast<FlatPtr>(&info) + offset;
     asm volatile(
         "   lla t0, 1f \n"
         "   csrw stvec, t0 \n"
@@ -233,20 +227,20 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
         panic_without_mmu("Passed FDT is bigger than the internal storage"sv);
     for (size_t o = 0; o < fdt_header->totalsize; o += 1) {
         // FIXME: Maybe increase the IO size here
-        adjust_by_mapping_base(DeviceTree::s_fdt_storage)[o] = fdt_storage[o];
+        DeviceTree::s_fdt_storage[o] = fdt_storage[o];
     }
 
-    *adjust_by_mapping_base(&g_boot_info.boot_method) = BootMethod::PreInit;
+    g_boot_info.boot_method = BootMethod::PreInit;
 
-    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_paddr) = PhysicalAddress { flattened_devicetree_paddr };
-    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_size) = fdt_header->totalsize;
-    *adjust_by_mapping_base(&g_boot_info.physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
-    *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) = KERNEL_MAPPING_BASE;
-    *adjust_by_mapping_base(&g_boot_info.kernel_load_base) = KERNEL_MAPPING_BASE;
+    g_boot_info.flattened_devicetree_paddr = PhysicalAddress { flattened_devicetree_paddr };
+    g_boot_info.flattened_devicetree_size = fdt_header->totalsize;
+    g_boot_info.physical_to_virtual_offset = calculate_physical_to_link_time_address_offset();
+    g_boot_info.kernel_mapping_base = KERNEL_MAPPING_BASE;
+    g_boot_info.kernel_load_base = KERNEL_MAPPING_BASE;
 
-    *adjust_by_mapping_base(&g_boot_info.arch_specific.boot_hart_id) = boot_hart_id;
+    g_boot_info.arch_specific.boot_hart_id = boot_hart_id;
 
-    PageBumpAllocator allocator(adjust_by_mapping_base(reinterpret_cast<u64*>(page_tables_phys_start)), adjust_by_mapping_base(reinterpret_cast<u64*>(page_tables_phys_end)));
+    PageBumpAllocator allocator(reinterpret_cast<u64*>(page_tables_phys_start), reinterpret_cast<u64*>(page_tables_phys_end));
     auto* root_table = allocator.take_page();
     build_mappings(allocator, root_table);
     setup_quickmap_page_table(allocator, root_table);

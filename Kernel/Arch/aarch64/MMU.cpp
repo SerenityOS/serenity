@@ -93,18 +93,6 @@ static UNMAP_AFTER_INIT FlatPtr calculate_physical_to_link_time_address_offset()
     return KERNEL_MAPPING_BASE - physical_address;
 }
 
-// NOTE: To access global variables while the MMU is not yet enabled, we need
-//       to convert the address of a global variable to a physical address by
-//       subtracting calculate_physical_to_link_time_address_offset(). This is because the kernel is linked
-//       for virtual memory at KERNEL_MAPPING_BASE, so a regular access to global variables
-//       will use the high virtual memory address. This does not work when the MMU is not yet
-//       enabled, so this function must be used for accessing global variables.
-template<typename T>
-inline T* adjust_by_mapping_base(T* ptr)
-{
-    return (T*)((FlatPtr)ptr - calculate_physical_to_link_time_address_offset());
-}
-
 static u64* insert_page_table(PageBumpAllocator& allocator, u64* page_table, VirtualAddress virtual_addr)
 {
     // Each level has 9 bits (512 entries)
@@ -156,20 +144,20 @@ static void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_ta
 {
     // FIXME: Rename boot_pd_kernel_pt1023 to quickmap_page_table
     // FIXME: Rename KERNEL_PT1024_BASE to quickmap_page_table_address
-    auto kernel_pt1024_base = VirtualAddress(*adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) + KERNEL_PT1024_OFFSET);
+    auto kernel_pt1024_base = VirtualAddress(g_boot_info.kernel_mapping_base + KERNEL_PT1024_OFFSET);
 
     auto quickmap_page_table = PhysicalAddress((PhysicalPtr)insert_page_table(allocator, root_table, kernel_pt1024_base));
-    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel_pt1023) = (PageTableEntry*)quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get();
+    g_boot_info.boot_pd_kernel_pt1023 = (PageTableEntry*)quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get();
 }
 
 static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
 {
     u64 normal_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | INNER_SHAREABLE | NORMAL_MEMORY;
 
-    auto start_of_kernel_range = VirtualAddress((FlatPtr)start_of_kernel_image);
-    auto end_of_kernel_range = VirtualAddress((FlatPtr)end_of_kernel_image);
+    auto start_of_kernel_range = VirtualAddress { KERNEL_MAPPING_BASE };
+    auto end_of_kernel_range = start_of_kernel_range.offset((+end_of_kernel_image) - (+start_of_kernel_image));
 
-    auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-calculate_physical_to_link_time_address_offset());
+    auto start_of_physical_kernel_range = PhysicalAddress { bit_cast<PhysicalPtr>(+start_of_kernel_image) };
 
     // Insert identity mapping
     insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), end_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), start_of_physical_kernel_range, normal_memory_flags);
@@ -255,17 +243,17 @@ static u64* get_page_directory_table(u64* root_table, VirtualAddress virtual_add
 
 static void setup_kernel_page_directory(u64* root_table)
 {
-    auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) });
+    auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { g_boot_info.kernel_mapping_base });
     if (!kernel_page_directory)
         panic_without_mmu("Could not find kernel page directory!"sv);
 
-    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel) = PhysicalAddress(kernel_page_directory);
+    g_boot_info.boot_pd_kernel = PhysicalAddress(kernel_page_directory);
 
     // FIXME: Rename boot_pml4t to something architecture agnostic.
-    *adjust_by_mapping_base(&g_boot_info.boot_pml4t) = PhysicalAddress((PhysicalPtr)root_table);
+    g_boot_info.boot_pml4t = PhysicalAddress((PhysicalPtr)root_table);
 
     // FIXME: Rename to directory_table or similar
-    *adjust_by_mapping_base(&g_boot_info.boot_pdpt) = PhysicalAddress((PhysicalPtr)get_page_directory_table(root_table, VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) }));
+    g_boot_info.boot_pdpt = PhysicalAddress((PhysicalPtr)get_page_directory_table(root_table, VirtualAddress { g_boot_info.kernel_mapping_base }));
 }
 
 void init_page_tables(PhysicalPtr flattened_devicetree_paddr)
@@ -280,24 +268,24 @@ void init_page_tables(PhysicalPtr flattened_devicetree_paddr)
         panic_without_mmu("Passed FDT is bigger than the internal storage"sv);
     for (size_t o = 0; o < fdt_header->totalsize; o += 1) {
         // FIXME: Maybe increase the IO size here
-        adjust_by_mapping_base(DeviceTree::s_fdt_storage)[o] = fdt_storage[o];
+        DeviceTree::s_fdt_storage[o] = fdt_storage[o];
     }
 
-    *adjust_by_mapping_base(&g_boot_info.boot_method) = BootMethod::PreInit;
+    g_boot_info.boot_method = BootMethod::PreInit;
 
-    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_paddr) = PhysicalAddress { flattened_devicetree_paddr };
-    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_size) = fdt_header->totalsize;
-    *adjust_by_mapping_base(&g_boot_info.physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
-    *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) = KERNEL_MAPPING_BASE;
-    *adjust_by_mapping_base(&g_boot_info.kernel_load_base) = KERNEL_MAPPING_BASE;
+    g_boot_info.flattened_devicetree_paddr = PhysicalAddress { flattened_devicetree_paddr };
+    g_boot_info.flattened_devicetree_size = fdt_header->totalsize;
+    g_boot_info.physical_to_virtual_offset = calculate_physical_to_link_time_address_offset();
+    g_boot_info.kernel_mapping_base = KERNEL_MAPPING_BASE;
+    g_boot_info.kernel_load_base = KERNEL_MAPPING_BASE;
 
-    PageBumpAllocator allocator(adjust_by_mapping_base((u64*)page_tables_phys_start), adjust_by_mapping_base((u64*)page_tables_phys_end));
+    PageBumpAllocator allocator((u64*)page_tables_phys_start, (u64*)page_tables_phys_end);
     auto root_table = allocator.take_page();
     build_mappings(allocator, root_table);
     setup_quickmap_page_table(allocator, root_table);
     setup_kernel_page_directory(root_table);
 
-    switch_to_page_table(adjust_by_mapping_base(page_tables_phys_start));
+    switch_to_page_table(page_tables_phys_start);
     activate_mmu();
 }
 
