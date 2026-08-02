@@ -212,8 +212,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (action_add)
             TRY(Core::System::ioctl(fd, SIOCADDRT, &rt));
 
-        if (action_del)
-            TRY(Core::System::ioctl(fd, SIOCDELRT, &rt));
+        if (action_del) {
+            auto maybe_error = Core::System::ioctl(fd, SIOCDELRT, &rt);
+            if (maybe_error.is_error() && maybe_error.error().code() != ESRCH)
+                return maybe_error.release_error();
+        }
     }
 
     return 0;
