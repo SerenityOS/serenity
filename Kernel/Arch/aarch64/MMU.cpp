@@ -166,9 +166,8 @@ static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
 {
     u64 normal_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | INNER_SHAREABLE | NORMAL_MEMORY;
 
-    // Align the identity mapping of the kernel image to 2 MiB, the rest of the memory is initially not mapped.
-    auto start_of_kernel_range = VirtualAddress((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
-    auto end_of_kernel_range = VirtualAddress(((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000 - 1);
+    auto start_of_kernel_range = VirtualAddress((FlatPtr)start_of_kernel_image);
+    auto end_of_kernel_range = VirtualAddress((FlatPtr)end_of_kernel_image);
 
     auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-calculate_physical_to_link_time_address_offset());
 
