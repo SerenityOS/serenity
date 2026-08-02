@@ -65,15 +65,12 @@ private:
 static UNMAP_AFTER_INIT FlatPtr calculate_physical_to_link_time_address_offset()
 {
     FlatPtr physical_address;
-    FlatPtr link_time_address;
 
     asm volatile(
-        "   lla %[physical_address], 1f\n"
-        "1: la %[link_time_address], 1b\n"
-        : [physical_address] "=r"(physical_address),
-        [link_time_address] "=r"(link_time_address));
+        "lla %[physical_address], start_of_kernel_image"
+        : [physical_address] "=r"(physical_address));
 
-    return link_time_address - physical_address;
+    return KERNEL_MAPPING_BASE - physical_address;
 }
 
 static UNMAP_AFTER_INIT bool page_table_entry_valid(u64 entry)
