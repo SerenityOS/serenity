@@ -367,7 +367,7 @@ void ProcessorBase::switch_context(Thread*& from_thread, Thread*& to_thread)
         "sd fp, %[from_fp] \n"
 
         // Set from_thread's pc to label "1"
-        "la t0, 1f \n"
+        "lla t0, 1f \n"
         "sd t0, %[from_ip] \n"
 
         // Switch to to_thread's stack
@@ -611,7 +611,7 @@ NAKED void do_assume_context(Thread*, u32)
         "addi sp, sp, -32 \n"
         "sd s1, 0(sp) \n"
         "sd s1, 8(sp) \n"
-        "la ra, thread_context_first_enter \n" // should be same as regs.sepc
+        "lla ra, thread_context_first_enter \n" // should be same as regs.sepc
         "tail enter_thread_context \n");
     // clang-format on
 }
