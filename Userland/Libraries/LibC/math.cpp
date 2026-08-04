@@ -182,7 +182,7 @@ static int internal_ilogb(FloatT x) NOEXCEPT
         return FP_ILOGB0;
 
     if (isnan(x))
-        return FP_ILOGNAN;
+        return FP_ILOGBNAN;
 
     if (!isfinite(x))
         return INT_MAX;
