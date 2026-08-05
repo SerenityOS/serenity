@@ -28,6 +28,8 @@ PDFErrorOr<Version> DocumentParser::initialize()
 
     auto maybe_version = parse_header();
     if (maybe_version.is_error()) {
+        if (m_document->strictness() == Document::Strictness::Strict)
+            return maybe_version.release_error();
         warnln("{}", maybe_version.error().message());
         warnln("No valid PDF header detected, continuing anyway.");
         maybe_version = Version { 1, 6 }; // ¯\_(ツ)_/¯

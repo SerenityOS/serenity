@@ -217,11 +217,14 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     u32 render_repeats = 1;
     args_parser.add_option(render_repeats, "Number of times to render page (for profiling)", "render-repeats", {}, "N");
 
+    bool strict = false;
+    args_parser.add_option(strict, "Error out on technically invalid PDFs", "strict", {});
+
     args_parser.parse(arguments);
 
     auto file = TRY(Core::MappedFile::map(in_path));
 
-    auto document = TRY(PDF::Document::create(file->bytes()));
+    auto document = TRY(PDF::Document::create(file->bytes(), strict ? PDF::Document::Strictness::Strict : PDF::Document::Strictness::Permissive));
 
     if (auto handler = document->security_handler(); handler && !handler->has_user_password()) {
         if (password.is_empty()) {
