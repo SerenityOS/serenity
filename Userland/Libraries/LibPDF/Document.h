@@ -105,12 +105,18 @@ public:
     // Converts a text string (PDF 1.7 spec, 3.8.1. "String Types") to UTF-8.
     static ErrorOr<String> text_string_to_utf8(ByteString const&);
 
-    static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
+    enum class Strictness {
+        Permissive,
+        Strict,
+    };
+    static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes, Strictness strictness = Strictness::Permissive);
 
     // If a security handler is present, it is the caller's responsibility to ensure
     // this document is unencrypted before calling this function. The user does not
     // need to handle the case where the user password is the empty string.
     PDFErrorOr<void> initialize();
+
+    Strictness strictness() const { return m_strictness; }
 
     Version version() const { return m_version; }
 
@@ -159,7 +165,7 @@ public:
     PDFErrorOr<void> unfilter_stream(NonnullRefPtr<StreamObject> stream) { return m_parser->unfilter_stream(move(stream)); }
 
 private:
-    explicit Document(NonnullRefPtr<DocumentParser> const& parser);
+    explicit Document(NonnullRefPtr<DocumentParser> const& parser, Strictness);
 
     // FIXME: Currently, to improve performance, we don't load any pages at Document
     // construction, rather we just load the page structure and populate
@@ -185,6 +191,7 @@ private:
     PDFErrorOr<NonnullRefPtr<Object>> find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, DeprecatedFlyString name);
     PDFErrorOr<NonnullRefPtr<Object>> find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, DeprecatedFlyString name);
 
+    Strictness m_strictness { Strictness::Permissive };
     NonnullRefPtr<DocumentParser> m_parser;
     Version m_version;
     RefPtr<DictObject> m_catalog;

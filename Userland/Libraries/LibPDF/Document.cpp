@@ -91,16 +91,18 @@ ErrorOr<String> Document::text_string_to_utf8(ByteString const& text_string)
     return TRY(TextCodec::decoder_for_exact_name("PDFDocEncoding"sv)->to_utf8(text_string));
 }
 
-PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
+PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes, Document::Strictness strictness)
 {
     size_t offset_to_start = TRY(DocumentParser::scan_for_header_start(bytes));
     if (offset_to_start != 0) {
+        if (strictness == Strictness::Strict)
+            return Error::malformed_error("PDF header not at start of file");
         dbgln("warning: PDF header not at start of file, skipping {} bytes", offset_to_start);
         bytes = bytes.slice(offset_to_start);
     }
 
     auto parser = adopt_ref(*new DocumentParser({}, bytes));
-    auto document = adopt_ref(*new Document(parser));
+    auto document = adopt_ref(*new Document(parser, strictness));
 
     document->m_version = TRY(parser->initialize());
     document->m_trailer = parser->trailer();
@@ -119,8 +121,9 @@ PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
     return document;
 }
 
-Document::Document(NonnullRefPtr<DocumentParser> const& parser)
-    : m_parser(parser)
+Document::Document(NonnullRefPtr<DocumentParser> const& parser, Strictness strictness)
+    : m_strictness(strictness)
+    , m_parser(parser)
 {
     m_parser->set_document(this);
 }
