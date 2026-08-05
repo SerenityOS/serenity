@@ -67,6 +67,9 @@ NonnullRefPtr<Action> Action::create_checkable(ByteString text, Shortcut const& 
 
 RefPtr<Action> Action::find_action_for_shortcut(Core::EventReceiver& object, Shortcut const& shortcut)
 {
+    if (!shortcut.is_valid())
+        return nullptr;
+
     RefPtr<Action> found_action = nullptr;
     object.for_each_child_of_type<Action>([&](auto& action) {
         if (action.shortcut() == shortcut || action.alternate_shortcut() == shortcut) {
