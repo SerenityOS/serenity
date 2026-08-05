@@ -134,8 +134,10 @@ void Application::quit(int exit_code)
 
 void Application::register_global_shortcut_action(Badge<Action>, Action& action)
 {
-    m_global_shortcut_actions.set(action.shortcut(), &action);
-    m_global_shortcut_actions.set(action.alternate_shortcut(), &action);
+    if (action.shortcut().is_valid())
+        m_global_shortcut_actions.set(action.shortcut(), &action);
+    if (action.alternate_shortcut().is_valid())
+        m_global_shortcut_actions.set(action.alternate_shortcut(), &action);
 }
 
 void Application::unregister_global_shortcut_action(Badge<Action>, Action& action)
