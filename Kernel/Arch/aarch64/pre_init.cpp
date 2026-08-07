@@ -13,8 +13,6 @@
 #include <LibELF/Relocation.h>
 
 // We arrive here from boot.S with the MMU disabled and in an unknown exception level (EL).
-// The kernel is linked at the virtual address, so we have to be really carefull when accessing
-// global variables, as the MMU is not yet enabled.
 
 // FIXME: This should probably be shared with the Prekernel.
 
