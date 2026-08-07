@@ -248,6 +248,11 @@ static void setup_kernel_page_directory(u64* root_table)
     register FlatPtr x0 asm("x0") = bit_cast<FlatPtr>(&info) + offset;
     asm volatile(
         R"(
+            // Invalidate the TLBs before enabling the MMU, as the TLBs might still contain old values.
+            tlbi vmalle1
+            dsb ish
+            isb
+
             // Enable the MMU, data cache, and instruction cache.
             mrs x1, sctlr_el1
             mov w2, #(1 << 0) | (1 << 2) | (1 << 12)
