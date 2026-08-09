@@ -17,10 +17,10 @@ Co-Authored-By: Oskar Skog <oskar@oskog97.com>
  1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/configure b/configure
-index 8cfdda5a29b00da362abad11b90767480388aa27..13873c817d5b093c346148a176fc4803c902eb9b 100755
+index 2cb22a7806fa550dc7be5afded79fb3d9c24d925..3b547e9bf6244ff42ee99d0798f7319048271580 100755
 --- a/configure
 +++ b/configure
-@@ -4105,6 +4105,9 @@ then
+@@ -4106,6 +4106,9 @@ then
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
  	case "$host" in
@@ -30,7 +30,7 @@ index 8cfdda5a29b00da362abad11b90767480388aa27..13873c817d5b093c346148a176fc4803
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
  		;;
-@@ -4157,6 +4160,7 @@ then
+@@ -4158,6 +4161,7 @@ then
  	linux*) MACHDEP="linux";;
  	cygwin*) MACHDEP="cygwin";;
  	darwin*) MACHDEP="darwin";;
@@ -38,7 +38,7 @@ index 8cfdda5a29b00da362abad11b90767480388aa27..13873c817d5b093c346148a176fc4803
  	'')	MACHDEP="unknown";;
      esac
  
-@@ -4581,6 +4585,9 @@ fi
+@@ -4582,6 +4586,9 @@ fi
  
  if test "$cross_compiling" = yes; then
  	case "$host" in
@@ -48,7 +48,7 @@ index 8cfdda5a29b00da362abad11b90767480388aa27..13873c817d5b093c346148a176fc4803
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
-@@ -7734,7 +7741,7 @@ printf "%s\n" "#define Py_ENABLE_SHARED 1" >>confdefs.h
+@@ -7735,7 +7742,7 @@ printf "%s\n" "#define Py_ENABLE_SHARED 1" >>confdefs.h
          PY3LIBRARY=libpython3.so
        fi
        ;;
@@ -57,7 +57,7 @@ index 8cfdda5a29b00da362abad11b90767480388aa27..13873c817d5b093c346148a176fc4803
        LDLIBRARY='libpython$(LDVERSION).so'
        BLDLIBRARY='-L. -lpython$(LDVERSION)'
        RUNSHARED=LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-@@ -13716,7 +13723,7 @@ then
+@@ -13835,7 +13842,7 @@ then
  		 then CCSHARED="-fPIC";
  		 else CCSHARED="+z";
  		 fi;;
@@ -66,7 +66,7 @@ index 8cfdda5a29b00da362abad11b90767480388aa27..13873c817d5b093c346148a176fc4803
  	Emscripten*|WASI*)
  		if test "x$enable_wasm_dynamic_linking" = xyes
  then :
-@@ -13754,7 +13761,7 @@ then
+@@ -13873,7 +13880,7 @@ then
  	    LINKFORSHARED="-Wl,-E -Wl,+s";;
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
