@@ -42,7 +42,7 @@ mkShell.override { stdenv = gccStdenv; } {
     #       adds extra include and resource directories that conflict with serenity's custom toolchain.
     # FIXME: Go back to the `clang-tools` package once https://github.com/NixOS/nixpkgs/pull/354755 is merged.
     llvmPackages_20.clang-unwrapped
-    nodePackages.prettier
+    prettier
     pre-commit
   ]
   ++ lib.optionals stdenv.isLinux [
