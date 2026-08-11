@@ -59,9 +59,12 @@ ErrorOr<FlatPtr> Process::preadv_impl(int fd, Userspace<const struct iovec*> iov
     }
 
     auto description = TRY(open_readable_file_description(fds(), fd));
-    // NOTE: Negative offset means "operate like readv" which seeks the file.
+    // NOTE: We implement LibC readv() by passing a negative offset to the
+    //       preadv syscall instead of having a separate readv syscall.
+    //       Normally, a negative offset would be rejected with EINVAL, which is
+    //       instead done in userland.
     if (base_offset >= 0 && !description->file().is_seekable())
-        return EINVAL;
+        return ESPIPE;
 
     int nread = 0;
     off_t current_offset = base_offset;

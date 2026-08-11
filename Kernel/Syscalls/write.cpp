@@ -34,9 +34,12 @@ ErrorOr<FlatPtr> Process::sys$pwritev(int fd, Userspace<const struct iovec*> iov
     auto description = TRY(open_file_description(fd));
     if (!description->is_writable())
         return EBADF;
-    // NOTE: Negative offset means "operate like writev" which seeks the file.
+    // NOTE: We implement LibC writev() by passing a negative offset to the
+    //       pwritev syscall instead of having a separate writev syscall.
+    //       Normally, a negative offset would be rejected with EINVAL, which is
+    //       instead done in userland.
     if (base_offset >= 0 && !description->file().is_seekable())
-        return EINVAL;
+        return ESPIPE;
 
     int nwritten = 0;
     off_t current_offset = base_offset;
