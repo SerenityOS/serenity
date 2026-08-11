@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Tue, 11 Aug 2026 00:00:00 +0200
+Subject: [PATCH] Do not include malloc.h on SerenityOS
+
+---
+ engines/hpl1/engine/libraries/angelscript/sources/as_memory.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/engines/hpl1/engine/libraries/angelscript/sources/as_memory.cpp b/engines/hpl1/engine/libraries/angelscript/sources/as_memory.cpp
+index 1c624b1..2cf6655 100644
+--- a/engines/hpl1/engine/libraries/angelscript/sources/as_memory.cpp
++++ b/engines/hpl1/engine/libraries/angelscript/sources/as_memory.cpp
+@@ -38,7 +38,7 @@
+
+ #include <stdlib.h>
+
+-#if !defined(__APPLE__) && !defined(__SNC__) && !defined(__ghs__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__DragonFly__)
++#if !defined(__APPLE__) && !defined(__SNC__) && !defined(__ghs__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__DragonFly__) && !defined(__serenity__)
+ #include <malloc.h>
+ #endif

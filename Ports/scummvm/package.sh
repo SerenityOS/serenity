@@ -1,12 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='scummvm'
 useconfigure='true'
-version='2.9.1'
+version='2026.3.0'
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#6a82f36afa9de758ab1dd377101a26a53f12417cbfd350bb8e5d7fd5b8c257e3"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#b863a81e1598df8bc4aa0c33e3d9b1c8bbede1879d94d91568a4f200057677e7"
 )
 depends=(
     'freetype'
+    'giflib'
     'libiconv'
     'libjpeg'
     'libmad'
