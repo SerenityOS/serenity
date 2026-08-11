@@ -278,6 +278,7 @@ public:
     bool has_plt() const { return m_procedure_linkage_table_offset.has_value(); }
     VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
+    VirtualAddress elf_base_address() const { return m_elf_base_address; }
 
     ByteString const& filepath() const { return m_filepath; }
 
