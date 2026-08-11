@@ -1844,12 +1844,12 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
     auto color_space_resource_dict = TRY(resources->get_dict(m_document, CommonNames::ColorSpace));
     if (!color_space_resource_dict->contains(color_space_name))
         return Error::malformed_error("ColorSpace resource dictionary does not contain {}", color_space_name);
-    return get_color_space_from_document(TRY(color_space_resource_dict->get_object(m_document, color_space_name)));
+    return get_color_space_from_document(TRY(color_space_resource_dict->get_object(m_document, color_space_name)), resources);
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(NonnullRefPtr<Object> color_space_object)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(NonnullRefPtr<Object> color_space_object, Optional<NonnullRefPtr<DictObject>> resources)
 {
-    return ColorSpace::create(m_document, color_space_object, *this);
+    return ColorSpace::create(m_document, color_space_object, *this, resources);
 }
 
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
