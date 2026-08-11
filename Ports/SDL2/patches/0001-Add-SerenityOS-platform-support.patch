@@ -910,10 +910,10 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..9299649cfa64e256c1cee8d138c49cb5fd68cbd8
+index 0000000000000000000000000000000000000000..4f29a7d0bd144feca75a898f148001c1eec75a63
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,658 @@
+@@ -0,0 +1,659 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1244,6 +1244,7 @@ index 0000000000000000000000000000000000000000..9299649cfa64e256c1cee8d138c49cb5
 +{
 +    dbgln("SERENITY_VideoQuit");
 +    SERENITY_QuitMouse(_this);
++    g_app = nullptr;
 +}
 +
 +SerenitySDLWidget::SerenitySDLWidget(SDL_Window* sdl_window)
