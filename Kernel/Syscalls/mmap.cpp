@@ -79,16 +79,23 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         TRY(require_promise(Pledge::prot_exec));
     }
 
-    if (flags & MAP_FIXED || flags & MAP_FIXED_NOREPLACE) {
+    if (flags & (MAP_FIXED | MAP_FIXED_NOREPLACE)) {
         TRY(require_promise(Pledge::map_fixed));
     }
 
     if (alignment & ~PAGE_MASK)
         return EINVAL;
 
+    if (size == 0)
+        return EINVAL;
+
     size_t rounded_size = TRY(Memory::page_round_up(size));
-    if (!Memory::is_user_range(VirtualAddress(addr), rounded_size))
-        return EFAULT;
+    if (flags & (MAP_FIXED | MAP_FIXED_NOREPLACE)) {
+        if (!Memory::is_user_range(VirtualAddress(addr), rounded_size))
+            return EFAULT;
+        if ((FlatPtr)addr & ~PAGE_MASK)
+            return EINVAL;
+    }
 
     OwnPtr<KString> name;
     if (params.name.characters) {
@@ -96,11 +103,6 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
             return ENAMETOOLONG;
         name = TRY(try_copy_kstring_from_user(params.name));
     }
-
-    if (size == 0)
-        return EINVAL;
-    if ((FlatPtr)addr & ~PAGE_MASK)
-        return EINVAL;
 
     bool map_shared = flags & MAP_SHARED;
     bool map_anonymous = flags & MAP_ANONYMOUS;
