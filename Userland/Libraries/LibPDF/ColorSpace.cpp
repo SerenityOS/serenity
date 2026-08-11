@@ -883,8 +883,8 @@ PDFErrorOr<ColorOrStyle> PatternColorSpace::style(ReadonlySpan<Value> arguments)
     auto device_space_lower_left = initial_ctm.map(pattern_transform.map(pattern_space_lower_left));
     auto device_space_upper_right = initial_ctm.map(pattern_transform.map(pattern_space_upper_right));
 
-    auto bitmap_width = (int)device_space_upper_right.x() - (int)device_space_lower_left.x();
-    auto bitmap_height = (int)device_space_upper_right.y() - (int)device_space_lower_left.y();
+    auto bitmap_width = abs((int)device_space_upper_right.x() - (int)device_space_lower_left.x());
+    auto bitmap_height = abs((int)device_space_upper_right.y() - (int)device_space_lower_left.y());
 
     auto pattern_cell = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { bitmap_width, bitmap_height }));
     auto page = Page(m_renderer.m_page);
