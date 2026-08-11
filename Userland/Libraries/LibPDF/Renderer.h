@@ -228,7 +228,7 @@ private:
     PDFErrorOr<void> paint_image_xobject(NonnullRefPtr<StreamObject>);
     void paint_empty_image(Gfx::IntSize);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
-    PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>);
+    PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>, Optional<NonnullRefPtr<DictObject>> = {});
 
     static ColorOrStyle style_with_alpha(ColorOrStyle style, float alpha)
     {
