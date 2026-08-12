@@ -6,11 +6,11 @@ Subject: [PATCH] Extend support for SerenityOS target
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
  zig/lib/std/Io/Threaded.zig          | 50 +++++++++++++++++++++++++---
- zig/lib/std/c.zig                    |  3 +-
+ zig/lib/std/c.zig                    |  5 ++-
  zig/lib/std/c/serenity.zig           |  4 +--
  zig/lib/std/zig/LibCInstallation.zig | 27 ++++++++++++---
  zig/src/target.zig                   |  2 +-
- 5 files changed, 71 insertions(+), 15 deletions(-)
+ 5 files changed, 72 insertions(+), 16 deletions(-)
 
 diff --git a/zig/lib/std/Io/Threaded.zig b/zig/lib/std/Io/Threaded.zig
 index f004a56ca91155cca0ae69dfdf4575678f81979c..475d97ddeab3c14150ba8b59791b3350b299a1b2 100644
@@ -102,9 +102,19 @@ index f004a56ca91155cca0ae69dfdf4575678f81979c..475d97ddeab3c14150ba8b59791b3350
  }
  
 diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
-index f0b03917855a2261fad5352220329c6904f922dc..c7f8f9cca378e9cd7e4d2ecc97884795d89d6c2d 100644
+index f0b03917855a2261fad5352220329c6904f922dc..14099817553e1f348132bd24f3792e9ce8e66ba5 100644
 --- a/zig/lib/std/c.zig
 +++ b/zig/lib/std/c.zig
+@@ -9467,8 +9467,8 @@ pub const tc_lflag_t = switch (native_os) {
+         ECHOPRT: bool = false,
+         ECHOKE: bool = false,
+         FLUSHO: bool = false,
++        _13: u1 = 0,
+         PENDIN: bool = false,
+-        _14: u6 = 0,
+         IEXTEN: bool = false,
+         EXTPROC: bool = false,
+         _: u15 = 0,
 @@ -11449,8 +11449,7 @@ pub const disown = serenity.disown;
  pub const profiling_enable = serenity.profiling_enable;
  pub const profiling_disable = serenity.profiling_disable;
