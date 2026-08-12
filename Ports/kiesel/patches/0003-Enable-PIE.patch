@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Thu, 13 Aug 2026 00:19:27 +0100
+Subject: [PATCH] Enable PIE
+
+---
+ build.zig | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/build.zig b/build.zig
+index a329cf8108095d7cd33d3979aa77977c9750e4a2..31c02d041205367ec79f4b85476a0c13b8028c3c 100644
+--- a/build.zig
++++ b/build.zig
+@@ -288,6 +288,10 @@ pub fn build(b: *std.Build) !void {
+         .cwd_relative = "../../../Root/usr/lib/crt0.o",
+     });
+ 
++    // This will be removed when updating to Zig 0.17.
++    // See: https://codeberg.org/ziglang/zig/commit/89b0c634c129aa048b7677c555ea1302a5d15d46
++    exe.pie = true;
++
+     const install_exe = b.addInstallArtifact(exe, .{
+         .dest_dir = switch (target.result.os.tag) {
+             .uefi => .{ .override = .{ .custom = "EFI/BOOT" } },

@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Thu, 13 Aug 2026 00:19:27 +0100
+Subject: [PATCH] Define __serenity__ for bdwgc
+
+---
+ build.zig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/build.zig b/build.zig
+index 053562bdab89de38ed52c49fd2881e92668a976c..4e0b710452349afb3191289de85a50f4210cd11f 100644
+--- a/build.zig
++++ b/build.zig
+@@ -167,6 +167,9 @@ pub fn build(b: *std.Build) !void {
+             if (optimize != .Debug) {
+                 try cflags.append(b.allocator, "-DNO_GETENV");
+             }
++            // This will be removed when updating to Zig 0.17
++            // See: https://codeberg.org/ziglang/zig/commit/537e455b4f33b81c84cad73c668bdfc0edb8f0f1
++            try cflags.append(b.allocator, "-D__serenity__");
+             break :blk try std.mem.join(b.allocator, " ", cflags.items);
+         };
+         if (b.lazyDependency("bdwgc_zig", .{
