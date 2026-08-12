@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Thu, 13 Aug 2026 00:19:27 +0100
+Subject: [PATCH] Link crt0.o
+
+---
+ build.zig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/build.zig b/build.zig
+index 4e0b710452349afb3191289de85a50f4210cd11f..a329cf8108095d7cd33d3979aa77977c9750e4a2 100644
+--- a/build.zig
++++ b/build.zig
+@@ -282,6 +282,12 @@ pub fn build(b: *std.Build) !void {
+         }),
+     };
+ 
++    // This will be removed when updating to Zig 0.17.
++    // See: https://codeberg.org/ziglang/zig/commit/0f5de17d6dcf58c22d4070e45758e995bb9f1633
++    exe.root_module.addObjectFile(.{
++        .cwd_relative = "../../../Root/usr/lib/crt0.o",
++    });
++
+     const install_exe = b.addInstallArtifact(exe, .{
+         .dest_dir = switch (target.result.os.tag) {
+             .uefi => .{ .override = .{ .custom = "EFI/BOOT" } },
