@@ -115,7 +115,7 @@ ErrorOr<size_t> FUSEDevice::write(OpenFileDescription& description, u64, UserOrK
                 instance.expecting_header = false;
             } else {
                 instance.response_ready = true;
-                instance_queue.notify_all();
+                m_instance_queue.notify_all();
             }
         } else {
             fuse_out_header* existing_header = bit_cast<fuse_out_header*>(instance.response->data());
@@ -125,7 +125,7 @@ ErrorOr<size_t> FUSEDevice::write(OpenFileDescription& description, u64, UserOrK
                 return Error::from_errno(EINVAL);
 
             instance.response_ready = true;
-            instance_queue.notify_all();
+            m_instance_queue.notify_all();
             u64 length = existing_header->len - sizeof(fuse_out_header);
             dbgln_if(FUSE_DEBUG, "request: response length: {}", length);
             TRY(buffer.read(instance.response->data() + sizeof(fuse_out_header), 0, length));
@@ -205,7 +205,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(Op
                 break;
             }
         });
-        instance_queue.notify_all();
+        m_instance_queue.notify_all();
     };
 
     auto timer = TRY(try_make_ref_counted<Timer>());
@@ -220,7 +220,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(Op
         // Deal with that by just running the handler manually.
         set_timed_out();
 
-    auto wait_status = instance_queue.wait_until(m_instances, receive_reply);
+    auto wait_status = m_instance_queue.wait_until(m_instances, receive_reply);
     TimerQueue::the().cancel_timer(*timer);
 
     if (wait_status.is_error()) {
