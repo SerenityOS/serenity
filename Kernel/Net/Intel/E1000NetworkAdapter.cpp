@@ -466,8 +466,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 
     if (descriptor.status == 0) {
         // Someone is still using the descriptor, let's wait until it's free.
-        Spinlock<LockRank::None> dummy;
-        m_wait_queue.wait_until(dummy, [&descriptor]() {
+        m_wait_queue.wait_until([&descriptor]() {
                         return descriptor.status == 0;
                     })
             .release_value_but_fixme_should_propagate_errors();
