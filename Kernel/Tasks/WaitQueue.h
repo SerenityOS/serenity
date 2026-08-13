@@ -19,6 +19,43 @@ class WaitQueue {
     friend class Waiter;
     class Waiter {
     public:
+        template<CallableAs<bool> F>
+        ErrorOr<void> wait_until(WaitQueue& wait_queue, F should_wake)
+        {
+            bool was_interrupted = false;
+
+            SpinlockLocker scheduler_lock(g_scheduler_lock);
+
+            while (true) {
+                prepare(wait_queue);
+
+                if (should_wake())
+                    break;
+                if (was_interrupted = Thread::current()->was_interrupted(); was_interrupted)
+                    break;
+
+                scheduler_lock.unlock();
+
+                maybe_block();
+
+                scheduler_lock.lock();
+            }
+
+            clear();
+
+            scheduler_lock.unlock();
+
+            // This is always cleared since the thread might have been both interrupted and woken up.
+            // If both of those occurred during the same cycle, then we won't report the interrupt,
+            // but we still need to clear it.
+            Thread::current()->clear_interrupted();
+            if (was_interrupted) {
+                return EINTR;
+            }
+
+            return {};
+        }
+
         template<LockRank Rank, CallableAs<bool> F>
         ErrorOr<void> wait_until(WaitQueue& wait_queue, Spinlock<Rank>& lock, F should_wake)
         {
@@ -123,6 +160,13 @@ class WaitQueue {
 public:
     void notify_all();
     void notify_one();
+
+    template<CallableAs<bool> F>
+    ErrorOr<void> wait_until(F should_wake)
+    {
+        Waiter waiter;
+        return waiter.wait_until(*this, move(should_wake));
+    }
 
     template<LockRank Rank, CallableAs<bool> F>
     ErrorOr<void> wait_until(Spinlock<Rank>& lock, F should_wake)
