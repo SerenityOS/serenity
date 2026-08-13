@@ -55,7 +55,7 @@ private:
 
     ErrorOr<void> queue_request(OpenFileDescription const& description, Bytes bytes, InstanceTracker& instances);
 
-    WaitQueue instance_queue {};
+    WaitQueue m_instance_queue {};
     SpinlockProtected<InstanceTracker, LockRank::None> m_instances;
 };
 
