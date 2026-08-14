@@ -174,6 +174,22 @@ Name of the script that will be run in the default `configure` function when
 
 Defaults to `configure`.
 
+#### `curlopts`
+
+Options passed to `curl` when downloading the port's [`files`](#files).
+
+Defaults to `--fail --location --silent --show-error`.
+
+> [!TIP]
+> It is recommended to append extra flags with `curlopts+=()` so the
+> defaults stay in effect:
+>
+> ```bash
+> curlopts+=(--retry 3)
+> ```
+>
+> Feel free to override the array if that solves your purpose.
+
 #### `depends`
 
 An array of other SerenityOS ports the port depends on and which will be
