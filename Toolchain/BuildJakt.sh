@@ -85,7 +85,7 @@ buildstep_ninja() {
 
 mkdir -p "$DIR/Tarballs"
 
-JAKT_COMMIT_HASH="825f6870a1795caeebb759f1d27a4d57e4fb7a31"
+JAKT_COMMIT_HASH="14c980b0f16d9cbe9136818302fb504e26583416"
 JAKT_NAME="jakt-${JAKT_COMMIT_HASH}"
 JAKT_TARBALL="${JAKT_NAME}.tar.gz"
 JAKT_GIT_URL="https://github.com/serenityos/jakt"
