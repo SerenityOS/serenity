@@ -1,9 +1,9 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-set(UCD_VERSION "15.1.0")
-set(UCD_SHA256 "cb1c663d053926500cd501229736045752713a066bd75802098598b7a7056177")
-set(EMOJI_SHA256 "d876ee249aa28eaa76cfa6dfaa702847a8d13b062aa488d465d0395ee8137ed9")
-set(IDNA_SHA256 "402cbd285f1f952fcd0834b63541d54f69d3d8f1b8f8599bf71a1a14935f82c4")
+set(UCD_VERSION "17.0.0")
+set(UCD_SHA256 "2066d1909b2ea93916ce092da1c0ee4808ea3ef8407c94b4f14f5b7eb263d28e")
+set(EMOJI_SHA256 "1d8a944f88d7952f7ef7c5167fef3c67995bcae24543949710231b03a201acda")
+set(IDNA_SHA256 "87f05505dc026fdb2bff16132bdc68a8014675836882a9a2b1844540ad3be382")
 
 set(UCD_PATH "${SERENITY_CACHE_DIR}/UCD" CACHE PATH "Download location for UCD files")
 set(UCD_VERSION_FILE "${UCD_PATH}/version.txt")
@@ -65,8 +65,7 @@ set(WORD_BREAK_PROP_PATH "${UCD_PATH}/${WORD_BREAK_PROP_SOURCE}")
 set(SENTENCE_BREAK_PROP_SOURCE "auxiliary/SentenceBreakProperty.txt")
 set(SENTENCE_BREAK_PROP_PATH "${UCD_PATH}/${SENTENCE_BREAK_PROP_SOURCE}")
 
-string(REGEX REPLACE "([0-9]+\\.[0-9]+)\\.[0-9]+" "\\1" EMOJI_VERSION "${UCD_VERSION}")
-set(EMOJI_TEST_URL "https://www.unicode.org/Public/emoji/${EMOJI_VERSION}/emoji-test.txt")
+set(EMOJI_TEST_URL "https://www.unicode.org/Public/${UCD_VERSION}/emoji/emoji-test.txt")
 set(EMOJI_TEST_PATH "${UCD_PATH}/emoji-test.txt")
 set(EMOJI_VERSION_FILE "${UCD_PATH}/emoji-version.txt")
 set(EMOJI_RES_PATH "${SerenityOS_SOURCE_DIR}/Base/res/emoji")
@@ -74,7 +73,7 @@ set(EMOJI_SERENITY_PATH "${SerenityOS_SOURCE_DIR}/Base/home/anon/Documents/emoji
 set(EMOJI_FILE_LIST_PATH "${SerenityOS_SOURCE_DIR}/Meta/emoji-file-list.txt")
 set(EMOJI_INSTALL_PATH "${CMAKE_BINARY_DIR}/Root/home/anon/Documents/emoji.txt")
 
-set(IDNA_MAPPING_TABLE_URL "https://www.unicode.org/Public/idna/${UCD_VERSION}/IdnaMappingTable.txt")
+set(IDNA_MAPPING_TABLE_URL "https://www.unicode.org/Public/${UCD_VERSION}/idna/IdnaMappingTable.txt")
 set(IDNA_MAPPING_TABLE_PATH "${UCD_PATH}/IdnaMappingTable.txt")
 set(IDNA_VERSION_FILE "${UCD_PATH}/idna-version.txt")
 
