@@ -137,13 +137,19 @@ if [ -n "${IN_SERENITY_PORT_DEV:-}" ]; then
 fi
 
 run_nocd() {
-    echo "+ $@ (nocd)" >&2
-    ("$@")
+    (
+        PS4='+ (nocd) '
+        set -x
+        "$@"
+    )
 }
 
 run() {
-    echo "+ $@"
-    (cd "$workdir" && "$@")
+    (
+        cd "$workdir" || exit
+        set -x
+        "$@"
+    )
 }
 
 run_replace_in_file() {
