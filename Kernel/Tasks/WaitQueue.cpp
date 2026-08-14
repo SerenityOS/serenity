@@ -47,8 +47,8 @@ void WaitQueue::Waiter::notify(Badge<WaitQueue>)
     VERIFY(thread.state() == Thread::State::Blocked);
 
     if (&thread == Thread::current()) {
-        // This can happen if an interrupt handler wakes up the currently running thread.
-        VERIFY(Processor::current_in_irq());
+        // This can happen if e.g. an interrupt handler or a deferred call triggered by an interrupt wakes up
+        // the currently running thread.
         thread.set_state(Thread::State::Running);
     } else {
         thread.set_state(Thread::State::Runnable);
