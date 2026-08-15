@@ -1,12 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ja2'
-version='0.15.x'
+version='0.15.1'
 depends=(
     'SDL2'
 )
 workdir="ja2-stracciatella-${version}"
 files=(
-    "https://github.com/ja2-stracciatella/ja2-stracciatella/archive/refs/heads/${version}.zip#178375de4859d16a76276c781455bf48d3fa862841387c8aa6cfa4162f4f0ca4"
+    "https://github.com/ja2-stracciatella/ja2-stracciatella/archive/refs/tags/v${version}.zip#2421d0650dac5636d84d659c8ce2b651ed12bedf149ee69e601da1c619fcd930"
 )
 makeopts+=(
     'SERENITY=1'
