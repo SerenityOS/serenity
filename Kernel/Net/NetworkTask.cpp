@@ -27,6 +27,7 @@
 #include <Kernel/Net/UDP.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 
@@ -62,8 +63,13 @@ void NetworkTask_main(void*)
 {
     delayed_ack_sockets = new HashTable<NonnullRefPtr<TCPSocket>>;
 
-    DeprecatedWaitQueue packet_wait_queue;
-    int pending_packets = 0;
+    WaitQueue packet_wait_queue;
+    struct WaitState {
+        size_t pending_packets = 0;
+        bool timeout_expired = false;
+    };
+    SpinlockProtected<WaitState, LockRank::None> wait_state;
+
     NetworkingManagement::the().for_each([&](auto& adapter) {
         dmesgln("NetworkTask: {} network adapter found: hw={}", adapter.class_name(), adapter.mac_address().to_string());
 
@@ -73,8 +79,8 @@ void NetworkTask_main(void*)
         }
 
         adapter.on_receive = [&]() {
-            pending_packets++;
-            packet_wait_queue.wake_all();
+            wait_state.with([](WaitState& state) { state.pending_packets++; });
+            packet_wait_queue.notify_one();
         };
     });
 
@@ -95,43 +101,73 @@ void NetworkTask_main(void*)
     while (!Process::current().is_dying()) {
         flush_delayed_tcp_acks();
         retransmit_tcp_packets();
-        size_t packet_size = 0;
-        if (!pending_packets) {
-            auto timeout_time = Duration::from_milliseconds(500);
-            auto timeout = Thread::BlockTimeout { false, &timeout_time };
-            [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask"sv);
-            continue;
+
+        auto timeout_callback = [&wait_state, &packet_wait_queue] {
+            wait_state.with([](WaitState& state) { state.timeout_expired = true; });
+            packet_wait_queue.notify_one();
+        };
+
+        // FIXME: Maybe implement timeouts in WaitQueue itself.
+        auto timer = try_make_ref_counted<Timer>().release_value_but_fixme_should_propagate_errors();
+        auto deadline = TimeManagement::the().current_time(CLOCK_MONOTONIC_COARSE) + Duration::from_milliseconds(500);
+        bool timer_was_added = TimerQueue::the().add_timer_without_id(timer, CLOCK_MONOTONIC_COARSE, deadline, [&timeout_callback] { timeout_callback(); });
+
+        if (!timer_was_added) {
+            // In the unlikely case that the timer already expired before it was queued,
+            // simply call the timeout callback directly.
+            timeout_callback();
         }
 
-        NetworkingManagement::the().for_each([&](auto& adapter) {
-            if (packet_size || !adapter.has_queued_packets()) {
-                return;
+        size_t pending_packets = 0;
+
+        MUST(packet_wait_queue.wait_until(wait_state, [&pending_packets](WaitState& state) {
+            if (state.pending_packets > 0 || state.timeout_expired) {
+                pending_packets = state.pending_packets;
+                state.pending_packets = 0;
+                state.timeout_expired = false;
+                return true;
             }
-            packet_size = adapter.dequeue_packet(meta.buffer, buffer_size, meta.packet_timestamp);
-            pending_packets--;
-            dbgln_if(NETWORK_TASK_DEBUG, "NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
-            meta.adapter = adapter;
-        });
 
-        if (packet_size < sizeof(EthernetFrameHeader)) {
-            dbgln("NetworkTask: Packet is too small to be an Ethernet packet! ({})", packet_size);
-            continue;
-        }
-        auto& eth = *(EthernetFrameHeader const*)meta.buffer;
-        dbgln_if(ETHERNET_DEBUG, "NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
+            return false;
+        }));
 
-        switch (eth.ether_type()) {
-        case EtherType::ARP:
-            handle_arp(eth, packet_size, meta.adapter);
-            break;
-        case EtherType::IPv4:
-            handle_ipv4(eth, packet_size, meta.packet_timestamp, meta.adapter);
-            break;
-        case EtherType::IPv6:
-            handle_ipv6(eth, packet_size, meta.packet_timestamp, meta.adapter);
-            break;
-        default:
-            dbgln_if(ETHERNET_DEBUG, "NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
+        while (pending_packets > 0) {
+            size_t packet_size = 0;
+
+            NetworkingManagement::the().for_each([&](auto& adapter) {
+                if (packet_size || !adapter.has_queued_packets()) {
+                    return;
+                }
+                auto size = adapter.dequeue_packet(meta.buffer, buffer_size, meta.packet_timestamp);
+                VERIFY(size.has_value());
+                packet_size = size.value();
+                pending_packets--;
+                dbgln_if(NETWORK_TASK_DEBUG, "NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
+                meta.adapter = adapter;
+            });
+
+            if (packet_size < sizeof(EthernetFrameHeader)) {
+                if (packet_size > 0)
+                    dbgln("NetworkTask: Packet is too small to be an Ethernet packet! ({})", packet_size);
+                continue;
+            }
+
+            auto& eth = *(EthernetFrameHeader const*)meta.buffer;
+            dbgln_if(ETHERNET_DEBUG, "NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
+
+            switch (eth.ether_type()) {
+            case EtherType::ARP:
+                handle_arp(eth, packet_size, meta.adapter);
+                break;
+            case EtherType::IPv4:
+                handle_ipv4(eth, packet_size, meta.packet_timestamp, meta.adapter);
+                break;
+            case EtherType::IPv6:
+                handle_ipv6(eth, packet_size, meta.packet_timestamp, meta.adapter);
+                break;
+            default:
+                dbgln_if(ETHERNET_DEBUG, "NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
+            }
         }
     }
     Process::current().sys$exit(0);
