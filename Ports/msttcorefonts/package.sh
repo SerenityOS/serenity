@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='msttcorefonts'
-# Note: Using 'git' as a placeholder since msttcorefonts versioning is for .spec files, which are not used here.
-version=git
+# Note: Using '1.0' as a placeholder since msttcorefonts versioning is for .spec files, which are not used here.
+version='1.0'
 archive='https://sourceforge.net/projects/corefonts/files/the%20fonts/final'
 files=(
     "${archive}/andale32.exe#0524fe42951adc3a7eb870e32f0920313c71f170c859b5f770d82b4ee111e970"
