@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=sl
-version=git
-workdir=sl-master
+version='923e7d7ebc5c1f009755bdeb789ac25658ccce03'
 files=(
-    "https://github.com/mtoyoda/sl/archive/master.tar.gz#3270434e28c4f4e15b8e98de60ea98508a7486485f52356a61f36ac5430fbc80"
+    "https://github.com/mtoyoda/sl/archive/${version}.tar.gz#0b90e669db80437b106c49536b89a5364b47e6a55d0a0164a8dda5d2dbd2aab0"
 )
 depends=("ncurses")
 
