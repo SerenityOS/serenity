@@ -129,11 +129,11 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         on_receive();
 }
 
-size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, UnixDateTime& packet_timestamp)
+Optional<size_t> NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, UnixDateTime& packet_timestamp)
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
-        return 0;
+        return {};
     auto packet_with_timestamp = m_packet_queue.take_first();
     m_packet_queue_size--;
     packet_timestamp = packet_with_timestamp->timestamp;
