@@ -15,6 +15,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
 
@@ -387,6 +388,10 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, DHCPv4Packet con
     auto maybe_dhcp_server_ip = offer.parse_options().get<IPv4Address>(DHCPOption::ServerIdentifier);
     if (maybe_dhcp_server_ip.has_value())
         builder.add_option(DHCPOption::ServerIdentifier, sizeof(IPv4Address), &maybe_dhcp_server_ip.value());
+
+    auto hostname = Core::System::gethostname();
+    if (!hostname.is_error())
+        builder.add_option(DHCPOption::HostName, hostname.value().length(), hostname.value().characters());
 
     AK::Array<DHCPOption, 2> parameter_request_list = {
         DHCPOption::SubnetMask,
