@@ -9,6 +9,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Library/EINTRError.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Tasks/Thread.h>
@@ -20,20 +21,20 @@ class WaitQueue {
     class Waiter {
     public:
         template<CallableAs<bool> F>
-        ErrorOr<void> wait_until(WaitQueue& wait_queue, F should_wake)
+        EINTROr<void> wait_until(WaitQueue& wait_queue, F should_wake)
         {
             // LockRank::None is just a dummy value.
             return wait_until_impl<LockRank::None>(wait_queue, should_wake, OptionalNone {});
         }
 
         template<LockRank Rank, CallableAs<bool> F>
-        ErrorOr<void> wait_until(WaitQueue& wait_queue, Spinlock<Rank>& lock, F should_wake)
+        EINTROr<void> wait_until(WaitQueue& wait_queue, Spinlock<Rank>& lock, F should_wake)
         {
             return wait_until_impl(wait_queue, should_wake, lock);
         }
 
         template<typename T, LockRank Rank, CallableAs<bool, T&> F>
-        ErrorOr<void> wait_until(WaitQueue& wait_queue, SpinlockProtected<T, Rank>& spinlock_protected, F should_wake)
+        EINTROr<void> wait_until(WaitQueue& wait_queue, SpinlockProtected<T, Rank>& spinlock_protected, F should_wake)
         {
             return wait_until_impl<Rank>(wait_queue, [&spinlock_protected, &should_wake] { return should_wake(spinlock_protected.m_value); }, spinlock_protected.m_spinlock);
         }
@@ -42,7 +43,7 @@ class WaitQueue {
 
     private:
         template<LockRank Rank, CallableAs<bool> F>
-        ErrorOr<void> wait_until_impl(WaitQueue& wait_queue, F should_wake, Optional<Spinlock<Rank>&> user_lock)
+        EINTROr<void> wait_until_impl(WaitQueue& wait_queue, F should_wake, Optional<Spinlock<Rank>&> user_lock)
         {
             bool was_interrupted = false;
 
@@ -87,7 +88,7 @@ class WaitQueue {
             // but we still need to clear it.
             Thread::current()->clear_interrupted();
             if (was_interrupted) {
-                return EINTR;
+                return EINTRError {};
             }
 
             return {};
@@ -116,21 +117,21 @@ public:
     void notify_one();
 
     template<CallableAs<bool> F>
-    ErrorOr<void> wait_until(F should_wake)
+    EINTROr<void> wait_until(F should_wake)
     {
         Waiter waiter;
         return waiter.wait_until(*this, move(should_wake));
     }
 
     template<LockRank Rank, CallableAs<bool> F>
-    ErrorOr<void> wait_until(Spinlock<Rank>& lock, F should_wake)
+    EINTROr<void> wait_until(Spinlock<Rank>& lock, F should_wake)
     {
         Waiter waiter;
         return waiter.wait_until(*this, lock, move(should_wake));
     }
 
     template<typename T, LockRank Rank, CallableAs<bool, T&> F>
-    ErrorOr<void> wait_until(SpinlockProtected<T, Rank>& spinlock_protected, F should_wake)
+    EINTROr<void> wait_until(SpinlockProtected<T, Rank>& spinlock_protected, F should_wake)
     {
         Waiter waiter;
         return waiter.wait_until(*this, spinlock_protected, move(should_wake));
