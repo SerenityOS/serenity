@@ -18,7 +18,7 @@ static void finalizer_task(void*)
 {
     Thread::current()->set_priority(THREAD_PRIORITY_LOW);
     while (!Process::current().is_dying()) {
-        MUST(g_finalizer_wait_queue->wait_until(g_finalizer_has_work, [](bool& has_work) -> bool {
+        uninterruptible(g_finalizer_wait_queue->wait_until(g_finalizer_has_work, [](bool& has_work) -> bool {
             if (!has_work)
                 return false;
             has_work = false;
