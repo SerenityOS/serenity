@@ -45,16 +45,16 @@ mkShell.override { stdenv = gccStdenv; } {
     prettier
     pre-commit
   ]
-  ++ lib.optionals stdenv.isLinux [
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
     fuse2fs
     grub2
     parted
   ]
-  ++ lib.optionals stdenv.isDarwin [
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
     genext2fs
   ];
 
-  buildInputs = lib.optionals stdenv.isDarwin [
+  buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [
     apple-sdk_13
     (darwinMinVersionHook "13.3")
   ];
