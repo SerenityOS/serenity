@@ -26,6 +26,7 @@ set(TEST_FILES
     password-is-sup.pdf
     paths.pdf
     pattern-type1.pdf
+    pattern-type1-rot.pdf
     pattern-type2.pdf
     rotate.pdf
     shade-coons.pdf
