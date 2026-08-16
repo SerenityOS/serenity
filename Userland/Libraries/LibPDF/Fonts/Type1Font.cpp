@@ -106,7 +106,7 @@ void Type1Font::set_font_size(float font_size)
 
 PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
-    auto style = TRY(renderer.state().paint_style.visit(
+    auto style = TRY(renderer.state().paint_color.visit(
         [&](Color const& style) -> PDFErrorOr<Color> {
             return style;
         },

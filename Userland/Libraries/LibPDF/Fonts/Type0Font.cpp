@@ -94,7 +94,7 @@ PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     if (!bitmap)
         return Error::rendering_unsupported_error("Type0 font CIDFontType0: failed to rasterize glyph");
 
-    auto style = TRY(renderer.state().paint_style.visit(
+    auto style = TRY(renderer.state().paint_color.visit(
         [&](Color const& style) -> PDFErrorOr<Color> {
             return style;
         },
@@ -210,7 +210,7 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
 
     // FIXME: We don't support non-embedded type0 truetype fonts yet.
 
-    auto style = TRY(renderer.state().paint_style.visit(
+    auto style = TRY(renderer.state().paint_color.visit(
         [&](Color const& style) -> PDFErrorOr<Color> {
             return style;
         },

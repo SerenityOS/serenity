@@ -137,7 +137,7 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
 {
     auto glyph_id = TRY(resolve_glyph_id_for_char_code(char_code));
     if (glyph_id.has_value()) {
-        TRY(renderer.state().paint_style.visit(
+        TRY(renderer.state().paint_color.visit(
             [&](Color const& style) -> PDFErrorOr<void> {
                 do_draw_glyph(painter, *glyph_id, point, m_font, style);
                 return {};
