@@ -112,43 +112,65 @@ PDFErrorOr<NonnullRefPtr<TilingPattern>> TilingPattern::create(Document* documen
     return adopt_ref(*new TilingPattern(common_entries, renderer.page(), pattern_space_lower_left, pattern_space_upper_right, pattern_resources, x_steps, y_steps, pattern->cast<StreamObject>()->bytes(), renderer));
 }
 
+[[nodiscard]] static Gfx::IntRect enclosing_tiled_int_rect(Gfx::FloatRect const& float_rect, Gfx::IntSize tile_size)
+{
+    auto float_tile_size = tile_size.to_type<float>();
+    int x1 = floorf(float_rect.x() / float_tile_size.width()) * tile_size.width();
+    int y1 = floorf(float_rect.y() / float_tile_size.height()) * tile_size.height();
+    int x2 = ceilf(float_rect.right() / float_tile_size.width()) * tile_size.width();
+    int y2 = ceilf(float_rect.bottom() / float_tile_size.height()) * tile_size.height();
+    return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
+}
+
 PDFErrorOr<void> TilingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransform const& transform_in)
 {
     auto transform = transform_in;
-    transform.set_translation(0, 0);
-    transform.set_scale(transform.x_scale(), transform.y_scale());
     transform.multiply(m_common_entries.matrix);
 
-    auto device_space_lower_left = transform.map((m_pattern_space_lower_left));
-    auto device_space_upper_right = transform.map(m_pattern_space_upper_right);
+    auto pattern_space_bbox = Gfx::FloatRect::from_two_points(m_pattern_space_lower_left, m_pattern_space_upper_right);
+    float s = max(transform.x_scale(), transform.y_scale());
+    auto bitmap_width = round_to<int>(pattern_space_bbox.width() * s);
+    auto bitmap_height = round_to<int>(pattern_space_bbox.height() * s);
 
-    auto bitmap_width = abs((int)device_space_upper_right.x() - (int)device_space_lower_left.x());
-    auto bitmap_height = abs((int)device_space_upper_right.y() - (int)device_space_lower_left.y());
-
+    // FIXME: Cache cell bitmap across pattern paints?
     auto pattern_cell = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { bitmap_width, bitmap_height }));
+
     m_page.media_box = Rectangle {
-        m_pattern_space_lower_left.x(), m_pattern_space_lower_left.y(),
-        m_pattern_space_upper_right.x(), m_pattern_space_upper_right.y()
+        0, 0,
+        pattern_space_bbox.width(), pattern_space_bbox.height()
     };
     m_page.crop_box = m_page.media_box;
 
     auto pattern_renderer = Renderer(m_renderer.m_document, m_page, pattern_cell, {}, m_renderer.m_rendering_preferences);
+    TRY(pattern_renderer.handle_concatenate_matrix(Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { -pattern_space_bbox.x() }, Value { -pattern_space_bbox.y() } }));
     auto operators = TRY(Parser::parse_operators(m_renderer.m_document, m_content_stream));
     for (auto& op : operators)
         TRY(pattern_renderer.handle_operator(op, m_pattern_resources));
 
+    auto maybe_inverse_transform = transform.inverse();
+    if (!maybe_inverse_transform.has_value())
+        return Error::malformed_error("Failed to invert tiling pattern transform");
+    auto inverse_transform = maybe_inverse_transform.value();
+
     auto x_steps = m_x_steps.value_or(bitmap_width);
     auto y_steps = m_y_steps.value_or(bitmap_height);
-    auto device_space_steps = transform.map(Gfx::IntPoint { x_steps, y_steps });
 
-    // FIXME: Blit pattern_cell on a grid, without using RepeatingBitmapPaintStyle.
-    NonnullRefPtr<Gfx::PaintStyle> style = MUST(Gfx::RepeatingBitmapPaintStyle::create(
-        *pattern_cell,
-        device_space_steps,
-        {}));
-    auto translation = Gfx::AffineTransform().translate(painter.clip_rect().location().to_type<float>());
-    style = MUST(Gfx::OffsetPaintStyle::create(move(style), translation));
-    painter.fill_rect(painter.clip_rect(), style);
+    // Map page's clip rect to pattern space and compute its axis-aligned bounding box in that space.
+    auto clip_rect_bounds_in_pattern_space = inverse_transform.map_to_quad(painter.clip_rect().to_type<float>()).bounding_rect();
+
+    auto pattern_rect = enclosing_tiled_int_rect(clip_rect_bounds_in_pattern_space.translated(-pattern_space_bbox.location()), { x_steps, y_steps });
+
+    for (int y = pattern_rect.top(); y < pattern_rect.bottom(); y += y_steps) {
+        for (int x = pattern_rect.left(); x < pattern_rect.right(); x += x_steps) {
+            Gfx::FloatRect cell_rect = { { pattern_space_bbox.x() + x, pattern_space_bbox.y() + y }, pattern_space_bbox.size() };
+
+            // Cell has (0, 0) in its lower left corner, Gfx::Bitmap in its upper left.
+            Gfx::AffineTransform vertical_reflection_matrix = { 1, 0, 0, -1, 0, 2 * cell_rect.y() + cell_rect.height() };
+            auto t = transform;
+            t.multiply(vertical_reflection_matrix);
+            painter.draw_scaled_bitmap_with_transform(Gfx::enclosing_int_rect(cell_rect), pattern_cell, pattern_cell->rect().to_type<float>(), t);
+        }
+    }
 
     return {};
 }
