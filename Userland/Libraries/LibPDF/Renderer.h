@@ -109,8 +109,8 @@ struct GraphicsState {
     ClippingState clipping_state;
     RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
-    Variant<ColorOrStyle, NonnullRefPtr<Pattern>> stroke_style { ColorOrStyle { Color::Black } };
-    Variant<ColorOrStyle, NonnullRefPtr<Pattern>> paint_style { ColorOrStyle { Color::Black } };
+    Variant<Color, NonnullRefPtr<Pattern>> stroke_style { Color { Color::Black } };
+    Variant<Color, NonnullRefPtr<Pattern>> paint_style { Color { Color::Black } };
     ByteString color_rendering_intent { "RelativeColorimetric"sv };
     float flatness_tolerance { 1.0f };
     float line_width { 1.0f };
@@ -181,13 +181,9 @@ public:
 
     bool show_hidden_text() const { return m_rendering_preferences.show_hidden_text; }
 
-    static void fill_path_with_style(Gfx::AntiAliasingPainter& painter, Gfx::Path const& path, ColorOrStyle const& style, float paint_style_opacity = 1.0f, Gfx::WindingRule winding_rule = Gfx::WindingRule::Nonzero)
+    static void fill_path_with_style(Gfx::AntiAliasingPainter& painter, Gfx::Path const& path, Color const& style, Gfx::WindingRule winding_rule = Gfx::WindingRule::Nonzero)
     {
-        if (auto* paint_style = style.get_pointer<NonnullRefPtr<Gfx::PaintStyle>>()) {
-            painter.fill_path(path, *paint_style, paint_style_opacity, winding_rule);
-        } else {
-            painter.fill_path(path, style.get<Color>(), winding_rule);
-        }
+        painter.fill_path(path, style, winding_rule);
     }
 
     Page const& page() const { return m_page; }
@@ -237,11 +233,11 @@ private:
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>, Optional<NonnullRefPtr<DictObject>> = {});
 
-    static Variant<ColorOrStyle, NonnullRefPtr<Pattern>> style_with_alpha(Variant<ColorOrStyle, NonnullRefPtr<Pattern>> style, float alpha)
+    static Variant<Color, NonnullRefPtr<Pattern>> style_with_alpha(Variant<Color, NonnullRefPtr<Pattern>> style, float alpha)
     {
-        if (!style.has<ColorOrStyle>() || !style.get<ColorOrStyle>().has<Color>())
+        if (!style.has<Color>())
             return style;
-        return ColorOrStyle { style.get<ColorOrStyle>().get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255))) };
+        return Color { style.get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255))) };
     }
 
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
@@ -426,21 +422,13 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         builder.append("GraphicsState {\n"sv);
         builder.appendff("  ctm={}\n", state.ctm);
         state.stroke_style.visit(
-            [&](PDF::ColorOrStyle const& style) {
-                if (style.has<Color>()) {
-                    builder.appendff("  stroke_style={}\n", style.get<Color>());
-                } else {
-                    builder.appendff("  stroke_style={}\n", style.get<NonnullRefPtr<Gfx::PaintStyle>>());
-                }
+            [&](Gfx::Color const& style) {
+                builder.appendff("  stroke_style={}\n", style);
             },
             [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  stroke_style=pattern\n"); });
         state.paint_style.visit(
-            [&](PDF::ColorOrStyle const& style) {
-                if (style.has<Color>()) {
-                    builder.appendff("  paint_style={}\n", style.get<Color>());
-                } else {
-                    builder.appendff("  paint_style={}\n", style.get<NonnullRefPtr<Gfx::PaintStyle>>());
-                }
+            [&](Gfx::Color const& style) {
+                builder.appendff("  paint_style={}\n", style);
             },
             [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  paint_style=pattern\n"); });
         builder.appendff("  color_rendering_intent={}\n", state.color_rendering_intent);

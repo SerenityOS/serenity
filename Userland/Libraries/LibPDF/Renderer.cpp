@@ -461,12 +461,8 @@ PDFErrorOr<void> Renderer::fill_path_with_pattern(Gfx::Path const& path, Nonnull
 PDFErrorOr<void> Renderer::stroke_current_path()
 {
     TRY(state().stroke_style.visit(
-        [&](ColorOrStyle const& style) -> PDFErrorOr<void> {
-            if (style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-                anti_aliasing_painter().stroke_path(m_current_path, style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style(), state().stroke_alpha_constant);
-            } else {
-                anti_aliasing_painter().stroke_path(m_current_path, style.get<Color>(), stroke_style());
-            }
+        [&](Color const& style) -> PDFErrorOr<void> {
+            anti_aliasing_painter().stroke_path(m_current_path, style, stroke_style());
             return {};
         },
         [&](NonnullRefPtr<Pattern> const& pattern) -> PDFErrorOr<void> {
@@ -481,8 +477,8 @@ PDFErrorOr<void> Renderer::fill_current_path(Gfx::WindingRule winding_rule)
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
     TRY(state().paint_style.visit(
-        [&](ColorOrStyle const& style) -> PDFErrorOr<void> {
-            fill_path_with_style(anti_aliasing_painter(), m_current_path, style, state().paint_alpha_constant, winding_rule);
+        [&](Color const& style) -> PDFErrorOr<void> {
+            fill_path_with_style(anti_aliasing_painter(), m_current_path, style, winding_rule);
             return {};
         },
         [&](NonnullRefPtr<Pattern> const& pattern) -> PDFErrorOr<void> {
@@ -1637,8 +1633,8 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }));
 
         Color colors[] = {
-            TRY(color_space->style({ &decode_array[0], 1 })).get<Color>(),
-            TRY(color_space->style({ &decode_array[1], 1 })).get<Color>(),
+            TRY(color_space->style({ &decode_array[0], 1 })),
+            TRY(color_space->style({ &decode_array[1], 1 })),
         };
 
         auto const bytes_per_line = ceil_div(width, 8);
@@ -1698,7 +1694,7 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
             sample = sample.slice(bytes_per_component);
             component_values[i] = component_value_decoders[i].interpolate(component[0]);
         }
-        auto color = TRY(color_space->style(component_values)).get<Color>();
+        auto color = TRY(color_space->style(component_values));
         bitmap->set_pixel(x, y, color);
         ++x;
         if (x == width) {
@@ -1816,11 +1812,11 @@ PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image
         // PDF 1.7 spec, 4.8.5 Masked Images, Stencil Masking:
         // "An image mask (an image XObject whose ImageMask entry is true) [...] is treated as a stencil mask [...].
         //  Sample values [...] designate places on the page that should either be marked with the current color or masked out (not marked at all)."
-        if (!state().paint_style.has<ColorOrStyle>() || !state().paint_style.get<ColorOrStyle>().has<Gfx::Color>())
+        if (!state().paint_style.has<Color>())
             return Error(Error::Type::RenderingUnsupported, "Image masks with pattern fill not yet implemented");
 
         // Move mask to alpha channel, and put current color in RGB.
-        auto current_color = state().paint_style.get<ColorOrStyle>().get<Gfx::Color>();
+        auto current_color = state().paint_style.get<Gfx::Color>();
         for (auto& pixel : *image_bitmap.bitmap) {
             // "a sample value of 0 marks the page with the current color, and a 1 leaves the previous contents unchanged."
             // That's opposite of the normal alpha convention, and we're upsampling masks to 8 bit and use that as normal alpha.

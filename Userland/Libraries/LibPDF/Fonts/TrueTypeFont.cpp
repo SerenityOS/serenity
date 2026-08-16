@@ -62,19 +62,12 @@ NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, Nonnu
     return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte, is_zapf_dingbats });
 }
 
-static void do_draw_glyph(Gfx::Painter& painter, u32 glyph_id, Gfx::FloatPoint point, float width, Gfx::ScaledFont const& font, ColorOrStyle const& style)
+static void do_draw_glyph(Gfx::Painter& painter, u32 glyph_id, Gfx::FloatPoint point, Gfx::ScaledFont const& font, Color const& style)
 {
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -font.pixel_metrics().ascent);
 
-    if (style.has<Color>()) {
-        painter.draw_glyph_via_glyph_id(position, font, glyph_id, style.get<Color>());
-    } else {
-        // FIXME: Bounding box and sample point look to be pretty wrong
-        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
-            painter.draw_glyph_via_glyph_id(position, font, glyph_id, sample(Gfx::IntPoint(position.x(), position.y())));
-        });
-    }
+    painter.draw_glyph_via_glyph_id(position, font, glyph_id, style);
 }
 
 PDFErrorOr<TrueTypePainter::GlyphID> TrueTypePainter::resolve_glyph_id_for_char_code(u8 char_code)
@@ -140,13 +133,13 @@ PDFErrorOr<TrueTypePainter::GlyphID> TrueTypePainter::resolve_glyph_id_for_char_
     return m_font->glyph_id_for_code_point(unicode);
 }
 
-PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
+PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, u8 char_code, Renderer const& renderer)
 {
     auto glyph_id = TRY(resolve_glyph_id_for_char_code(char_code));
     if (glyph_id.has_value()) {
         TRY(renderer.state().paint_style.visit(
-            [&](ColorOrStyle const& style) -> PDFErrorOr<void> {
-                do_draw_glyph(painter, *glyph_id, point, width, m_font, style);
+            [&](Color const& style) -> PDFErrorOr<void> {
+                do_draw_glyph(painter, *glyph_id, point, m_font, style);
                 return {};
             },
             [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
@@ -221,9 +214,9 @@ void TrueTypeFont::set_font_size(float font_size)
     m_font_painter->set_font_size(font_size);
 }
 
-PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
+PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u8 char_code, Renderer const& renderer)
 {
-    return m_font_painter->draw_glyph(painter, point, width, char_code, renderer);
+    return m_font_painter->draw_glyph(painter, point, char_code, renderer);
 }
 
 PDFErrorOr<void> TrueTypeFont::append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, u8 char_code, Renderer const& renderer)

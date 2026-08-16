@@ -95,25 +95,16 @@ PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
         return Error::rendering_unsupported_error("Type0 font CIDFontType0: failed to rasterize glyph");
 
     auto style = TRY(renderer.state().paint_style.visit(
-        [&](ColorOrStyle const& style) -> PDFErrorOr<ColorOrStyle> {
+        [&](Color const& style) -> PDFErrorOr<Color> {
             return style;
         },
-        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<ColorOrStyle> {
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<Color> {
             return Error::rendering_unsupported_error("Cannot draw type0 CID0 glyph with a pattern yet");
         }));
 
-    if (style.has<Color>()) {
-        painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
-            return pixel.multiply(style.get<Color>());
-        });
-    } else {
-        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(bitmap->physical_rect(), [&](auto sample) {
-            painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [&](Color pixel) -> Color {
-                // FIXME: Presumably we need to sample at every point in the glyph, not just the top left?
-                return pixel.multiply(sample(glyph_position.blit_position));
-            });
-        });
-    }
+    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
+        return pixel.multiply(style);
+    });
 
     return {};
 }
@@ -196,7 +187,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType2(move(font))));
 }
 
-PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Renderer const& renderer)
+PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u32 char_code, Renderer const& renderer)
 {
     if (!m_font) {
         // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
@@ -220,24 +211,17 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     // FIXME: We don't support non-embedded type0 truetype fonts yet.
 
     auto style = TRY(renderer.state().paint_style.visit(
-        [&](ColorOrStyle const& style) -> PDFErrorOr<ColorOrStyle> {
+        [&](Color const& style) -> PDFErrorOr<Color> {
             return style;
         },
-        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<ColorOrStyle> {
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<Color> {
             return Error::rendering_unsupported_error("Cannot draw type0 CID2 glyph with a pattern yet");
         }));
 
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -m_font->pixel_metrics().ascent);
 
-    if (style.has<Color>()) {
-        painter.draw_glyph(position, char_code, *m_font, style.get<Color>());
-    } else {
-        // FIXME: Bounding box and sample point look to be pretty wrong
-        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
-            painter.draw_glyph(position, char_code, *m_font, sample(Gfx::IntPoint(position.x(), position.y())));
-        });
-    }
+    painter.draw_glyph(position, char_code, *m_font, style);
     return {};
 }
 

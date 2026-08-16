@@ -16,7 +16,7 @@ class TrueTypePainter {
 public:
     static NonnullOwnPtr<TrueTypePainter> create(Document*, NonnullRefPtr<DictObject> const&, SimpleFont const& containing_pdf_font, AK::NonnullRefPtr<Gfx::ScaledFont>, NonnullRefPtr<Encoding>, bool is_zapf_dingbats);
 
-    PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u8 char_code, Renderer const&);
+    PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, u8 char_code, Renderer const&);
     Optional<float> get_glyph_width(u8 char_code) const;
     void set_font_size(float font_size);
 
