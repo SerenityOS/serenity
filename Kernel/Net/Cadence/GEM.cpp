@@ -48,16 +48,15 @@ void CadenceGEMNetworkAdapter::send_raw(ReadonlyBytes data)
 
     auto* descriptor = tx_descriptor_entry(m_tx_enqueue_index);
 
-    ErrorOr<void> maybe_error {};
+    InterruptedOr<void> maybe_interrupted {};
     do {
-        maybe_error = m_wait_queue.wait_until([&descriptor]() {
+        maybe_interrupted = m_wait_queue.wait_until([&descriptor]() {
             // Inform the compiler that the contents of DMA regions might have changed,
             // even if it didn't see any writes to them.
             optimizer_fence();
             return descriptor->is_software_owned;
         });
-    } while (maybe_error.is_error() && maybe_error.error().code() == EINTR);
-    VERIFY(!maybe_error.is_error());
+    } while (maybe_interrupted.is_error());
 
     // Ensure that the software owned check is done before writing the descriptor and buffer data.
     full_memory_fence();
