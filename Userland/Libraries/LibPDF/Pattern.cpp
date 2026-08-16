@@ -117,9 +117,10 @@ PDFErrorOr<void> TilingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransform
     auto transform = transform_in;
     transform.set_translation(0, 0);
     transform.set_scale(transform.x_scale(), transform.y_scale());
+    transform.multiply(m_common_entries.matrix);
 
-    auto device_space_lower_left = transform.map(m_common_entries.matrix.map((m_pattern_space_lower_left)));
-    auto device_space_upper_right = transform.map(m_common_entries.matrix.map(m_pattern_space_upper_right));
+    auto device_space_lower_left = transform.map((m_pattern_space_lower_left));
+    auto device_space_upper_right = transform.map(m_pattern_space_upper_right);
 
     auto bitmap_width = abs((int)device_space_upper_right.x() - (int)device_space_lower_left.x());
     auto bitmap_height = abs((int)device_space_upper_right.y() - (int)device_space_lower_left.y());
@@ -138,7 +139,7 @@ PDFErrorOr<void> TilingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransform
 
     auto x_steps = m_x_steps.value_or(bitmap_width);
     auto y_steps = m_y_steps.value_or(bitmap_height);
-    auto device_space_steps = transform.map(m_common_entries.matrix.map(Gfx::IntPoint { x_steps, y_steps }));
+    auto device_space_steps = transform.map(Gfx::IntPoint { x_steps, y_steps });
 
     // FIXME: Blit pattern_cell on a grid, without using RepeatingBitmapPaintStyle.
     NonnullRefPtr<Gfx::PaintStyle> style = MUST(Gfx::RepeatingBitmapPaintStyle::create(
