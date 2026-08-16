@@ -46,7 +46,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
     return Error { Error::Type::MalformedPDF, "Color space must be name or array" };
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name, Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name, Renderer&, Optional<NonnullRefPtr<DictObject>>)
 {
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)
@@ -56,11 +56,11 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
     if (name == CommonNames::DeviceCMYK)
         return TRY(DeviceCMYKColorSpace::the());
     if (name == CommonNames::Pattern)
-        return PatternColorSpace::create(renderer, extra_resources);
+        return PatternColorSpace::create();
     VERIFY_NOT_REACHED();
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<ArrayObject> color_space_array, Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<ArrayObject> color_space_array, Renderer& renderer, Optional<NonnullRefPtr<DictObject>>)
 {
     auto color_space_name = TRY(color_space_array->get_name_at(document, 0))->name();
 
@@ -91,7 +91,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
         return TRY(SeparationColorSpace::create(document, move(parameters), renderer));
 
     if (color_space_name == CommonNames::Pattern)
-        return PatternColorSpace::create(renderer, extra_resources);
+        return PatternColorSpace::create();
 
     dbgln("Unknown color space: {}", color_space_name);
     return Error::rendering_unsupported_error("unknown color space");
@@ -803,31 +803,15 @@ Vector<float> SeparationColorSpace::default_decode() const
 {
     return { 0.0f, 1.0f };
 }
-NonnullRefPtr<PatternColorSpace> PatternColorSpace::create(Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
+NonnullRefPtr<PatternColorSpace> PatternColorSpace::create()
 {
-    return adopt_ref(*new PatternColorSpace(renderer, extra_resources));
+    return adopt_ref(*new PatternColorSpace());
 }
 
-PDFErrorOr<ColorOrStyle> PatternColorSpace::style(ReadonlySpan<Value> arguments) const
+PDFErrorOr<ColorOrStyle> PatternColorSpace::style(ReadonlySpan<Value>) const
 {
-    VERIFY(arguments.size() >= 1);
-
-    auto resources = m_extra_resources.value_or(m_renderer.m_page.resources);
-    if (!resources->contains(CommonNames::Pattern))
-        return Error::malformed_error("Pattern resource dictionary missing");
-
-    auto pattern_resource = resources->get_value(CommonNames::Pattern);
-    auto* maybe_doc_pattern_dict = pattern_resource.get_pointer<NonnullRefPtr<Object>>();
-    if (!maybe_doc_pattern_dict || !(*maybe_doc_pattern_dict)->is<DictObject>())
-        return Error::malformed_error("Pattern resource dictionary not DictObject");
-
-    auto doc_pattern_dict = (*maybe_doc_pattern_dict)->cast<DictObject>();
-    auto const& pattern_name = arguments.last().get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-    if (!doc_pattern_dict->contains(pattern_name))
-        return Error::malformed_error("Pattern dictionary does not contain pattern {}", pattern_name);
-
-    auto const pattern = TRY(m_renderer.m_document->resolve_to<Object>(doc_pattern_dict->get_value(pattern_name)));
-    return Pattern::style(m_renderer.m_document, pattern, m_renderer);
+    // Not permitted
+    VERIFY_NOT_REACHED();
 }
 int PatternColorSpace::number_of_components() const
 {

@@ -158,7 +158,7 @@ struct RenderingPreferences {
 
 class Renderer {
     friend class Pattern;
-    friend class PatternColorSpace;
+    friend class TilingPattern;
 
 public:
     static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences preferences);
@@ -189,6 +189,8 @@ public:
             painter.fill_path(path, style.get<Color>(), winding_rule);
         }
     }
+
+    Page const& page() const { return m_page; }
 
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences);
@@ -308,8 +310,6 @@ private:
     // Only used for m_rendering_preferences.show_clipping_paths.
     void show_clipping_paths();
     Vector<Gfx::Path> m_clip_paths_to_show_for_debugging;
-    // Used to offset the PaintStyle's origin when rendering a pattern.
-    RefPtr<Gfx::PaintStyle> m_original_paint_style;
 };
 
 }
