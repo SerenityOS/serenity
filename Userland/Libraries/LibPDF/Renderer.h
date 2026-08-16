@@ -181,9 +181,9 @@ public:
 
     bool show_hidden_text() const { return m_rendering_preferences.show_hidden_text; }
 
-    static void fill_path_with_style(Gfx::AntiAliasingPainter& painter, Gfx::Path const& path, Color const& style, Gfx::WindingRule winding_rule = Gfx::WindingRule::Nonzero)
+    static void fill_path_with_color(Gfx::AntiAliasingPainter& painter, Gfx::Path const& path, Color const& color, Gfx::WindingRule winding_rule = Gfx::WindingRule::Nonzero)
     {
-        painter.fill_path(path, style, winding_rule);
+        painter.fill_path(path, color, winding_rule);
     }
 
     Page const& page() const { return m_page; }
@@ -212,7 +212,7 @@ private:
 
     void begin_path_paint();
     PDFErrorOr<void> end_path_paint();
-    PDFErrorOr<void> fill_path_with_pattern(Gfx::Path const& path, NonnullRefPtr<Pattern> const& pattern, float paint_style_opacity, Gfx::WindingRule winding_rule);
+    PDFErrorOr<void> fill_path_with_pattern(Gfx::Path const& path, NonnullRefPtr<Pattern> const& pattern, float opacity, Gfx::WindingRule winding_rule);
     PDFErrorOr<void> stroke_current_path();
     PDFErrorOr<void> fill_current_path(Gfx::WindingRule);
     PDFErrorOr<void> fill_and_stroke_current_path(Gfx::WindingRule);
@@ -233,11 +233,11 @@ private:
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>, Optional<NonnullRefPtr<DictObject>> = {});
 
-    static Variant<Color, NonnullRefPtr<Pattern>> style_with_alpha(Variant<Color, NonnullRefPtr<Pattern>> style, float alpha)
+    static Variant<Color, NonnullRefPtr<Pattern>> color_with_alpha(Variant<Color, NonnullRefPtr<Pattern>> color, float alpha)
     {
-        if (!style.has<Color>())
-            return style;
-        return Color { style.get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255))) };
+        if (!color.has<Color>())
+            return color;
+        return Color { color.get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255))) };
     }
 
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
@@ -422,13 +422,13 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         builder.append("GraphicsState {\n"sv);
         builder.appendff("  ctm={}\n", state.ctm);
         state.stroke_color.visit(
-            [&](Gfx::Color const& style) {
-                builder.appendff("  stroke_color={}\n", style);
+            [&](Gfx::Color const& color) {
+                builder.appendff("  stroke_color={}\n", color);
             },
             [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  stroke_color=pattern\n"); });
         state.paint_color.visit(
-            [&](Gfx::Color const& style) {
-                builder.appendff("  paint_color={}\n", style);
+            [&](Gfx::Color const& color) {
+                builder.appendff("  paint_color={}\n", color);
             },
             [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  paint_color=pattern\n"); });
         builder.appendff("  color_rendering_intent={}\n", state.color_rendering_intent);
