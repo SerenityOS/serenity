@@ -62,12 +62,12 @@ NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, Nonnu
     return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte, is_zapf_dingbats });
 }
 
-static void do_draw_glyph(Gfx::Painter& painter, u32 glyph_id, Gfx::FloatPoint point, Gfx::ScaledFont const& font, Color const& style)
+static void do_draw_glyph(Gfx::Painter& painter, u32 glyph_id, Gfx::FloatPoint point, Gfx::ScaledFont const& font, Color const& color)
 {
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -font.pixel_metrics().ascent);
 
-    painter.draw_glyph_via_glyph_id(position, font, glyph_id, style);
+    painter.draw_glyph_via_glyph_id(position, font, glyph_id, color);
 }
 
 PDFErrorOr<TrueTypePainter::GlyphID> TrueTypePainter::resolve_glyph_id_for_char_code(u8 char_code)
@@ -138,8 +138,8 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
     auto glyph_id = TRY(resolve_glyph_id_for_char_code(char_code));
     if (glyph_id.has_value()) {
         TRY(renderer.state().paint_color.visit(
-            [&](Color const& style) -> PDFErrorOr<void> {
-                do_draw_glyph(painter, *glyph_id, point, m_font, style);
+            [&](Color const& color) -> PDFErrorOr<void> {
+                do_draw_glyph(painter, *glyph_id, point, m_font, color);
                 return {};
             },
             [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {

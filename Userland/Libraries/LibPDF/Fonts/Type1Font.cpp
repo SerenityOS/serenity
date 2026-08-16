@@ -106,9 +106,9 @@ void Type1Font::set_font_size(float font_size)
 
 PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
-    auto style = TRY(renderer.state().paint_color.visit(
-        [&](Color const& style) -> PDFErrorOr<Color> {
-            return style;
+    auto color = TRY(renderer.state().paint_color.visit(
+        [&](Color const& color) -> PDFErrorOr<Color> {
+            return color;
         },
         [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<Color> {
             return Error::rendering_unsupported_error("Cannot draw type1 glyph with a pattern yet");
@@ -138,8 +138,8 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
         m_glyph_cache.set(index, bitmap);
     }
 
-    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
-        return pixel.multiply(style);
+    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
+        return pixel.multiply(color);
     });
     return {};
 }

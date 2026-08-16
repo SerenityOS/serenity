@@ -126,8 +126,8 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_transformed_glyphs(Gfx::Painter& pa
             .set_scale(1 / text_rendering_matrix.x_scale() * horizontal_scaling,
                 -1 / text_rendering_matrix.x_scale() * horizontal_scaling)));
     TRY(renderer.state().paint_color.visit(
-        [&](Color const& style) -> PDFErrorOr<void> {
-            Renderer::fill_path_with_style(aa_painter, text_path, style);
+        [&](Color const& color) -> PDFErrorOr<void> {
+            Renderer::fill_path_with_color(aa_painter, text_path, color);
             return {};
         },
         [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {

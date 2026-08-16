@@ -94,16 +94,16 @@ PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     if (!bitmap)
         return Error::rendering_unsupported_error("Type0 font CIDFontType0: failed to rasterize glyph");
 
-    auto style = TRY(renderer.state().paint_color.visit(
-        [&](Color const& style) -> PDFErrorOr<Color> {
-            return style;
+    auto color = TRY(renderer.state().paint_color.visit(
+        [&](Color const& color) -> PDFErrorOr<Color> {
+            return color;
         },
         [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<Color> {
             return Error::rendering_unsupported_error("Cannot draw type0 CID0 glyph with a pattern yet");
         }));
 
-    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
-        return pixel.multiply(style);
+    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
+        return pixel.multiply(color);
     });
 
     return {};
@@ -210,9 +210,9 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
 
     // FIXME: We don't support non-embedded type0 truetype fonts yet.
 
-    auto style = TRY(renderer.state().paint_color.visit(
-        [&](Color const& style) -> PDFErrorOr<Color> {
-            return style;
+    auto color = TRY(renderer.state().paint_color.visit(
+        [&](Color const& color) -> PDFErrorOr<Color> {
+            return color;
         },
         [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<Color> {
             return Error::rendering_unsupported_error("Cannot draw type0 CID2 glyph with a pattern yet");
@@ -221,7 +221,7 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -m_font->pixel_metrics().ascent);
 
-    painter.draw_glyph(position, char_code, *m_font, style);
+    painter.draw_glyph(position, char_code, *m_font, color);
     return {};
 }
 
