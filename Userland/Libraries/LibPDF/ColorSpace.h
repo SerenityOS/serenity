@@ -289,7 +289,7 @@ private:
 
 class PatternColorSpace final : public ColorSpace {
 public:
-    static NonnullRefPtr<PatternColorSpace> create(Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources);
+    static NonnullRefPtr<PatternColorSpace> create();
     ~PatternColorSpace() override = default;
 
     PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const override;
@@ -298,14 +298,9 @@ public:
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Pattern; }
 
 private:
-    PatternColorSpace(Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
-        : m_renderer(renderer)
-        , m_extra_resources(extra_resources)
+    PatternColorSpace()
     {
     }
-
-    Renderer& m_renderer;
-    Optional<NonnullRefPtr<DictObject>> m_extra_resources;
 };
 
 }

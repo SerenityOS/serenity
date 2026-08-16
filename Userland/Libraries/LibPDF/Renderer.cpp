@@ -426,12 +426,6 @@ PDFErrorOr<void> Renderer::restore_previous_clip_after_graphics_state_restore()
 void Renderer::begin_path_paint()
 {
     m_current_path.transform(state().ctm);
-    if (state().paint_style.has<ColorOrStyle>() && state().paint_style.get<ColorOrStyle>().has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        VERIFY(!m_original_paint_style);
-        m_original_paint_style = state().paint_style.get<ColorOrStyle>().get<NonnullRefPtr<Gfx::PaintStyle>>();
-        auto translation = Gfx::AffineTransform().translate(m_current_path.bounding_box().x(), m_current_path.bounding_box().y());
-        state().paint_style = ColorOrStyle { MUST(Gfx::OffsetPaintStyle::create(state().paint_style.get<ColorOrStyle>().get<NonnullRefPtr<Gfx::PaintStyle>>(), translation)) };
-    }
 }
 
 PDFErrorOr<void> Renderer::end_path_paint()
@@ -439,11 +433,6 @@ PDFErrorOr<void> Renderer::end_path_paint()
     if (m_add_path_as_clip != AddPathAsClip::No) {
         TRY(add_clip_path(move(m_current_path), m_add_path_as_clip == AddPathAsClip::Nonzero ? Gfx::WindingRule::Nonzero : Gfx::WindingRule::EvenOdd));
         m_add_path_as_clip = AddPathAsClip::No;
-    }
-
-    if (m_original_paint_style) {
-        state().paint_style = ColorOrStyle { m_original_paint_style.release_nonnull() };
-        m_original_paint_style = nullptr;
     }
 
     // "Once a path has been painted, it is no longer defined; there is then no current path
@@ -856,10 +845,8 @@ RENDERER_HANDLER(set_stroking_color_extended)
     if (state().stroke_color_space->family() == ColorSpaceFamily::Pattern) {
         auto resources = extra_resources.value_or(m_page.resources);
         auto pattern_object = TRY(get_resource(resources, CommonNames::Pattern, args.last()));
-        if (TRY(Pattern::is_type2(m_document, pattern_object))) {
-            state().stroke_style = TRY(Pattern::create(m_document, pattern_object, *this));
-            return {};
-        }
+        state().stroke_style = TRY(Pattern::create(m_document, pattern_object, *this));
+        return {};
     }
 
     state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
@@ -877,10 +864,8 @@ RENDERER_HANDLER(set_painting_color_extended)
     if (state().paint_color_space->family() == ColorSpaceFamily::Pattern) {
         auto resources = extra_resources.value_or(m_page.resources);
         auto pattern_object = TRY(get_resource(resources, CommonNames::Pattern, args.last()));
-        if (TRY(Pattern::is_type2(m_document, pattern_object))) {
-            state().paint_style = TRY(Pattern::create(m_document, pattern_object, *this));
-            return {};
-        }
+        state().paint_style = TRY(Pattern::create(m_document, pattern_object, *this));
+        return {};
     }
 
     state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);

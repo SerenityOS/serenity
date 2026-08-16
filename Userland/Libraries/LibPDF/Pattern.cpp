@@ -53,6 +53,107 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
     return common_entries;
 }
 
+}
+
+class TilingPattern final : public Pattern {
+public:
+    static PDFErrorOr<NonnullRefPtr<TilingPattern>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries, Renderer&);
+
+    virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
+
+private:
+    TilingPattern(CommonEntries common_entries, Page const& page, Gfx::FloatPoint pattern_space_lower_left, Gfx::FloatPoint pattern_space_upper_right, Optional<NonnullRefPtr<DictObject>> pattern_resources, Optional<int> x_steps, Optional<int> y_steps, ReadonlyBytes content_stream, Renderer& renderer)
+        : m_common_entries(common_entries)
+        , m_page(page)
+        , m_pattern_space_lower_left(pattern_space_lower_left)
+        , m_pattern_space_upper_right(pattern_space_upper_right)
+        , m_pattern_resources(pattern_resources)
+        , m_x_steps(x_steps)
+        , m_y_steps(y_steps)
+        , m_content_stream(move(content_stream))
+        , m_renderer(renderer)
+    {
+    }
+
+    CommonEntries m_common_entries;
+    Page m_page;
+    Gfx::FloatPoint m_pattern_space_lower_left;
+    Gfx::FloatPoint m_pattern_space_upper_right;
+    Optional<NonnullRefPtr<DictObject>> m_pattern_resources;
+    Optional<int> m_x_steps;
+    Optional<int> m_y_steps;
+    ReadonlyBytes m_content_stream;
+    Renderer& m_renderer;
+};
+
+PDFErrorOr<NonnullRefPtr<TilingPattern>> TilingPattern::create(Document* document, NonnullRefPtr<StreamObject> pattern, CommonEntries common_entries, Renderer& renderer)
+{
+    auto pattern_dict = pattern->dict();
+
+    // PaintType (Required) A code that determines how the colour of the pattern cell shall be specified
+    auto const pattern_paint_type = pattern_dict->get("PaintType")->get_u16();
+    if (pattern_paint_type != 1)
+        return Error::rendering_unsupported_error("Unsupported pattern paint type {}", pattern_paint_type); // FIXME
+
+    auto pattern_bounding_box = pattern_dict->get_array(document, CommonNames::BBox).value()->elements();
+
+    auto pattern_space_lower_left = Gfx::FloatPoint { pattern_bounding_box[0].to_int(), pattern_bounding_box[1].to_int() };
+    auto pattern_space_upper_right = Gfx::FloatPoint { pattern_bounding_box[2].to_int(), pattern_bounding_box[3].to_int() };
+
+    // (Required) A resource dictionary containing all of the named resources required by the pattern’s content stream.
+    // FIXME: This is technically required, but `patterns.pdf` omits it (and it is accepted by Chrome and FF/LibPDF.js).
+    Optional<NonnullRefPtr<DictObject>> pattern_resources {};
+    if (pattern_dict->contains(CommonNames::Resources))
+        pattern_resources = TRY(pattern_dict->get_dict(document, CommonNames::Resources));
+
+    auto x_steps = pattern_dict->get("XStep").map([](auto& v) { return v.to_int(); });
+    auto y_steps = pattern_dict->get("YStep").map([](auto& v) { return v.to_int(); });
+
+    return adopt_ref(*new TilingPattern(common_entries, renderer.page(), pattern_space_lower_left, pattern_space_upper_right, pattern_resources, x_steps, y_steps, pattern->cast<StreamObject>()->bytes(), renderer));
+}
+
+PDFErrorOr<void> TilingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransform const& transform_in)
+{
+    auto transform = transform_in;
+    transform.set_translation(0, 0);
+    transform.set_scale(transform.x_scale(), transform.y_scale());
+
+    auto device_space_lower_left = transform.map(m_common_entries.matrix.map((m_pattern_space_lower_left)));
+    auto device_space_upper_right = transform.map(m_common_entries.matrix.map(m_pattern_space_upper_right));
+
+    auto bitmap_width = abs((int)device_space_upper_right.x() - (int)device_space_lower_left.x());
+    auto bitmap_height = abs((int)device_space_upper_right.y() - (int)device_space_lower_left.y());
+
+    auto pattern_cell = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { bitmap_width, bitmap_height }));
+    m_page.media_box = Rectangle {
+        m_pattern_space_lower_left.x(), m_pattern_space_lower_left.y(),
+        m_pattern_space_upper_right.x(), m_pattern_space_upper_right.y()
+    };
+    m_page.crop_box = m_page.media_box;
+
+    auto pattern_renderer = Renderer(m_renderer.m_document, m_page, pattern_cell, {}, m_renderer.m_rendering_preferences);
+    auto operators = TRY(Parser::parse_operators(m_renderer.m_document, m_content_stream));
+    for (auto& op : operators)
+        TRY(pattern_renderer.handle_operator(op, m_pattern_resources));
+
+    auto x_steps = m_x_steps.value_or(bitmap_width);
+    auto y_steps = m_y_steps.value_or(bitmap_height);
+    auto device_space_steps = transform.map(m_common_entries.matrix.map(Gfx::IntPoint { x_steps, y_steps }));
+
+    // FIXME: Blit pattern_cell on a grid, without using RepeatingBitmapPaintStyle.
+    NonnullRefPtr<Gfx::PaintStyle> style = MUST(Gfx::RepeatingBitmapPaintStyle::create(
+        *pattern_cell,
+        device_space_steps,
+        {}));
+    auto translation = Gfx::AffineTransform().translate(painter.clip_rect().location().to_type<float>());
+    style = MUST(Gfx::OffsetPaintStyle::create(move(style), translation));
+    painter.fill_rect(painter.clip_rect(), style);
+
+    return {};
+}
+
+namespace {
+
 class ShadingPattern final : public Pattern {
 public:
     static PDFErrorOr<NonnullRefPtr<ShadingPattern>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries, Renderer&);
@@ -100,15 +201,6 @@ PDFErrorOr<void> ShadingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransfor
 
 }
 
-PDFErrorOr<bool> Pattern::is_type2(Document* document, NonnullRefPtr<Object> pattern)
-{
-    if (!pattern->is<DictObject>())
-        return false;
-    auto pattern_dict = pattern->cast<DictObject>();
-    auto const pattern_type = TRY(document->resolve(pattern_dict->get_value(CommonNames::PatternType))).to_int();
-    return pattern_type == 2;
-}
-
 PDFErrorOr<NonnullRefPtr<Pattern>> Pattern::create(Document* document, NonnullRefPtr<Object> pattern, Renderer& renderer)
 {
     auto pattern_dict = TRY([&]() -> PDFErrorOr<NonnullRefPtr<DictObject>> {
@@ -124,7 +216,9 @@ PDFErrorOr<NonnullRefPtr<Pattern>> Pattern::create(Document* document, NonnullRe
 
     switch (pattern_type) {
     case 1:
-        VERIFY_NOT_REACHED(); // Tiling patterns use PatternColorSpace::style() for now.
+        if (!pattern->is<StreamObject>())
+            return Error::malformed_error("Type 1 pattern has wrong type");
+        return TilingPattern::create(document, pattern->cast<StreamObject>(), common_entries, renderer);
     case 2:
         if (!pattern->is<DictObject>())
             return Error::malformed_error("Type 2 pattern has wrong type");
@@ -132,78 +226,6 @@ PDFErrorOr<NonnullRefPtr<Pattern>> Pattern::create(Document* document, NonnullRe
     }
     dbgln("Pattern type {}", pattern_type);
     return Error::malformed_error("Invalid pattern type");
-}
-
-PDFErrorOr<ColorOrStyle> Pattern::style(Document*, NonnullRefPtr<Object> pattern, Renderer& renderer)
-{
-    NonnullRefPtr<DictObject> pattern_dict = [&] {
-        // Shading patterns do not have a content stream.
-        if (pattern->is<DictObject>())
-            return pattern->cast<DictObject>();
-        return pattern->cast<StreamObject>()->dict();
-    }();
-
-    // PatternType (Required) A code identifying the type of pattern that this dictionary describes;
-    // shall be 1 for a tiling pattern
-    auto const pattern_type = pattern_dict->get(CommonNames::PatternType)->get_u16();
-    if (pattern_type != 1)
-        return Error::rendering_unsupported_error("Unsupported pattern type {}", pattern_type);
-
-    auto common_entries = TRY(read_common_entries(renderer.m_document, *pattern_dict));
-
-    // PaintType (Required) A code that determines how the colour of the pattern cell shall be specified
-    auto const pattern_paint_type = pattern_dict->get("PaintType")->get_u16();
-    if (pattern_paint_type != 1)
-        return Error::rendering_unsupported_error("Unsupported pattern paint type {}", pattern_paint_type);
-
-    // To get the device space size for the bitmap, apply the pattern transform to the pattern space bounding box, and then apply the initial ctm.
-    // NB: the pattern pattern_matrix maps pattern space to the default (initial) coordinate space of the page. (i.e cannot be updated via cm).
-
-    auto initial_ctm = Gfx::AffineTransform(renderer.m_graphics_state_stack.first().ctm);
-    initial_ctm.set_translation(0, 0);
-    initial_ctm.set_scale(initial_ctm.x_scale(), initial_ctm.y_scale());
-
-    auto pattern_bounding_box = pattern_dict->get_array(renderer.m_document, CommonNames::BBox).value()->elements();
-
-    auto pattern_space_lower_left = Gfx::FloatPoint { pattern_bounding_box[0].to_int(), pattern_bounding_box[1].to_int() };
-    auto pattern_space_upper_right = Gfx::FloatPoint { pattern_bounding_box[2].to_int(), pattern_bounding_box[3].to_int() };
-
-    auto device_space_lower_left = initial_ctm.map(common_entries.matrix.map(pattern_space_lower_left));
-    auto device_space_upper_right = initial_ctm.map(common_entries.matrix.map(pattern_space_upper_right));
-
-    auto bitmap_width = abs((int)device_space_upper_right.x() - (int)device_space_lower_left.x());
-    auto bitmap_height = abs((int)device_space_upper_right.y() - (int)device_space_lower_left.y());
-
-    auto pattern_cell = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { bitmap_width, bitmap_height }));
-    auto page = Page(renderer.m_page);
-    page.media_box = Rectangle {
-        pattern_space_lower_left.x(), pattern_space_lower_left.y(),
-        pattern_space_upper_right.x(), pattern_space_upper_right.y()
-    };
-    page.crop_box = page.media_box;
-
-    // (Required) A resource dictionary containing all of the named resources required by the pattern’s content stream.
-    // FIXME: This is technically required, but `patterns.pdf` omits it (and it is accepted by Chrome and FF/LibPDF.js).
-    Optional<NonnullRefPtr<DictObject>> pattern_resources {};
-    if (pattern_dict->contains(CommonNames::Resources))
-        pattern_resources = TRY(pattern_dict->get_dict(renderer.m_document, CommonNames::Resources));
-
-    auto pattern_renderer = Renderer(renderer.m_document, page, pattern_cell, {}, renderer.m_rendering_preferences);
-    auto operators = TRY(Parser::parse_operators(renderer.m_document, pattern->cast<StreamObject>()->bytes()));
-    for (auto& op : operators)
-        TRY(pattern_renderer.handle_operator(op, pattern_resources));
-
-    auto x_steps = pattern_dict->get("XStep").value_or(bitmap_width).to_int();
-    auto y_steps = pattern_dict->get("YStep").value_or(bitmap_height).to_int();
-
-    auto device_space_steps = initial_ctm.map(common_entries.matrix.map(Gfx::IntPoint { x_steps, y_steps }));
-
-    NonnullRefPtr<Gfx::PaintStyle> style = MUST(Gfx::RepeatingBitmapPaintStyle::create(
-        *pattern_cell,
-        device_space_steps,
-        {}));
-
-    return style;
 }
 
 }

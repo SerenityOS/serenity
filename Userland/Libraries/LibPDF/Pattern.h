@@ -15,13 +15,10 @@ class Renderer;
 
 class Pattern : public RefCounted<Pattern> {
 public:
-    static PDFErrorOr<bool> is_type2(Document*, NonnullRefPtr<Object>);
     static PDFErrorOr<NonnullRefPtr<Pattern>> create(Document*, NonnullRefPtr<Object>, Renderer&);
 
     virtual ~Pattern() = default;
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) = 0;
-
-    static PDFErrorOr<ColorOrStyle> style(Document*, NonnullRefPtr<Object>, Renderer&);
 };
 
 }
