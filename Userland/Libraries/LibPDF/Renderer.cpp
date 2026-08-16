@@ -460,7 +460,7 @@ PDFErrorOr<void> Renderer::fill_path_with_pattern(Gfx::Path const& path, Nonnull
 
 PDFErrorOr<void> Renderer::stroke_current_path()
 {
-    TRY(state().stroke_style.visit(
+    TRY(state().stroke_color.visit(
         [&](Color const& style) -> PDFErrorOr<void> {
             anti_aliasing_painter().stroke_path(m_current_path, style, stroke_style());
             return {};
@@ -832,7 +832,7 @@ RENDERER_HANDLER(set_painting_space)
 
 RENDERER_HANDLER(set_stroking_color)
 {
-    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
+    state().stroke_color = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
     return {};
 }
 
@@ -841,11 +841,11 @@ RENDERER_HANDLER(set_stroking_color_extended)
     if (state().stroke_color_space->family() == ColorSpaceFamily::Pattern) {
         auto resources = extra_resources.value_or(m_page.resources);
         auto pattern_object = TRY(get_resource(resources, CommonNames::Pattern, args.last()));
-        state().stroke_style = TRY(Pattern::create(m_document, pattern_object, *this));
+        state().stroke_color = TRY(Pattern::create(m_document, pattern_object, *this));
         return {};
     }
 
-    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
+    state().stroke_color = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
     return {};
 }
 
@@ -871,7 +871,7 @@ RENDERER_HANDLER(set_painting_color_extended)
 RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 {
     state().stroke_color_space = DeviceGrayColorSpace::the();
-    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
+    state().stroke_color = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
     return {};
 }
 
@@ -885,7 +885,7 @@ RENDERER_HANDLER(set_painting_color_and_space_to_gray)
 RENDERER_HANDLER(set_stroking_color_and_space_to_rgb)
 {
     state().stroke_color_space = DeviceRGBColorSpace::the();
-    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
+    state().stroke_color = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
     return {};
 }
 
@@ -899,7 +899,7 @@ RENDERER_HANDLER(set_painting_color_and_space_to_rgb)
 RENDERER_HANDLER(set_stroking_color_and_space_to_cmyk)
 {
     state().stroke_color_space = TRY(DeviceCMYKColorSpace::the());
-    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
+    state().stroke_color = style_with_alpha(TRY(state().stroke_color_space->color(args)), state().stroke_alpha_constant);
     return {};
 }
 
@@ -1368,7 +1368,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
 
     if (dict->contains(CommonNames::CA) && m_rendering_preferences.use_constant_alpha) {
         state().stroke_alpha_constant = dict->get_value(CommonNames::CA).to_float();
-        state().stroke_style = style_with_alpha(state().stroke_style, state().stroke_alpha_constant);
+        state().stroke_color = style_with_alpha(state().stroke_color, state().stroke_alpha_constant);
     }
 
     if (dict->contains(CommonNames::ca) && m_rendering_preferences.use_constant_alpha) {
