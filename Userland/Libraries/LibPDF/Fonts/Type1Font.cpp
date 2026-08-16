@@ -107,15 +107,15 @@ void Type1Font::set_font_size(float font_size)
 PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto style = TRY(renderer.state().paint_style.visit(
-        [&](ColorOrStyle const& style) -> PDFErrorOr<ColorOrStyle> {
+        [&](Color const& style) -> PDFErrorOr<Color> {
             return style;
         },
-        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<ColorOrStyle> {
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<Color> {
             return Error::rendering_unsupported_error("Cannot draw type1 glyph with a pattern yet");
         }));
 
     if (!m_font_program)
-        return m_fallback_font_painter->draw_glyph(painter, point, width, char_code, renderer);
+        return m_fallback_font_painter->draw_glyph(painter, point, char_code, renderer);
 
     auto effective_encoding = encoding();
     if (!effective_encoding)
@@ -138,18 +138,9 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
         m_glyph_cache.set(index, bitmap);
     }
 
-    if (style.has<Color>()) {
-        painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
-            return pixel.multiply(style.get<Color>());
-        });
-    } else {
-        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(bitmap->physical_rect(), [&](auto sample) {
-            painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [&](Color pixel) -> Color {
-                // FIXME: Presumably we need to sample at every point in the glyph, not just the top left?
-                return pixel.multiply(sample(glyph_position.blit_position));
-            });
-        });
-    }
+    painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [style](Color pixel) -> Color {
+        return pixel.multiply(style);
+    });
     return {};
 }
 }
