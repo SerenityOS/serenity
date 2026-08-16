@@ -52,7 +52,7 @@ struct CommonEntries {
     {
         if (!background.has_value())
             return Optional<Gfx::Color> {};
-        return TRY(color_space->style(background.value()));
+        return TRY(color_space->color(background.value()));
     }
 };
 
@@ -239,7 +239,7 @@ PDFErrorOr<void> FunctionBasedShading::draw(Gfx::Painter& painter, Gfx::AffineTr
                     return {};
                 }));
 
-            auto color = TRY(m_common_entries.color_space->style(color_components));
+            auto color = TRY(m_common_entries.color_space->color(color_components));
             bitmap.scanline(y)[x] = color.value();
         }
     }
@@ -380,7 +380,7 @@ PDFErrorOr<void> AxialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform 
                     return {};
                 }));
 
-            auto color = TRY(m_common_entries.color_space->style(color_components));
+            auto color = TRY(m_common_entries.color_space->color(color_components));
             bitmap.scanline(y)[x] = color.value();
         }
     }
@@ -612,7 +612,7 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
                     return {};
                 }));
 
-            auto color = TRY(m_common_entries.color_space->style(color_components));
+            auto color = TRY(m_common_entries.color_space->color(color_components));
             bitmap.scanline(y)[x] = color.value();
         }
     }
@@ -710,7 +710,7 @@ Gfx::Color GouraudPaintStyle::sample_color_in_bbox(Gfx::IntPoint point_in_bbox) 
             }
         });
 
-    return MUST(m_color_space->style(color));
+    return MUST(m_color_space->color(color));
 }
 
 void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpaceWithFloatArgs> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds const& bounds)
