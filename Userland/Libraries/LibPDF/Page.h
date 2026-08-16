@@ -7,7 +7,9 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <LibPDF/Error.h>
 #include <LibPDF/Forward.h>
+#include <LibPDF/ObjectDerivatives.h>
 
 namespace PDF {
 
