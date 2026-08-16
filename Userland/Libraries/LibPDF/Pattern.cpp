@@ -62,14 +62,13 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    TilingPattern(CommonEntries common_entries, Page const& page, Gfx::FloatPoint pattern_space_lower_left, Gfx::FloatPoint pattern_space_upper_right, Optional<NonnullRefPtr<DictObject>> pattern_resources, Optional<int> x_steps, Optional<int> y_steps, ReadonlyBytes content_stream, Renderer& renderer)
+    TilingPattern(CommonEntries common_entries, Page const& page, Gfx::FloatRect bbox, NonnullRefPtr<DictObject> pattern_resources, float x_steps, float y_steps, ReadonlyBytes content_stream, Renderer& renderer)
         : m_common_entries(common_entries)
         , m_page(page)
-        , m_pattern_space_lower_left(pattern_space_lower_left)
-        , m_pattern_space_upper_right(pattern_space_upper_right)
+        , m_bbox(bbox)
         , m_pattern_resources(pattern_resources)
-        , m_x_steps(x_steps)
-        , m_y_steps(y_steps)
+        , m_x_step(x_steps)
+        , m_y_step(y_steps)
         , m_content_stream(move(content_stream))
         , m_renderer(renderer)
     {
@@ -77,48 +76,63 @@ private:
 
     CommonEntries m_common_entries;
     Page m_page;
-    Gfx::FloatPoint m_pattern_space_lower_left;
-    Gfx::FloatPoint m_pattern_space_upper_right;
-    Optional<NonnullRefPtr<DictObject>> m_pattern_resources;
-    Optional<int> m_x_steps;
-    Optional<int> m_y_steps;
+    Gfx::FloatRect m_bbox;
+    NonnullRefPtr<DictObject> m_pattern_resources;
+    float m_x_step;
+    float m_y_step;
     ReadonlyBytes m_content_stream;
     Renderer& m_renderer;
 };
 
 PDFErrorOr<NonnullRefPtr<TilingPattern>> TilingPattern::create(Document* document, NonnullRefPtr<StreamObject> pattern, CommonEntries common_entries, Renderer& renderer)
 {
+    // PDF 1.7 spec, 4.6.2 Tiling Patterns
+    // TABLE 4.25 Additional entries specific to a type 1 pattern dictionary
+
     auto pattern_dict = pattern->dict();
 
-    // PaintType (Required) A code that determines how the colour of the pattern cell shall be specified
-    auto const pattern_paint_type = pattern_dict->get("PaintType")->get_u16();
-    if (pattern_paint_type != 1)
-        return Error::rendering_unsupported_error("Unsupported pattern paint type {}", pattern_paint_type); // FIXME
+    // "(Required) A code that determines how the colour of the pattern cell shall be specified"
+    auto const paint_type = pattern_dict->get("PaintType")->get_u16();
+    if (paint_type != 1)
+        return Error::rendering_unsupported_error("Unsupported pattern paint type {}", paint_type); // FIXME
 
-    auto pattern_bounding_box = pattern_dict->get_array(document, CommonNames::BBox).value()->elements();
+    // "(Required) A code that controls adjustments to the spacing of tiles relative to
+    //  the device pixel grid"
+    auto const tiling_type = pattern_dict->get("TilingType")->get_u16();
+    (void)tiling_type; // FIXME: Should we do something with this?
 
-    auto pattern_space_lower_left = Gfx::FloatPoint { pattern_bounding_box[0].to_int(), pattern_bounding_box[1].to_int() };
-    auto pattern_space_upper_right = Gfx::FloatPoint { pattern_bounding_box[2].to_int(), pattern_bounding_box[3].to_int() };
+    // "(Required) An array of four numbers in the pattern coordinate system giving
+    //  the coordinates of the left, bottom, right, and top edges, respectively, of the
+    //  pattern cell’s bounding box."
+    auto bbox_object = pattern_dict->get_array(document, CommonNames::BBox).value()->elements();
+    auto bbox = Gfx::FloatRect::from_two_points({ bbox_object[0].to_float(), bbox_object[1].to_float() }, { bbox_object[2].to_float(), bbox_object[3].to_float() });
 
-    // (Required) A resource dictionary containing all of the named resources required by the pattern’s content stream.
-    // FIXME: This is technically required, but `patterns.pdf` omits it (and it is accepted by Chrome and FF/LibPDF.js).
-    Optional<NonnullRefPtr<DictObject>> pattern_resources {};
-    if (pattern_dict->contains(CommonNames::Resources))
-        pattern_resources = TRY(pattern_dict->get_dict(document, CommonNames::Resources));
+    // "(Required) The desired horizontal spacing between pattern cells, measured in
+    //  the pattern coordinate system."
+    auto x_step = pattern_dict->get("XStep")->to_float();
 
-    auto x_steps = pattern_dict->get("XStep").map([](auto& v) { return v.to_int(); });
-    auto y_steps = pattern_dict->get("YStep").map([](auto& v) { return v.to_int(); });
+    // "(Required) The desired vertical spacing between pattern cells, measured in
+    //  the pattern coordinate system."
+    auto y_step = pattern_dict->get("YStep")->to_float();
 
-    return adopt_ref(*new TilingPattern(common_entries, renderer.page(), pattern_space_lower_left, pattern_space_upper_right, pattern_resources, x_steps, y_steps, pattern->cast<StreamObject>()->bytes(), renderer));
+    // "XStep and YStep may be either positive or negative but not zero."
+    if (x_step == 0 || y_step == 0)
+        return Error::malformed_error("Tiling pattern XStep and YStep must not be zero");
+
+    // "(Required) A resource dictionary containing all of the named resources required by the pattern’s content stream."
+    auto pattern_resources = TRY(pattern_dict->get_dict(document, CommonNames::Resources));
+
+    // Matrix is read by read_common_entries().
+
+    return adopt_ref(*new TilingPattern(common_entries, renderer.page(), bbox, pattern_resources, x_step, y_step, pattern->cast<StreamObject>()->bytes(), renderer));
 }
 
-[[nodiscard]] static Gfx::IntRect enclosing_tiled_int_rect(Gfx::FloatRect const& float_rect, Gfx::IntSize tile_size)
+[[nodiscard]] static Gfx::IntRect enclosing_tiled_int_rect(Gfx::FloatRect const& float_rect, Gfx::FloatSize tile_size)
 {
-    auto float_tile_size = tile_size.to_type<float>();
-    int x1 = floorf(float_rect.x() / float_tile_size.width()) * tile_size.width();
-    int y1 = floorf(float_rect.y() / float_tile_size.height()) * tile_size.height();
-    int x2 = ceilf(float_rect.right() / float_tile_size.width()) * tile_size.width();
-    int y2 = ceilf(float_rect.bottom() / float_tile_size.height()) * tile_size.height();
+    int x1 = floorf(float_rect.x() / tile_size.width()) * tile_size.width();
+    int y1 = floorf(float_rect.y() / tile_size.height()) * tile_size.height();
+    int x2 = ceilf(float_rect.right() / tile_size.width()) * tile_size.width();
+    int y2 = ceilf(float_rect.bottom() / tile_size.height()) * tile_size.height();
     return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
 }
 
@@ -127,22 +141,21 @@ PDFErrorOr<void> TilingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransform
     auto transform = transform_in;
     transform.multiply(m_common_entries.matrix);
 
-    auto pattern_space_bbox = Gfx::FloatRect::from_two_points(m_pattern_space_lower_left, m_pattern_space_upper_right);
     float s = max(transform.x_scale(), transform.y_scale());
-    auto bitmap_width = round_to<int>(pattern_space_bbox.width() * s);
-    auto bitmap_height = round_to<int>(pattern_space_bbox.height() * s);
+    auto bitmap_width = round_to<int>(m_bbox.width() * s);
+    auto bitmap_height = round_to<int>(m_bbox.height() * s);
 
     // FIXME: Cache cell bitmap across pattern paints?
     auto pattern_cell = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { bitmap_width, bitmap_height }));
 
     m_page.media_box = Rectangle {
         0, 0,
-        pattern_space_bbox.width(), pattern_space_bbox.height()
+        m_bbox.width(), m_bbox.height()
     };
     m_page.crop_box = m_page.media_box;
 
     auto pattern_renderer = Renderer(m_renderer.m_document, m_page, pattern_cell, {}, m_renderer.m_rendering_preferences);
-    TRY(pattern_renderer.handle_concatenate_matrix(Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { -pattern_space_bbox.x() }, Value { -pattern_space_bbox.y() } }));
+    TRY(pattern_renderer.handle_concatenate_matrix(Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { -m_bbox.x() }, Value { -m_bbox.y() } }));
     auto operators = TRY(Parser::parse_operators(m_renderer.m_document, m_content_stream));
     for (auto& op : operators)
         TRY(pattern_renderer.handle_operator(op, m_pattern_resources));
@@ -152,17 +165,14 @@ PDFErrorOr<void> TilingPattern::draw(Gfx::Painter& painter, Gfx::AffineTransform
         return Error::malformed_error("Failed to invert tiling pattern transform");
     auto inverse_transform = maybe_inverse_transform.value();
 
-    auto x_steps = m_x_steps.value_or(bitmap_width);
-    auto y_steps = m_y_steps.value_or(bitmap_height);
-
     // Map page's clip rect to pattern space and compute its axis-aligned bounding box in that space.
     auto clip_rect_bounds_in_pattern_space = inverse_transform.map_to_quad(painter.clip_rect().to_type<float>()).bounding_rect();
 
-    auto pattern_rect = enclosing_tiled_int_rect(clip_rect_bounds_in_pattern_space.translated(-pattern_space_bbox.location()), { x_steps, y_steps });
+    auto pattern_rect = enclosing_tiled_int_rect(clip_rect_bounds_in_pattern_space.translated(-m_bbox.location()), { m_x_step, m_y_step });
 
-    for (int y = pattern_rect.top(); y < pattern_rect.bottom(); y += y_steps) {
-        for (int x = pattern_rect.left(); x < pattern_rect.right(); x += x_steps) {
-            Gfx::FloatRect cell_rect = { { pattern_space_bbox.x() + x, pattern_space_bbox.y() + y }, pattern_space_bbox.size() };
+    for (int y = pattern_rect.top(); y < pattern_rect.bottom(); y += m_y_step) {
+        for (int x = pattern_rect.left(); x < pattern_rect.right(); x += m_x_step) {
+            Gfx::FloatRect cell_rect = { { m_bbox.x() + x, m_bbox.y() + y }, m_bbox.size() };
 
             // Cell has (0, 0) in its lower left corner, Gfx::Bitmap in its upper left.
             Gfx::AffineTransform vertical_reflection_matrix = { 1, 0, 0, -1, 0, 2 * cell_rect.y() + cell_rect.height() };
@@ -197,10 +207,13 @@ private:
 PDFErrorOr<NonnullRefPtr<ShadingPattern>> ShadingPattern::create(Document* document, NonnullRefPtr<DictObject> pattern_dict, CommonEntries common_entries, Renderer& renderer)
 {
     // PDF 1.7 spec, 4.6.3 Shading Patterns
+    // TABLE 4.26 Entries in a type 2 pattern dictionary
 
     // "(Required) A shading object ([...]]) defining the shading pattern’s gradi-
     //  ent fill."
     auto shading_object = TRY(pattern_dict->get_object(document, CommonNames::Shading));
+
+    // Matrix is read by read_common_entries().
 
     // "(Optional) A graphics state parameter dictionary (see Section 4.3.4, “Graph-
     //  ics State Parameter Dictionaries”) containing graphics state parameters to be
