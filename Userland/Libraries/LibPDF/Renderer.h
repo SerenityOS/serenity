@@ -109,7 +109,7 @@ struct GraphicsState {
     ClippingState clipping_state;
     RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
-    Variant<Color, NonnullRefPtr<Pattern>> stroke_style { Color { Color::Black } };
+    Variant<Color, NonnullRefPtr<Pattern>> stroke_color { Color { Color::Black } };
     Variant<Color, NonnullRefPtr<Pattern>> paint_style { Color { Color::Black } };
     ByteString color_rendering_intent { "RelativeColorimetric"sv };
     float flatness_tolerance { 1.0f };
@@ -421,11 +421,11 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         StringBuilder builder;
         builder.append("GraphicsState {\n"sv);
         builder.appendff("  ctm={}\n", state.ctm);
-        state.stroke_style.visit(
+        state.stroke_color.visit(
             [&](Gfx::Color const& style) {
-                builder.appendff("  stroke_style={}\n", style);
+                builder.appendff("  stroke_color={}\n", style);
             },
-            [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  stroke_style=pattern\n"); });
+            [&](NonnullRefPtr<PDF::Pattern> const&) { builder.appendff("  stroke_color=pattern\n"); });
         state.paint_style.visit(
             [&](Gfx::Color const& style) {
                 builder.appendff("  paint_style={}\n", style);
