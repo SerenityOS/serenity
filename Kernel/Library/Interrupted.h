@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 
@@ -25,5 +26,11 @@ public:
 // a WaitQueue or a Mutex.
 template<typename T>
 using InterruptedOr = ErrorOr<T, Interrupted>;
+
+inline void uninterruptible(InterruptedOr<void>&& maybe_error)
+{
+    VERIFY(Process::current().is_kernel_process());
+    VERIFY(!maybe_error.is_error());
+}
 
 }

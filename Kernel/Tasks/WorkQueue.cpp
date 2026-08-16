@@ -36,7 +36,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
                 if (have_more)
                     continue;
             }
-            MUST(m_wait_queue.wait_until(m_items, [](auto& items) -> bool { return !items.is_empty(); }));
+            uninterruptible(m_wait_queue.wait_until(m_items, [](auto& items) -> bool { return !items.is_empty(); }));
         }
         Process::current().sys$exit(0);
         VERIFY_NOT_REACHED();
