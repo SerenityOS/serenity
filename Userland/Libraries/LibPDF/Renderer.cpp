@@ -476,7 +476,7 @@ PDFErrorOr<void> Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
-    TRY(state().paint_style.visit(
+    TRY(state().paint_color.visit(
         [&](Color const& style) -> PDFErrorOr<void> {
             fill_path_with_style(anti_aliasing_painter(), m_current_path, style, winding_rule);
             return {};
@@ -851,7 +851,7 @@ RENDERER_HANDLER(set_stroking_color_extended)
 
 RENDERER_HANDLER(set_painting_color)
 {
-    state().paint_style = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
+    state().paint_color = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
     return {};
 }
 
@@ -860,11 +860,11 @@ RENDERER_HANDLER(set_painting_color_extended)
     if (state().paint_color_space->family() == ColorSpaceFamily::Pattern) {
         auto resources = extra_resources.value_or(m_page.resources);
         auto pattern_object = TRY(get_resource(resources, CommonNames::Pattern, args.last()));
-        state().paint_style = TRY(Pattern::create(m_document, pattern_object, *this));
+        state().paint_color = TRY(Pattern::create(m_document, pattern_object, *this));
         return {};
     }
 
-    state().paint_style = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
+    state().paint_color = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
     return {};
 }
 
@@ -878,7 +878,7 @@ RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 RENDERER_HANDLER(set_painting_color_and_space_to_gray)
 {
     state().paint_color_space = DeviceGrayColorSpace::the();
-    state().paint_style = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
+    state().paint_color = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
     return {};
 }
 
@@ -892,7 +892,7 @@ RENDERER_HANDLER(set_stroking_color_and_space_to_rgb)
 RENDERER_HANDLER(set_painting_color_and_space_to_rgb)
 {
     state().paint_color_space = DeviceRGBColorSpace::the();
-    state().paint_style = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
+    state().paint_color = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
     return {};
 }
 
@@ -906,7 +906,7 @@ RENDERER_HANDLER(set_stroking_color_and_space_to_cmyk)
 RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 {
     state().paint_color_space = TRY(DeviceCMYKColorSpace::the());
-    state().paint_style = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
+    state().paint_color = style_with_alpha(TRY(state().paint_color_space->color(args)), state().paint_alpha_constant);
     return {};
 }
 
@@ -1373,7 +1373,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
 
     if (dict->contains(CommonNames::ca) && m_rendering_preferences.use_constant_alpha) {
         state().paint_alpha_constant = dict->get_value(CommonNames::ca).to_float();
-        state().paint_style = style_with_alpha(state().paint_style, state().paint_alpha_constant);
+        state().paint_color = style_with_alpha(state().paint_color, state().paint_alpha_constant);
     }
 
     if (dict->contains(CommonNames::AIS)) // "alpha is shape"
@@ -1812,11 +1812,11 @@ PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image
         // PDF 1.7 spec, 4.8.5 Masked Images, Stencil Masking:
         // "An image mask (an image XObject whose ImageMask entry is true) [...] is treated as a stencil mask [...].
         //  Sample values [...] designate places on the page that should either be marked with the current color or masked out (not marked at all)."
-        if (!state().paint_style.has<Color>())
+        if (!state().paint_color.has<Color>())
             return Error(Error::Type::RenderingUnsupported, "Image masks with pattern fill not yet implemented");
 
         // Move mask to alpha channel, and put current color in RGB.
-        auto current_color = state().paint_style.get<Gfx::Color>();
+        auto current_color = state().paint_color.get<Gfx::Color>();
         for (auto& pixel : *image_bitmap.bitmap) {
             // "a sample value of 0 marks the page with the current color, and a 1 leaves the previous contents unchanged."
             // That's opposite of the normal alpha convention, and we're upsampling masks to 8 bit and use that as normal alpha.
