@@ -361,7 +361,7 @@ fetch_simple() {
                 run touch ".${filename}_extracted"
                 ;;
             *.zip)
-                run_nocd bsdtar xf "${PORT_META_DIR}/${filename}" || run_nocd unzip -qo "${PORT_META_DIR}/${filename}"
+                run_nocd unzip -qo "${PORT_META_DIR}/${filename}" || run_nocd bsdtar xf "${PORT_META_DIR}/${filename}"
                 run touch ".${filename}_extracted"
                 ;;
             *.exe|*.htm)
