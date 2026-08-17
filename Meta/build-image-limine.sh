@@ -102,5 +102,6 @@ cp limine/bin/BOOTX64.EFI esp/EFI/BOOT
 cp limine/bin/limine-bios.sys esp
 cp "$SERENITY_SOURCE_DIR"/Meta/limine.conf esp
 mv mnt/boot/Kernel esp
+cp "$SERENITY_SOURCE_DIR"/Base/res/wallpapers/grid.png esp/wallpaper.png
 limine/bin/limine bios-install "${dev}" 2
 echo "done"
