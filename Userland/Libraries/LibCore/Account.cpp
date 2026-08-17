@@ -183,6 +183,11 @@ ErrorOr<void> Account::login() const
     return {};
 }
 
+bool Account::is_self() const
+{
+    return getuid() == m_uid;
+}
+
 ErrorOr<void> Account::set_password(SecretString const& password)
 {
     m_password_hash = crypt(password.characters(), TRY(get_salt()).characters());
