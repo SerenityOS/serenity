@@ -140,7 +140,6 @@ ErrorOr<void> Service::change_privileges()
             dbgln("Failed to drop privileges (tried to change to GID={}, UID={}), due to {}\n", account.gid(), account.uid(), error_or_void.error());
             exit(1);
         }
-        TRY(Core::Environment::set("HOME"sv, account.home_directory(), Core::Environment::Overwrite::Yes));
     }
     return {};
 }
