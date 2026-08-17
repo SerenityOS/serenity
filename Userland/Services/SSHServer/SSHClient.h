@@ -72,7 +72,7 @@ private:
     ErrorOr<void> send_service_accept(StringView);
 
     ErrorOr<void> handle_user_authentication(GenericMessage data);
-    ErrorOr<void> handle_publickey_message(GenericMessage&, ReadonlyBytes user_name, ReadonlyBytes service_name);
+    ErrorOr<void> handle_publickey_message(GenericMessage&, Core::Account const& user, ReadonlyBytes service_name);
     ErrorOr<void> send_available_authentication_methods();
     ErrorOr<void> send_publickey_ok_message(ReadonlyBytes algorithm_name, ReadonlyBytes blob);
     ErrorOr<void> send_user_authentication_success();

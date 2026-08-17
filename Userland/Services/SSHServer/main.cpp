@@ -61,7 +61,7 @@ ErrorOr<void> accept_connection()
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio accept inet unix rpath wpath cpath proc exec sigaction"));
+    TRY(Core::System::pledge("stdio accept inet unix rpath wpath cpath proc exec sigaction id"));
 
     // FIXME: Audit the server architecture and add veils wherever possible.
 
@@ -127,6 +127,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     outln("Listening on {}:{}", g_tcp_server->local_address().value(), g_tcp_server->local_port());
 
-    TRY(Core::System::pledge("stdio accept rpath wpath cpath proc exec sigaction"));
+    TRY(Core::System::pledge("stdio accept rpath wpath cpath proc exec sigaction id"));
     return loop.exec();
 }
