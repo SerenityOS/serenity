@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
+#include <LibCore/Forward.h>
 #include <LibSSH/DataTypes.h>
 
 namespace SSH::Server {
@@ -34,10 +35,10 @@ public:
     void set_keylog_file(StringView path) { m_keylog_file = path; }
     Optional<ByteString> keylog_file() const { return m_keylog_file; }
 
-    ErrorOr<Vector<TypedBlob>> get_authorized_keys_for_user() const;
+    ErrorOr<Vector<TypedBlob>> get_authorized_keys_for_user(Core::Account const&) const;
 
 private:
-    ErrorOr<StringView> user_authorized_keys_file() const;
+    ErrorOr<StringView> user_authorized_keys_file(Core::Account const&) const;
 
     mutable TypedBlob m_ssh_ed25519_server_public_key;
     mutable TypedBlob m_ssh_ed25519_server_private_key;

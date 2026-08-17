@@ -5,6 +5,7 @@
  */
 
 #include "ServerConfiguration.h"
+#include <LibCore/Account.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCrypto/Curves/Ed25519.h>
@@ -57,9 +58,9 @@ void ServerConfiguration::ensure_ssh_ed25519_keys() const
     }
 }
 
-ErrorOr<Vector<TypedBlob>> ServerConfiguration::get_authorized_keys_for_user() const
+ErrorOr<Vector<TypedBlob>> ServerConfiguration::get_authorized_keys_for_user(Core::Account const& user) const
 {
-    auto raw_file = TRY(Core::File::open(TRY(user_authorized_keys_file()), Core::File::OpenMode::Read));
+    auto raw_file = TRY(Core::File::open(TRY(user_authorized_keys_file(user)), Core::File::OpenMode::Read));
     auto file = TRY(Core::InputBufferedFile::create(move(raw_file)));
 
     Vector<TypedBlob> blobs;
@@ -74,13 +75,16 @@ ErrorOr<Vector<TypedBlob>> ServerConfiguration::get_authorized_keys_for_user() c
     return blobs;
 }
 
-ErrorOr<StringView> ServerConfiguration::user_authorized_keys_file() const
+ErrorOr<StringView> ServerConfiguration::user_authorized_keys_file([[maybe_unused]] Core::Account const& user) const
 {
     if (!m_user_authorized_keys_file.is_empty())
         return m_user_authorized_keys_file;
 
 #ifdef AK_OS_SERENITY
-    static auto default_path = ByteString::formatted("{}/{}", Core::StandardPaths::config_directory(), "ssh/authorized_keys"sv);
+    static auto default_path = ByteString::formatted(
+        "{}/{}",
+        user.home_directory(),
+        "/.config/ssh/authorized_keys"sv);
     return default_path;
 #endif
 

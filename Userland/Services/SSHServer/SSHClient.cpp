@@ -333,7 +333,10 @@ ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
     auto service_name = TRY(decode_string(message.payload));
     auto method_name = TRY(decode_string(message.payload));
 
-    if (username != TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).username())
+    auto self = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
+    auto need_to_change_user = username != self.username();
+
+    if (getuid() != 0 && need_to_change_user)
         return Error::from_string_literal("Can't authenticate for another user account");
 
     // "The 'service name' specifies the service to start after authentication. There may
@@ -344,8 +347,19 @@ ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
     if (service_name != "ssh-connection"sv.bytes())
         return Error::from_string_literal("Unknown service name.");
 
-    if (method_name == "publickey"sv.bytes())
-        return handle_publickey_message(message, username, service_name);
+    Optional<Core::Account> user {};
+    if (need_to_change_user) {
+        auto maybe_user = Core::Account::from_name(username, Core::Account::Read::PasswdOnly);
+        if (!maybe_user.is_error())
+            user = maybe_user.release_value();
+    } else {
+        user = self;
+    }
+
+    if (user.has_value()) {
+        if (method_name == "publickey"sv.bytes())
+            return handle_publickey_message(message, *user, service_name);
+    }
 
     TRY(send_available_authentication_methods());
     // FIXME: Disconnect the client after too many attempts.
@@ -384,7 +398,7 @@ ErrorOr<ByteBuffer> make_authentication_message(
 // https://datatracker.ietf.org/doc/html/rfc4252#section-7
 ErrorOr<void> SSHClient::handle_publickey_message(
     GenericMessage& message,
-    ReadonlyBytes user_name,
+    Core::Account const& user,
     ReadonlyBytes service_name)
 {
     bool contains_signature = TRY(message.payload.read_value<bool>());
@@ -400,8 +414,8 @@ ErrorOr<void> SSHClient::handle_publickey_message(
 
     auto signature = TRY(TypedBlob::decode(message.payload));
 
-    auto authorized_keys = []() -> Vector<TypedBlob> {
-        auto maybe_keys = ServerConfiguration::the().get_authorized_keys_for_user();
+    auto authorized_keys = [&user] -> Vector<TypedBlob> {
+        auto maybe_keys = ServerConfiguration::the().get_authorized_keys_for_user(user);
         if (maybe_keys.is_error()) {
             dbgln("warning: Impossible to load authorized keys: {}", maybe_keys.release_error());
             return {};
@@ -413,9 +427,10 @@ ErrorOr<void> SSHClient::handle_publickey_message(
         if (algorithm_name != TypedBlob::type_to_string(public_key.type).bytes())
             continue;
 
+        auto username = user.username();
         auto authentication_message = TRY(make_authentication_message(
             session_id(),
-            user_name,
+            username.bytes(),
             service_name,
             algorithm_name,
             public_key));
@@ -432,7 +447,10 @@ ErrorOr<void> SSHClient::handle_publickey_message(
         m_state = State::Authentified;
         TRY(send_user_authentication_success());
 
-        outln("Successful authentication for: {:s}", user_name);
+        if (!user.is_self())
+            TRY(user.login());
+
+        outln("Successful authentication for: {:s}", user.username());
 
         // FIXME: Also send a cool banner :^)
         return {};
