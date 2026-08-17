@@ -55,7 +55,7 @@ ErrorOr<size_t> StorageDevicePartition::read(OpenFileDescription& fd, u64 offset
     // NOTE: The last available offset is actually just after the last addressable block.
     if (offset >= total_block_count * block_size())
         return 0;
-    size_t nread = min(static_cast<size_t>(total_block_count - offset), len);
+    size_t nread = min(static_cast<size_t>(total_block_count * block_size() - offset), len);
     u64 adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "StorageDevicePartition::read offset={}, adjust={}, len={}", fd.offset(), adjust, nread);
     return device->read(fd, offset + adjust, outbuf, nread);
@@ -72,7 +72,7 @@ ErrorOr<size_t> StorageDevicePartition::write(OpenFileDescription& fd, u64 offse
     // NOTE: The last available offset is actually just after the last addressable block.
     if (offset >= total_block_count * block_size())
         return Error::from_errno(ENOSPC);
-    size_t nwrite = min(static_cast<size_t>(total_block_count - offset), len);
+    size_t nwrite = min(static_cast<size_t>(total_block_count * block_size() - offset), len);
     u64 adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "StorageDevicePartition::write offset={}, adjust={}, len={}", offset, adjust, nwrite);
     return device->write(fd, offset + adjust, inbuf, nwrite);
