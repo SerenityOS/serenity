@@ -40,6 +40,8 @@ public:
     bool authenticate(SecretString const& password) const;
     ErrorOr<void> login() const;
 
+    bool is_self() const;
+
     ByteString username() const { return m_username; }
     ByteString password_hash() const { return m_password_hash.value_or(ByteString::empty()); }
 
