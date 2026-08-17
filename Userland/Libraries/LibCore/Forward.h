@@ -10,6 +10,7 @@
 
 namespace Core {
 
+class Account;
 class AnonymousBuffer;
 class ArgsParser;
 class BufferedSocketBase;
