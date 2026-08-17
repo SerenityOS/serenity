@@ -120,11 +120,12 @@ void NetworkTask_main(void*)
 
         size_t pending_packets = 0;
 
-        MUST(packet_wait_queue.wait_until(wait_state, [&pending_packets](WaitState& state) {
+        MUST(packet_wait_queue.wait_until(wait_state, [&pending_packets, &timer](WaitState& state) {
             if (state.pending_packets > 0 || state.timeout_expired) {
                 pending_packets = state.pending_packets;
                 state.pending_packets = 0;
                 state.timeout_expired = false;
+                TimerQueue::the().cancel_timer(*timer);
                 return true;
             }
 
