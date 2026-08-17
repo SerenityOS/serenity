@@ -8,9 +8,10 @@ script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 if [ ! -d "limine" ]; then
     echo "limine not found, the script will now build it"
-    git clone --depth 1 --branch v2.78.2 --single-branch https://github.com/limine-bootloader/limine
+    git clone --depth 1 --branch v12.5.2 --single-branch https://github.com/limine-bootloader/limine
     cd limine
-    ./autogen.sh
+    ./bootstrap
+    ./configure --enable-uefi-x86-64 --enable-bios
     make all
     cd ..
 fi
@@ -33,7 +34,7 @@ else
     : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
 fi
 
-DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 300))
+DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 512 + 300))
 
 echo "setting up disk image..."
 dd if=/dev/zero of=limine_disk_image bs=1M count="${DISK_SIZE:-800}" status=none || die "couldn't create disk image"
@@ -72,27 +73,34 @@ cleanup() {
 trap cleanup EXIT
 
 printf "creating partition table... "
-parted -s "${dev}" mklabel gpt mkpart EFI fat32 1MiB 10MiB mkpart ROOT ext2 10MiB 100% set 1 esp on || die "couldn't partition disk"
+parted -s "${dev}" \
+    mklabel gpt \
+    mkpart EFI fat32 0% 512MiB \
+    mkpart Limine-BIOS-Stage-2 512MiB 513MiB \
+    mkpart ROOT ext2 513MiB 100% \
+    set 1 esp on \
+    set 2 bios_grub on || die "couldn't partition disk"
 echo "done"
 
 printf "creating new filesystems... "
 mkfs.vfat -F 32 "${dev}p1" || die "couldn't create efi filesystem"
-mke2fs -q "${dev}p2" || die "couldn't create root filesystem"
+mke2fs -q "${dev}p3" || die "couldn't create root filesystem"
 echo "done"
 
 printf "mounting filesystems... "
 mkdir -p esp
 mount "${dev}p1" esp || die "couldn't mount efi filesystem"
 mkdir -p mnt
-mount "${dev}p2" mnt || die "couldn't mount root filesystem"
+mount "${dev}p3" mnt || die "couldn't mount root filesystem"
 echo "done"
 
 "$script_path/build-root-filesystem.sh"
 
 echo "installing limine"
 mkdir -p esp/EFI/BOOT
-cp limine/bin/limine.sys esp
 cp limine/bin/BOOTX64.EFI esp/EFI/BOOT
-cp "$SERENITY_SOURCE_DIR"/Meta/limine.cfg esp
-limine/bin/limine-install "${dev}"
+cp limine/bin/limine-bios.sys esp
+cp "$SERENITY_SOURCE_DIR"/Meta/limine.conf esp
+mv mnt/boot/Kernel esp
+limine/bin/limine bios-install "${dev}" 2
 echo "done"
