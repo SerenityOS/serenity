@@ -11,6 +11,7 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/Directory.h>
+#include <LibCore/Environment.h>
 #include <LibCore/System.h>
 #include <LibCore/UmaskScope.h>
 #include <errno.h>
@@ -179,6 +180,8 @@ ErrorOr<void> Account::login() const
     TRY(Core::System::setgroups(m_extra_gids));
     TRY(Core::System::setgid(m_gid));
     TRY(Core::System::setuid(m_uid));
+
+    TRY(Core::Environment::set("HOME"sv, m_home_directory, Core::Environment::Overwrite::Yes));
 
     return {};
 }

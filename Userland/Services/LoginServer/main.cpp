@@ -47,7 +47,6 @@ static void child_process(Core::Account const& account)
         exit(1);
     }
 
-    setenv("HOME", account.home_directory().characters(), true);
     dbgln("login with sid={}", rc);
 
     execlp("/bin/SystemServer", "SystemServer", "--user", nullptr);
