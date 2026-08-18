@@ -27,7 +27,7 @@ set(GENERATED_SOURCES
     GLAPI.cpp)
 
 serenity_lib(LibGL gl)
-target_link_libraries(LibGL PRIVATE LibGfx LibGLSL LibGPU)
+target_link_libraries(LibGL PRIVATE LibCore LibGfx LibGLSL LibGPU)
 
 # Install symlinks at some common locations so ports can find LibGL without issue
 if (SERENITYOS)

@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibCore/Environment.h>
 #include <LibGL/GLContext.h>
 #include <LibGL/Image.h>
 #include <LibGPU/Device.h>
@@ -881,8 +882,8 @@ ErrorOr<ByteBuffer> GLContext::build_extension_string()
 
 ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap& bitmap)
 {
-    // FIXME: Make driver selectable. This is currently hardcoded to LibSoftGPU
-    auto driver = TRY(GPU::Driver::try_create("softgpu"sv));
+    // FIXME: Automatically select GPU drivers other than LibSoftGPU once they are mature enough.
+    auto driver = TRY(GPU::Driver::try_create(Core::Environment::get("LIBGL_GPU_DRIVER"sv).value_or("softgpu"sv)));
     auto device = TRY(driver->try_create_device(bitmap.size()));
     auto context = make<GLContext>(driver, move(device), bitmap);
     dbgln_if(GL_DEBUG, "GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
