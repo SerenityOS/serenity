@@ -1,12 +1,17 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=chester
-useconfigure=true
-version=git
-depends=("SDL2")
-workdir=chester-public
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
+port='chester'
+version='2581716abb6a538535d07c71802f9571ba08e1bc'
+depends=(
+    'SDL2'
+)
+useconfigure='true'
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    # Upstream declares 3.0.0 which is no longer supported
+    '-DCMAKE_POLICY_VERSION_MINIMUM=3.25'
+)
 files=(
-    "https://github.com/veikkos/chester/archive/public.tar.gz#b3ea7ad40608e1050fa434258f5c69b93e7bad10523c4c4a86fe08d1442a907b"
+    "https://github.com/veikkos/chester/archive/${version}.zip#024e58247f1a95fde905230ef2ca8e0f953452f0045448cb97f5591baacf5408"
 )
 
 configure() {
