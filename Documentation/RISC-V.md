@@ -43,8 +43,14 @@ The following extensions defined by the [RISC-V Profiles](https://github.com/ris
 -   **Ssu64xl**: UXLEN=64 must be supported
 -   **Svbare**: Bare mode virtual-memory translation supported (only when not booting via UEFI)
 
+These extensions are required, unless the system has fully cache-coherent DMA:
+
+-   **Svpbmt**: Page-Based Memory Types
+-   **Zicbom**: Cache-Block Management Operations
+
 The following extensions are used by the kernel, if supported:
 
 -   **V**: Vector Operations (context switching of V registers is supported)
 -   **Zihintpause**: Pause Hint
 -   **Sstc**: Supervisor-mode Timer Interrupts
+-   **Zkr**: Entropy CSR
