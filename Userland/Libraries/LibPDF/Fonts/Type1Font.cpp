@@ -104,6 +104,16 @@ void Type1Font::set_font_size(float font_size)
         m_fallback_font_painter->set_font_size(font_size);
 }
 
+DeprecatedFlyString Type1Font::char_name_for_char_code(u8 char_code) const
+{
+    auto effective_encoding = encoding();
+    if (!effective_encoding)
+        effective_encoding = m_font_program->encoding();
+    if (!effective_encoding)
+        effective_encoding = Encoding::standard_encoding();
+    return effective_encoding->get_name(char_code);
+}
+
 PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto color = TRY(renderer.state().paint_color.visit(
@@ -117,12 +127,7 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
     if (!m_font_program)
         return m_fallback_font_painter->draw_glyph(painter, point, char_code, renderer);
 
-    auto effective_encoding = encoding();
-    if (!effective_encoding)
-        effective_encoding = m_font_program->encoding();
-    if (!effective_encoding)
-        effective_encoding = Encoding::standard_encoding();
-    auto char_name = effective_encoding->get_name(char_code);
+    auto char_name = char_name_for_char_code(char_code);
     auto translation = m_font_program->glyph_translation(char_name, width);
     point = point.translated(translation);
 

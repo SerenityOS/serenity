@@ -35,6 +35,8 @@ protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
 
 private:
+    DeprecatedFlyString char_name_for_char_code(u8 char_code) const;
+
     DeprecatedFlyString m_base_font_name;
     RefPtr<Type1FontProgram> m_font_program;
     OwnPtr<TrueTypePainter> m_fallback_font_painter;
