@@ -149,11 +149,15 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
     return {};
 }
 
-PDFErrorOr<void> Type1Font::append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, float, u8 char_code, Renderer const& renderer)
+PDFErrorOr<void> Type1Font::append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     if (!m_font_program)
         return m_fallback_font_painter->append_glyph_path(path, point, char_code, renderer);
-    return Error { Error::Type::RenderingUnsupported, "append_glyph_path not implemented for font" };
+
+    auto char_name = char_name_for_char_code(char_code);
+    path.move_to(point);
+    m_font_program->append_glyph_path_to(path, char_name, width);
+    return {};
 }
 
 }

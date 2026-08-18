@@ -95,6 +95,7 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::append_text_path(Gfx::Path& path, Gfx::F
     auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
     return for_each_glyph_position(position, string, renderer, [&](Gfx::FloatPoint glyph_position, float glyph_width, u8 char_code) {
         // The glyph position is in terms of the `renderer.text_state().font_size`, so we need to scale it to the requested font size.
+        glyph_width *= text_rendering_matrix.x_scale() / horizontal_scaling;
         return append_glyph_path(path, glyph_position.scaled(text_rendering_matrix.x_scale() / horizontal_scaling, 1), glyph_width, char_code, renderer);
     });
 }

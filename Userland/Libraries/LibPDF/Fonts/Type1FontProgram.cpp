@@ -71,6 +71,18 @@ RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(DeprecatedFlyString const&
     return bitmap;
 }
 
+bool Type1FontProgram::append_glyph_path_to(Gfx::Path& path, DeprecatedFlyString const& char_name, float width)
+{
+    auto maybe_glyph = m_glyph_map.get(char_name);
+    if (!maybe_glyph.has_value())
+        return false;
+
+    auto const& glyph = maybe_glyph.value();
+    auto transform = glyph_transform_to_device_space(glyph, width);
+    path.append_path(glyph.path().copy_transformed(transform), Gfx::Path::AppendRelativeToLastPoint::Yes);
+    return true;
+}
+
 Gfx::Path Type1FontProgram::build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
     auto maybe_glyph = m_glyph_map.get(char_name);
