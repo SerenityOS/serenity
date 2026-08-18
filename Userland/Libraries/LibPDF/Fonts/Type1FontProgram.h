@@ -25,6 +25,7 @@ public:
     };
 
     RefPtr<Gfx::Bitmap> rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
+    bool append_glyph_path_to(Gfx::Path&, DeprecatedFlyString const& char_name, float width);
     Gfx::FloatPoint glyph_translation(DeprecatedFlyString const& char_name, float width) const;
     RefPtr<Encoding> encoding() const { return m_encoding; }
 
