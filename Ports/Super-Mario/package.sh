@@ -1,12 +1,20 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=Super-Mario
-useconfigure=true
-version=git
-depends=("SDL2" "SDL2_mixer" "SDL2_image")
-workdir=Super-Mario-Clone-Cpp-master
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
+port='Super-Mario'
+version='7293c0776f23f1d7fc1e106d1f32ffda83d7e3ac'
+depends=(
+    'SDL2'
+    'SDL2_mixer'
+    'SDL2_image'
+)
+workdir=Super-Mario-Clone-Cpp-${version}
+useconfigure='true'
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    # Upstream declares 2.6 which is no longer supported
+    '-DCMAKE_POLICY_VERSION_MINIMUM=3.25'
+)
 files=(
-    "https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp/archive/refs/heads/master.zip#fcacc15d3b5afccb3227f982d3e05f2cfeb198f0fffd008fdcda005cb7f87f91"
+    "https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp/archive/${version}.zip#2167f9676cf053d719e865e6e82e81c7dc98ef6053dd961f302f72c70cf2b76f"
 )
 launcher_name="Super Mario"
 launcher_category='&Games'
