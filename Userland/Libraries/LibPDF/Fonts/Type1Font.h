@@ -13,12 +13,12 @@
 
 namespace PDF {
 
-struct Type1GlyphCacheKey {
+struct CachedGlyphBitmapsKey {
     u32 glyph_id;
     Gfx::GlyphSubpixelOffset subpixel_offset;
     float width;
 
-    bool operator==(Type1GlyphCacheKey const&) const = default;
+    bool operator==(CachedGlyphBitmapsKey const&) const = default;
 };
 
 class Type1Font : public SimpleFont {
@@ -38,7 +38,7 @@ private:
     DeprecatedFlyString m_base_font_name;
     RefPtr<Type1FontProgram> m_font_program;
     OwnPtr<TrueTypePainter> m_fallback_font_painter;
-    HashMap<Type1GlyphCacheKey, RefPtr<Gfx::Bitmap>> m_glyph_cache;
+    HashMap<CachedGlyphBitmapsKey, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
 };
 
 }
@@ -46,8 +46,8 @@ private:
 namespace AK {
 
 template<>
-struct Traits<PDF::Type1GlyphCacheKey> : public DefaultTraits<PDF::Type1GlyphCacheKey> {
-    static unsigned hash(PDF::Type1GlyphCacheKey const& index)
+struct Traits<PDF::CachedGlyphBitmapsKey> : public DefaultTraits<PDF::CachedGlyphBitmapsKey> {
+    static unsigned hash(PDF::CachedGlyphBitmapsKey const& index)
     {
         return pair_int_hash(pair_int_hash(index.glyph_id, (index.subpixel_offset.x << 8) | index.subpixel_offset.y), int_hash(bit_cast<u32>(index.width)));
     }

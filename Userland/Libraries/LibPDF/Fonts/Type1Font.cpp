@@ -127,15 +127,15 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
     point = point.translated(translation);
 
     auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(point);
-    Type1GlyphCacheKey index { char_code, glyph_position.subpixel_offset, width };
+    CachedGlyphBitmapsKey index { char_code, glyph_position.subpixel_offset, width };
 
     RefPtr<Gfx::Bitmap> bitmap;
-    auto maybe_bitmap = m_glyph_cache.get(index);
+    auto maybe_bitmap = m_cached_glyph_bitmaps.get(index);
     if (maybe_bitmap.has_value()) {
         bitmap = maybe_bitmap.value();
     } else {
         bitmap = m_font_program->rasterize_glyph(char_name, width, glyph_position.subpixel_offset);
-        m_glyph_cache.set(index, bitmap);
+        m_cached_glyph_bitmaps.set(index, bitmap);
     }
 
     painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
