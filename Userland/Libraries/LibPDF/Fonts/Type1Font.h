@@ -27,7 +27,7 @@ public:
     void set_font_size(float font_size) override;
     PDFErrorOr<void> draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const&) override;
 
-    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, u8 char_code, Renderer const& renderer) override;
+    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, float width, u8 char_code, Renderer const&) override;
 
     DeprecatedFlyString base_font_name() const { return m_base_font_name; }
 
