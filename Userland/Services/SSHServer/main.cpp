@@ -113,6 +113,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     if (keylog_file.has_value())
         SSH::Server::ServerConfiguration::the().set_keylog_file(*keylog_file);
 
+    // If we need to generate a random key, do it before forking so all children
+    // share the same key.
+    (void)SSH::Server::ServerConfiguration::the().ssh_ed25519_server_public_key();
+
     Core::EventLoop loop;
 
     Core::EventLoop::register_signal(SIGCHLD, [&](int) {
