@@ -32,6 +32,22 @@ TypedBlob const& ServerConfiguration::ssh_ed25519_server_private_key() const
     return m_ssh_ed25519_server_private_key;
 }
 
+static ErrorOr<Vector<TypedBlob>> read_blobs_from_file(NonnullOwnPtr<Core::File> raw_file)
+{
+    auto file = TRY(Core::InputBufferedFile::create(move(raw_file)));
+
+    Vector<TypedBlob> blobs;
+
+    while (TRY(file->can_read_line())) {
+        Array<u8, 1024> buffer;
+        auto line = TRY(file->read_line(buffer));
+
+        blobs.append(TRY(TypedBlob::read_from_string(line)));
+    }
+
+    return blobs;
+}
+
 void ServerConfiguration::ensure_ssh_ed25519_keys() const
 {
     if (m_ssh_ed25519_server_public_key.key.is_empty()
@@ -61,18 +77,7 @@ void ServerConfiguration::ensure_ssh_ed25519_keys() const
 ErrorOr<Vector<TypedBlob>> ServerConfiguration::get_authorized_keys_for_user(Core::Account const& user) const
 {
     auto raw_file = TRY(Core::File::open(TRY(user_authorized_keys_file(user)), Core::File::OpenMode::Read));
-    auto file = TRY(Core::InputBufferedFile::create(move(raw_file)));
-
-    Vector<TypedBlob> blobs;
-
-    while (TRY(file->can_read_line())) {
-        Array<u8, 1024> buffer;
-        auto line = TRY(file->read_line(buffer));
-
-        blobs.append(TRY(TypedBlob::read_from_string(line)));
-    }
-
-    return blobs;
+    return read_blobs_from_file(move(raw_file));
 }
 
 ErrorOr<StringView> ServerConfiguration::user_authorized_keys_file([[maybe_unused]] Core::Account const& user) const
