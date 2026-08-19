@@ -63,6 +63,29 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio accept inet unix rpath wpath cpath proc exec sigaction id"));
 
+    // FIXME: Make the server use more low-privilege processes.
+    //        When receiving a connection, the main server forks and the child handles
+    //        the request. As an SSH server needs to perform many powerful actions, the
+    //        child remains a high-privilege process. This design is quite dangerous as
+    //        the probably easily abusable network code is done by this same high-privilege
+    //        process. When running the server as root a simple bug in the network handling
+    //        code can result in a compromised root-running binary.
+    //        Splitting the server in more low-privilege processes should solve this
+    //        safety hazard. What is proposed here is similar to the OpenSSH
+    //        architecture:
+    //         - The main process (this file) should first set up the PrivilegedWorker,
+    //           and then only accept connections and spawn NetworkParser processes for
+    //           them.
+    //         - NetworkParser processes should only parse SSH packets and defer any
+    //           privileged actions to the PrivilegedWorker.
+    //         - The PrivilegedWorker should be responsible for performing privileged
+    //           actions requested by the NetworkParser processes (reading configuration
+    //           files, authentification, spawning child processes etc…).
+    //        After setup, the privileges of the processes should be as follow:
+    //         - Main process: pledge(stdio accept spawn), unveil(NetworkParser binary)
+    //         - NetworkParser: pledge(stdio recvfd unix), unveil()
+    //         - PrivilegedWorker: pledge(stdio rpath wpath cpath sendfd id proc exec sigaction unix), veil-free.
+
     // FIXME: Audit the server architecture and add veils wherever possible.
 
     Optional<u32> port {};
