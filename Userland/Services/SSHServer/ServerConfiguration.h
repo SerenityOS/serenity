@@ -12,9 +12,6 @@
 
 namespace SSH::Server {
 
-// FIXME: This generates a brand new host key every single time
-//        a server is started. We should store in on the disk to
-//        make it persistent.
 class ServerConfiguration {
 public:
     static ServerConfiguration& the();
@@ -40,9 +37,11 @@ public:
 private:
     ErrorOr<StringView> user_authorized_keys_file(Core::Account const&) const;
 
+    void ensure_ssh_ed25519_keys() const;
+    ErrorOr<void> load_server_keys_from_file() const;
+
     mutable TypedBlob m_ssh_ed25519_server_public_key;
     mutable TypedBlob m_ssh_ed25519_server_private_key;
-    void ensure_ssh_ed25519_keys() const;
 
     bool m_use_unsafe_stubbed_private_key { false };
 

@@ -141,3 +141,21 @@ TEST_CASE(typed_blob_from_string)
                               "\x20\x11\xe4\xab\xa4\xa0\xbf\xf3\x59\xfc\xc9\x82\xf0"
                               "\x01\xff\xd3\xdb\xa3\x62"sv.bytes());
 }
+
+TEST_CASE(typed_blob_from_openssh_private_key)
+{
+    static constexpr auto private_key = R"(-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAk5SqGXG9YD3p4TFQL+VgbpbWJSdrArrtYaem2zQ3JsAAAAJi1cqI0tXKi
+NAAAAAtzc2gtZWQyNTUxOQAAACAk5SqGXG9YD3p4TFQL+VgbpbWJSdrArrtYaem2zQ3JsA
+AAAEA1dZAYEAZ0Yv/uh+u0pxJyWMNs9Lu6eOnWUlNK6fy7DCTlKoZcb1gPenhMVAv5WBul
+tYlJ2sCuu1hp6bbNDcmwAAAAEXRoaXMgaXMgYSBjb21tZW50AQIDBA==
+-----END OPENSSH PRIVATE KEY-----
+)"sv;
+
+    auto typed_blob = TRY_OR_FAIL(SSH::TypedBlob::read_from_openssh_private_key(private_key));
+    EXPECT_EQ(typed_blob.type, SSH::TypedBlob::Type::SSH_ED25519);
+    EXPECT_EQ(typed_blob.key.bytes(), "\x35\x75\x90\x18\x10\x06\x74\x62\xFF\xEE\x87\xEB\xB4"
+                                      "\xA7\x12\x72\x58\xC3\x6C\xF4\xBB\xBA\x78\xE9\xD6\x52"
+                                      "\x53\x4A\xE9\xFC\xBB\x0C"sv.bytes());
+}

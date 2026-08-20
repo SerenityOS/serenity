@@ -48,10 +48,40 @@ static ErrorOr<Vector<TypedBlob>> read_blobs_from_file(NonnullOwnPtr<Core::File>
     return blobs;
 }
 
+ErrorOr<void> ServerConfiguration::load_server_keys_from_file() const
+{
+    auto private_key_file = TRY(Core::File::open("/etc/ssh/host_ed25519"sv, Core::File::OpenMode::Read));
+    auto content = TRY(private_key_file->read_until_eof());
+    auto private_key = TRY(TypedBlob::read_from_openssh_private_key(content));
+    VERIFY(private_key.type == TypedBlob::Type::SSH_ED25519);
+
+    auto public_key_file = TRY(Core::File::open("/etc/ssh/host_ed25519.pub"sv, Core::File::OpenMode::Read));
+    auto blobs = TRY(read_blobs_from_file(move(public_key_file)));
+    VERIFY(blobs.size() == 1);
+    auto public_key = blobs.take_first();
+    VERIFY(public_key.type == TypedBlob::Type::SSH_ED25519);
+
+    auto computed_public_key = TRY(Crypto::Curves::Ed25519::generate_public_key(private_key.key));
+    if (computed_public_key != public_key.key)
+        return Error::from_string_literal("Corrupted host key");
+
+    m_ssh_ed25519_server_private_key = move(private_key);
+    m_ssh_ed25519_server_public_key = move(public_key);
+
+    return {};
+}
+
 void ServerConfiguration::ensure_ssh_ed25519_keys() const
 {
     if (m_ssh_ed25519_server_public_key.key.is_empty()
         || m_ssh_ed25519_server_private_key.key.is_empty()) {
+
+        if (!m_use_unsafe_stubbed_private_key) {
+            auto maybe_error = load_server_keys_from_file();
+            if (!maybe_error.is_error())
+                return;
+            dbgln("Unable to use the host key from /etc/ssh/: {}", maybe_error.error());
+        }
 
         if (m_use_unsafe_stubbed_private_key) {
             auto stub = MUST(ByteBuffer ::create_uninitialized(32));
