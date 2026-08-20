@@ -15,6 +15,8 @@ ByteBuffer decode_pem(ReadonlyBytes data)
     GenericLexer lexer { data };
     ByteBuffer decoded;
 
+    Vector<u8, 4> buffer;
+
     // FIXME: Parse multiple.
     enum {
         PreStartData,
@@ -34,13 +36,33 @@ ByteBuffer decode_pem(ReadonlyBytes data)
                 lexer.consume_line();
                 break;
             }
-            auto b64decoded = decode_base64(lexer.consume_line().trim_whitespace(TrimMode::Right));
-            if (b64decoded.is_error()) {
-                dbgln("Failed to decode PEM: {}", b64decoded.error().string_literal());
+            auto maybe_error = [&]() -> ErrorOr<void> {
+                auto next_line = lexer.consume_line().trim_whitespace(TrimMode::Right);
+                if (!buffer.is_empty()) {
+                    while (buffer.size() < 4 && !next_line.is_empty()) {
+                        buffer.append(next_line[0]);
+                        next_line = next_line.bytes().slice(1);
+                    }
+                    if (buffer.size() != 4)
+                        return {};
+                    auto b64decoded = TRY(decode_base64(StringView { buffer }));
+                    TRY(decoded.try_append(b64decoded.data(), b64decoded.size()));
+                    buffer.clear();
+                }
+
+                auto remainder = next_line.length() % 4;
+                auto end = next_line.length() - remainder;
+
+                buffer.extend(next_line.bytes().slice_from_end(remainder));
+
+                auto b64decoded = TRY(decode_base64(next_line.bytes().trim(end)));
+                TRY(decoded.try_append(b64decoded.data(), b64decoded.size()));
+
                 return {};
-            }
-            if (decoded.try_append(b64decoded.value().data(), b64decoded.value().size()).is_error()) {
-                dbgln("Failed to decode PEM, likely OOM condition");
+            }();
+
+            if (maybe_error.is_error()) {
+                dbgln("Failed to decode PEM: {}", maybe_error.error());
                 return {};
             }
             break;
@@ -51,6 +73,11 @@ ByteBuffer decode_pem(ReadonlyBytes data)
         default:
             VERIFY_NOT_REACHED();
         }
+    }
+
+    if (!buffer.is_empty()) {
+        dbgln("Failed to decode PEM: Invalid length of base64 encoded string");
+        return {};
     }
 
     return decoded;
