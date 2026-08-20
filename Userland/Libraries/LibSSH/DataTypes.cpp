@@ -7,6 +7,8 @@
 #include "DataTypes.h"
 #include <AK/Base64.h>
 #include <AK/Endian.h>
+#include <LibCrypto/ASN1/PEM.h>
+#include <LibCrypto/Curves/Ed25519.h>
 
 namespace SSH {
 
@@ -146,6 +148,61 @@ ErrorOr<TypedBlob> TypedBlob::read_from_string(StringView input)
         return Error::from_string_literal("Incoherent algorithm name");
 
     return blob;
+}
+
+// The format is documented at [1] source code at [2]
+// [1] https://coolaj86.com/articles/the-openssh-private-key-format/
+// [2] https://github.com/openssh/openssh-portable/blob/master/sshkey.c
+ErrorOr<TypedBlob> TypedBlob::read_from_openssh_private_key(StringView input)
+{
+    auto buffer = Crypto::decode_pem(input.bytes());
+    FixedMemoryStream inner_stream { buffer.bytes() };
+
+    static constexpr auto magic_bytes = "openssh-key-v1\0"sv;
+    Array<u8, magic_bytes.length()> data;
+    TRY(inner_stream.read_until_filled(data));
+    if (data != magic_bytes.bytes())
+        return Error::from_string_literal("Unsupported private key file");
+
+    auto cipher_name = TRY(decode_string(inner_stream));
+    if (cipher_name != "none"sv.bytes())
+        return Error::from_string_literal("Unsupported cipher name");
+
+    auto kdfname = TRY(decode_string(inner_stream));
+    if (kdfname != "none"sv.bytes())
+        return Error::from_string_literal("Unsupported kdf name");
+
+    auto number_of_kdf = TRY(inner_stream.read_value<NetworkOrdered<u32>>());
+    if (number_of_kdf != 0)
+        return Error::from_string_literal("Key has kdf");
+
+    auto number_of_keys = TRY(inner_stream.read_value<NetworkOrdered<u32>>());
+    if (number_of_keys != 1)
+        return Error::from_string_literal("File has more than one key");
+
+    auto public_key = TRY(TypedBlob::decode(inner_stream));
+
+    [[maybe_unused]] auto private_key_length = TRY(inner_stream.read_value<NetworkOrdered<u32>>());
+    [[maybe_unused]] u64 maybe_checksum = TRY(inner_stream.read_value<NetworkOrdered<u64>>());
+    auto key_type = TRY(decode_string(inner_stream));
+    if (key_type != type_to_string(public_key.type).bytes())
+        return Error::from_string_literal("Invalid private key type");
+
+    auto embedded_public_key = TRY(decode_string(inner_stream));
+    if (embedded_public_key != public_key.key)
+        return Error::from_string_literal("Mismatch between public and embedded public key");
+
+    auto private_key = TRY(decode_string(inner_stream));
+
+    if (private_key.span().slice(32) != public_key.key)
+        return Error::from_string_literal("Mismatch between public and second embedded public key");
+
+    if (TRY(Crypto::Curves::Ed25519::generate_public_key(private_key.bytes().trim(32))) != public_key.key)
+        return Error::from_string_literal("Mismatch between public and private key");
+
+    // The file still has a comment + padding.
+
+    return TypedBlob { .type = Type::SSH_ED25519, .key = TRY(ByteBuffer::copy(private_key.bytes().trim(32))) };
 }
 
 } // SSH

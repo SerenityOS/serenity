@@ -33,6 +33,7 @@ struct TypedBlob {
 
     static ErrorOr<TypedBlob> decode(FixedMemoryStream& stream);
     static ErrorOr<TypedBlob> read_from_string(StringView);
+    static ErrorOr<TypedBlob> read_from_openssh_private_key(StringView);
 
     Type type { Type::SSH_ED25519 };
     ByteBuffer key {};
