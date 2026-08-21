@@ -242,9 +242,17 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     return {};
 }
 
-PDFErrorOr<void> CIDFontType2::append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u32)
+PDFErrorOr<void> CIDFontType2::append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, float, u32 code_point)
 {
-    return Error::rendering_unsupported_error("Type0 font CIDFontType0: append_glyph_path not yet implemented");
+    if (!m_font) {
+        // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
+        return Error::malformed_error("CIDFontType2: missing FontFile2");
+    }
+
+    auto glyph_id = m_font->glyph_id_for_code_point(code_point);
+    path.move_to(point.translated(m_font->glyph_metrics(glyph_id).left_side_bearing, -m_font->pixel_metrics().ascent));
+    m_font->append_glyph_path_to(path, glyph_id);
+    return {};
 }
 
 void CIDFontType2::set_font_size(float font_size)
