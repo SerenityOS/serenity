@@ -17,6 +17,7 @@ class CIDFontType {
 public:
     virtual ~CIDFontType() = default;
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) = 0;
+    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u32 cid) = 0;
     virtual void set_font_size(float) = 0;
 };
 
@@ -25,6 +26,7 @@ public:
     static PDFErrorOr<NonnullOwnPtr<CIDFontType0>> create(Document*, NonnullRefPtr<DictObject> const& descendant);
 
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) override;
+    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u32 cid) override;
 
     virtual void set_font_size(float) override { }
 
@@ -109,11 +111,17 @@ PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     return {};
 }
 
+PDFErrorOr<void> CIDFontType0::append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u32)
+{
+    return Error::rendering_unsupported_error("Type0 font CIDFontType0: append_glyph_path not yet implemented");
+}
+
 class CIDFontType2 : public CIDFontType {
 public:
     static PDFErrorOr<NonnullOwnPtr<CIDFontType2>> create(Document*, NonnullRefPtr<DictObject> const& descendant, float font_size);
 
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float width, u32 cid, Renderer const&) override;
+    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u32 cid) override;
 
     virtual void set_font_size(float) override;
 
@@ -223,6 +231,11 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
 
     painter.draw_glyph(position, char_code, *m_font, color);
     return {};
+}
+
+PDFErrorOr<void> CIDFontType2::append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u32)
+{
+    return Error::rendering_unsupported_error("Type0 font CIDFontType0: append_glyph_path not yet implemented");
 }
 
 void CIDFontType2::set_font_size(float font_size)
@@ -528,12 +541,28 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::for_each_glyph_position(Gfx::FloatPoint g
     return glyph_position;
 }
 
+PDFErrorOr<Gfx::FloatPoint> Type0Font::append_text_path(Gfx::Path& path, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+{
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    return for_each_glyph_position(position, string, renderer, [&](Gfx::FloatPoint glyph_position, float glyph_width, u32 cid) {
+        // The glyph position is in terms of the `renderer.text_state().font_size`, so we need to scale it to the requested font size.
+        glyph_width *= text_rendering_matrix.x_scale() / horizontal_scaling;
+        return m_cid_font_type->append_glyph_path(path, glyph_position.scaled(text_rendering_matrix.x_scale() / horizontal_scaling, 1), glyph_width, cid);
+    });
+}
+
 PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
 {
     auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
     // Fast path: Use cached bitmap glyphs.
     if (text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes))
         return draw_axis_aligned_glyphs(painter, position, string, renderer);
+
+    // FIXME: Make the vector path work for vertical writing mode, see e.g. 0000552.pdf.
+    if (m_cmap->writing_mode() == WritingMode::Vertical)
+        return draw_axis_aligned_glyphs(painter, position, string, renderer);
+
     // Slow path: Create a Gfx::Path for the string, transform it, then draw it. This handles arbitrary transforms.
     if (auto end_position = draw_transformed_glyphs(painter, position, string, renderer); !end_position.is_error())
         return end_position;
@@ -541,10 +570,28 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
     return draw_axis_aligned_glyphs(painter, position, string, renderer);
 }
 
-PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_transformed_glyphs(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&)
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_transformed_glyphs(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
 {
-    // FIXME: Implement.
-    return Error::rendering_unsupported_error("Type0 font: drawing transformed glyphs not yet implemented");
+    Gfx::Path text_path;
+    Gfx::AntiAliasingPainter aa_painter(painter);
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+    auto text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    auto end_position = TRY(append_text_path(text_path, position, string, renderer));
+    // FIXME: This is a bit janky, but the font is already scaled by `m_text_rendering_matrix.x_scale() / horizontal_scaling`,
+    // which is included in `m_text_rendering_matrix`. So, we must scale it by the reciprocal. Also, the y-axis is flipped.
+    text_path.transform(text_rendering_matrix.multiply(
+        Gfx::AffineTransform {}
+            .set_scale(1 / text_rendering_matrix.x_scale() * horizontal_scaling,
+                -1 / text_rendering_matrix.x_scale() * horizontal_scaling)));
+    TRY(renderer.state().paint_color.visit(
+        [&](Color const& color) -> PDFErrorOr<void> {
+            Renderer::fill_path_with_color(aa_painter, text_path, color);
+            return {};
+        },
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
+            return Error::rendering_unsupported_error("Cannot draw text with a pattern yet");
+        }));
+    return end_position;
 }
 
 PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_axis_aligned_glyphs(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
