@@ -82,6 +82,20 @@ TEST_CASE(test_bmp_top_down)
     TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
 }
 
+TEST_CASE(test_bmp_rejects_minimum_height)
+{
+    constexpr auto bitmap = "\x42\x4d\x37\x00\x00\x00\x00\x00"
+                            "\x00\x00\x36\x00\x00\x00\x28\x00"
+                            "\x00\x00\x01\x00\x00\x00\x00\x00"
+                            "\x00\x80\x01\x00\x08\x00\x00\x00"
+                            "\x00\x00\x00\x00\x00\x00\x00\x00"
+                            "\x00\x00\x00\x00\x00\x00\x00\x00"
+                            "\x00\x00\x00\x00\x00\x00\x00"sv;
+    static_assert(bitmap.length() == 55);
+
+    EXPECT(Gfx::BMPImageDecoderPlugin::create(bitmap.bytes()).is_error());
+}
+
 TEST_CASE(test_bmp_1bpp)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("bmp/bitmap.bmp"sv)));
