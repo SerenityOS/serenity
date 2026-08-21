@@ -451,7 +451,8 @@ void Type0Font::set_font_size(float font_size)
     m_cid_font_type->set_font_size(font_size);
 }
 
-PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const& renderer)
+template<typename Callback>
+PDFErrorOr<Gfx::FloatPoint> Type0Font::for_each_glyph_position(Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const& renderer, Callback callback)
 {
     // Type0 fonts map bytes to character IDs ("CIDs"), and then CIDs to glyphs.
 
@@ -462,14 +463,7 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
     //  if no match is found, a second byte shall be extracted, and the 2-byte code shall be matched against 2-byte
     //  codespace ranges [...]"
 
-    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
-
-    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
-
-    // TrueType fonts are prescaled to text_rendering_matrix.x_scale() * text_state().font_size / horizontal_scaling,
-    // cf `Renderer::text_set_font()`. That's the width we get back from `get_glyph_width()` if we use a fallback
-    // (or built-in) font. Scale the width size too, so the m_width.get() codepath is consistent.
-    auto const font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling;
+    auto const font_size = renderer.text_state().font_size;
 
     auto character_spacing = renderer.text_state().character_spacing;
     auto word_spacing = renderer.text_state().word_spacing;
@@ -497,27 +491,22 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
         if (writing_mode == WritingMode::Vertical) {
             if (auto metric = m_vertical_metrics.get(cid); metric.has_value()) {
                 vertical_metric = metric.value();
-                vertical_displacement_vector_y = renderer.text_state().font_size * vertical_metric.vertical_displacement_vector_y / 1000.0f;
+                vertical_displacement_vector_y = font_size * vertical_metric.vertical_displacement_vector_y / 1000.0f;
                 position_vector_x = vertical_metric.position_vector_x / 1000.0f;
                 position_vector_y = vertical_metric.position_vector_y / 1000.0f;
             } else {
-                vertical_displacement_vector_y = renderer.text_state().font_size * m_default_displacement_vector_y / 1000.0f;
+                vertical_displacement_vector_y = font_size * m_default_displacement_vector_y / 1000.0f;
                 position_vector_x = glyph_width / 2.0f / font_size;
                 position_vector_y = m_default_position_vector_y / 1000.0f;
             }
         }
 
-        if (renderer.text_state().rendering_mode != TextRenderingMode::Invisible || renderer.show_hidden_text()) {
-            Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position - Gfx::FloatPoint { position_vector_x, position_vector_y });
-            TRY(m_cid_font_type->draw_glyph(painter, glyph_render_position, glyph_width, cid, renderer));
-        }
+        if (renderer.text_state().rendering_mode != TextRenderingMode::Invisible || renderer.show_hidden_text())
+            TRY(callback(glyph_position - Gfx::FloatPoint { position_vector_x, position_vector_y }, glyph_width, cid));
 
-        // glyph_width is scaled by `text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling`,
-        // but it should only be scaled by `renderer.text_state().font_size`.
-        // FIXME: Having to divide here isn't pretty. Refactor things so that this isn't needed.
         float displacement;
         if (writing_mode == WritingMode::Horizontal)
-            displacement = glyph_width / text_rendering_matrix.x_scale() * horizontal_scaling;
+            displacement = glyph_width;
         else
             displacement = vertical_displacement_vector_y;
         displacement += character_spacing;
@@ -537,6 +526,37 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
             glyph_position += { 0.0f, displacement };
     }
     return glyph_position;
+}
+
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+{
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    // Fast path: Use cached bitmap glyphs.
+    if (text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes))
+        return draw_axis_aligned_glyphs(painter, position, string, renderer);
+    // Slow path: Create a Gfx::Path for the string, transform it, then draw it. This handles arbitrary transforms.
+    if (auto end_position = draw_transformed_glyphs(painter, position, string, renderer); !end_position.is_error())
+        return end_position;
+    // Fallback to axis aligned glyphs in case `append_path` is unimplemented. This won't look correct.
+    return draw_axis_aligned_glyphs(painter, position, string, renderer);
+}
+
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_transformed_glyphs(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&)
+{
+    // FIXME: Implement.
+    return Error::rendering_unsupported_error("Type0 font: drawing transformed glyphs not yet implemented");
+}
+
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_axis_aligned_glyphs(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+{
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    return for_each_glyph_position(position, string, renderer, [&](Gfx::FloatPoint glyph_position, float glyph_width, u32 cid) {
+        Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position);
+        // Glyph width is in terms of the `renderer.text_state().font_size`, so we need to scale it to the render size.
+        glyph_width *= text_rendering_matrix.x_scale() / horizontal_scaling;
+        return m_cid_font_type->draw_glyph(painter, glyph_render_position, glyph_width, cid, renderer);
+    });
 }
 
 }

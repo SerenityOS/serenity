@@ -63,6 +63,12 @@ protected:
 private:
     float get_char_width(u16 char_code) const;
 
+    template<typename Callback>
+    PDFErrorOr<Gfx::FloatPoint> for_each_glyph_position(Gfx::FloatPoint, ByteString const&, Renderer const&, Callback callback);
+
+    PDFErrorOr<Gfx::FloatPoint> draw_transformed_glyphs(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&);
+    PDFErrorOr<Gfx::FloatPoint> draw_axis_aligned_glyphs(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&);
+
     DeprecatedFlyString m_base_font_name;
     CIDSystemInfo m_system_info;
     HashMap<u16, u16> m_widths;
