@@ -20,7 +20,7 @@ protected:
     virtual Optional<float> get_glyph_width(u8 char_code) const = 0;
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const&) = 0;
 
-    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u8, Renderer const&)
+    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint, float, u8)
     {
         return Error { Error::Type::RenderingUnsupported, "append_glyph_path not implemented for font" };
     }
