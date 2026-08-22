@@ -49,7 +49,8 @@ ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
 
     u8 padding_length = TRY(stream.read_value<u8>());
 
-    if (packet_length == padding_length)
+    // "byte[n1]  payload; n1 = packet_length - padding_length - 1"
+    if (packet_length <= padding_length + 1u)
         return Error::from_string_literal("Packet doesn't have a payload");
 
     // "There MUST be at least four bytes of padding."
