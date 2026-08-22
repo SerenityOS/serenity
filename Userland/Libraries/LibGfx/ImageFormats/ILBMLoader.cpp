@@ -347,6 +347,8 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
         } else if (chunk.id() == "CRNG"sv) {
             dbgln_if(ILBM_DEBUG, "Chunk:CRNG");
         } else if (chunk.id() == "CAMG"sv) {
+            if (chunk.size() < sizeof(u32))
+                return Error::from_string_literal("IFFImageDecoderPlugin: Not enough data for CAMG chunk");
             context.viewport_mode = static_cast<ViewportMode>(AK::convert_between_host_and_big_endian(ByteReader::load32(chunk.data().data())));
             dbgln_if(ILBM_DEBUG, "Chunk:CAMG, Viewport={}, EHB={}, HAM={}", (u32)context.viewport_mode, has_flag(context.viewport_mode, ViewportMode::EHB), has_flag(context.viewport_mode, ViewportMode::HAM));
         }
