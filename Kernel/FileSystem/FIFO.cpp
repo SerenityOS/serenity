@@ -22,8 +22,15 @@ ErrorOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
     return adopt_nonnull_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer)));
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction, ShouldBlock block)
 {
+    MutexLocker locker(m_open_lock);
+
+    // "If O_NONBLOCK is set, [...]. An open() for writing-only shall return an error
+    // if no process currently has the file open for reading."
+    if (block == ShouldBlock::No && direction == Direction::Writer && m_readers == 0)
+        return ENXIO;
+
     auto description = TRY(OpenFileDescription::try_create(*this));
     if (direction == Direction::Reader) {
         ++m_readers;
@@ -32,26 +39,16 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction
     }
     evaluate_block_conditions();
     description->set_fifo_direction({}, direction);
-    return description;
-}
-
-ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
-{
-    MutexLocker locker(m_open_lock);
-
-    auto description = TRY(open_direction(direction));
 
     if (direction == Direction::Reader) {
         m_read_open_queue.wake_all();
 
-        if (m_writers == 0) {
+        if (block == ShouldBlock::Yes && m_writers == 0) {
             locker.unlock();
             m_write_open_queue.wait_forever("FIFO"sv);
             locker.lock();
         }
-    }
-
-    if (direction == Direction::Writer) {
+    } else if (direction == Direction::Writer) {
         m_write_open_queue.wake_all();
 
         if (m_readers == 0) {

@@ -89,4 +89,4 @@ endforeach()
 
 target_link_libraries(TestPageFaultRace PRIVATE LibThreading)
 
-add_subdirectory(Wait)
+add_subdirectory(POSIX)
