@@ -240,7 +240,7 @@ UNMAP_AFTER_INIT ErrorOr<void> GICv3::initialize()
     //  The GIC architecture does not require a GIC implementation to support a continuous range of SPI interrupt IDs.
     //  Software must check which SPI INTIDs are supported, up to the maximum value indicated by GICD_TYPER.ITLinesNumber."
     auto it_lines_number = (m_distributor_registers->interrupt_controller_type >> DistributorRegisters::INTERRUPT_CONTROLLER_TYPE_IT_LINES_NUMBER_OFFSET) & DistributorRegisters::INTERRUPT_CONTROLLER_TYPE_IT_LINES_NUMBER_MASK;
-    auto max_spi_range_end = 32 * (it_lines_number + 1);
+    auto max_spi_range_end = min(32 * (it_lines_number + 1), SHARED_PERIPHERAL_INTERRUPT_RANGE_END);
 
     // "# SPI, PPI, and SGI configuration
     //  [...]
