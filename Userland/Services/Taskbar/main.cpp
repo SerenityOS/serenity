@@ -103,7 +103,9 @@ static bool less_than_ignore_hotkey(ByteString const& a, ByteString const& b)
         ++a_it;
         ++b_it;
     }
-    return a_it != a.end();
+    // When one string is a prefix of the other, sort the shorter one first so
+    // that a parent category ("Games") precedes its children ("Games/Puzzles").
+    return a_it == a.end() && b_it != b.end();
 }
 
 ErrorOr<Vector<ByteString>> discover_apps_and_categories()
@@ -159,11 +161,6 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
             parent_menu = system_menu;
         } else {
             parent_menu = app_category_menus.get(parent_category).value();
-            if (!parent_menu) {
-                create_category_menu(parent_category);
-                parent_menu = app_category_menus.get(parent_category).value();
-                VERIFY(parent_menu);
-            }
         }
         auto category_menu = parent_menu->add_submenu(String::from_byte_string(child_category).release_value_but_fixme_should_propagate_errors());
         auto category_icon_path = category_icons->read_entry("16x16", category);
