@@ -220,13 +220,9 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(Op
         // Deal with that by just running the handler manually.
         set_timed_out();
 
-    auto wait_status = m_instance_queue.wait_until(m_instances, receive_reply);
+    auto maybe_eintr = m_instance_queue.wait_until(m_instances, receive_reply);
     TimerQueue::the().cancel_timer(*timer);
-
-    if (wait_status.is_error()) {
-        VERIFY(wait_status.error().code() == EINTR);
-        return wait_status.release_error();
-    }
+    TRY(maybe_eintr);
 
     if (reply_or_error.is_error())
         return reply_or_error.release_error();
