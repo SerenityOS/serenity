@@ -1171,6 +1171,9 @@ ALWAYS_INLINE static void do_draw_box_sampled_scaled_bitmap(Gfx::Bitmap& target,
                 }
             }
 
+            if (total_area == 0)
+                continue;
+
             Color src_pixel = {
                 round_to<u8>(min(red_accumulator / total_area, 255.f)),
                 round_to<u8>(min(green_accumulator / total_area, 255.f)),

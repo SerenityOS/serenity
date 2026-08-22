@@ -34,6 +34,32 @@ void disable_reporting();
 u64 randomized_runs();
 }
 
+#define XFAIL(x)                                                                            \
+    do {                                                                                    \
+        auto res_before = ::Test::current_test_result();                                    \
+        ::Test::set_current_test_result(::Test::TestResult::Passed);                        \
+        auto reporting_enabled = ::Test::is_reporting_enabled();                            \
+        ::Test::disable_reporting();                                                        \
+        do {                                                                                \
+            x;                                                                              \
+        } while (0);                                                                        \
+        if (reporting_enabled)                                                              \
+            ::Test::enable_reporting();                                                     \
+        if (::Test::current_test_result() == ::Test::TestResult::Failed) {                  \
+            ::Test::set_current_test_result(res_before);                                    \
+        } else if (::Test::current_test_result() == ::Test::TestResult::Passed) {           \
+            if (::Test::is_reporting_enabled())                                             \
+                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: '{}' Unexpectedly succeeded",   \
+                    __FILE__, __LINE__, #x);                                                \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                    \
+        } else {                                                                            \
+            if (::Test::is_reporting_enabled())                                             \
+                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: '{}' Had unexpected result {}", \
+                    __FILE__, __LINE__, #x, (int)::Test::current_test_result());            \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                    \
+        }                                                                                   \
+    } while (0)
+
 #define EXPECT_EQ(a, b)                                                                                       \
     do {                                                                                                      \
         auto lhs = (a);                                                                                       \
