@@ -73,19 +73,21 @@ static StringView get_field_as_string_view(char const (&field)[N])
 }
 
 template<size_t N, class TSource>
-static void set_field(char (&field)[N], TSource&& source)
+static ErrorOr<void> set_field(char (&field)[N], TSource&& source)
 {
-    VERIFY(N >= source.length());
+    if (N < source.length())
+        return Error::from_string_literal("Source too long");
     memcpy(field, StringView(source).characters_without_null_termination(), source.length());
     if (N > source.length())
         field[source.length()] = 0;
+    return {};
 }
 
 template<class TSource, size_t N>
 static ErrorOr<void> set_octal_field(char (&field)[N], TSource&& source)
 {
     auto octal = TRY(String::formatted("{:o}", forward<TSource>(source)));
-    set_field(field, octal.bytes_as_string_view());
+    TRY(set_field(field, octal.bytes_as_string_view()));
     return {};
 }
 
@@ -110,23 +112,23 @@ public:
     // FIXME: support ustar filename prefix
     StringView prefix() const { return get_field_as_string_view(m_prefix); }
 
-    void set_filename(StringView filename) { set_field(m_filename, filename); }
+    ErrorOr<void> set_filename(StringView filename) { return set_field(m_filename, filename); }
     ErrorOr<void> set_mode(mode_t mode) { return set_octal_field(m_mode, mode); }
     ErrorOr<void> set_uid(uid_t uid) { return set_octal_field(m_uid, uid); }
     ErrorOr<void> set_gid(gid_t gid) { return set_octal_field(m_gid, gid); }
     ErrorOr<void> set_size(size_t size) { return set_octal_field(m_size, size); }
     ErrorOr<void> set_timestamp(time_t timestamp) { return set_octal_field(m_timestamp, timestamp); }
     void set_type_flag(TarFileType type) { m_type_flag = to_underlying(type); }
-    void set_link_name(StringView link_name) { set_field(m_link_name, link_name); }
+    ErrorOr<void> set_link_name(StringView link_name) { return set_field(m_link_name, link_name); }
     // magic doesn't necessarily include a null byte
-    void set_magic(StringView magic) { set_field(m_magic, magic); }
+    ErrorOr<void> set_magic(StringView magic) { return set_field(m_magic, magic); }
     // version doesn't necessarily include a null byte
-    void set_version(StringView version) { set_field(m_version, version); }
-    void set_owner_name(StringView owner_name) { set_field(m_owner_name, owner_name); }
-    void set_group_name(StringView group_name) { set_field(m_group_name, group_name); }
+    ErrorOr<void> set_version(StringView version) { return set_field(m_version, version); }
+    ErrorOr<void> set_owner_name(StringView owner_name) { return set_field(m_owner_name, owner_name); }
+    ErrorOr<void> set_group_name(StringView group_name) { return set_field(m_group_name, group_name); }
     ErrorOr<void> set_major(int major) { return set_octal_field(m_major, major); }
     ErrorOr<void> set_minor(int minor) { return set_octal_field(m_minor, minor); }
-    void set_prefix(StringView prefix) { set_field(m_prefix, prefix); }
+    ErrorOr<void> set_prefix(StringView prefix) { return set_field(m_prefix, prefix); }
 
     unsigned expected_checksum() const;
     ErrorOr<void> calculate_checksum();
