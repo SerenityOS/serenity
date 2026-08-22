@@ -688,7 +688,7 @@ if (BUILD_LAGOM)
         # LibTest tests from Tests/
         set(TEST_DIRECTORIES
             AK
-            Kernel/Wait
+            Kernel/POSIX
             LibCompress
             LibCrypto
             LibDisassembly
