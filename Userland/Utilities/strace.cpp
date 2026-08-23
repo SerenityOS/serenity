@@ -492,6 +492,12 @@ private:
     bool m_first_arg { true };
 };
 
+static void format_getcwd(FormattedSyscallBuilder& builder, char* buffer, int rc)
+{
+    if (rc > 0)
+        builder.add_arguments(StringArgument { { buffer, static_cast<size_t>(rc) } });
+}
+
 static void format_getrandom(FormattedSyscallBuilder& builder, void* buffer, size_t size, unsigned flags)
 {
     builder.add_arguments(buffer, size, flags);
@@ -904,6 +910,7 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
     case SC_dbgputstr:
     case SC_fstat:
     case SC_getrandom:
+    case SC_getcwd:
     case SC_ioctl:
     case SC_poll:
     case SC_prctl:
@@ -956,6 +963,9 @@ static ErrorOr<void> format_syscall_final(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_fstat:
         format_fstat(builder, (int)arg1, (struct stat*)arg2);
+        break;
+    case SC_getcwd:
+        format_getcwd(builder, (char*)arg1, (int)res);
         break;
     case SC_getrandom:
         format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
