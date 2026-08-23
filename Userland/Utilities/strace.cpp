@@ -930,6 +930,7 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
     case SC_getpid:
     case SC_getppid:
     case SC_gettid:
+    case SC_map_time_page:
         // These syscalls don't take arguments.
         break;
     case SC_connect:
@@ -964,6 +965,7 @@ static void format_result(FormattedSyscallBuilder& builder, Syscall::Function sy
     case SC_write:
         builder.format_result((ssize_t)res);
         break;
+    case SC_map_time_page:
     case SC_mmap:
         builder.format_result((void*)res);
         break;
