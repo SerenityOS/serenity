@@ -11,6 +11,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <Kernel/API/SyscallString.h>
+#include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <Kernel/API/prctl_numbers.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -601,6 +602,18 @@ struct Formatter<struct stat> : StandardFormatter {
 };
 }
 
+struct VirtualMemoryAnnotation : BitflagBase {
+    static constexpr auto options = {
+        BitflagOption { to_underlying(Kernel::VirtualMemoryRangeFlags::SyscallCode), "SyscallCode"sv },
+        BitflagOption { to_underlying(Kernel::VirtualMemoryRangeFlags::Immutable), "Immutable"sv },
+    };
+};
+
+static void format_annotate_mapping(FormattedSyscallBuilder& builder, void const* address, int flags)
+{
+    builder.add_arguments(address, VirtualMemoryAnnotation { flags });
+}
+
 static void format_chdir(FormattedSyscallBuilder& builder, char const* path_p, size_t length)
 {
     auto buf = copy_from_process(path_p, length);
@@ -842,6 +855,9 @@ static void format_prctl(FormattedSyscallBuilder& builder, int option, size_t ar
 static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, [[maybe_unused]] syscall_arg_t arg4)
 {
     switch (syscall_function) {
+    case SC_annotate_mapping:
+        format_annotate_mapping(builder, (void const*)arg1, (int)arg2);
+        break;
     case SC_chdir:
         format_chdir(builder, (char const*)arg1, (size_t)arg2);
         break;
