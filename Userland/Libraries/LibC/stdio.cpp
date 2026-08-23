@@ -1059,6 +1059,9 @@ static int parse_mode(char const* mode)
         case 't':
             // Ok...
             break;
+        case 'x':
+            flags |= O_EXCL;
+            break;
         default:
             dbgln("Potentially unsupported fopen mode _{}_ (because of '{}')", mode, *ptr);
         }
