@@ -12,6 +12,8 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+
+#define __WCHAR_FORCE_C_DECLARATION
 #include <wchar.h>
 
 static unsigned int mbstate_expected_bytes(mbstate_t* state)
