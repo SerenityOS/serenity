@@ -222,6 +222,9 @@ HANDLE(PR_SET_PROCESS_NAME)
 HANDLE(PR_GET_PROCESS_NAME)
 HANDLE(PR_SET_THREAD_NAME)
 HANDLE(PR_GET_THREAD_NAME)
+HANDLE(PR_SET_NO_TRANSITION_TO_EXECUTABLE_FROM_WRITABLE_PROT)
+HANDLE(PR_SET_JAILED_UNTIL_EXIT)
+HANDLE(PR_SET_JAILED_UNTIL_EXEC)
 END_VALUES_TO_NAMES()
 
 static int g_pid = -1;
@@ -851,8 +854,16 @@ static void format_prctl(FormattedSyscallBuilder& builder, int option, size_t ar
     case PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
         builder.add_argument((bool)arg1);
         break;
+    case PR_GET_PROCESS_NAME:
+    case PR_GET_THREAD_NAME:
+        if ((char*)arg1 && arg2 > 0)
+            builder.add_arguments(StringArgument { { (char*)arg1, arg2 } });
+        break;
     case PR_GET_DUMPABLE:
     case PR_GET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
+    case PR_SET_NO_TRANSITION_TO_EXECUTABLE_FROM_WRITABLE_PROT:
+    case PR_SET_JAILED_UNTIL_EXIT:
+    case PR_SET_JAILED_UNTIL_EXEC:
         break;
     default:
         builder.add_arguments(arg1, arg2, arg3);
