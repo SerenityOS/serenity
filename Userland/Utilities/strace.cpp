@@ -897,6 +897,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
     case SC_open:
         TRY(format_open(builder, (Syscall::SC_open_params*)arg1));
         break;
+    case SC_pledge:
+        TRY(format_pledge(builder, (Syscall::SC_pledge_params*)arg1));
+        break;
     case SC_rename:
         TRY(format_rename(builder, (Syscall::SC_rename_params*)arg1));
         break;
@@ -905,9 +908,6 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_symlink:
         TRY(format_symlink(builder, (Syscall::SC_symlink_params*)arg1));
-        break;
-    case SC_pledge:
-        TRY(format_pledge(builder, (Syscall::SC_pledge_params*)arg1));
         break;
     case SC_write:
         format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
