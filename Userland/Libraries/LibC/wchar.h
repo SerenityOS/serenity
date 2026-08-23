@@ -26,8 +26,10 @@ __BEGIN_DECLS
 #    define WEOF (0xffffffffu)
 #endif
 
+// Let libcxx and libstdc++ know that we provide the C++ version of wcschr and friends.
 #ifdef __cplusplus
-#    define _LIBCPP_WCHAR_H_HAS_CONST_OVERLOADS
+#    define _LIBCPP_WCHAR_H_HAS_CONST_OVERLOADS 1
+#    define __CORRECT_ISO_CPP_WCHAR_H_PROTO
 #endif
 
 typedef __WINT_TYPE__ wint_t;
@@ -41,6 +43,15 @@ typedef struct {
 
 struct tm;
 
+#if defined(__cplusplus) && !defined(__WCHAR_FORCE_C_DECLARATION)
+#    define __MAKE_C_OR_CPP_DECLARATION(name, ...)                                \
+        extern "C++" wchar_t const* name(wchar_t const*, __VA_ARGS__) asm(#name); \
+        extern "C++" wchar_t* name(wchar_t*, __VA_ARGS__) asm(#name)
+#else
+#    define __MAKE_C_OR_CPP_DECLARATION(name, ...) \
+        wchar_t* name(wchar_t const*, __VA_ARGS__)
+#endif
+
 size_t wcslen(wchar_t const*);
 wchar_t* wcscpy(wchar_t*, wchar_t const*);
 wchar_t* wcsdup(wchar_t const*);
@@ -48,8 +59,8 @@ wchar_t* wcsncpy(wchar_t*, wchar_t const*, size_t);
 __attribute__((warn_unused_result)) size_t wcslcpy(wchar_t*, wchar_t const*, size_t);
 int wcscmp(wchar_t const*, wchar_t const*);
 int wcsncmp(wchar_t const*, wchar_t const*, size_t);
-wchar_t* wcschr(wchar_t const*, int);
-wchar_t* wcsrchr(wchar_t const*, wchar_t);
+__MAKE_C_OR_CPP_DECLARATION(wcschr, int);
+__MAKE_C_OR_CPP_DECLARATION(wcsrchr, wchar_t);
 wchar_t* wcscat(wchar_t*, wchar_t const*);
 wchar_t* wcsncat(wchar_t*, wchar_t const*, size_t);
 wchar_t* wcstok(wchar_t*, wchar_t const*, wchar_t**);
@@ -63,9 +74,9 @@ int wcscoll(wchar_t const*, wchar_t const*);
 size_t wcsxfrm(wchar_t*, wchar_t const*, size_t);
 int wctob(wint_t);
 int mbsinit(mbstate_t const*);
-wchar_t* wcspbrk(wchar_t const*, wchar_t const*);
-wchar_t* wcsstr(wchar_t const*, wchar_t const*);
-wchar_t* wmemchr(wchar_t const*, wchar_t, size_t);
+__MAKE_C_OR_CPP_DECLARATION(wcspbrk, wchar_t const*);
+__MAKE_C_OR_CPP_DECLARATION(wcsstr, wchar_t const*);
+__MAKE_C_OR_CPP_DECLARATION(wmemchr, wchar_t, size_t);
 wchar_t* wmemcpy(wchar_t*, wchar_t const*, size_t);
 wchar_t* wmemset(wchar_t*, wchar_t, size_t);
 wchar_t* wmemmove(wchar_t*, wchar_t const*, size_t);
@@ -112,3 +123,5 @@ int vwscanf(wchar_t const* __restrict format, va_list arg);
 size_t wcsftime(wchar_t* __restrict wcs, size_t maxsize, wchar_t const* __restrict format, const struct tm* __restrict timeptr);
 
 __END_DECLS
+
+#undef __MAKE_C_OR_CPP_DECLARATION

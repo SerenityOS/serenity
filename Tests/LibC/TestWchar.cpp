@@ -10,6 +10,9 @@
 #include <limits.h>
 #include <string.h>
 #include <time.h>
+
+// This is testing LibC, so let's use the C declaration.
+#define __WCHAR_FORCE_C_DECLARATION
 #include <wchar.h>
 
 TEST_CASE(wcspbrk)
