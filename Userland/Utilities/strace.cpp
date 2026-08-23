@@ -731,6 +731,14 @@ static ErrorOr<void> format_symlink(FormattedSyscallBuilder& builder, Syscall::S
     return {};
 }
 
+static void format_unlink(FormattedSyscallBuilder& builder, int dir_fd, char const* path, size_t path_length, int flags)
+{
+    builder.add_arguments(
+        DirFDArgument { dir_fd },
+        StringArgument { { path, path_length } },
+        flags);
+}
+
 static void format_connect(FormattedSyscallBuilder& builder, int socket, const struct sockaddr* address_p, socklen_t address_len)
 {
     builder.add_arguments(socket, copy_from_process(address_p).release_value_but_fixme_should_propagate_errors(), address_len);
@@ -908,6 +916,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_symlink:
         TRY(format_symlink(builder, (Syscall::SC_symlink_params*)arg1));
+        break;
+    case SC_unlink:
+        format_unlink(builder, (int)arg1, (char const*)arg2, (size_t)arg3, (int)arg4);
         break;
     case SC_write:
         format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
