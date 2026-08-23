@@ -36,6 +36,7 @@ set(TEST_SOURCES
     TestStdio.cpp
     TestStrlcpy.cpp
     TestStrtodAccuracy.cpp
+    TestTruncate.cpp
     TestWchar.cpp
     TestWctype.cpp
 )
