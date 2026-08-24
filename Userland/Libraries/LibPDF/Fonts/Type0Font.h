@@ -67,7 +67,7 @@ private:
     PDFErrorOr<Gfx::FloatPoint> for_each_glyph_position(Gfx::FloatPoint, ByteString const&, Renderer const&, Callback callback);
 
     PDFErrorOr<Gfx::FloatPoint> append_text_path(Gfx::Path&, Gfx::FloatPoint, ByteString const&, Renderer const&);
-    PDFErrorOr<Gfx::FloatPoint> draw_transformed_glyphs(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&);
+    PDFErrorOr<Gfx::FloatPoint> draw_transformed_glyphs(Gfx::FloatPoint, ByteString const&, Renderer const&);
     PDFErrorOr<Gfx::FloatPoint> draw_axis_aligned_glyphs(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&);
 
     DeprecatedFlyString m_base_font_name;

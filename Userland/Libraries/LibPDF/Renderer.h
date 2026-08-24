@@ -177,6 +177,7 @@ public:
 
     Gfx::AffineTransform const& calculate_text_rendering_matrix() const;
 
+    PDFErrorOr<void> paint_text_glyphs(Gfx::Path const&);
     PDFErrorOr<void> render_type3_glyph(Gfx::FloatPoint, StreamObject const&, Gfx::AffineTransform const&, Optional<NonnullRefPtr<DictObject>>);
 
     bool show_hidden_text() const { return m_rendering_preferences.show_hidden_text; }
