@@ -21,6 +21,7 @@
 
 #define FILENAME_MAX 1024
 #define FOPEN_MAX 1024
+#define TMP_MAX 1000
 
 __BEGIN_DECLS
 #ifndef EOF
