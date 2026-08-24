@@ -339,6 +339,46 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
     return nprinted;
 }
 
+static void print_permissions(mode_t mode, mode_t read_mode, mode_t write_mode, mode_t exec_mode, mode_t special_mode)
+{
+    if (mode & read_mode) {
+        foreground(ANSIStyle::Yellow).apply(stdout);
+        out("r");
+    } else {
+        foreground(ANSIStyle::Default).apply(stdout);
+        out("-");
+    }
+
+    if (mode & write_mode) {
+        foreground(ANSIStyle::Red).apply(stdout);
+        out("w");
+    } else {
+        foreground(ANSIStyle::Default).apply(stdout);
+        out("-");
+    }
+
+    if (mode & special_mode) {
+        foreground(ANSIStyle::Magenta).apply(stdout);
+        switch (special_mode) {
+        case S_ISUID:
+        case S_ISGID:
+            out("{}", mode & exec_mode ? 's' : 'S');
+            return;
+        case S_ISVTX:
+            out("{}", mode & exec_mode ? 't' : 'T');
+            return;
+        }
+    }
+
+    if (mode & exec_mode) {
+        foreground(ANSIStyle::Green).apply(stdout);
+        out("x");
+    } else {
+        foreground(ANSIStyle::Default).apply(stdout);
+        out("-");
+    }
+}
+
 static bool print_filesystem_object(ByteString const& path, ByteString const& name, const struct stat& st, Optional<ino_t> raw_inode_number)
 {
     if (flag_show_inode) {
@@ -350,41 +390,37 @@ static bool print_filesystem_object(ByteString const& path, ByteString const& na
             printf("n/a ");
     }
 
-    if (S_ISDIR(st.st_mode))
-        printf("d");
-    else if (S_ISLNK(st.st_mode))
-        printf("l");
-    else if (S_ISBLK(st.st_mode))
-        printf("b");
-    else if (S_ISCHR(st.st_mode))
-        printf("c");
-    else if (S_ISFIFO(st.st_mode))
-        printf("f");
-    else if (S_ISSOCK(st.st_mode))
-        printf("s");
-    else if (S_ISREG(st.st_mode))
-        printf("-");
-    else
-        printf("?");
+    style(ANSIStyle::Bold).apply(stdout);
 
-    printf("%c%c%c%c%c%c%c%c",
-        st.st_mode & S_IRUSR ? 'r' : '-',
-        st.st_mode & S_IWUSR ? 'w' : '-',
-        st.st_mode & S_ISUID
-            ? (st.st_mode & S_IXUSR ? 's' : 'S')
-            : (st.st_mode & S_IXUSR ? 'x' : '-'),
-        st.st_mode & S_IRGRP ? 'r' : '-',
-        st.st_mode & S_IWGRP ? 'w' : '-',
-        st.st_mode & S_ISGID
-            ? (st.st_mode & S_IXGRP ? 's' : 'S')
-            : (st.st_mode & S_IXGRP ? 'x' : '-'),
-        st.st_mode & S_IROTH ? 'r' : '-',
-        st.st_mode & S_IWOTH ? 'w' : '-');
+    if (S_ISDIR(st.st_mode)) {
+        foreground(ANSIStyle::Blue).apply(stdout);
+        out("d");
+    } else if (S_ISLNK(st.st_mode)) {
+        foreground(ANSIStyle::Cyan).apply(stdout);
+        out("l");
+    } else if (S_ISBLK(st.st_mode)) {
+        foreground(ANSIStyle::Yellow).apply(stdout);
+        out("b");
+    } else if (S_ISCHR(st.st_mode)) {
+        foreground(ANSIStyle::Yellow).apply(stdout);
+        out("c");
+    } else if (S_ISFIFO(st.st_mode)) {
+        foreground(ANSIStyle::Yellow).apply(stdout);
+        out("f");
+    } else if (S_ISSOCK(st.st_mode)) {
+        foreground(ANSIStyle::Magenta).apply(stdout);
+        out("s");
+    } else if (S_ISREG(st.st_mode)) {
+        out("-");
+    } else {
+        out("?");
+    }
 
-    if (st.st_mode & S_ISVTX)
-        printf("%c", st.st_mode & S_IXOTH ? 't' : 'T');
-    else
-        printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
+    print_permissions(st.st_mode, S_IRUSR, S_IWUSR, S_IXUSR, S_ISUID);
+    print_permissions(st.st_mode, S_IRGRP, S_IWGRP, S_IXGRP, S_ISGID);
+    print_permissions(st.st_mode, S_IROTH, S_IWOTH, S_IXOTH, S_ISVTX);
+
+    style(ANSIStyle::Reset).apply(stdout);
 
     printf(" %3lu", st.st_nlink);
 
