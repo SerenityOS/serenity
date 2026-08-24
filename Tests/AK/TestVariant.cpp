@@ -332,3 +332,19 @@ TEST_CASE(variant_equality)
         EXPECT_EQ(variant1, variant2);
     }
 }
+
+// Note: Duplicates are ignored
+static_assert(IsSame<Variant<int>, Variant<int>>);
+static_assert(IsSame<Variant<int>, Variant<int, int>>);
+static_assert(IsSame<Variant<int, double>, Variant<int, double, int>>);
+static_assert(IsSame<Variant<int, double>, Variant<int, int, double, int, double>>);
+
+TEST_CASE(index_order)
+{
+    Variant<int, float, float, int, char const*> var { 1337 };
+    EXPECT_EQ(var.index(), 0);
+    var.set(3.141f);
+    EXPECT_EQ(var.index(), 1);
+    var.set(+"foobar"); // Note: We need to manually decay this to a pointer....
+    EXPECT_EQ(var.index(), 2);
+}
