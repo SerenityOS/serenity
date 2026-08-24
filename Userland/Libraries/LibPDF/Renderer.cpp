@@ -1888,6 +1888,19 @@ Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
     return m_text_rendering_matrix;
 }
 
+PDFErrorOr<void> Renderer::paint_text_glyphs(Gfx::Path const& text_path)
+{
+    TRY(state().paint_color.visit(
+        [&](Color const& color) -> PDFErrorOr<void> {
+            Renderer::fill_path_with_color(anti_aliasing_painter(), text_path, color);
+            return {};
+        },
+        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
+            return Error::rendering_unsupported_error("Cannot draw text with a pattern yet");
+        }));
+    return {};
+}
+
 PDFErrorOr<void> Renderer::render_type3_glyph(Gfx::FloatPoint point, StreamObject const& glyph_data, Gfx::AffineTransform const& font_matrix, Optional<NonnullRefPtr<DictObject>> resources)
 {
     ScopedState scoped_state { *this };

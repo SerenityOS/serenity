@@ -107,16 +107,15 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
     if (text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes))
         return draw_axis_aligned_glyphs(painter, position, string, renderer);
     // Slow path: Create a Gfx::Path for the string, transform it, then draw it. This handles arbitrary transforms.
-    if (auto end_position = draw_transformed_glyphs(painter, position, string, renderer); !end_position.is_error())
+    if (auto end_position = draw_transformed_glyphs(position, string, renderer); !end_position.is_error())
         return end_position;
     // Fallback to axis aligned glyphs in case `append_path` is unimplemented. This won't look correct.
     return draw_axis_aligned_glyphs(painter, position, string, renderer);
 }
 
-PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_transformed_glyphs(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_transformed_glyphs(Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
 {
     Gfx::Path text_path;
-    Gfx::AntiAliasingPainter aa_painter(painter);
     auto horizontal_scaling = renderer.text_state().horizontal_scaling;
     auto text_rendering_matrix = renderer.calculate_text_rendering_matrix();
     auto end_position = TRY(append_text_path(text_path, position, string, renderer));
@@ -126,14 +125,7 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_transformed_glyphs(Gfx::Painter& pa
         Gfx::AffineTransform {}
             .set_scale(1 / text_rendering_matrix.x_scale() * horizontal_scaling,
                 -1 / text_rendering_matrix.x_scale() * horizontal_scaling)));
-    TRY(renderer.state().paint_color.visit(
-        [&](Color const& color) -> PDFErrorOr<void> {
-            Renderer::fill_path_with_color(aa_painter, text_path, color);
-            return {};
-        },
-        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
-            return Error::rendering_unsupported_error("Cannot draw text with a pattern yet");
-        }));
+    TRY(const_cast<Renderer&>(renderer).paint_text_glyphs(text_path));
     return end_position;
 }
 
