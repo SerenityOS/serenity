@@ -143,7 +143,8 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
                 return {};
             },
             [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
-                return Error::rendering_unsupported_error("Cannot draw TrueType glyph with a pattern yet");
+                // Renderer::needs_vector_glyphs_for_current_text() should always return true for pattern text fills.
+                VERIFY_NOT_REACHED();
             }));
     }
     return {};

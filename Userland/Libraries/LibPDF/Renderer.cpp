@@ -1905,6 +1905,9 @@ Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
 
 bool Renderer::needs_vector_glyphs_for_current_text() const
 {
+    if (!state().paint_color.has<Color>())
+        return true;
+
     auto const& text_rendering_matrix = calculate_text_rendering_matrix();
     // Fast path: Use cached bitmap glyphs.
     return !text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes);
@@ -1912,14 +1915,7 @@ bool Renderer::needs_vector_glyphs_for_current_text() const
 
 PDFErrorOr<void> Renderer::paint_text_glyphs(Gfx::Path const& text_path)
 {
-    TRY(state().paint_color.visit(
-        [&](Color const& color) -> PDFErrorOr<void> {
-            Renderer::fill_path_with_color(anti_aliasing_painter(), text_path, color);
-            return {};
-        },
-        [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<void> {
-            return Error::rendering_unsupported_error("Cannot draw text with a pattern yet");
-        }));
+    TRY(fill_path(text_path, Gfx::WindingRule::Nonzero));
     return {};
 }
 

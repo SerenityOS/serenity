@@ -121,7 +121,8 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
             return color;
         },
         [&](NonnullRefPtr<Pattern> const&) -> PDFErrorOr<Color> {
-            return Error::rendering_unsupported_error("Cannot draw type1 glyph with a pattern yet");
+            // Renderer::needs_vector_glyphs_for_current_text() should always return true for pattern text fills.
+            VERIFY_NOT_REACHED();
         }));
 
     if (!m_font_program)
