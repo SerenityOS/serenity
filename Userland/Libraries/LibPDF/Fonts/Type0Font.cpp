@@ -575,11 +575,6 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
     // Fast path: Use cached bitmap glyphs.
     if (text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes))
         return draw_axis_aligned_glyphs(painter, position, string, renderer);
-
-    // FIXME: Make the vector path work for vertical writing mode, see e.g. 0000552.pdf.
-    if (m_cmap->writing_mode() == WritingMode::Vertical)
-        return draw_axis_aligned_glyphs(painter, position, string, renderer);
-
     // Slow path: Create a Gfx::Path for the string, transform it, then draw it. This handles arbitrary transforms.
     if (auto end_position = draw_transformed_glyphs(painter, position, string, renderer); !end_position.is_error())
         return end_position;
@@ -589,6 +584,10 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::F
 
 PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_transformed_glyphs(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
 {
+    // FIXME: Make the vector path work for vertical writing mode, see e.g. 0000552.pdf.
+    if (m_cmap->writing_mode() == WritingMode::Vertical)
+        return Error::rendering_unsupported_error("Type0 font: getting vector path for vertical writing mode not yet implemented");
+
     Gfx::Path text_path;
     Gfx::AntiAliasingPainter aa_painter(painter);
     auto horizontal_scaling = renderer.text_state().horizontal_scaling;
