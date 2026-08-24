@@ -177,6 +177,7 @@ public:
 
     Gfx::AffineTransform const& calculate_text_rendering_matrix() const;
 
+    bool needs_vector_glyphs_for_current_text() const;
     PDFErrorOr<void> paint_text_glyphs(Gfx::Path const&);
     PDFErrorOr<void> render_type3_glyph(Gfx::FloatPoint, StreamObject const&, Gfx::AffineTransform const&, Optional<NonnullRefPtr<DictObject>>);
 

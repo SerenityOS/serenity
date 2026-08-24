@@ -571,9 +571,8 @@ PDFErrorOr<Gfx::FloatPoint> Type0Font::append_text_path(Gfx::Path& path, Gfx::Fl
 
 PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
 {
-    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
     // Fast path: Use cached bitmap glyphs.
-    if (text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes))
+    if (!renderer.needs_vector_glyphs_for_current_text())
         return draw_axis_aligned_glyphs(painter, position, string, renderer);
     // Slow path: Create a Gfx::Path for the string, transform it, then draw it. This handles arbitrary transforms.
     if (auto end_position = draw_transformed_glyphs(position, string, renderer); !end_position.is_error())
