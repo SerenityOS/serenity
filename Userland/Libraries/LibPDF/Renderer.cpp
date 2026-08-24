@@ -458,38 +458,48 @@ PDFErrorOr<void> Renderer::fill_path_with_pattern(Gfx::Path const& path, Nonnull
     return pattern->draw(painter(), m_userspace_matrix);
 }
 
-PDFErrorOr<void> Renderer::stroke_current_path()
+PDFErrorOr<void> Renderer::stroke_path(Gfx::Path const& path)
 {
     TRY(state().stroke_color.visit(
         [&](Color const& color) -> PDFErrorOr<void> {
-            anti_aliasing_painter().stroke_path(m_current_path, color, stroke_style());
+            anti_aliasing_painter().stroke_path(path, color, stroke_style());
             return {};
         },
         [&](NonnullRefPtr<Pattern> const& pattern) -> PDFErrorOr<void> {
-            auto stroke_path = m_current_path.stroke_to_fill(stroke_style());
+            auto stroke_path = path.stroke_to_fill(stroke_style());
             return fill_path_with_pattern(stroke_path, pattern, state().stroke_alpha_constant, Gfx::WindingRule::Nonzero);
         }));
     return {};
 }
 
-PDFErrorOr<void> Renderer::fill_current_path(Gfx::WindingRule winding_rule)
+PDFErrorOr<void> Renderer::stroke_current_path()
 {
-    auto path_end = m_current_path.end();
-    m_current_path.close_all_subpaths();
+    return stroke_path(m_current_path);
+}
+
+PDFErrorOr<void> Renderer::fill_path(Gfx::Path const& path, Gfx::WindingRule winding_rule)
+{
+    auto path_end = path.end();
+    const_cast<Gfx::Path&>(path).close_all_subpaths();
     TRY(state().paint_color.visit(
         [&](Color const& color) -> PDFErrorOr<void> {
-            fill_path_with_color(anti_aliasing_painter(), m_current_path, color, winding_rule);
+            fill_path_with_color(anti_aliasing_painter(), path, color, winding_rule);
             return {};
         },
         [&](NonnullRefPtr<Pattern> const& pattern) -> PDFErrorOr<void> {
-            return fill_path_with_pattern(m_current_path, pattern, state().paint_alpha_constant, winding_rule);
+            return fill_path_with_pattern(path, pattern, state().paint_alpha_constant, winding_rule);
         }));
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
-    m_current_path.trim(path_end);
+    const_cast<Gfx::Path&>(path).trim(path_end);
     return {};
 }
 
-PDFErrorOr<void> Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
+PDFErrorOr<void> Renderer::fill_current_path(Gfx::WindingRule winding_rule)
+{
+    return fill_path(m_current_path, winding_rule);
+}
+
+PDFErrorOr<void> Renderer::fill_and_stroke_path(Gfx::Path const& path, Gfx::WindingRule winding_rule)
 {
     // Note: Just drawing the stroke on top of the fill is incorrect if the stroke is not opaque.
     // See "Special Path-Painting Considerations" on page 569 of the PDF 1.7 spec:
@@ -497,9 +507,14 @@ PDFErrorOr<void> Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding
     // (The spec says this in the language of knockout groups.)
     // Having said that, while Acrobat Reader and PDFium get this right, PDF.js and Preview.app do not.
     // FIXME: Once we have support for transparency groups, do this per spec.
-    TRY(fill_current_path(winding_rule));
-    TRY(stroke_current_path());
+    TRY(fill_path(path, winding_rule));
+    TRY(stroke_path(path));
     return {};
+}
+
+PDFErrorOr<void> Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
+{
+    return fill_and_stroke_path(m_current_path, winding_rule);
 }
 
 RENDERER_HANDLER(path_stroke)
