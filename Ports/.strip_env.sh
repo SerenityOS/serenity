@@ -13,6 +13,7 @@ keep_environment_variables=(
     'EDITOR'
     'IN_SERENITY_PORT_DEV'
     'MAKEJOBS'
+    'PKG_CONFIG_PATH'
     'SERENITY_ARCH'
     'SERENITY_TOOLCHAIN'
     'VISUAL'
