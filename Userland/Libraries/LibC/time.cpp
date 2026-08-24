@@ -520,4 +520,12 @@ double difftime(time_t t1, time_t t0)
 {
     return (double)(t1 - t0);
 }
+
+int timespec_get(struct timespec* ts, int base)
+{
+    (void)ts;
+    (void)base;
+    dbgln("FIXME: Implement timespec_get");
+    TODO();
+}
 }

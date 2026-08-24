@@ -52,4 +52,7 @@ struct tm* localtime_r(time_t const* timep, struct tm* result);
 double difftime(time_t, time_t);
 size_t strftime(char* s, size_t max, char const* format, const struct tm*) __attribute__((format(strftime, 3, 0)));
 
+#define TIME_UTC 0
+int timespec_get(struct timespec*, int);
+
 __END_DECLS
