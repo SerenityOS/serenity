@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ANSIStyle.h>
 #include <AK/Assertions.h>
 #include <AK/ByteString.h>
 #include <AK/HashMap.h>
@@ -87,7 +88,6 @@ static bool flag_recursive = false;
 static bool flag_force_newline = false;
 
 static size_t terminal_columns = 0;
-static bool output_is_terminal = false;
 
 static HashMap<uid_t, ByteString> users;
 static HashMap<gid_t, ByteString> groups;
@@ -102,7 +102,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
     if (rc == 0) {
         terminal_columns = ws.ws_col;
-        output_is_terminal = true;
     }
 
     is_a_tty = isatty(STDOUT_FILENO);
@@ -141,6 +140,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_force_newline, "List one file per line", nullptr, '1');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    AK::set_color_enabled(flag_colorize);
 
     if (flag_print_numeric || flag_hide_group || flag_hide_owner)
         flag_long = true;
@@ -223,26 +224,40 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return status;
 }
 
-static int print_escaped(StringView name)
+static int print_escaped(StringView name, ANSIStyle ansi_style)
 {
-    int printed = 0;
+    int nprinted = Utf8View(name).length();
 
-    Utf8View utf8_name(name);
-    if (utf8_name.validate()) {
-        out("{}", name);
-        return utf8_name.length();
-    }
+    ansi_style.apply(stdout);
 
     for (auto c : name) {
-        if (is_ascii_printable(c)) {
-            putchar(c);
-            printed++;
-        } else {
-            printed += printf("\\%03d", c);
+        switch (c) {
+        case '\t':
+            out(foreground(ANSIStyle::Red), "\\t");
+            ansi_style.apply(stdout);
+            nprinted++;
+            continue;
+        case '\n':
+            out(foreground(ANSIStyle::Red), "\\n");
+            ansi_style.apply(stdout);
+            nprinted++;
+            continue;
         }
+
+        if (static_cast<u8>(c) < 0x1f) {
+            out(foreground(ANSIStyle::Red), "\\{:#02o}", c);
+            ansi_style.apply(stdout);
+            nprinted += 3;
+            continue;
+        }
+
+        out("{:c}", c);
     }
 
-    return printed;
+    if (ansi_style.has_style())
+        style(ANSIStyle::Reset).apply(stdout);
+
+    return nprinted;
 }
 
 static ByteString& hostname()
@@ -271,31 +286,24 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
 
     size_t nprinted = 0;
 
-    if (!flag_colorize || !output_is_terminal) {
-        nprinted = printf("%s", name.characters());
-    } else {
-        char const* begin_color = "";
-        char const* end_color = "\033[0m";
-
-        if (st.st_mode & S_ISVTX)
-            begin_color = "\033[42;30;1m";
-        else if (st.st_mode & S_ISUID)
-            begin_color = "\033[41;1m";
-        else if (st.st_mode & S_ISGID)
-            begin_color = "\033[43;1m";
-        else if (S_ISLNK(st.st_mode))
-            begin_color = "\033[36;1m";
-        else if (S_ISDIR(st.st_mode))
-            begin_color = "\033[34;1m";
-        else if (st.st_mode & 0111)
-            begin_color = "\033[32;1m";
-        else if (S_ISSOCK(st.st_mode))
-            begin_color = "\033[35;1m";
-        else if (S_ISFIFO(st.st_mode) || S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
-            begin_color = "\033[33;1m";
-        printf("%s", begin_color);
-        nprinted = print_escaped(name);
-        printf("%s", end_color);
+    if (st.st_mode & S_ISVTX)
+        nprinted = print_escaped(name, background(ANSIStyle::Magenta) | foreground(ANSIStyle::Black) | style(ANSIStyle::Bold));
+    else if (st.st_mode & S_ISUID)
+        nprinted = print_escaped(name, background(ANSIStyle::Red) | style(ANSIStyle::Bold));
+    else if (st.st_mode & S_ISGID)
+        nprinted = print_escaped(name, background(ANSIStyle::Yellow) | foreground(ANSIStyle::Black) | style(ANSIStyle::Bold));
+    else if (S_ISLNK(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Cyan) | style(ANSIStyle::Bold));
+    else if (S_ISDIR(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Blue) | style(ANSIStyle::Bold));
+    else if (st.st_mode & 0111)
+        nprinted = print_escaped(name, foreground(ANSIStyle::Green) | style(ANSIStyle::Bold));
+    else if (S_ISSOCK(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Magenta) | style(ANSIStyle::Bold));
+    else if (S_ISFIFO(st.st_mode) || S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Yellow) | style(ANSIStyle::Bold));
+    else {
+        nprinted = print_escaped(name, ANSIStyle());
     }
 
     if (S_ISLNK(st.st_mode)) {
@@ -304,7 +312,7 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
             if (link_destination_or_error.is_error()) {
                 warnln("readlink of {} failed: {}", path_for_link_resolution.value(), link_destination_or_error.error());
             } else {
-                nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value());
+                nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value(), ANSIStyle());
             }
         } else {
             if (has_flag(flag_indicator_style, IndicatorStyle::SymbolicLink))
