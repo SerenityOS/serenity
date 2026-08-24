@@ -8,6 +8,7 @@
 #pragma once
 
 #include <bits/stdint.h>
+#include <stddef.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -201,5 +202,7 @@ imaxdiv_t imaxdiv(intmax_t, intmax_t);
 
 intmax_t strtoimax(char const*, char** endptr, int base);
 uintmax_t strtoumax(char const*, char** endptr, int base);
+intmax_t wcstoimax(wchar_t const*, wchar_t**, int);
+uintmax_t wcstoumax(wchar_t const*, wchar_t**, int);
 
 __END_DECLS

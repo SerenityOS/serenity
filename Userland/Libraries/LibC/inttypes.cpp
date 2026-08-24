@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/NumericLimits.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -58,5 +60,17 @@ uintmax_t strtoumax(char const* str, char** endptr, int base)
     }
 
     return ulong_value;
+}
+
+intmax_t wcstoimax(wchar_t const*, wchar_t**, int)
+{
+    dbgln("FIXME: Implement wcstoimax()");
+    TODO();
+}
+
+uintmax_t wcstoumax(wchar_t const*, wchar_t**, int)
+{
+    dbgln("FIXME: Implement wcstoumax()");
+    TODO();
 }
 }
