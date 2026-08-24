@@ -35,9 +35,16 @@ __BEGIN_DECLS
 #define L_tmpnam 256
 #define P_tmpdir "/tmp"
 
+// "The <stdio.h> header shall define the following macros which shall expand to expressions
+// of type "pointer to FILE" that point to the FILE objects associated, respectively, with
+// the standard error, input, and output streams:"
 extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
+
+#define stdin stdin
+#define stdout stdout
+#define stderr stderr
 
 typedef off_t fpos_t;
 
