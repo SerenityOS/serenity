@@ -36,6 +36,7 @@ mkShell.override { stdenv = gccStdenv; } {
     lzip
     meson
     nasm
+    perl
     wayland-scanner
     # For development
     # NOTE: The unwrapped clang package is used because the one installed by `clang-tools`
@@ -54,7 +55,11 @@ mkShell.override { stdenv = gccStdenv; } {
     genext2fs
   ];
 
-  buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [
+  buildInputs = [
+    # Declared as a build input to be available to pkg-config,
+    # used by stpuzzles to build icons on the host
+    gtk3
+  ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
     apple-sdk_13
     (darwinMinVersionHook "13.3")
   ];
