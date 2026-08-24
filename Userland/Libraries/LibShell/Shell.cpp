@@ -63,6 +63,9 @@ void Shell::setup_signals()
             auto job = current_job();
             kill_job(job, SIGTSTP);
             if (job) {
+                struct termios job_termios;
+                if (tcgetattr(0, &job_termios) == 0)
+                    job->set_saved_termios(job_termios);
                 job->set_is_suspended(true);
                 job->unblock();
             }
@@ -2291,6 +2294,9 @@ void Shell::notify_child_event()
                 } else if (WIFEXITED(wstatus)) {
                     job.set_has_exit(WEXITSTATUS(wstatus));
                 } else if (WIFSTOPPED(wstatus)) {
+                    struct termios job_termios;
+                    if (tcgetattr(0, &job_termios) == 0)
+                        job.set_saved_termios(job_termios);
                     job.unblock();
                     job.set_is_suspended(true);
                 }

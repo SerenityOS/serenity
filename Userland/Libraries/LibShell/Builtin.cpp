@@ -838,8 +838,11 @@ ErrorOr<int> Shell::builtin_fg(Main::Arguments arguments)
     job->set_running_in_background(false);
     job->set_shell_did_continue(true);
 
-    dbgln("Resuming {} ({})", job->pid(), job->cmd());
     warnln("Resuming job {} - {}", job->job_id(), job->cmd());
+
+    // Restore the terminal state the program expects to be in.
+    if (auto const& termios = job->saved_termios(); termios.has_value())
+        tcsetattr(0, TCSANOW, &termios.value());
 
     tcsetpgrp(STDOUT_FILENO, job->pgid());
     tcsetpgrp(STDIN_FILENO, job->pgid());
