@@ -16,6 +16,7 @@
 #include <AK/OwnPtr.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventReceiver.h>
+#include <termios.h>
 
 namespace Shell {
 
@@ -73,6 +74,9 @@ public:
     void set_is_suspended(bool value) const { m_is_suspended = value; }
     void set_shell_did_continue(bool value) const { m_shell_did_continue = value; }
 
+    Optional<struct termios> const& saved_termios() const { return m_saved_termios; }
+    void set_saved_termios(struct termios const& value) const { m_saved_termios = value; }
+
     void set_running_in_background(bool running_in_background)
     {
         m_running_in_background = running_in_background;
@@ -108,6 +112,7 @@ private:
     mutable bool m_active { true };
     mutable bool m_is_suspended { false };
     mutable bool m_shell_did_continue { false };
+    mutable Optional<struct termios> m_saved_termios;
     bool m_should_be_disowned { false };
     OwnPtr<AST::Command> m_command;
 };
