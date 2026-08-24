@@ -1903,6 +1903,13 @@ Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
     return m_text_rendering_matrix;
 }
 
+bool Renderer::needs_vector_glyphs_for_current_text() const
+{
+    auto const& text_rendering_matrix = calculate_text_rendering_matrix();
+    // Fast path: Use cached bitmap glyphs.
+    return !text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes);
+}
+
 PDFErrorOr<void> Renderer::paint_text_glyphs(Gfx::Path const& text_path)
 {
     TRY(state().paint_color.visit(
