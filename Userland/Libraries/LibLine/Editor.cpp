@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2026, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -207,10 +207,11 @@ void Editor::ensure_free_lines_from_origin(size_t count)
         // FIXME: Implement paging
     }
 
-    if (m_origin_row + count <= m_num_lines)
+    // Ignore requests asking to go beyond the bottom of the terminal.
+    if (m_origin_row + count - 1 <= m_num_lines)
         return;
 
-    auto diff = m_origin_row + count - m_num_lines - 1;
+    auto diff = m_origin_row + count - 1 - m_num_lines;
     out(stderr, "\x1b[{}S", diff);
     fflush(stderr);
     m_origin_row -= diff;
@@ -974,6 +975,10 @@ ErrorOr<void> Editor::handle_read_event()
             case '[':
                 m_state = InputState::CSIExpectParameter;
                 continue;
+            case 'O':
+                // ^[O: single-shift 3; DECCKM mode ends up spewing these when the terminal is in application cursor keys mode.
+                m_state = InputState::SS3ExpectFinal;
+                continue;
             default: {
                 m_callback_machine.key_pressed(*this, { code_point, Key::Alt });
                 m_state = InputState::Free;
@@ -981,6 +986,40 @@ ErrorOr<void> Editor::handle_read_event()
                 continue;
             }
             }
+        case InputState::SS3ExpectFinal: {
+            m_state = m_previous_free_state;
+            if (m_state == InputState::Paste) {
+                // Not an actual control sequence; treat it as pasted data.
+                insert('\x1b');
+                insert('O');
+                insert(code_point);
+                continue;
+            }
+            TRY(cleanup_suggestions());
+            switch (code_point) {
+            case 'A': // ^[OA: arrow up
+                search_backwards();
+                continue;
+            case 'B': // ^[OB: arrow down
+                search_forwards();
+                continue;
+            case 'C': // ^[OC: arrow right
+                cursor_right_character();
+                continue;
+            case 'D': // ^[OD: arrow left
+                cursor_left_character();
+                continue;
+            case 'H': // ^[OH: home
+                go_home();
+                continue;
+            case 'F': // ^[OF: end
+                go_end();
+                continue;
+            default:
+                dbgln("LibLine: Unhandled SS3: {:02x} ({:c})", code_point, code_point);
+                continue;
+            }
+        }
         case InputState::CSIExpectParameter:
             if (code_point >= 0x30 && code_point <= 0x3f) { // '0123456789:;<=>?'
                 csi_parameter_bytes.append(code_point);
@@ -1290,13 +1329,10 @@ ErrorOr<void> Editor::handle_read_event()
         insert(code_point);
     }
 
-    if (consumed_code_points == valid_bytes) {
-        m_incomplete_data.clear();
-    } else {
-        auto bytes_to_drop = input_view.byte_offset_of(consumed_code_points + 1);
-        for (size_t i = 0; i < bytes_to_drop; ++i)
-            m_incomplete_data.take_first();
-    }
+    // Drop whatever we've just consumed.
+    auto bytes_to_drop = input_view.byte_offset_of(consumed_code_points);
+    for (size_t i = 0; i < bytes_to_drop; ++i)
+        m_incomplete_data.take_first();
 
     if (!m_incomplete_data.is_empty() && !m_finish)
         deferred_invoke([&] { try_update_once().release_value_but_fixme_should_propagate_errors(); });
@@ -1656,7 +1692,8 @@ ErrorOr<void> Editor::reposition_cursor(Stream& stream, bool to_end)
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
-    ensure_free_lines_from_origin(line);
+    // The cursor is 0-based, so we need _line + 1_ lines available.
+    ensure_free_lines_from_origin(line + 1);
 
     VERIFY(column + m_origin_column <= m_num_columns);
     TRY(VT::move_absolute(line + m_origin_row, column + m_origin_column, stream));
