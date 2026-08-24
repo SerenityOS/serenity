@@ -300,6 +300,7 @@ private:
 
     Gfx::AffineTransform m_userspace_matrix;
     Vector<GraphicsState> m_graphics_state_stack;
+    Gfx::Path m_clip_from_text;
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;
 
