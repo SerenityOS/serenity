@@ -602,6 +602,7 @@ RENDERER_HANDLER(path_intersect_clip_evenodd)
 
 RENDERER_HANDLER(text_begin)
 {
+    m_clip_from_text.clear();
     m_text_matrix = Gfx::AffineTransform();
     m_text_line_matrix = Gfx::AffineTransform();
     m_text_rendering_matrix_is_dirty = true;
@@ -610,7 +611,10 @@ RENDERER_HANDLER(text_begin)
 
 RENDERER_HANDLER(text_end)
 {
-    // FIXME: Do we need to do anything here?
+    // See comment in paint_text_glyphs().
+    if (!m_clip_from_text.is_empty())
+        TRY(add_clip_path(m_clip_from_text, Gfx::WindingRule::Nonzero));
+    m_clip_from_text.clear();
     return {};
 }
 
@@ -1905,7 +1909,7 @@ Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
 
 bool Renderer::needs_vector_glyphs_for_current_text() const
 {
-    if (!state().paint_color.has<Color>())
+    if (text_state().rendering_mode != TextRenderingMode::Fill || !state().paint_color.has<Color>())
         return true;
 
     auto const& text_rendering_matrix = calculate_text_rendering_matrix();
@@ -1915,7 +1919,24 @@ bool Renderer::needs_vector_glyphs_for_current_text() const
 
 PDFErrorOr<void> Renderer::paint_text_glyphs(Gfx::Path const& text_path)
 {
-    TRY(fill_path(text_path, Gfx::WindingRule::Nonzero));
+    // 5.2.5 Text Rendering Mode
+    auto const mode = text_state().rendering_mode;
+    using enum TextRenderingMode;
+    if (mode == Fill || mode == FillAndClip)
+        TRY(fill_path(text_path, Gfx::WindingRule::Nonzero));
+    else if (mode == Stroke || mode == StrokeAndClip)
+        TRY(stroke_path(text_path));
+    else if (mode == FillThenStroke || mode == FillStrokeAndClip)
+        TRY(fill_and_stroke_path(text_path, Gfx::WindingRule::Nonzero));
+
+    // "The behavior of the clipping modes requires further explanation. Glyph outlines
+    //  begin accumulating if a BT operator is executed while the text rendering mode is
+    //  set to a clipping mode or if it is set to a clipping mode within a text object. Glyphs
+    //  accumulate until the text object is ended by an ET operator; the text rendering
+    //  mode must not be changed back to a nonclipping mode before that point."
+    if (mode == Clip || mode == FillAndClip || mode == StrokeAndClip || mode == FillStrokeAndClip)
+        m_clip_from_text.append_path(text_path);
+
     return {};
 }
 
