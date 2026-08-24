@@ -2137,7 +2137,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
     if (m_input_error.has_value())
         return m_input_error.value();
 
-    fputs("\033[6n\n", stderr);
+    fputs("\033[6n", stderr);
     fflush(stderr);
 
     // Parse the DSR response
