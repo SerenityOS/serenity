@@ -1,12 +1,14 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=qt6-serenity
-version=git
-depends=("qt6-qtbase")
-workdir=QSerenityPlatform-master
-useconfigure=true
-files=(
-    "https://github.com/SerenityPorts/QSerenityPlatform/archive/master.zip#522cbb41e814a3d6553d3761380f9ce08e341fd5a8137ef8cfa9fe555317c6c0"
+port='qt6-serenity'
+version='a83d315d96a2621890266ea828e2db3c52442a36'
+workdir="QSerenityPlatform-${version}"
+depends=(
+    'qt6-qtbase'
 )
+files=(
+    "https://github.com/SerenityPorts/QSerenityPlatform/archive/${version}.tar.gz#986ae477f12a5f3471af4cb4241ca082bc460746c07e4f6c95d303aa841f037b"
+)
+useconfigure='true'
 configopts=(
     "-GNinja"
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
