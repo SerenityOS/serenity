@@ -384,8 +384,6 @@ def check_available_ports(from_table, ports):
         expected_version = ports[port]["version"]
         if GIT_HASH_REGEX.match(expected_version):
             expected_version = expected_version[0:7]
-        if expected_version == "git":
-            expected_version = ""
         if actual_version != expected_version:
             print((
                 f'Version in AvailablePorts.md for port {port} is incorrect, '
