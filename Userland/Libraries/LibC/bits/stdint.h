@@ -138,4 +138,21 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define PTRDIFF_MAX __PTRDIFF_MAX__
 #define PTRDIFF_MIN (-__PTRDIFF_MAX__ - 1)
 
+// "If sig_atomic_t (see the <signal.h> header) is defined as a signed integer type,
+// the value of {SIG_ATOMIC_MIN} shall be no greater than -127 and the value of {SIG_ATOMIC_MAX}
+// shall be no less than 127; otherwise, sig_atomic_t shall be defined as an unsigned integer
+// type, and the value of {SIG_ATOMIC_MIN} shall be 0 and the value of {SIG_ATOMIC_MAX} shall
+// be no less than 255.
+
+#define SIG_ATOMIC_MIN 0
+#define SIG_ATOMIC_MAX UINT32_MAX
+
+// "If wint_t (see the <wchar.h> header) is defined as a signed integer type, the value
+// of {WINT_MIN} shall be no greater than -32767 and the value of {WINT_MAX} shall be no
+// less than 32767; otherwise, wint_t shall be defined as an unsigned integer type, and
+// the value of {WINT_MIN} shall be 0 and the value of {WINT_MAX} shall be no less than 65535.
+
+#define WINT_MIN 0
+#define WINT_MAX UINT32_MAX
+
 __END_DECLS
