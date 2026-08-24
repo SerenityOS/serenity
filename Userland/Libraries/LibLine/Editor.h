@@ -490,6 +490,7 @@ private:
         Verbatim,
         Paste,
         GotEscape,
+        SS3ExpectFinal,
         CSIExpectParameter,
         CSIExpectIntermediate,
         CSIExpectFinal,
