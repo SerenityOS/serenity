@@ -214,8 +214,11 @@ private:
     void begin_path_paint();
     PDFErrorOr<void> end_path_paint();
     PDFErrorOr<void> fill_path_with_pattern(Gfx::Path const& path, NonnullRefPtr<Pattern> const& pattern, float opacity, Gfx::WindingRule winding_rule);
+    PDFErrorOr<void> stroke_path(Gfx::Path const&);
     PDFErrorOr<void> stroke_current_path();
+    PDFErrorOr<void> fill_path(Gfx::Path const&, Gfx::WindingRule);
     PDFErrorOr<void> fill_current_path(Gfx::WindingRule);
+    PDFErrorOr<void> fill_and_stroke_path(Gfx::Path const&, Gfx::WindingRule);
     PDFErrorOr<void> fill_and_stroke_current_path(Gfx::WindingRule);
     PDFErrorOr<GraphicsState::SMask> read_smask_dict(NonnullRefPtr<DictObject> dict);
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
