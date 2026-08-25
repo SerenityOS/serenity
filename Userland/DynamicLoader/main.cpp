@@ -72,7 +72,8 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
     args_parser.set_general_help("Run dynamically-linked ELF executables");
     args_parser.set_stop_on_first_non_option(true);
 
-    if (LexicalPath::basename(arguments[0]) == "ldd"sv) {
+    bool is_running_as_ldd = LexicalPath::basename(arguments[0]) == "ldd"sv;
+    if (is_running_as_ldd) {
         flag_list_loaded_dependencies = true;
         flag_dry_run = true;
     } else {
@@ -100,6 +101,16 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
 
     int main_program_fd = error_or_fd.release_value();
     ByteString main_program_path = command[0];
+
+    if (is_running_as_ldd) {
+        auto real_path = realpath(main_program_path.characters(), nullptr);
+        if (!real_path) {
+            perror("ldd: realpath failed");
+            return 1;
+        }
+        main_program_path = real_path;
+        free(real_path);
+    }
 
     // NOTE: We need to extract the command with its arguments to be able
     // to run the actual requested executable with the requested parameters
