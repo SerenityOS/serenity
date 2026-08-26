@@ -64,6 +64,8 @@ foreach(target x86_64-serenity;aarch64-serenity;riscv64-serenity)
     set(RUNTIMES_${target}_LIBCXX_USE_COMPILER_RT ON CACHE BOOL "")
 
     set(RUNTIMES_${target}_LIBCXX_ENABLE_STATIC_ABI_LIBRARY ON CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXX_ENABLE_EXCEPTIONS OFF CACHE BOOL "")
+    set(RUNTIMES_${target}_LIBCXXABI_ENABLE_EXCEPTIONS OFF CACHE BOOL "")
     set(RUNTIMES_${target}_LIBCXX_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
 
     # Hardcode autodetection results for libm, libdl, and libpthread.
