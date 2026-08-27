@@ -437,7 +437,7 @@ public:
     ErrorOr<FlatPtr> sys$alarm(unsigned seconds);
     ErrorOr<FlatPtr> sys$faccessat(Userspace<Syscall::SC_faccessat_params const*>);
     ErrorOr<FlatPtr> sys$fcntl(int fd, int cmd, uintptr_t extra_arg);
-    ErrorOr<FlatPtr> sys$ioctl(int fd, unsigned request, FlatPtr arg);
+    ErrorOr<FlatPtr> sys$ioctl(int fd, unsigned request, Userspace<void*> arg);
     ErrorOr<FlatPtr> sys$mkdir(int dirfd, Userspace<char const*> pathname, size_t path_length, mode_t mode);
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
     ErrorOr<FlatPtr> sys$utime(Userspace<char const*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
@@ -666,7 +666,7 @@ public:
         // NOTE: If the string is too much big for the FixedStringBuffer,
         // we return E2BIG error here.
         FixedStringBuffer<Size> buffer;
-        TRY(try_copy_string_from_user_into_fixed_string_buffer<Size>(reinterpret_cast<FlatPtr>(argument.characters), buffer, argument.length));
+        TRY(try_copy_string_from_user_into_fixed_string_buffer<Size>(argument.characters, buffer, argument.length));
         return buffer;
     }
 
@@ -686,7 +686,7 @@ public:
         // NOTE: If the string is too much big for the FixedStringBuffer,
         // we return ENAMETOOLONG error here.
         FixedStringBuffer<Size> buffer;
-        TRY(try_copy_name_from_user_into_fixed_string_buffer<Size>(reinterpret_cast<FlatPtr>(argument.characters), buffer, argument.length));
+        TRY(try_copy_name_from_user_into_fixed_string_buffer<Size>(argument.characters, buffer, argument.length));
         return buffer;
     }
 
@@ -1197,8 +1197,7 @@ inline ProcessID Thread::pid() const
 
 inline ErrorOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(Kernel::Syscall::StringArgument const& string)
 {
-    Userspace<char const*> characters((FlatPtr)string.characters);
-    return try_copy_kstring_from_user(characters, string.length);
+    return try_copy_kstring_from_user(string.characters, string.length);
 }
 
 template<>

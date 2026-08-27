@@ -80,7 +80,7 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
         case SC_exit:
             process.sys$exit(arg1);
         case SC_exit_thread:
-            process.sys$exit_thread(arg1, arg2, arg3);
+            process.sys$exit_thread(Userspace<void*> { arg1 }, Userspace<void*> { arg2 }, arg3);
         default:
             VERIFY_NOT_REACHED();
         }

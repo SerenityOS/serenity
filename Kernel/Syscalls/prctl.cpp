@@ -38,7 +38,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
         return 0;
     }
     case PR_SET_COREDUMP_METADATA_VALUE: {
-        auto params = TRY(copy_typed_from_user<Syscall::SC_set_coredump_metadata_params>(arg1));
+        auto params = TRY(copy_typed_from_user(Userspace<Syscall::SC_set_coredump_metadata_params const*>(arg1)));
         if (params.key.length == 0 || params.key.length > 16 * KiB)
             return EINVAL;
         if (params.value.length > 16 * KiB)
@@ -50,7 +50,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
     }
     case PR_SET_PROCESS_NAME: {
         TRY(require_promise(Pledge::proc));
-        Userspace<char const*> buffer = arg1;
+        Userspace<char const*> buffer { arg1 };
         size_t buffer_size = static_cast<size_t>(arg2);
         Process::Name process_name {};
         TRY(try_copy_name_from_user_into_fixed_string_buffer(buffer, process_name, buffer_size));
@@ -62,7 +62,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
     }
     case PR_GET_PROCESS_NAME: {
         TRY(require_promise(Pledge::stdio));
-        Userspace<char*> buffer = arg1;
+        Userspace<char*> buffer { arg1 };
         size_t buffer_size = static_cast<size_t>(arg2);
         TRY(m_name.with([&buffer, buffer_size](auto& name) -> ErrorOr<void> {
             VERIFY(!name.representable_view().is_null());
@@ -73,7 +73,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
     case PR_SET_THREAD_NAME: {
         TRY(require_promise(Pledge::stdio));
         int thread_id = static_cast<int>(arg1);
-        Userspace<char const*> buffer = arg2;
+        Userspace<char const*> buffer { arg2 };
         size_t buffer_size = static_cast<size_t>(arg3);
 
         Thread::Name thread_name {};
@@ -85,7 +85,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
     case PR_GET_THREAD_NAME: {
         TRY(require_promise(Pledge::thread));
         int thread_id = static_cast<int>(arg1);
-        Userspace<char*> buffer = arg2;
+        Userspace<char*> buffer { arg2 };
         size_t buffer_size = static_cast<size_t>(arg3);
         auto thread = TRY(get_thread_from_thread_list(thread_id));
 

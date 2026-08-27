@@ -6,6 +6,7 @@
  */
 
 #include <AK/ScopeGuard.h>
+#include <AK/Userspace.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/Region.h>
@@ -161,9 +162,9 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         while (buf_params.buf.size > 0) {
             size_t copy_this_iteration = min(buf.size(), buf_params.buf.size);
             TRY(peer->process().peek_user_data(buf.span().slice(0, copy_this_iteration), Userspace<u8 const*> { tracee_ptr }));
-            TRY(copy_to_user((void*)buf_params.buf.data, buf.data(), copy_this_iteration));
+            TRY(copy_to_user(buf_params.buf.data, buf.data(), copy_this_iteration));
             tracee_ptr += copy_this_iteration;
-            buf_params.buf.data += copy_this_iteration;
+            buf_params.buf.data = Userspace<u8*> { buf_params.buf.data.ptr() + copy_this_iteration };
             buf_params.buf.size -= copy_this_iteration;
         }
         break;

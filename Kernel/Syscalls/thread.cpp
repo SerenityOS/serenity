@@ -22,7 +22,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     int schedule_priority = params.schedule_priority;
     unsigned stack_size = params.stack_size;
 
-    auto user_sp = Checked<FlatPtr>((FlatPtr)params.stack_location);
+    auto user_sp = make_checked(params.stack_location.ptr());
     user_sp += stack_size;
     if (user_sp.has_overflow())
         return EOVERFLOW;
@@ -62,9 +62,9 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.cr3 = address_space().with([](auto& space) { return space->page_directory().cr3(); });
 
     // Set up the argument registers expected by pthread_create_helper.
-    regs.rdi = (FlatPtr)params.entry;
-    regs.rsi = (FlatPtr)params.entry_argument;
-    regs.rdx = (FlatPtr)params.stack_location;
+    regs.rdi = params.entry.ptr();
+    regs.rsi = params.entry_argument.ptr();
+    regs.rdx = params.stack_location.ptr();
     regs.rcx = (FlatPtr)params.stack_size;
 
     thread->arch_specific_data().fs_base = bit_cast<FlatPtr>(params.tls_pointer);
@@ -72,9 +72,9 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.ttbr0_el1 = address_space().with([](auto& space) { return space->page_directory().ttbr0(); });
 
     // Set up the argument registers expected by pthread_create_helper.
-    regs.x[0] = (FlatPtr)params.entry;
-    regs.x[1] = (FlatPtr)params.entry_argument;
-    regs.x[2] = (FlatPtr)params.stack_location;
+    regs.x[0] = params.entry.ptr();
+    regs.x[1] = params.entry_argument.ptr();
+    regs.x[2] = params.stack_location.ptr();
     regs.x[3] = (FlatPtr)params.stack_size;
 
     regs.tpidr_el0 = bit_cast<FlatPtr>(params.tls_pointer);
@@ -82,9 +82,9 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.satp = address_space().with([](auto& space) { return space->page_directory().satp(); });
 
     // Set up the argument registers expected by pthread_create_helper.
-    regs.x[9] = (FlatPtr)params.entry;
-    regs.x[10] = (FlatPtr)params.entry_argument;
-    regs.x[11] = (FlatPtr)params.stack_location;
+    regs.x[9] = params.entry.ptr();
+    regs.x[10] = params.entry_argument.ptr();
+    regs.x[11] = params.stack_location.ptr();
     regs.x[12] = (FlatPtr)params.stack_size;
 
     regs.x[3] = bit_cast<FlatPtr>(params.tls_pointer);
@@ -127,7 +127,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
             dbgln("Failed to unmap thread stack, terminating thread anyway. Error code: {}", unmap_result.error());
     }
 
-    current_thread->exit(reinterpret_cast<void*>(exit_value.ptr()));
+    current_thread->exit(exit_value.unsafe_userspace_ptr());
     VERIFY_NOT_REACHED();
 }
 
