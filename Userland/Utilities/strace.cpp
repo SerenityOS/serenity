@@ -519,6 +519,28 @@ static void format_exit(FormattedSyscallBuilder& builder, int status)
     builder.add_argument(status);
 }
 
+VALUES_TO_NAMES(fcntl_command)
+HANDLE(F_DUPFD)
+HANDLE(F_GETFD)
+HANDLE(F_SETFD)
+HANDLE(F_GETFL)
+HANDLE(F_SETFL)
+HANDLE(F_ISTTY)
+HANDLE(F_GETLK)
+HANDLE(F_SETLK)
+HANDLE(F_SETLKW)
+HANDLE(F_DUPFD_CLOEXEC)
+END_VALUES_TO_NAMES()
+
+static void format_fcntl(FormattedSyscallBuilder& builder, int fd, int cmd, int arg1, int arg2)
+{
+    builder.add_arguments(fd, fcntl_command(cmd));
+    // FIXME: Format command args.
+    (void)arg1;
+    (void)arg2;
+    builder.add_arguments("...");
+}
+
 static void format_ftruncate(FormattedSyscallBuilder& builder, int fd, off_t length)
 {
     builder.add_arguments(fd, length);
@@ -885,6 +907,9 @@ static ErrorOr<void> format_syscall_early(FormattedSyscallBuilder& builder, Sysc
         break;
     case SC_exit:
         format_exit(builder, (int)arg1);
+        break;
+    case SC_fcntl:
+        format_fcntl(builder, (int)arg1, (int)arg2, (int)arg3, (int)arg4);
         break;
     case SC_ftruncate:
         format_ftruncate(builder, (int)arg1, (off_t)arg2);
