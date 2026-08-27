@@ -335,11 +335,9 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (!event.rect().contains(row_rect))
             continue;
         auto& line = m_terminal.line(first_row_from_history + visual_row);
-        bool has_only_one_background_color = line.has_only_one_background_color();
+
         if (visual_beep_active)
             painter.clear_rect(row_rect, terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)));
-        else if (has_only_one_background_color)
-            painter.clear_rect(row_rect, terminal_color_to_rgb(line.attribute_at(0).effective_background_color()).with_alpha(m_opacity));
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
@@ -354,8 +352,9 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
             auto text_color_before_bold_change = should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color();
             auto text_color = terminal_color_to_rgb(m_show_bold_text_as_bright ? text_color_before_bold_change.to_bright() : text_color_before_bold_change);
-            if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection)
-                painter.clear_rect(cell_rect, terminal_color_to_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color()));
+            auto background_color = should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color();
+            if (background_color != VT::Color::named(VT::Color::ANSIColor::DefaultBackground))
+                painter.clear_rect(cell_rect, terminal_color_to_rgb(background_color));
 
             if constexpr (TERMINAL_DEBUG) {
                 if (line.termination_column() == column)
