@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
 
 namespace FileSystem {
