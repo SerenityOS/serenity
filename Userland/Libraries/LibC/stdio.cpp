@@ -169,6 +169,11 @@ bool FILE::write_from_buffer()
 
 size_t FILE::read(u8* data, size_t size)
 {
+    if (!(m_mode & O_RDONLY)) {
+        set_err();
+        return 0;
+    }
+
     size_t total_read = 0;
 
     m_flags |= Flags::LastRead;
@@ -211,6 +216,11 @@ size_t FILE::read(u8* data, size_t size)
 
 size_t FILE::write(u8 const* data, size_t size)
 {
+    if (!(m_mode & O_WRONLY)) {
+        set_err();
+        return 0;
+    }
+
     size_t total_written = 0;
 
     m_flags &= ~Flags::LastRead;

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibFileSystem/TempFile.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
 #include <sys/wait.h>
@@ -53,4 +54,28 @@ TEST_CASE(sprintf_sign)
 
     EXPECT_EQ(buf1, "+12"sv);
     EXPECT_EQ(buf2, "-12"sv);
+}
+
+TEST_CASE(cannot_write_to_read_only_file)
+{
+    auto temp_file = TRY_OR_FAIL(FileSystem::TempFile::create_temp_file());
+
+    auto c_file = fopen(temp_file->path().characters(), "r");
+    EXPECT(c_file);
+
+    EXPECT_EQ(fputc('x', c_file), EOF);
+    EXPECT(ferror(c_file));
+    EXPECT(!fclose(c_file));
+}
+
+TEST_CASE(cannot_read_from_write_only_file)
+{
+    auto temp_file = TRY_OR_FAIL(FileSystem::TempFile::create_temp_file());
+
+    auto c_file = fopen(temp_file->path().characters(), "w");
+    EXPECT(c_file);
+
+    EXPECT_EQ(fgetc(c_file), EOF);
+    EXPECT(ferror(c_file));
+    EXPECT(!fclose(c_file));
 }
