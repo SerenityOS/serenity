@@ -164,13 +164,10 @@ ALWAYS_INLINE int print_decimal(PutChFunc putch, CharType*& bufptr, u64 number, 
 }
 #ifndef KERNEL
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision, bool trailing_zeros)
+ALWAYS_INLINE u32 print_nan_and_inf(PutChFunc putch, CharType*& bufptr, double number, bool sign, u32 field_width)
 {
-    int length = 0;
+    u32 length = 0;
 
-    u32 whole_width = (field_width >= precision + 1) ? field_width - precision - 1 : 0;
-
-    bool sign = signbit(number);
     bool nan = isnan(number);
     bool inf = isinf(number);
 
@@ -192,12 +189,26 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
             putch(bufptr, 'n');
             putch(bufptr, 'f');
         }
-        return length + 3;
+        length += 3;
     }
+    return length;
+}
+
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision, bool trailing_zeros)
+{
+    int length = 0;
+
+    bool sign = signbit(number);
+
+    length = print_nan_and_inf(putch, bufptr, number, sign, field_width);
+    if (length > 0)
+        return length;
 
     if (sign)
         number = -number;
 
+    u32 whole_width = (field_width >= precision + 1) ? field_width - precision - 1 : 0;
     length = print_decimal(putch, bufptr, (i64)number, sign, always_sign, left_pad, zero_pad, whole_width, false, 1);
     if (precision > 0) {
         double fraction = number - (i64)number;
