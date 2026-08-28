@@ -297,6 +297,18 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
     return sqrtl(2.0 * M_PIl / static_cast<long double>(x)) * powl(static_cast<long double>(x) / M_El, static_cast<long double>(x));
 }
 
+template<typename Float>
+Float internal_lgamma(Float value, int* sign)
+{
+    if (value == static_cast<Float>(1.0) || value == static_cast<Float>(2.0))
+        return 0.0;
+    if (isinf(value) || value == static_cast<Float>(0.0))
+        return INFINITY;
+    Float result = AK::log(internal_gamma(value));
+    *sign = signbit(result) ? -1 : 1;
+    return result;
+}
+
 extern "C" {
 
 float nanf(char const* s) NOEXCEPT
@@ -900,35 +912,17 @@ float lgammaf(float value) NOEXCEPT
 
 long double lgammal_r(long double value, int* sign) NOEXCEPT
 {
-    if (value == 1.0 || value == 2.0)
-        return 0.0;
-    if (isinf(value) || value == 0.0)
-        return INFINITY;
-    long double result = logl(internal_gamma(value));
-    *sign = signbit(result) ? -1 : 1;
-    return result;
+    return internal_lgamma(value, sign);
 }
 
 double lgamma_r(double value, int* sign) NOEXCEPT
 {
-    if (value == 1.0 || value == 2.0)
-        return 0.0;
-    if (isinf(value) || value == 0.0)
-        return INFINITY;
-    double result = log(internal_gamma(value));
-    *sign = signbit(result) ? -1 : 1;
-    return result;
+    return internal_lgamma(value, sign);
 }
 
 float lgammaf_r(float value, int* sign) NOEXCEPT
 {
-    if (value == 1.0f || value == 2.0f)
-        return 0.0;
-    if (isinf(value) || value == 0.0f)
-        return INFINITY;
-    float result = logf(internal_gamma(value));
-    *sign = signbit(result) ? -1 : 1;
-    return result;
+    return internal_lgamma(value, sign);
 }
 
 long double expm1l(long double x) NOEXCEPT
