@@ -12,6 +12,7 @@
 #include <stdarg.h>
 
 #ifndef KERNEL
+#    include <AK/FloatingPoint.h>
 #    include <math.h>
 #    include <wchar.h>
 #endif
@@ -248,6 +249,89 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 
     return length;
 }
+
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_double_as_hex(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision)
+{
+    int length = 0;
+
+    bool sign = signbit(number);
+
+    length = print_nan_and_inf(putch, bufptr, number, sign, always_sign, left_pad, field_width);
+    if (length > 0)
+        return length;
+
+    if (sign || always_sign) {
+        if (sign)
+            putch(bufptr, '-');
+        else
+            putch(bufptr, '+');
+        length++;
+    }
+
+    if (left_pad || zero_pad) {
+        dbgln("FIXME: Modifiers are unsupported with %a");
+        (void)zero_pad;
+        (void)precision;
+    }
+
+    auto extractor = FloatExtractor<f64>::from_float(number);
+
+    if (extractor.exponent == 0 && extractor.mantissa == 0) {
+        // FIXME: Maybe share the modifiers logic with print_nan_and_inf.
+        putch(bufptr, '0');
+        putch(bufptr, 'x');
+        putch(bufptr, '0');
+        putch(bufptr, 'p');
+        putch(bufptr, '+');
+        putch(bufptr, '0');
+        length += 6;
+
+        return length;
+    }
+
+    putch(bufptr, '0');
+    putch(bufptr, 'x');
+    putch(bufptr, '1');
+    length += 3;
+
+    if (extractor.mantissa != 0) {
+        putch(bufptr, '.');
+        length++;
+
+        bool has_seen_non_zero = false;
+        u32 first_trailing_zero = 0;
+        for (u32 i = FloatExtractor<f64>::mantissa_bits; i > 0; i -= 4) {
+            auto extracted = extractor.mantissa & (0xFul << (i - 4));
+
+            if (!has_seen_non_zero) {
+                if (extracted != 0)
+                    has_seen_non_zero = true;
+                continue;
+            }
+
+            if (extracted == 0) {
+                first_trailing_zero = i;
+                break;
+            }
+        }
+        u32 mantissa_precision = (FloatExtractor<f64>::mantissa_bits - first_trailing_zero) / 4;
+
+        auto without_right_zeroes = extractor.mantissa;
+        while ((without_right_zeroes & 0xFu) == 0)
+            without_right_zeroes >>= 4u;
+
+        length += print_hex(putch, bufptr, without_right_zeroes, false, false, false, true, mantissa_precision, false, 0);
+    }
+
+    putch(bufptr, 'p');
+    length++;
+
+    auto unbiased_exponent = static_cast<i32>(extractor.exponent) - FloatExtractor<f64>::exponent_bias;
+    length += print_decimal(putch, bufptr, abs(unbiased_exponent), unbiased_exponent < 0, true, false, false, 0, false, 0);
+
+    return length;
+}
 #endif
 template<typename PutChFunc, typename CharType>
 ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u64 number, bool alternate_form, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
@@ -436,6 +520,10 @@ struct PrintfImpl {
     {
         return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, true);
     }
+    ALWAYS_INLINE int format_a(ModifierState const& state, ArgumentListRefT ap) const
+    {
+        return print_double_as_hex(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision);
+    }
 #endif
     ALWAYS_INLINE int format_o(ModifierState const& state, ArgumentListRefT ap) const
     {
@@ -623,6 +711,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
 #ifndef KERNEL
                 PRINTF_IMPL_DELEGATE_TO_IMPL(f);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(g);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(a);
 #endif
                 PRINTF_IMPL_DELEGATE_TO_IMPL(i);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(n);
