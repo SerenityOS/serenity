@@ -304,7 +304,11 @@ Float internal_lgamma(Float value, int* sign)
         return 0.0;
     if (isinf(value) || value == static_cast<Float>(0.0))
         return INFINITY;
-    Float result = AK::log(internal_gamma(value));
+
+    // Use the Stirling approximation for log(gamma(x)) directly.
+    // This allows us to support bigger values of x, where gamma(x) would have returned inf.
+    // https://en.wikipedia.org/wiki/Stirling%27s_approximation
+    Float result = value * AK::log(value) - value;
     *sign = signbit(result) ? -1 : 1;
     return result;
 }
