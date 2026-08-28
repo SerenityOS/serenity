@@ -572,6 +572,10 @@ void Editor::initialize()
     if (m_initialized)
         return;
 
+    // A child may have left the terminal in nonblock mode, fix that.
+    if (auto flags = fcntl(0, F_GETFL); flags >= 0 && (flags & O_NONBLOCK) != 0)
+        fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
+
     struct termios termios;
     tcgetattr(0, &termios);
     m_default_termios = termios; // grab a copy to restore
@@ -918,6 +922,9 @@ ErrorOr<void> Editor::handle_read_event()
             return {};
         }
 
+        if (errno == EAGAIN)
+            return {};
+
         ScopedValueRollback errno_restorer(errno);
         perror("read failed");
 
@@ -1100,6 +1107,8 @@ ErrorOr<void> Editor::handle_read_event()
                 continue;
             case 'F': // ^[[F: end
                 go_end();
+                continue;
+            case 'R': // A stray cursor position report; ignore it.
                 continue;
             case 127:
                 if (modifiers == CSIMod::Ctrl)
@@ -2199,6 +2208,14 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
         if (nread < 0) {
             if (errno == 0 || errno == EINTR) {
                 // ????
+                continue;
+            }
+            if (errno == EAGAIN) {
+                fd_set dsr_readfds;
+                FD_ZERO(&dsr_readfds);
+                FD_SET(0, &dsr_readfds);
+                timeval response_timeout { 1, 0 };
+                select(1, &dsr_readfds, nullptr, nullptr, &response_timeout);
                 continue;
             }
             dbgln("Error while reading DSR: {}", strerror(errno));
