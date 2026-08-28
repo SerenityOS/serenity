@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <limits.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -304,6 +305,28 @@ TEST_CASE(float_value_special)
     v.i = 0x7ff0000000000000;
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| inf|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-inf|\0") }));
+}
+
+TEST_CASE(float_nan_and_inf)
+{
+    EXPECT(test_single<float>({ LITERAL("xxxxxx"), "|%f|", NAN, 5, LITERAL("|nan|\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxx"), "|%+f|", NAN, 6, LITERAL("|+nan|\0") }));
+
+    EXPECT(test_single<float>({ LITERAL("xxxxxxx"), "|%f|", -INFINITY, 6, LITERAL("|-inf|\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxx"), "|%+f|", -INFINITY, 6, LITERAL("|-inf|\0") }));
+
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%08f|", NAN, 10, LITERAL("|     nan|\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%+08f|", NAN, 10, LITERAL("|    +nan|\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%08f|", -INFINITY, 10, LITERAL("|    -inf|\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%+08f|", -INFINITY, 10, LITERAL("|    -inf|\0") }));
+
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%8f|", NAN, 10, LITERAL("|     nan|\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%+8f|", NAN, 10, LITERAL("|    +nan|\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%8f|", -INFINITY, 10, LITERAL("|    -inf|\0") }));
+
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%-8f|", NAN, 10, LITERAL("|nan     |\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%-+8f|", NAN, 10, LITERAL("|+nan    |\0") }));
+    EXPECT(test_single<float>({ LITERAL("xxxxxxxxxxx"), "|%-8f|", -INFINITY, 10, LITERAL("|-inf    |\0") }));
 }
 
 TEST_CASE(string_precision)

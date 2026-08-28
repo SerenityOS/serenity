@@ -164,7 +164,7 @@ ALWAYS_INLINE int print_decimal(PutChFunc putch, CharType*& bufptr, u64 number, 
 }
 #ifndef KERNEL
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE u32 print_nan_and_inf(PutChFunc putch, CharType*& bufptr, double number, bool sign, u32 field_width)
+ALWAYS_INLINE u32 print_nan_and_inf(PutChFunc putch, CharType*& bufptr, double number, bool sign, bool always_sign, bool left_pad, u32 field_width)
 {
     u32 length = 0;
 
@@ -172,12 +172,21 @@ ALWAYS_INLINE u32 print_nan_and_inf(PutChFunc putch, CharType*& bufptr, double n
     bool inf = isinf(number);
 
     if (nan || inf) {
-        for (unsigned i = 0; i < field_width - 3 - sign; i++) {
-            putch(bufptr, ' ');
-            length++;
+        bool include_sign = sign || always_sign;
+        u32 minimum_width = 3 + include_sign;
+        auto padding_width = field_width > minimum_width ? field_width - minimum_width : 0;
+
+        if (!left_pad) {
+            for (unsigned i = 0; i < padding_width; i++)
+                putch(bufptr, ' ');
+            length += padding_width;
         }
-        if (sign) {
-            putch(bufptr, '-');
+
+        if (include_sign) {
+            if (sign)
+                putch(bufptr, '-');
+            else
+                putch(bufptr, '+');
             length++;
         }
         if (nan) {
@@ -190,6 +199,12 @@ ALWAYS_INLINE u32 print_nan_and_inf(PutChFunc putch, CharType*& bufptr, double n
             putch(bufptr, 'f');
         }
         length += 3;
+
+        if (left_pad) {
+            for (unsigned i = 0; i < padding_width; i++)
+                putch(bufptr, ' ');
+            length += padding_width;
+        }
     }
     return length;
 }
@@ -201,7 +216,7 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 
     bool sign = signbit(number);
 
-    length = print_nan_and_inf(putch, bufptr, number, sign, field_width);
+    length = print_nan_and_inf(putch, bufptr, number, sign, always_sign, left_pad, field_width);
     if (length > 0)
         return length;
 
