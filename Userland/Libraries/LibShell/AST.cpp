@@ -146,6 +146,13 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     command.should_wait = first_in_right.should_wait && last_in_left.should_wait;
     command.is_pipe_source = first_in_right.is_pipe_source;
     command.should_notify_if_in_background = first_in_right.should_notify_if_in_background || last_in_left.should_notify_if_in_background;
+    command.should_immediately_execute_next = first_in_right.should_immediately_execute_next || last_in_left.should_immediately_execute_next;
+
+    command.pipeline = first_in_right.pipeline ? first_in_right.pipeline : last_in_left.pipeline;
+
+    // Keep the continuations (e.g. the rest of a "a; b" or "a && b" chain) of both sides; otherwise `alias; cmd` will just turn into `alias`.
+    command.next_chain.extend(move(last_in_left.next_chain));
+    command.next_chain.extend(move(first_in_right.next_chain));
 
     command.position = merge_positions(last_in_left.position, first_in_right.position);
 
