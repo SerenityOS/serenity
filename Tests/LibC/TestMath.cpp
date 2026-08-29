@@ -458,3 +458,15 @@ TEST_CASE(cosh)
     EXPECT_EQ(cosh(AK::Infinity<double>), AK::Infinity<double>);
     EXPECT_EQ(cosh(-AK::Infinity<double>), AK::Infinity<double>);
 }
+
+TEST_CASE(exp)
+{
+    EXPECT(isnan(exp(AK::NaN<double>)));
+
+    EXPECT_EQ(exp(0.0), 1.0);
+    EXPECT_EQ(exp(-0.0), 1.0);
+
+    EXPECT_EQ(exp(-AK::Infinity<double>), 0.0);
+
+    EXPECT_EQ(exp(AK::Infinity<double>), AK::Infinity<double>);
+}
