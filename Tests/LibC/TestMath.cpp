@@ -395,3 +395,23 @@ TEST_CASE(round)
     EXPECT_EQ(round(9999999999999.5), 10000000000000.0);
     EXPECT_EQ(round(-9999999999999.5), -10000000000000.0);
 }
+
+TEST_CASE(hypot)
+{
+    double r = hypot(INFINITY, INFINITY);
+    EXPECT(isinf(r));
+    EXPECT(!signbit(r));
+    r = hypot(INFINITY, NAN);
+    EXPECT(isinf(r));
+    EXPECT(!signbit(r));
+    r = hypot(+INFINITY, 42);
+    EXPECT(isinf(r));
+    EXPECT(!signbit(r));
+    r = hypot(42, -INFINITY);
+    EXPECT(isinf(r));
+    EXPECT(!signbit(r));
+
+    EXPECT(isnan(hypot(NAN, NAN)));
+    EXPECT(isnan(hypot(+NAN, 42)));
+    EXPECT(isnan(hypot(42, -NAN)));
+}
