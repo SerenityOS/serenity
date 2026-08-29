@@ -22,6 +22,13 @@ namespace Trigonometry {
 template<FloatingPoint T>
 constexpr T hypot(T x, T y)
 {
+    // "If x or y is ±Inf, +Inf shall be returned (even if one of x or y is NaN)."
+    if (isinf(x) || isinf(y))
+        return Infinity<T>;
+    // "If x or y is NaN, and the other is not ±Inf, a NaN shall be returned."
+    if (isnan(x) || isnan(y))
+        return NaN<T>;
+
     return sqrt(x * x + y * y);
 }
 
