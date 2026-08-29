@@ -428,3 +428,12 @@ TEST_CASE(tanh)
     EXPECT_EQ(tanh(AK::Infinity<double>), 1.0);
     EXPECT_EQ(tanh(-AK::Infinity<double>), -1.0);
 }
+
+TEST_CASE(sinh)
+{
+    EXPECT(isnan(sinh(AK::NaN<double>)));
+    EXPECT_EQ(sinh(0.0), 0.0);
+    EXPECT_EQ(sinh(-0.0), -0.0);
+    EXPECT_EQ(sinh(AK::Infinity<double>), AK::Infinity<double>);
+    EXPECT_EQ(sinh(-AK::Infinity<double>), -AK::Infinity<double>);
+}
