@@ -37,6 +37,16 @@ constexpr T cosh(T x)
 {
     CONSTEXPR_STATE(cosh, x);
 
+    // "If x is NaN, a NaN shall be returned."
+    if (isnan(x))
+        return NaN<T>;
+    // "If x is ±0, the value 1.0 shall be returned."
+    if (x == 0)
+        return T(1.0);
+    // "If x is ±Inf, +Inf shall be returned."
+    if (isinf(x))
+        return Infinity<T>;
+
     T exponentiated = exp(-x);
     if (x < 0)
         return (1 + exponentiated * exponentiated) / 2 / exponentiated;
