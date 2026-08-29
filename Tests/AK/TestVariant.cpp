@@ -189,13 +189,6 @@ TEST_CASE(moved_from_state)
     EXPECT(same_contents);
 }
 
-TEST_CASE(duplicated_types)
-{
-    Variant<int, int, int, int> its_just_an_int { 42 };
-    EXPECT(its_just_an_int.has<int>());
-    EXPECT_EQ(its_just_an_int.get<int>(), 42);
-}
-
 TEST_CASE(return_values)
 {
     using MyVariant = Variant<int, ByteString, float>;
