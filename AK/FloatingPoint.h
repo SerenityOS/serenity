@@ -35,9 +35,7 @@ struct FloatExtractor<f128> {
 // Validate that f128 and the FloatExtractor struct are 128 bits.
 static_assert(AssertSize<f128, 16>());
 static_assert(AssertSize<FloatExtractor<f128>, sizeof(f128)>());
-#endif
-
-#ifdef AK_HAS_FLOAT_80
+#elifdef AK_HAS_FLOAT_80
 template<>
 struct FloatExtractor<f80> {
     static constexpr FloatExtractor<f80> from_float(f80 f) { return bit_cast<FloatExtractor<f80>>(f); }
@@ -60,6 +58,25 @@ struct FloatExtractor<f80> {
     ComponentType sign : 1;
 };
 static_assert(AssertSize<FloatExtractor<f80>, sizeof(f80)>());
+#else
+// On some platforms (Arm Mac and Arm Windows) long double is a distinct version of f64
+template<>
+struct FloatExtractor<long double> {
+    static constexpr FloatExtractor<long double> from_float(long double f) { return bit_cast<FloatExtractor<long double>>(f); }
+    constexpr long double to_float() const { return bit_cast<long double>(*this); }
+
+    using ComponentType = unsigned long long;
+    static constexpr int mantissa_bits = 52;
+    static constexpr ComponentType mantissa_max = (1ull << 52) - 1;
+    static constexpr int exponent_bias = 1023;
+    static constexpr int exponent_bits = 11;
+    static constexpr unsigned exponent_max = 2047;
+
+    ComponentType mantissa : 52;
+    ComponentType exponent : 11;
+    ComponentType sign : 1;
+};
+static_assert(AssertSize<FloatExtractor<long double>, sizeof(long double)>());
 #endif
 
 template<>

@@ -54,15 +54,14 @@ constexpr T sqrt(T x)
             : "f"(x));
         return res;
     }
-    if constexpr (IsSame<T, long double>)
-        TODO_RISCV64();
 #else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
+#    ifndef AK_OS_SERENITY
     CALL_BUILTIN(sqrt, x);
+#    endif
 #endif
+    // TODO: Add implementation for this function.
+    //       This *should* only affect long double on non-x86
+    TODO();
 }
 
 #include <AK/Math/UndefMacros.h>
