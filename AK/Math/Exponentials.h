@@ -12,6 +12,7 @@
 #include <AK/Math/Constants.h>
 #include <AK/Math/Fabs.h>
 #include <AK/NumericLimits.h>
+#include <math.h>
 
 #include <AK/Math/Macros.h>
 
@@ -223,6 +224,19 @@ template<FloatingPoint T>
 constexpr T exp(T exponent)
 {
     CONSTEXPR_STATE(exp, exponent);
+
+    // "If x is NaN, a NaN shall be returned."
+    if (isnan(exponent))
+        return NaN<T>;
+    // "If x is ±0, 1 shall be returned."
+    if (exponent == 0)
+        return T(1);
+    // "If x is -Inf, +0 shall be returned."
+    if (isinf(exponent) && signbit(exponent))
+        return T(0);
+    // "If x is +Inf, x shall be returned."
+    if (isinf(exponent))
+        return exponent;
 
 #if ARCH(X86_64)
     T res;
