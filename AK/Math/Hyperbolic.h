@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/Math/Copysign.h>
 #include <AK/Math/Sqrt.h>
+#include <math.h>
 
 #include <AK/Math/Macros.h>
 
@@ -37,6 +39,16 @@ constexpr T cosh(T x)
 template<FloatingPoint T>
 constexpr T tanh(T x)
 {
+    // "If x is NaN, a NaN shall be returned."
+    if (isnan(x))
+        return NaN<T>;
+    // "If x is ±0, x shall be returned."
+    if (x == 0)
+        return x;
+    // "If x is ±Inf, ±1 shall be returned."
+    if (isinf(x))
+        return AK::copysign(T(1), x);
+
     if (x > 0) {
         T exponentiated = exp<T>(2 * x);
         return (exponentiated - 1) / (exponentiated + 1);

@@ -424,3 +424,16 @@ TEST_CASE(hypot)
     EXPECT(isnan(hypot(+NAN, 42)));
     EXPECT(isnan(hypot(42, -NAN)));
 }
+
+TEST_CASE(tanh)
+{
+    EXPECT(isnan(tanh(AK::NaN<double>)));
+
+    EXPECT_EQ(tanh(0.0), 0);
+    EXPECT_EQ(signbit(tanh(0.0)), 0);
+    EXPECT_EQ(tanh(-0.0), 0);
+    EXPECT_EQ(signbit(tanh(-0.0)), 1);
+
+    EXPECT_EQ(tanh(AK::Infinity<double>), 1.0);
+    EXPECT_EQ(tanh(-AK::Infinity<double>), -1.0);
+}
