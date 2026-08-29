@@ -19,6 +19,13 @@ namespace Hyperbolic {
 template<FloatingPoint T>
 constexpr T sinh(T x)
 {
+    // "If x is NaN, a NaN shall be returned."
+    if (isnan(x))
+        return NaN<T>;
+    // "If x is ±0 or ±Inf, x shall be returned."
+    if (x == 0 || isinf(x))
+        return x;
+
     T exponentiated = exp<T>(x);
     if (x > 0)
         return (exponentiated * exponentiated - 1) / 2 / exponentiated;
