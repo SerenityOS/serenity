@@ -362,4 +362,13 @@ TEST_CASE(g_format)
     EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "|%g|", -1.12, 7, LITERAL("|-1.12|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%g|", 10.0000001, 4, LITERAL("|10|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%g|", 10.0000000001, 4, LITERAL("|10|\0") }));
+
+    EXPECT(test_single<long double>({ LITERAL("xxxxx"), "|%Lg|", 10L, 4, LITERAL("|10|\0") }));
+    EXPECT(test_single<long double>({ LITERAL("xxxxxx"), "|%Lg|", -10L, 5, LITERAL("|-10|\0") }));
+}
+
+TEST_CASE(f_format)
+{
+    EXPECT(test_single<long double>({ LITERAL("xxxxxxxxxxxx"), "|%Lf|", 10L, 11, LITERAL("|10.000000|\0") }));
+    EXPECT(test_single<long double>({ LITERAL("xxxxxxxxxxxxx"), "|%Lf|", -10L, 12, LITERAL("|-10.000000|\0") }));
 }
