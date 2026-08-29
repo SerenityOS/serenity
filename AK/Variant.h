@@ -112,64 +112,6 @@ struct VariantConstructTag {
     explicit VariantConstructTag() = default;
 };
 
-// Type list deduplication
-// Since this is a big template mess, each template is commented with how and why it works.
-struct ParameterPackTag {
-};
-
-// Pack<Ts...> is just a way to pass around the type parameter pack Ts
-template<typename... Ts>
-struct ParameterPack : ParameterPackTag {
-};
-
-// Blank<T> is a unique replacement for T, if T is a duplicate type.
-template<typename T>
-struct Blank {
-    void operator()() const;
-};
-
-template<typename A, typename P>
-inline constexpr bool IsTypeInPack = false;
-
-// IsTypeInPack<T, Pack<Ts...>> will just return whether 'T' exists in 'Ts'.
-template<typename T, typename... Ts>
-inline constexpr bool IsTypeInPack<T, ParameterPack<Ts...>> = (IsSame<T, Ts> || ...);
-
-// Replaces T with Blank<T> if it exists in Qs.
-template<typename T, typename... Qs>
-using BlankIfDuplicate = Conditional<(IsTypeInPack<T, Qs> || ...), Blank<T>, T>;
-
-template<size_t I, typename...>
-struct InheritFromUniqueEntries;
-
-// InheritFromUniqueEntries will inherit from both Qs and Ts, but only scan entries going *forwards*
-// that is to say, if it's scanning from index I in Qs, it won't scan for duplicates for entries before I
-// as that has already been checked before.
-// This makes sure that the search is linear in time (like the 'merge' step of merge sort).
-template<size_t I, typename... Ts, size_t... Js, typename... Qs>
-struct InheritFromUniqueEntries<I, ParameterPack<Ts...>, IndexSequence<Js...>, Qs...>
-    : public BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>... {
-
-    using BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>::BlankIfDuplicate...;
-    using BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>::operator()...;
-};
-
-template<typename...>
-struct InheritFromPacks;
-
-// InheritFromPacks will attempt to 'merge' the pack 'Ps' with *itself*, but skip the duplicate entries
-// (via InheritFromUniqueEntries).
-template<size_t... Is, typename... Ps>
-struct InheritFromPacks<IndexSequence<Is...>, Ps...>
-    : public InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>... {
-
-    using InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>::operator()...;
-};
-
-// Just a nice wrapper around InheritFromPacks, which will wrap any parameter packs in ParameterPack (unless it already is one).
-template<typename... Ps>
-using MergeAndDeduplicatePacks = InheritFromPacks<MakeIndexSequence<sizeof...(Ps)>, Conditional<IsBaseOf<ParameterPackTag, Ps>, Ps, ParameterPack<Ps>>...>;
-
 template<typename T>
 struct Overload {
     // This Overload for <T> can be chosen, if the passed fully qualified type <U&&>, can be used to construct a <T>.
@@ -182,22 +124,16 @@ struct Overload {
     static auto operator()(T, U&&) -> T;
 };
 
-template<typename... Bases>
-struct AllOverloads : MergeAndDeduplicatePacks<ParameterPack<Bases>...> {
-    using MergeAndDeduplicatePacks<ParameterPack<Bases>...>::operator();
-};
-
-template<typename IndexSequence>
-struct MakeOverloadsImpl;
-
-template<size_t... Indices>
-struct MakeOverloadsImpl<IndexSequence<Indices...>> {
-    template<typename... Types>
-    using Apply = AllOverloads<Overload<Types>...>;
+template<typename... Ts>
+struct AllOverloads : public Overload<Ts>... {
+    // If you are here because of a long list of redeclarations of this functions
+    // your Variant likely contains duplicate types.
+    // Use DedupAndApply<Variant, Ts...> if you want duplicates in your type list
+    using Overload<Ts>::operator()...;
 };
 
 template<typename... Types>
-using MakeOverloads = typename MakeOverloadsImpl<MakeIndexSequence<sizeof...(Types)>>::template Apply<Types...>;
+using MakeOverloads = AllOverloads<Types...>;
 }
 
 namespace AK {
