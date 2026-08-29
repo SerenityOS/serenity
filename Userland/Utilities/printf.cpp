@@ -221,6 +221,19 @@ struct ArgvNextArgument<double, V> {
 };
 
 template<typename V>
+struct ArgvNextArgument<long double, V> {
+    ALWAYS_INLINE long double operator()(V arg) const
+    {
+        if (arg.argc == 0)
+            return 0;
+
+        auto result = *arg.argv++;
+        --arg.argc;
+        return strtold(result, nullptr);
+    }
+};
+
+template<typename V>
 struct ArgvNextArgument<int*, V> {
     ALWAYS_INLINE int* operator()(V) const
     {

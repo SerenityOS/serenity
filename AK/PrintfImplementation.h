@@ -164,7 +164,7 @@ ALWAYS_INLINE int print_decimal(PutChFunc putch, CharType*& bufptr, u64 number, 
 }
 #ifndef KERNEL
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision, bool trailing_zeros)
+ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, long double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision, bool trailing_zeros)
 {
     int length = 0;
 
@@ -329,10 +329,10 @@ struct ModifierState {
     unsigned precision { 6 };
     unsigned short_qualifiers { 0 }; // TODO: Unimplemented.
     unsigned long_qualifiers { 0 };
-    bool intmax_qualifier { false };      // TODO: Unimplemented.
-    bool ptrdiff_qualifier { false };     // TODO: Unimplemented.
-    bool long_double_qualifier { false }; // TODO: Unimplemented.
-    bool size_qualifier { false };        // TODO: Unimplemented.
+    bool intmax_qualifier { false };  // TODO: Unimplemented.
+    bool ptrdiff_qualifier { false }; // TODO: Unimplemented.
+    bool long_double_qualifier { false };
+    bool size_qualifier { false }; // TODO: Unimplemented.
     bool alternate_form { 0 };
     bool always_sign { false };
 };
@@ -404,10 +404,14 @@ struct PrintfImpl {
     ALWAYS_INLINE int format_g(ModifierState const& state, ArgumentListRefT ap) const
     {
         // FIXME: Exponent notation
+        if (state.long_double_qualifier)
+            return print_double(m_putch, m_bufptr, NextArgument<long double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, false);
         return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, false);
     }
     ALWAYS_INLINE int format_f(ModifierState const& state, ArgumentListRefT ap) const
     {
+        if (state.long_double_qualifier)
+            return print_double(m_putch, m_bufptr, NextArgument<long double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, true);
         return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, true);
     }
 #endif
