@@ -13,10 +13,11 @@
 
 namespace Kernel::Memory {
 
-class VirtualRange {
+template<typename VirtualAddress>
+class VirtualRangeBase {
 public:
-    VirtualRange() = delete;
-    VirtualRange(VirtualAddress base, size_t size)
+    VirtualRangeBase() = delete;
+    VirtualRangeBase(VirtualAddress base, size_t size)
         : m_base(base)
         , m_size(size)
     {
@@ -30,9 +31,10 @@ public:
 
     VirtualAddress end() const { return m_base.offset(m_size); }
 
-    bool operator==(VirtualRange const& other) const
+    template<typename Self>
+    bool operator==(this Self const& self, Self const& other)
     {
-        return m_base == other.m_base && m_size == other.m_size;
+        return self.m_base == other.m_base && self.m_size == other.m_size;
     }
 
     bool contains(VirtualAddress base, size_t size) const
@@ -42,39 +44,43 @@ public:
         return base >= m_base && base.offset(size) <= end();
     }
 
-    bool contains(VirtualRange const& other) const
+    template<typename Self>
+    bool contains(this Self const& self, Self const& other)
     {
-        return contains(other.base(), other.size());
+        return self.contains(other.base(), other.size());
     }
 
-    Vector<VirtualRange, 2> carve(VirtualRange const& taken) const
+    template<typename Self>
+    Vector<Self, 2> carve(this Self const& self, Self const& taken)
     {
         VERIFY((taken.size() % PAGE_SIZE) == 0);
 
-        Vector<VirtualRange, 2> parts;
-        if (taken == *this)
+        Vector<Self, 2> parts;
+        if (taken == self)
             return {};
-        if (taken.base() > base())
-            parts.unchecked_append({ base(), taken.base().get() - base().get() });
-        if (taken.end() < end())
-            parts.unchecked_append({ taken.end(), end().get() - taken.end().get() });
+        if (taken.base() > self.base())
+            parts.unchecked_append({ self.base(), taken.base().get() - self.base().get() });
+        if (taken.end() < self.end())
+            parts.unchecked_append({ taken.end(), self.end().get() - taken.end().get() });
         return parts;
     }
 
-    VirtualRange intersect(VirtualRange const& other) const
+    template<typename Self>
+    Self intersect(this Self const& self, Self const& other)
     {
-        if (*this == other) {
-            return *this;
+        if (self == other) {
+            return self;
         }
-        auto new_base = max(base(), other.base());
-        auto new_end = min(end(), other.end());
+        auto new_base = max(self.base(), other.base());
+        auto new_end = min(self.end(), other.end());
         VERIFY(new_base < new_end);
-        return VirtualRange(new_base, (new_end - new_base).get());
+        return Self(new_base, (new_end - new_base).get());
     }
 
-    bool intersects(VirtualRange const& other) const
+    template<typename Self>
+    bool intersects(this Self const& self, Self const& other)
     {
-        auto a = *this;
+        auto a = self;
         auto b = other;
 
         if (a.base() > b.base())
@@ -83,11 +89,16 @@ public:
         return a.base() < b.end() && b.base() < a.end();
     }
 
-    static ErrorOr<VirtualRange> expand_to_page_boundaries(FlatPtr address, size_t size);
-
 private:
     VirtualAddress m_base;
     size_t m_size { 0 };
+};
+
+class VirtualRange : public VirtualRangeBase<VirtualAddress> {
+    using VirtualRangeBase::VirtualRangeBase;
+
+public:
+    static ErrorOr<VirtualRange> expand_to_page_boundaries(FlatPtr address, size_t size);
 };
 
 }
