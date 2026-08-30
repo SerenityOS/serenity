@@ -22,11 +22,15 @@ enum class RandomizeVirtualAddress {
 };
 
 // RegionTree represents a virtual address space.
-// It is used by MemoryManager for kernel VM and by AddressSpace for user VM.
+// It is used by e.g. MemoryManager for kernel VM and by AddressSpace for user VM.
 // Regions are stored in an intrusive data structure and there are no allocations when interacting with it.
+template<typename Region>
 class RegionTree {
     AK_MAKE_NONCOPYABLE(RegionTree);
     AK_MAKE_NONMOVABLE(RegionTree);
+
+    using VirtualAddress = InvokeResult<decltype(&Region::vaddr), Region>;
+    using VirtualRange = RemoveCVReference<InvokeResult<decltype(&Region::range), Region>>;
 
 public:
     explicit RegionTree(VirtualRange total_range)
@@ -181,7 +185,7 @@ private:
         // FIXME: I'm sure there's a smarter way to do this.
         constexpr size_t maximum_randomization_attempts = 1000;
         for (size_t i = 0; i < maximum_randomization_attempts; ++i) {
-            VirtualAddress random_address { round_up_to_power_of_two(get_fast_random<FlatPtr>() % m_total_range.end().get(), alignment) };
+            VirtualAddress random_address { round_up_to_power_of_two(get_fast_random<typename VirtualAddress::UnderlyingType>() % m_total_range.end().get(), static_cast<typename VirtualAddress::UnderlyingType>(alignment)) };
 
             if (!m_total_range.contains(random_address, size))
                 continue;
