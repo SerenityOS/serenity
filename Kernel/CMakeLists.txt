@@ -264,7 +264,6 @@ set(KERNEL_SOURCES
     Memory/PhysicalZone.cpp
     Memory/PrivateInodeVMObject.cpp
     Memory/Region.cpp
-    Memory/RegionTree.cpp
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
     Memory/ScopedAddressSpaceSwitcher.cpp
