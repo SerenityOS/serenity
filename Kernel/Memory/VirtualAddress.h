@@ -30,10 +30,13 @@ public:
     void set(FlatPtr address) { m_address = address; }
     void mask(FlatPtr m) { m_address &= m; }
 
-    bool operator<=(VirtualAddress const& other) const { return m_address <= other.m_address; }
-    bool operator>=(VirtualAddress const& other) const { return m_address >= other.m_address; }
-    bool operator>(VirtualAddress const& other) const { return m_address > other.m_address; }
-    bool operator<(VirtualAddress const& other) const { return m_address < other.m_address; }
+    int operator<=>(VirtualAddress const& other) const
+    {
+        if (m_address == other.m_address)
+            return 0;
+        return m_address < other.m_address ? -1 : 1;
+    }
+
     bool operator==(VirtualAddress const& other) const { return m_address == other.m_address; }
     bool operator!=(VirtualAddress const& other) const { return m_address != other.m_address; }
 
