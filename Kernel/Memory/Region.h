@@ -36,9 +36,11 @@ class Region final
     : public LockWeakable<Region> {
     friend class AddressSpace;
     friend class MemoryManager;
-    friend class RegionTree;
     friend class AnonymousVMObject;
     friend class VMObject;
+
+    template<typename Region>
+    friend class RegionTree;
 
 public:
     enum Access : u8 {

@@ -28,8 +28,8 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     PageDirectory const& page_directory() const { return *m_page_directory; }
 
-    RegionTree& region_tree() { return m_region_tree; }
-    RegionTree const& region_tree() const { return m_region_tree; }
+    RegionTree<Region>& region_tree() { return m_region_tree; }
+    RegionTree<Region> const& region_tree() const { return m_region_tree; }
 
     void dump_regions();
 
@@ -67,7 +67,7 @@ private:
 
     LockRefPtr<PageDirectory> m_page_directory;
 
-    RegionTree m_region_tree;
+    RegionTree<Region> m_region_tree;
 
     SetOnce m_enforces_syscall_regions;
 };

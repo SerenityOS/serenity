@@ -242,7 +242,7 @@ private:
         Vector<NonnullOwnPtr<PhysicalRegion>> physical_regions;
         OwnPtr<PhysicalRegion> physical_pages_region;
 
-        RegionTree region_tree;
+        RegionTree<Region> region_tree;
 
         Vector<UsedMemoryRange> used_memory_ranges;
         Vector<PhysicalMemoryRange> physical_memory_ranges;
