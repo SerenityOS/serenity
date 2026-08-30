@@ -236,7 +236,7 @@ void Terminal::DECSET(Parameters params)
 void Terminal::SGR(Parameters params)
 {
     if (params.is_empty()) {
-        m_current_state.attribute.reset();
+        m_current_state.attribute.reset_style();
         return;
     }
     auto parse_color = [&]() -> Optional<Color> {
@@ -282,7 +282,7 @@ void Terminal::SGR(Parameters params)
             switch (param) {
             case 0:
                 // Reset
-                m_current_state.attribute.reset();
+                m_current_state.attribute.reset_style();
                 break;
             case 1:
                 m_current_state.attribute.flags |= Attribute::Flags::Bold;
@@ -1348,8 +1348,7 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
             dbgln("Attempted to set href but gave too few parameters");
         } else if (parameters[1].is_empty() && parameters[2].is_empty()) {
             // Clear hyperlink
-            m_current_state.attribute.href = {};
-            m_current_state.attribute.href_id = {};
+            m_current_state.attribute.reset_hyperlink();
         } else {
             m_current_state.attribute.href = stringview_ify(2);
             // FIXME: Respect the provided ID
