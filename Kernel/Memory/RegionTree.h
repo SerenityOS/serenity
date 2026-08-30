@@ -24,7 +24,7 @@ enum class RandomizeVirtualAddress {
 // RegionTree represents a virtual address space.
 // It is used by e.g. MemoryManager for kernel VM and by AddressSpace for user VM.
 // Regions are stored in an intrusive data structure and there are no allocations when interacting with it.
-template<typename Region>
+template<typename Region, size_t PageSize>
 class RegionTree {
     AK_MAKE_NONCOPYABLE(RegionTree);
     AK_MAKE_NONMOVABLE(RegionTree);
@@ -48,7 +48,7 @@ public:
 
     VirtualRange total_range() const { return m_total_range; }
 
-    ErrorOr<void> place_anywhere(Region& region, RandomizeVirtualAddress randomize_virtual_address, size_t size, size_t alignment = PAGE_SIZE)
+    ErrorOr<void> place_anywhere(Region& region, RandomizeVirtualAddress randomize_virtual_address, size_t size, size_t alignment = PageSize)
     {
         auto range = TRY(randomize_virtual_address == RandomizeVirtualAddress::Yes ? allocate_range_randomized(size, alignment) : allocate_range_anywhere(size, alignment));
         region.m_range = range;
@@ -96,13 +96,13 @@ public:
     }
 
 private:
-    ErrorOr<VirtualRange> allocate_range_anywhere(size_t size, size_t alignment = PAGE_SIZE)
+    ErrorOr<VirtualRange> allocate_range_anywhere(size_t size, size_t alignment = PageSize)
     {
         if (!size)
             return EINVAL;
 
-        VERIFY((size % PAGE_SIZE) == 0);
-        VERIFY((alignment % PAGE_SIZE) == 0);
+        VERIFY((size % PageSize) == 0);
+        VERIFY((alignment % PageSize) == 0);
 
         if (Checked<size_t>::addition_would_overflow(size, alignment))
             return EOVERFLOW;
@@ -152,8 +152,8 @@ private:
         if (!size)
             return EINVAL;
 
-        VERIFY(base.is_page_aligned());
-        VERIFY((size % PAGE_SIZE) == 0);
+        VERIFY((base.get() % PageSize) == 0);
+        VERIFY((size % PageSize) == 0);
 
         VirtualRange const range { base, size };
         if (!m_total_range.contains(range))
@@ -174,13 +174,13 @@ private:
         return range;
     }
 
-    ErrorOr<VirtualRange> allocate_range_randomized(size_t size, size_t alignment = PAGE_SIZE)
+    ErrorOr<VirtualRange> allocate_range_randomized(size_t size, size_t alignment = PageSize)
     {
         if (!size)
             return EINVAL;
 
-        VERIFY((size % PAGE_SIZE) == 0);
-        VERIFY((alignment % PAGE_SIZE) == 0);
+        VERIFY((size % PageSize) == 0);
+        VERIFY((alignment % PageSize) == 0);
 
         // FIXME: I'm sure there's a smarter way to do this.
         constexpr size_t maximum_randomization_attempts = 1000;
