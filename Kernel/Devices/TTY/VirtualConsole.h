@@ -59,7 +59,7 @@ public:
         void clear()
         {
             ch = ' ';
-            attribute.reset();
+            attribute = VT::Attribute();
         }
         char ch;
         VT::Attribute attribute;

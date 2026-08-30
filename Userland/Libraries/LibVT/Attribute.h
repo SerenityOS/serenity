@@ -22,15 +22,11 @@ struct Attribute {
     static constexpr Color default_foreground_color = Color::named(Color::ANSIColor::DefaultForeground);
     static constexpr Color default_background_color = Color::named(Color::ANSIColor::DefaultBackground);
 
-    void reset()
+    void reset_style()
     {
         foreground_color = default_foreground_color;
         background_color = default_background_color;
         flags = Flags::NoAttributes;
-#ifndef KERNEL
-        href = {};
-        href_id = {};
-#endif
     }
 
     Color foreground_color { default_foreground_color };
@@ -39,6 +35,12 @@ struct Attribute {
 #ifndef KERNEL
     ByteString href;
     Optional<ByteString> href_id;
+
+    void reset_hyperlink()
+    {
+        href = {};
+        href_id = {};
+    }
 #endif
 
     enum class Flags : u8 {
