@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Library/StdLib.h>
-#include <Kernel/Memory/AddressSpace.h>
 
 namespace Kernel {
 
@@ -28,10 +28,10 @@ struct ThreadRegisters {
 
     FlatPtr frame_pointer() const { return x[29]; }
 
-    void set_initial_state(bool is_kernel_process, Memory::AddressSpace& space, FlatPtr kernel_stack_top)
+    void set_initial_state(bool is_kernel_process, Memory::PageDirectory const& page_directory, FlatPtr kernel_stack_top)
     {
         set_sp(kernel_stack_top);
-        ttbr0_el1 = space.page_directory().ttbr0();
+        ttbr0_el1 = page_directory.ttbr0();
         set_spsr_el1(is_kernel_process);
     }
 
@@ -41,11 +41,11 @@ struct ThreadRegisters {
         x[0] = entry_data;
     }
 
-    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::AddressSpace& space)
+    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::PageDirectory const& page_directory)
     {
         set_ip(entry_ip);
         set_sp(userspace_sp);
-        ttbr0_el1 = space.page_directory().ttbr0();
+        ttbr0_el1 = page_directory.ttbr0();
         set_spsr_el1(false);
     }
 
