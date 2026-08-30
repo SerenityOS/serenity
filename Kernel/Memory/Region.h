@@ -39,7 +39,7 @@ class Region final
     friend class AnonymousVMObject;
     friend class VMObject;
 
-    template<typename Region>
+    template<typename Region, size_t PageSize>
     friend class RegionTree;
 
 public:
