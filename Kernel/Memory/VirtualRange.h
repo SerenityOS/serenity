@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Vector.h>
 #include <Kernel/Memory/VirtualAddress.h>
 
 namespace Kernel::Memory {
@@ -46,10 +47,41 @@ public:
         return contains(other.base(), other.size());
     }
 
-    Vector<VirtualRange, 2> carve(VirtualRange const&) const;
-    VirtualRange intersect(VirtualRange const&) const;
+    Vector<VirtualRange, 2> carve(VirtualRange const& taken) const
+    {
+        VERIFY((taken.size() % PAGE_SIZE) == 0);
 
-    bool intersects(VirtualRange const&) const;
+        Vector<VirtualRange, 2> parts;
+        if (taken == *this)
+            return {};
+        if (taken.base() > base())
+            parts.unchecked_append({ base(), taken.base().get() - base().get() });
+        if (taken.end() < end())
+            parts.unchecked_append({ taken.end(), end().get() - taken.end().get() });
+        return parts;
+    }
+
+    VirtualRange intersect(VirtualRange const& other) const
+    {
+        if (*this == other) {
+            return *this;
+        }
+        auto new_base = max(base(), other.base());
+        auto new_end = min(end(), other.end());
+        VERIFY(new_base < new_end);
+        return VirtualRange(new_base, (new_end - new_base).get());
+    }
+
+    bool intersects(VirtualRange const& other) const
+    {
+        auto a = *this;
+        auto b = other;
+
+        if (a.base() > b.base())
+            swap(a, b);
+
+        return a.base() < b.end() && b.base() < a.end();
+    }
 
     static ErrorOr<VirtualRange> expand_to_page_boundaries(FlatPtr address, size_t size);
 
