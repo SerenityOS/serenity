@@ -128,7 +128,6 @@ class MemoryManager {
     friend class PageDirectory;
     friend class AnonymousVMObject;
     friend class Region;
-    friend class RegionTree;
     friend class VMObject;
     friend struct ::KmallocGlobalData;
 
