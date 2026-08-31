@@ -81,7 +81,7 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
     }
 }
 
-ErrorOr<File::VMObjectAndMemoryType> InodeFile::vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const& range, u64& offset, bool shared)
+ErrorOr<File::VMObjectAndMemoryType> InodeFile::vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const& range, u64& offset, bool shared)
 {
     if (shared) {
         return VMObjectAndMemoryType {
