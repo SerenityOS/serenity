@@ -17,7 +17,7 @@ AnonymousFile::AnonymousFile(NonnullLockRefPtr<Memory::AnonymousVMObject> vmobje
 
 AnonymousFile::~AnonymousFile() = default;
 
-ErrorOr<File::VMObjectAndMemoryType> AnonymousFile::vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool)
+ErrorOr<File::VMObjectAndMemoryType> AnonymousFile::vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const&, u64& offset, bool)
 {
     if (offset != 0)
         return EINVAL;
