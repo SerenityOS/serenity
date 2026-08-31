@@ -17,7 +17,7 @@ template<typename VirtualAddress>
 class VirtualRangeBase {
 public:
     VirtualRangeBase() = delete;
-    VirtualRangeBase(VirtualAddress base, size_t size)
+    constexpr VirtualRangeBase(VirtualAddress base, size_t size)
         : m_base(base)
         , m_size(size)
     {
