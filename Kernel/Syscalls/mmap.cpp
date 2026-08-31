@@ -167,7 +167,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         if (description->inode())
             TRY(validate_inode_mmap_prot(prot, description->is_readable(), description->is_writable(), map_shared));
 
-        auto vmobject_and_memory_type = TRY(description->vmobject_for_mmap(*this, requested_range, used_offset, map_shared));
+        auto vmobject_and_memory_type = TRY(description->vmobject_for_mmap(*description, requested_range, used_offset, map_shared));
         vmobject = vmobject_and_memory_type.vmobject;
         memory_type = vmobject_and_memory_type.memory_type;
     }
