@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2_image'
-version='2.8.8'
+version='2.8.12'
 useconfigure='true'
 depends=(
     'libjpeg'
@@ -9,7 +9,7 @@ depends=(
     'SDL2'
 )
 files=(
-    "https://github.com/libsdl-org/SDL_image/releases/download/release-${version}/SDL2_image-${version}.tar.gz#2213b56fdaff2220d0e38c8e420cbe1a83c87374190cba8c70af2156097ce30a"
+    "https://github.com/libsdl-org/SDL_image/releases/download/release-${version}/SDL2_image-${version}.tar.gz#393f5efb50536ec13ca4f4affb69cc9966d3c3f969e6c5e701faddf9f9785381"
 )
 configure() {
     run ./configure \
