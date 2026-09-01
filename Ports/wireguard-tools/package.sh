@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='wireguard-tools'
-version='1.0.20250521'
+version='1.0.20260223'
 files=(
-    "https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-${version}.tar.xz#b6f2628b85b1b23cc06517ec9c74f82d52c4cdbd020f3dd2f00c972a1782950e"
+    "https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-${version}.tar.xz#af459827b80bfd31b83b08077f4b5843acb7d18ad9a33a2ef532d3090f291fbf"
 )
 makeopts=(
     '--directory=src'
