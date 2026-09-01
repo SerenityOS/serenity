@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Tue, 1 Sep 2026 07:11:24 +0100
+Subject: [PATCH] Include arpa/inet.h
+
+This seems wrong as INET6_ADDRSTRLEN belongs in netinet/in.h according
+to POSIX, but for now this is the easiest fix to get the port to build.
+---
+ src/lib/ares_ipv6.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/lib/ares_ipv6.h b/src/lib/ares_ipv6.h
+index d2007cc29ec4a068d1f033ce5ae6a86fd1196b59..f738e195de81fe77fa6a530525fbd5aa9995056c 100644
+--- a/src/lib/ares_ipv6.h
++++ b/src/lib/ares_ipv6.h
+@@ -27,6 +27,8 @@
+ #ifndef ARES_IPV6_H
+ #define ARES_IPV6_H
+ 
++#include <arpa/inet.h>
++
+ #ifdef HAVE_NETINET6_IN6_H
+ #  include <netinet6/in6.h>
+ #endif
