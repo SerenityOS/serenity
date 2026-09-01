@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ccache'
-version='4.11.3'
+version='4.14'
 useconfigure='true'
 files=(
-    "https://github.com/ccache/ccache/releases/download/v${version}/ccache-${version}.tar.gz#28a407314f03a7bd7a008038dbaffa83448bc670e2fc119609b1d99fb33bb600"
+    "https://github.com/ccache/ccache/releases/download/v${version}/ccache-${version}.tar.gz#fca63f36a83fb2f4b3cc4c01b2c7a1cd6e3629e7f7bd1e01a2eb8810f947c5ab"
 )
 depends=(
     'zstd'
