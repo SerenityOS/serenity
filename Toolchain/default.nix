@@ -57,7 +57,7 @@ mkShell.override { stdenv = gccStdenv; } {
 
   buildInputs = [
     # Declared as a build input to be available to pkg-config,
-    # used by stpuzzles to build icons on the host
+    # used by sgt-puzzles to build icons on the host
     gtk3
   ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
     apple-sdk_13

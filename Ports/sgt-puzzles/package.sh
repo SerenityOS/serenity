@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port='stpuzzles'
+port='sgt-puzzles'
 version='3c3632259d298ab62aafa8a5858823569ab1af46'
 files=(
     "git+https://git.tartarus.org/simon/puzzles.git#${version}"

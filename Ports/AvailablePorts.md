@@ -318,6 +318,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`serenity-theming`](serenity-theming/)         | SerenityOS theming                                            | 955c253                | https://github.com/SerenityOS/theming                                |
 | [`serious-sam-classic`](serious-sam-classic/)   | Serious Sam - The First Encounter                             | 1.10.4                 | https://github.com/tx00100xt/SeriousSamClassic                       |
 | [`sfinx`](sfinx/)                               | Sfinx                                                         | 1.1                    | https://www.scummvm.org/games/#games-sfinx                           |
+| [`sgt-puzzles`](sgt-puzzles/)                   | Simon Tatham's Portable Puzzle Collection                     | 3c36322                | https://www.chiark.greenend.org.uk/~sgtatham/puzzles/                |
 | [`sl`](sl/)                                     | Steam Locomotive (SL)                                         | 5.05                   | https://github.com/eyJhb/sl                                          |
 | [`soltys`](soltys/)                             | Soltys                                                        | 1.0                    | https://www.scummvm.org/games/#games-soltys                          |
 | [`SpaceCadetPinball`](SpaceCadetPinball/)       | 3D Pinball for Windows - Space Cadet                          | 2.1.0                  | https://github.com/k4zmu2a/SpaceCadetPinball                         |
@@ -328,7 +329,6 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`ssmtp`](ssmtp/)                               | sSMTP is a simple MTA                                         | 2.64-11                | https://wiki.debian.org/sSMTP                                        |
 | [`stb`](stb/)                                   | stb single-file public domain libraries for C/C++             | 2e2bef4                | https://github.com/nothings/stb                                      |
 | [`stockfish`](stockfish/)                       | Stockfish: A free and strong UCI chess engine                 | 17                     | https://github.com/official-stockfish/Stockfish                      |
-| [`stpuzzles`](stpuzzles/)                       | Simon Tatham's Portable Puzzle Collection                     | 3c36322                | https://www.chiark.greenend.org.uk/~sgtatham/puzzles/                |
 | [`stress-ng`](stress-ng/)                       | stress-ng                                                     | 0.16.04                | https://github.com/ColinIanKing/stress-ng                            |
 | [`Super-Mario`](Super-Mario/)                   | Super-Mario Clone                                             | 7293c07                | https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp              |
 | [`SuperTuxKart`](SuperTuxKart/)                 | Super Tux Kart                                                | 1.5                    | https://supertuxkart.net/                                            |
