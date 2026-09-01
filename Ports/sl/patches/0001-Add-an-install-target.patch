@@ -9,7 +9,7 @@ Co-Authored-By: Noah Rosamilia <ivoahivoah@gmail.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/Makefile b/Makefile
-index c3005d2..04fcb9d 100644
+index 515b96ded14f300c515dc368554b07660bd93de9..8936abe931bee8a3bef33916b305f49a191ae277 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -18,3 +18,9 @@ clean:
