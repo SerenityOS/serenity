@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ca-certificates'
-version='2026-07-16'
+version='2026-08-13'
 files=(
-    "https://curl.se/ca/cacert-${version}.pem#3ff344e30b9b1ed2971044eabb438a08f2e2245ddb5f8ab1a3ad8b63ab4eaf91"
+    "https://curl.se/ca/cacert-${version}.pem#f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9"
 )
 workdir='.'
 
