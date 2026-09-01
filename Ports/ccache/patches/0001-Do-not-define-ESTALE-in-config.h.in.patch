@@ -13,7 +13,7 @@ are included, but on Serenity, it breaks our definition of the
  1 file changed, 4 deletions(-)
 
 diff --git a/cmake/config.h.in b/cmake/config.h.in
-index f39a18fc1b42dd095336da037ad751b741a5aae8..f599e924af43e194a4b55b2505dc4438612a9347 100644
+index ace26787f18d655207e5986d787c1e984372d640..b46ae8740eea6e80502f8cd2cb16a30cc2aacd39 100644
 --- a/cmake/config.h.in
 +++ b/cmake/config.h.in
 @@ -205,10 +205,6 @@ typedef int pid_t;
@@ -24,6 +24,6 @@ index f39a18fc1b42dd095336da037ad751b741a5aae8..f599e924af43e194a4b55b2505dc4438
 -#  define ESTALE -1
 -#endif
 -
+ #define LIBEXECDIR "@CONFIG_LIBEXECDIR_C_ESCAPED@"
  #define SYSCONFDIR "@CONFIG_SYSCONFDIR_C_ESCAPED@"
  
- #cmakedefine INODE_CACHE_SUPPORTED

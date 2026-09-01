@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Tue, 1 Sep 2026 08:27:46 +0100
+Subject: [PATCH] Include sys/time.h
+
+---
+ src/third_party/cpp-httplib/httplib.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/third_party/cpp-httplib/httplib.h b/src/third_party/cpp-httplib/httplib.h
+index 33d7f97343214a67636818fcfb11a01e7015ff08..ac413d23ac104d2e88287cca8c91d35e74262383 100644
+--- a/src/third_party/cpp-httplib/httplib.h
++++ b/src/third_party/cpp-httplib/httplib.h
+@@ -220,6 +220,7 @@ using socklen_t = int;
+ #include <pthread.h>
+ #include <sys/mman.h>
+ #include <sys/socket.h>
++#include <sys/time.h>
+ #include <sys/un.h>
+ #include <unistd.h>
+ 

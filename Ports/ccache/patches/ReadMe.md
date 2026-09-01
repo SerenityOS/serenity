@@ -10,3 +10,8 @@ cause any problems on systems that redefine this macro when libc headers
 are included, but on Serenity, it breaks our definition of the
 `ErrnoCode` enum.
 
+## `0002-Include-sys-time.h.patch`
+
+Include sys/time.h
+
+
