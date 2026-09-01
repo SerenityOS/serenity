@@ -13,7 +13,7 @@ If you did attempt to call it you would trip a segfault.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arch-x86.h b/arch/arch-x86.h
-index c6bcb54..c1005b1 100644
+index c6bcb54ccf0d36d442401b483a788959a7358709..c1005b15e80fe85cd921bc133bbb14ccc1c3a784 100644
 --- a/arch/arch-x86.h
 +++ b/arch/arch-x86.h
 @@ -35,6 +35,7 @@ static inline unsigned long long get_cpu_clock(void)

@@ -11,16 +11,16 @@ currently supported.
  1 file changed, 3 insertions(+)
 
 diff --git a/configure b/configure
-index 84ccce0..04bac14 100755
+index 664ce2994dd39df76d88593ff22650929f1f0ade..c619965cc0923b2ced34cc9def35d4c814a6bd27 100755
 --- a/configure
 +++ b/configure
-@@ -323,6 +323,9 @@ elif check_define __NetBSD__ ; then
- elif check_define __sun__ ; then
-   targetos='SunOS'
-   CFLAGS="$CFLAGS -D_REENTRANT"
+@@ -375,6 +375,9 @@ elif check_define _WIN32 ; then
+   targetos='CYGWIN'
+ elif check_define __QNX__ ; then
+   targetos='QNX'
 +elif check_define __serenity__ ; then
 +  targetos='SerenityOS'
 +  no_shm="yes"
- elif check_define _WIN32 ; then
-   targetos='CYGWIN'
  else
+   targetos=`uname -s`
+ fi
