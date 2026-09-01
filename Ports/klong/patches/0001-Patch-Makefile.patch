@@ -11,15 +11,15 @@ Subject: [PATCH] Patch Makefile
  1 file changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index f692ff7..470adcd 100644
+index 97340facf124b0752844ece0344764de3dea6d19..cba54f340dc99fc14786aca4f1222c0ba972b8b1 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -1,5 +1,5 @@
  CFLAGS=	-g -Wall -pedantic -O3
 -CC=	cc $(CFLAGS)
 +CC:=	$(CC) $(CFLAGS)
- V=	20211014
- R=	20220315
+ V=	20221212
+ R=	20221212
  
 @@ -12,7 +12,7 @@ OPTIONS= -DEDIT
  # Modules to load into image file
@@ -39,4 +39,3 @@ index f692ff7..470adcd 100644
 +	mkdir -p ${DESTDIR}/usr/local/bin
 +	install kg ${DESTDIR}/usr/local/bin
 +	mkdir -p ${DESTDIR}/usr/local/lib/klong
-+	install -m 644 lib/* ${DESTDIR}/usr/local/lib/klong
