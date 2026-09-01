@@ -20,10 +20,10 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  3 files changed, 27 insertions(+)
 
 diff --git a/gcc/configure b/gcc/configure
-index ef780a23c2fdd0103fbc7db663f78dfbb482ef79..cc4cefb7dd48864101eac29466de4c64a6012b27 100755
+index 4a90e86ed9fc85975cc6730fa6865379b23c3875..de889a78b3686e4119ef8ec2a79384d0add5f57e 100755
 --- a/gcc/configure
 +++ b/gcc/configure
-@@ -33907,6 +33907,9 @@ case "$target" in
+@@ -33910,6 +33910,9 @@ case "$target" in
    *-linux-musl*)
      gcc_cv_target_dl_iterate_phdr=yes
      ;;

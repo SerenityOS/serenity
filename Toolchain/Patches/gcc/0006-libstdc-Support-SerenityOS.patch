@@ -27,7 +27,7 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  4 files changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index 8dc9e17b214cd30087673c6f4c0707cab3adecc3..6636b3b9585145cfadce97501c75dffe63769596 100644
+index a615692e7beb39723929be98a541d77dbe28ede3..103dac78c9b05e7a947c9597d44e150ceedc3c08 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
 @@ -1800,7 +1800,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
@@ -49,7 +49,7 @@ index 8dc9e17b214cd30087673c6f4c0707cab3adecc3..6636b3b9585145cfadce97501c75dffe
  	;;
        *)
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 6713e4504b1cd5ac2c7eddea758f8a51ab3d946e..14ff25d3fd9e912636b4dea503672bb228bf9433 100755
+index bc9dce5e2880e8e26652b2c2c0ecf8f536e81631..46ee96abecd2b1478b93895af9137388ee291dd4 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
 @@ -12402,6 +12402,11 @@ else
@@ -64,7 +64,7 @@ index 6713e4504b1cd5ac2c7eddea758f8a51ab3d946e..14ff25d3fd9e912636b4dea503672bb2
    darwin*)
    # if libdl is installed we need to link against it
      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
-@@ -16849,7 +16854,7 @@ fi
+@@ -16860,7 +16865,7 @@ fi
        dragonfly* | freebsd*)
  	enable_clocale_flag=dragonfly
  	;;
@@ -73,7 +73,7 @@ index 6713e4504b1cd5ac2c7eddea758f8a51ab3d946e..14ff25d3fd9e912636b4dea503672bb2
  	enable_clocale_flag=newlib
  	;;
        *)
-@@ -21546,7 +21551,7 @@ fi
+@@ -21557,7 +21562,7 @@ fi
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -82,7 +82,7 @@ index 6713e4504b1cd5ac2c7eddea758f8a51ab3d946e..14ff25d3fd9e912636b4dea503672bb2
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -28979,7 +28984,7 @@ case "${host}" in
+@@ -28990,7 +28995,7 @@ case "${host}" in
      # This is a freestanding configuration; there is nothing to do here.
      ;;
  
