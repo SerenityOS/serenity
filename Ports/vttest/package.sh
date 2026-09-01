@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='vttest'
-version='20240708'
+version='20251205'
 useconfigure='true'
 files=(
-    "https://invisible-mirror.net/archives/vttest/vttest-${version}.tgz#c195449eb2d2299ca3c0a24788a9aab569fe41c2e0e83128b5c29ba96e5abb1b"
+    "https://invisible-mirror.net/archives/vttest/vttest-${version}.tgz#cd6886f9aefe6a3f6c566fa61271a55710901a71849c630bf5376aa984bf77cc"
 )
