@@ -5,13 +5,13 @@ Subject: [PATCH] Undefine 'SIOCGIFCONF' on serenity
 
 FIXME: We don't know why yet.
 ---
- SDLnet.c | 4 ++++
+ src/SDLnet.c | 4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/SDLnet.c b/SDLnet.c
-index 24eb05b..847b185 100644
---- a/SDLnet.c
-+++ b/SDLnet.c
+diff --git a/src/SDLnet.c b/src/SDLnet.c
+index e6e3712ae8f351093bb5020c2397ed29bafea656..2138dcc9aff11fe799282f7f167a0c6bb9bfd630 100644
+--- a/src/SDLnet.c
++++ b/src/SDLnet.c
 @@ -218,6 +218,10 @@ const char *SDLNet_ResolveIP(const IPaddress *ip)
      return inet_ntoa(in);
  }
