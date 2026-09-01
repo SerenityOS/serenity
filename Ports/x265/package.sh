@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='x265'
-version='4.1'
+version='4.3'
 workdir="${port}_${version}"
 files=(
-    "https://bitbucket.org/multicoreware/x265_git/downloads/x265_${version}.tar.gz#a31699c6a89806b74b0151e5e6a7df65de4b49050482fe5ebf8a4379d7af8f29"
+    "https://github.com/Multicorewareinc/x265/releases/download/${version}/x265_${version}.tar.gz#83c53e4c8bbb8f1e33ed59e10a7d621d1d7801ca853910c3eb41f038b8ffb121"
 )
 useconfigure='true'
 
