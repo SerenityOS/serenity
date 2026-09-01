@@ -1,17 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libarchive'
-version='3.7.7'
+version='3.8.9'
 useconfigure='true'
-use_fresh_config_sub='true'
-config_sub_paths=(
-    'build/autoconf/config.sub'
-)
 configopts=(
     '--without-xml2'
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
 )
 files=(
-    "https://libarchive.org/downloads/libarchive-${version}.tar.gz#4cc540a3e9a1eebdefa1045d2e4184831100667e6d7d5b315bb1cbc951f8ddff"
+    "https://libarchive.org/downloads/libarchive-${version}.tar.gz#f5a6539059cf5e597dbeda37bfa4874b1e8dea063c8d93bf85a2b44af90a5bd4"
 )
 depends=(
     'pcre'
