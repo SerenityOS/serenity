@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='bc'
-version='7.0.3'
+version='7.1.0'
 files=(
-    "https://github.com/gavinhoward/bc/releases/download/${version}/bc-${version}.tar.xz#91eb74caed0ee6655b669711a4f350c25579778694df248e28363318e03c7fc4"
+    "https://github.com/gavinhoward/bc/releases/download/${version}/bc-${version}.tar.xz#1f13663ba0f2435b684321714a4d0b9fff32bb951fc78dc7424cd69bba5c0d3a"
 )
 useconfigure='true'
 configscript='configure.sh'
