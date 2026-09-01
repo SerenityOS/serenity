@@ -18,7 +18,7 @@ and running.
 
 diff --git a/os/os-serenity.h b/os/os-serenity.h
 new file mode 100644
-index 0000000..387727a
+index 0000000000000000000000000000000000000000..387727aa307347c8b827157acf8f17e73f08d8f5
 --- /dev/null
 +++ b/os/os-serenity.h
 @@ -0,0 +1,61 @@
@@ -84,18 +84,18 @@ index 0000000..387727a
 +
 +#endif
 diff --git a/os/os.h b/os/os.h
-index 5965d7b..46604f7 100644
+index 0736f8a1b8729ef346a5a8444ddc77b1a4016d6d..f0aaa10899f3f774c8db26313a13525bdd58c5ac 100644
 --- a/os/os.h
 +++ b/os/os.h
-@@ -24,6 +24,7 @@ enum {
- 	os_windows,
+@@ -25,6 +25,7 @@ enum {
  	os_android,
  	os_dragonfly,
+ 	os_qnx,
 +	os_serenity,
  
  	os_nr,
  };
-@@ -55,6 +56,8 @@ typedef enum {
+@@ -56,6 +57,8 @@ typedef enum {
  #include "os-windows.h"
  #elif defined (__DragonFly__)
  #include "os-dragonfly.h"
