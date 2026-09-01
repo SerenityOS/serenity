@@ -370,6 +370,6 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`xz`](xz/)                                     | xz                                                            | 5.8.1                  | https://tukaani.org/xz/                                              |
 | [`yasm`](yasm/)                                 | Yasm Modular Assembler                                        | 1.3.0                  | https://yasm.tortall.net/                                            |
 | [`zig`](zig/)                                   | Zig programming language                                      | 0.16.0                 | https://ziglang.org/                                                 |
-| [`zlib`](zlib/)                                 | zlib                                                          | 1.3.1                  | https://www.zlib.net/                                                |
+| [`zlib`](zlib/)                                 | zlib                                                          | 1.3.2                  | https://www.zlib.net/                                                |
 | [`zsh`](zsh/)                                   | Z Shell (Zsh)                                                 | 5.9.2                  | https://www.zsh.org                                                  |
 | [`zstd`](zstd/)                                 | Zstandard                                                     | 1.5.7                  | https://facebook.github.io/zstd/                                     |
