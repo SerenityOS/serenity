@@ -1,20 +1,16 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='libjxl'
-version='2023.09.11'
+version='0.12.0'
 files=(
-    "git+https://github.com/libjxl/libjxl#ff8a9c1cd54d324137c1905017542ffedeacdef8"
+    "https://github.com/libjxl/libjxl/archive/refs/tags/v${version}.tar.gz#03e9be69a30be4011f559da75328b6d7cea8ad921fabfbd551ce10bf45cdc992"
 )
-
 depends=(
     'brotli'
     'highway'
     'lcms2'
     'libpng'
 )
-
-workdir='libjxl'
-
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
     "-DCMAKE_BUILD_TYPE=Release"
