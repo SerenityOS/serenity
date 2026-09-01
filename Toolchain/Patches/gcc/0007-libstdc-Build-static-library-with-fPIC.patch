@@ -13,7 +13,7 @@ This hack is from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58638
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 14ff25d3fd9e912636b4dea503672bb228bf9433..bc6e5b79e310d735305af677bab167c54e4a9002 100755
+index 46ee96abecd2b1478b93895af9137388ee291dd4..3e0e4ecebde90b8bfc924c53799c93b24e887acb 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
 @@ -16188,8 +16188,8 @@ if test "$enable_shared" = yes; then

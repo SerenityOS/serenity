@@ -17,7 +17,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
 endif()
 
 # Check for toolchain mismatch, user might need to rebuild toolchain
-set(GCC_VERSION "16.1.0")
+set(GCC_VERSION "16.2.0")
 set(LLVM_VERSION "24.0.0git (fcf4bb1af7450f618504201610ef8c3ef52844d7)")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
