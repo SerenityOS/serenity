@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libenet'
-version='1.3.17'
+version='1.3.18'
 useconfigure='true'
 files=(
-    "http://sauerbraten.org/enet/download/enet-${version}.tar.gz#a38f0f194555d558533b8b15c0c478e946310022d0ec7b34334e19e4574dcedc"
+    "http://sauerbraten.org/enet/download/enet-${version}.tar.gz#2a8a0c5360d68bb4fcd11f2e4c47c69976e8d2c85b109dd7d60b1181a4f85d36"
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
