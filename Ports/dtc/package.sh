@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='dtc'
-version='1.7.0'
+version='1.8.1'
 files=(
-    "https://github.com/dgibson/dtc/archive/refs/tags/v${version}.tar.gz#70d9c156ec86d63de0f7bdae50540ffa492b25ec1d69491c7520845c860b9a62"
+    "https://github.com/dgibson/dtc/archive/refs/tags/v${version}.tar.gz#74b50bb19134f6562490afea53e59953dd6c4afb17e5ccb60be32221262d3390"
 )
 depends=('bash')
 
