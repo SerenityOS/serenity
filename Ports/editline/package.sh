@@ -1,12 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='editline'
-version='1.17.1'
+version='2.1.0'
 useconfigure='true'
-use_fresh_config_sub='true'
-config_sub_paths=('aux/config.sub')
 files=(
-    "https://github.com/troglobit/editline/releases/download/${version}/editline-${version}.tar.gz#781e03b6a935df75d99fb963551e2e9f09a714a8c49fc53280c716c90bf44d26"
+    "https://github.com/troglobit/editline/releases/download/${version}/editline-${version}.tar.gz#189e179253c0932d15ce94f53e8cde7a0c38383f39f11f3b92d40cd18839678f"
 )
 configopts=(
     'CFLAGS=-std=c17'
