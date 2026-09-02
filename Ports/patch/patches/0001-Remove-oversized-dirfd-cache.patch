@@ -4,21 +4,29 @@ Date: Wed, 10 Nov 2021 02:07:36 +0100
 Subject: [PATCH] Remove oversized dirfd cache
 
 ---
- src/safe.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ src/safe.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
 diff --git a/src/safe.c b/src/safe.c
-index 5a7202f..562a791 100644
+index eda99224b5e7ae83527f7e8ff0571aa9b918602b..1921e39e0cf77fc62de42b8c51168d0de50a913c 100644
 --- a/src/safe.c
 +++ b/src/safe.c
-@@ -98,9 +98,7 @@ static void init_dirfd_cache (void)
- {
-   struct rlimit nofile;
+@@ -103,17 +103,7 @@ static void free_cached_dirfd (struct cached_dirfd *entry)
  
--  max_cached_fds = 8;
+ static void init_dirfd_cache (void)
+ {
+-  struct rlimit nofile;
+-
 -  if (getrlimit (RLIMIT_NOFILE, &nofile) == 0)
--    max_cached_fds = MAX (nofile.rlim_cur / 4, max_cached_fds);
+-    {
+-      if (nofile.rlim_cur == RLIM_INFINITY)
+-        max_cached_fds = RLIM_INFINITY;
+-      else
+-	max_cached_fds = MAX (nofile.rlim_cur / 4, min_cached_fds);
+-    }
+-  else
+-    max_cached_fds = min_cached_fds;
 +  max_cached_fds = 64;
  
-   cached_dirfds = hash_initialize (max_cached_fds,
- 				   NULL,
+   cached_dirfds = hash_initialize (min_cached_fds, nullptr,
+ 				   hash_cached_dirfd,
