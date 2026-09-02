@@ -1,15 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ObjFW'
-version='1.2.2'
+version='1.5.7'
 useconfigure='true'
 files=(
-    "https://objfw.nil.im/downloads/objfw-${version}.tar.gz#4fe0bed1ec21561a184d804aa577ff630f1e3d20b1c3b973073e23ce829294a1"
+    "https://objfw.nil.im/downloads/objfw-${version}.tar.gz#e637c32731dc07396b812c4019f34d1417a3f7aa39d450b7f27c9bcdc23b3e12"
 )
 workdir="objfw-${version}"
-use_fresh_config_sub='true'
-config_sub_paths=(
-    'build-aux/config.sub'
-)
 depends=(
     'openssl'
 )
