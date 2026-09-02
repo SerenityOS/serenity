@@ -1,9 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=patch
-version=2.7.6
-useconfigure=true
-use_fresh_config_sub=true
-config_sub_paths=("build-aux/config.sub")
+port='patch'
+version='2.8'
+useconfigure='true'
 files=(
-    "https://ftpmirror.gnu.org/gnu/patch/patch-${version}.tar.gz#8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e"
+    "https://ftpmirror.gnu.org/gnu/patch/patch-${version}.tar.gz#308a4983ff324521b9b21310bfc2398ca861798f02307c79eb99bb0e0d2bf980"
 )
