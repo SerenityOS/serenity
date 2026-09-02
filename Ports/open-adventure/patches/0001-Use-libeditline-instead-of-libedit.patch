@@ -4,29 +4,35 @@ Date: Thu, 14 Nov 2024 06:37:10 +0000
 Subject: [PATCH] Use libeditline instead of libedit
 
 ---
- Makefile | 4 ++--
- cheat.c  | 2 +-
- main.c   | 2 +-
- misc.c   | 4 ++--
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ Makefile | 10 ++--------
+ cheat.c  |  2 +-
+ main.c   |  2 +-
+ misc.c   |  4 ++--
+ 4 files changed, 6 insertions(+), 12 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 88c59e6e60c46d3ec5855b94f93f6f7647ef5067..5eab3c7ca71f17713d33e18d965174396e60b250 100644
+index aa2aa10e0f118f0410507b6283ec2c06a0536e4e..e3221d22d13bd57892801b211f1ce61d8878fc82 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -13,8 +13,8 @@ VERS=$(shell sed -n <NEWS.adoc '/^[0-9]/s/:.*//p' | head -1)
+@@ -15,14 +15,8 @@ VERSION=$(shell sed -n <NEWS.adoc '/^[0-9]/s/:.*//p' | head -1)
  
  CC?=gcc
- CCFLAGS+=-std=c99 -Wall -Wextra -D_DEFAULT_SOURCE -DVERSION=\"$(VERS)\" -O2 -D_FORTIFY_SOURCE=2 -fstack-protector-all $(CFLAGS) -g $(EXTRA)
+ CCFLAGS+=-std=c99 -Wall -Wextra -Werror -D_DEFAULT_SOURCE -DVERSION=\"$(VERSION)\" -O2 -D_FORTIFY_SOURCE=2 -fstack-protector-all $(CFLAGS) -g $(EXTRA)
 -LIBS=$(shell pkg-config --libs libedit)
 -INC+=$(shell pkg-config --cflags libedit)
+-
+-# LLVM/Clang on macOS seems to need -ledit flag for linking
+-UNAME_S := $(shell uname -s)
+-ifeq ($(UNAME_S),Darwin)
+-    LIBS += -ledit
+-endif
 +LIBS=$(shell pkg-config --libs libeditline)
 +INC+=$(shell pkg-config --cflags libeditline)
  
- # LLVM/Clang on macOS seems to need -ledit flag for linking
- UNAME_S := $(shell uname -s)
+ OBJS=main.o init.o actions.o score.o misc.o saveresume.o
+ CHEAT_OBJS=cheat.o init.o actions.o score.o misc.o saveresume.o
 diff --git a/cheat.c b/cheat.c
-index 4e94025668fa367a9a584e859eef62bec061de49..d8f769b9114cf30167ca0de06e1b3384cbcf17ee 100644
+index bfabae60e2700491cdbe60c8e8eb11a79694c7ce..f7491c1c0c18c7fcbdac337d62b47b88d74c581f 100644
 --- a/cheat.c
 +++ b/cheat.c
 @@ -8,7 +8,7 @@
@@ -39,12 +45,12 @@ index 4e94025668fa367a9a584e859eef62bec061de49..d8f769b9114cf30167ca0de06e1b3384
  #include <stdbool.h>
  #include <stdio.h>
 diff --git a/main.c b/main.c
-index 835fc1b3bbc435ac6e10bfa674e0a438974ba25e..66c306e111d4300c2e2a8fa95048ea3584b3ad13 100644
+index f3a60ae562c4706b53272d2bc7d3a76159986af9..8682954bc0ab32c47bb8707b08255c819d4c5cd6 100644
 --- a/main.c
 +++ b/main.c
-@@ -5,7 +5,7 @@
+@@ -4,7 +4,7 @@
+  */
  
- #include "advent.h"
  #include <ctype.h>
 -#include <editline/readline.h>
 +#include <editline.h>
@@ -52,7 +58,7 @@ index 835fc1b3bbc435ac6e10bfa674e0a438974ba25e..66c306e111d4300c2e2a8fa95048ea35
  #include <signal.h>
  #include <stdbool.h>
 diff --git a/misc.c b/misc.c
-index b28949eccb8f5268eccbff68b8056672925cfa7c..6d62e54112877350a9fb81ca5f23667077992861 100644
+index cef674c7c431f560ec2d3b98fcf9ef94a532332e..81a0c79bab0b8146132b351f065ffa48655e98f1 100644
 --- a/misc.c
 +++ b/misc.c
 @@ -6,10 +6,10 @@
