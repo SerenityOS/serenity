@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openjpeg'
-version='2.5.3'
+version='2.5.4'
 useconfigure='true'
 files=(
-    "https://github.com/uclouvain/openjpeg/archive/refs/tags/v${version}.tar.gz#368fe0468228e767433c9ebdea82ad9d801a3ad1e4234421f352c8b06e7aa707"
+    "https://github.com/uclouvain/openjpeg/archive/refs/tags/v${version}.tar.gz#a695fbe19c0165f295a8531b1e4e855cd94d0875d2f88ec4b61080677e27188a"
 )
 depends=(
     'lcms2'
