@@ -23,6 +23,7 @@ set(FUZZER_TARGETS
     JBIG2Loader
     JPEG2000Loader
     JPEGLoader
+    JPEGXLLoader
     Js
     JsonParser
     LzmaDecompression
@@ -99,6 +100,7 @@ set(FUZZER_DEPENDENCIES_IMAPParser LibIMAP)
 set(FUZZER_DEPENDENCIES_JBIG2Loader LibGfx)
 set(FUZZER_DEPENDENCIES_JPEG2000Loader LibGfx)
 set(FUZZER_DEPENDENCIES_JPEGLoader LibGfx)
+set(FUZZER_DEPENDENCIES_JPEGXLLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Js LibJS)
 set(FUZZER_DEPENDENCIES_LzmaDecompression LibArchive LibCompress)
 set(FUZZER_DEPENDENCIES_LzmaRoundtrip LibCompress)
