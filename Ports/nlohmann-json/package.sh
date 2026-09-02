@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='nlohmann-json'
-version='3.11.2'
+version='3.12.0'
 workdir="json-${version}"
 files=(
-    "https://github.com/nlohmann/json/archive/refs/tags/v${version}.tar.gz#d69f9deb6a75e2580465c6c4c5111b89c4dc2fa94e3a85fcd2ffcd9a143d9273"
+    "https://github.com/nlohmann/json/archive/refs/tags/v${version}.tar.gz#4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187"
 )
 useconfigure='true'
 configopts=(
