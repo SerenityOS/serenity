@@ -1,11 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=npth
-version=1.7
-useconfigure=true
-use_fresh_config_sub=true
-config_sub_paths=("build-aux/config.sub")
+port='npth'
+version='1.8'
+useconfigure='true'
 files=(
-    "https://gnupg.org/ftp/gcrypt/npth/npth-${version}.tar.bz2#8589f56937b75ce33b28d312fccbf302b3b71ec3f3945fde6aaa74027914ad05"
+    "https://gnupg.org/ftp/gcrypt/npth/npth-${version}.tar.bz2#8bd24b4f23a3065d6e5b26e98aba9ce783ea4fd781069c1b35d149694e90ca3e"
 )
 
 configure() {
