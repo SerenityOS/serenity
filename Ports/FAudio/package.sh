@@ -1,11 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='FAudio'
-version='26.08'
+version='26.09'
 files=(
-    "https://github.com/FNA-XNA/FAudio/archive/refs/tags/${version}.tar.gz#5547ac583e2cd1caf0496db62a4c9a813dd6832a2e8b51b1efc00e9492704fce"
+    "https://github.com/FNA-XNA/FAudio/archive/refs/tags/${version}.tar.gz#b393b2f90b21e9160fedfd3d0da88c6c449df38c17699790b1df1abbf5751792"
 )
 useconfigure='true'
-
 depends=(
     'SDL2'
 )
