@@ -1,9 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='sgt-puzzles'
-version='3c3632259d298ab62aafa8a5858823569ab1af46'
+version='20260902.b30838a'
 files=(
-    "git+https://git.tartarus.org/simon/puzzles.git#${version}"
+    "https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles-${version}.tar.gz#9a13d7213e90238fdd7938a92c5527027e145d9a8fbd120404614501bb231638"
 )
+workdir="puzzles-${version}"
 useconfigure='true'
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
