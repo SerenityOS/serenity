@@ -1,10 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=bochs
-version=2.7
+port='bochs'
+version='3.1'
 depends=("SDL2")
 files=(
-    "https://download.sourceforge.net/project/bochs/bochs/$version/bochs-$version.tar.gz#a010ab1bfdc72ac5a08d2e2412cd471c0febd66af1d9349bc0d796879de5b17a"
+    "https://download.sourceforge.net/project/bochs/bochs/$version/bochs-$version.tar.gz#14aaf78dbe1337987923fffc4e7a962ae56abcf9a87474ace39e593f9f84ee84"
 )
-useconfigure=true
-use_fresh_config_sub=true
+workdir='bochs'
+use_fresh_config_sub='true'
+useconfigure='true'
 configopts=("--with-sdl2")
