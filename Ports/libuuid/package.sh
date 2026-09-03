@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libuuid'
-version='2.39.2'
+version='2.42.3'
 workdir="util-linux-${version}"
 useconfigure='true'
 configopts=(
@@ -12,9 +12,5 @@ configopts=(
     '--prefix=/usr/local'
 )
 files=(
-    "https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v$(cut -d. -f1,2 <<< ${version})/util-linux-${version}.tar.xz#87abdfaa8e490f8be6dde976f7c80b9b5ff9f301e1b67e3899e1f05a59a1531f"
-)
-use_fresh_config_sub='true'
-config_sub_paths=(
-    'config/config.sub'
+    "https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v$(cut -d. -f1,2 <<< ${version})/util-linux-${version}.tar.xz#66ac7c0e725278eb2b039e3104f2c91119341d941b41bac7a285c695f940bd57"
 )
