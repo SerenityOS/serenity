@@ -8,10 +8,10 @@ Subject: [PATCH] Don't use CMSG_CLOEXEC
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/meson.build b/meson.build
-index 3b9c66693b1028bdd738d7d09284000582d597ce..cf09e11f7065c06949849ba8d8a2849751b82ea0 100644
+index 4def130feca306d1fb5191c01b92a90a1960e789..52c72f32e70d700072e2040e55b7833c69f3d11d 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -51,7 +51,7 @@ foreach f: have_funcs
+@@ -56,7 +56,7 @@ foreach f: have_funcs
  	config_h.set('HAVE_' + f.underscorify().to_upper(), cc.has_function(f))
  endforeach
  config_h.set10('HAVE_XUCRED_CR_PID', cc.has_member('struct xucred', 'cr_pid', prefix : '#include <sys/ucred.h>'))

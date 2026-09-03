@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='wayland'
-version='1.24.0'
+version='1.26.0'
 useconfigure='true'
 configopts=(
     "--buildtype=release"
@@ -16,7 +16,7 @@ depends=(
     'libxml2'
 )
 files=(
-    "https://gitlab.freedesktop.org/wayland/wayland/-/releases/${version}/downloads/wayland-${version}.tar.xz#82892487a01ad67b334eca83b54317a7c86a03a89cfadacfef5211f11a5d0536"
+    "https://gitlab.freedesktop.org/wayland/wayland/-/releases/${version}/downloads/wayland-${version}.tar.xz#64176eaa46e4969903e286f8e5ef8331affc17fdf03ac9b58381d2b23162b7a3"
 )
 
 configure() {

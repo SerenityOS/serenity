@@ -9,10 +9,10 @@ Subject: [PATCH] Don't build wayland-server
  2 files changed, 2 insertions(+), 57 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index ef34ba4a5511d7ccf25edd1c048752a737f9bca9..3b9c66693b1028bdd738d7d09284000582d597ce 100644
+index 2c010be034fa58156c55288cd7ac7a2611fee1eb..4def130feca306d1fb5191c01b92a90a1960e789 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -80,8 +80,8 @@ if get_option('libraries')
+@@ -85,8 +85,8 @@ if get_option('libraries')
  	ffi_dep = dependency('libffi')
  
  	decls = [
@@ -24,10 +24,10 @@ index ef34ba4a5511d7ccf25edd1c048752a737f9bca9..3b9c66693b1028bdd738d7d092840005
  	]
  
 diff --git a/src/meson.build b/src/meson.build
-index 984e34abccc095890e5e05fde4f11dbf99967ab8..e9f041c2a6b43f46b7408c8123c909e5b482c738 100644
+index b3b9ea57313abb1c4b7224fbb0d81dab1bf7dbb7..ca1302de112b498d501d50b13c8a21747799b9ad 100644
 --- a/src/meson.build
 +++ b/src/meson.build
-@@ -170,59 +170,6 @@ if get_option('libraries')
+@@ -169,59 +169,6 @@ if get_option('libraries')
  		error('We probably need to bump the SONAME of libwayland-server and -client')
  	endif
  
@@ -87,7 +87,7 @@ index 984e34abccc095890e5e05fde4f11dbf99967ab8..e9f041c2a6b43f46b7408c8123c909e5
  	wayland_client = library(
  		'wayland-client',
  		sources: [
-@@ -274,8 +221,6 @@ if get_option('libraries')
+@@ -273,8 +220,6 @@ if get_option('libraries')
  
  	install_headers([
  		'wayland-util.h',
