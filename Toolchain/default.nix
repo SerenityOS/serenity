@@ -33,6 +33,9 @@ mkShell.override { stdenv = gccStdenv; } {
     gperf
     imagemagick
     libtool
+    lua5_1
+    lua5_4
+    luarocks
     lzip
     meson
     nasm
