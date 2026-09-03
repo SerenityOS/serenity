@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='VVVVVV'
-version='2.4.3'
+version='2.4.4'
 useconfigure='true'
 files=(
-    "https://github.com/TerryCavanagh/VVVVVV/releases/download/${version}/VVVVVV-${version}.zip#72128cc6aa9f3aad1aa01f4f45cb48bd940856675f0cc30704dab80239871e9b"
+    "https://github.com/TerryCavanagh/VVVVVV/releases/download/${version}/VVVVVV-${version}.zip#c8d92f6551d3ee2e39b0a0e84e7e9c76b5c81cb6ec59f14e01c17136cb5a2ca1"
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
