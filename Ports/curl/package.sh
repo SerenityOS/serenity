@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='curl'
-version='8.21.0'
+version='8.22.0'
 useconfigure='true'
 files=(
-    "https://curl.se/download/curl-${version}.tar.bz2#ad6f2f94934b38e31e48272833c99b891d045b4565fe942a53fbd27bd3910e16"
+    "https://curl.se/download/curl-${version}.tar.bz2#5d956a6a22b3c279f50c421ee5d3c9e9d660cb6f115dcf881b579e952130549c"
 )
 depends=(
     'ca-certificates'
@@ -26,9 +26,7 @@ configure() {
         -DCURL_ZSTD='ON' \
         -DCURL_CA_BUNDLE='/etc/ssl/certs/ca-certificates.crt' \
         -DCURL_CA_PATH='none' \
-        -DCURL_DISABLE_NTLM='ON' \
         -DCURL_DISABLE_SOCKETPAIR='ON' \
-        -DCURL_DISABLE_TESTS='ON' \
         -DCURL_HIDDEN_SYMBOLS='OFF'
 }
 
