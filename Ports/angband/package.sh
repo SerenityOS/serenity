@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='angband'
-version='4.2.5'
+version='4.2.6'
 workdir="Angband-${version}"
 useconfigure='true'
 files=(
-    "https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz#c4cacbdf28f726fcb1a0b30b8763100fb06f88dbb570e955232e41d83e0718a6"
+    "https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz#8c0ffa2b85d74bd0cc273752f61c0440dba93323cd790be460f90c8dced7cbf4"
 )
 depends=(
     'ncurses'
