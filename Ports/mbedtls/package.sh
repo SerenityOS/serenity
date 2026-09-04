@@ -1,16 +1,28 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='mbedtls'
-version='3.4.1'
+version='4.2.0'
+useconfigure='true'
 files=(
-    "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v${version}.tar.gz#a420fcf7103e54e775c383e3751729b8fb2dcd087f6165befd13f28315f754f5"
+    "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-${version}/mbedtls-${version}.tar.bz2#2bed9d713b4668f76553b097e72b8aa30bc8f112a940d7ae228d524bbde6ffea"
 )
-makeopts+=(
-    'SHARED=1'
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    "-DCMAKE_INSTALL_PREFIX=${SERENITY_INSTALL_ROOT}/usr/local"
+    '-DCMAKE_BUILD_TYPE=Release'
+    '-DUSE_SHARED_MBEDTLS_LIBRARY=ON'
+    '-DENABLE_PROGRAMS=OFF'
+    '-DENABLE_TESTING=OFF'
+    '-GNinja'
 )
 
+configure() {
+    run cmake "${configopts[@]}" .
+}
+
+build() {
+    run ninja
+}
+
 install() {
-    run make \
-        DESTDIR="${SERENITY_INSTALL_ROOT}/usr/local" \
-        "${installopts[@]}" \
-        install
+    run ninja install
 }
