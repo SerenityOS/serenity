@@ -10,7 +10,7 @@ work around our `unzip` command not supporting the flag `-n`
  1 file changed, 8 insertions(+)
 
 diff --git a/src/luarocks/core/cfg.lua b/src/luarocks/core/cfg.lua
-index 926d479..7c2914b 100644
+index 1c380e1df582e63d44f432c418ab0a8b6fc27b5d..b990e39c5bc1d071aa7a20eb69fa09cb6fe74020 100644
 --- a/src/luarocks/core/cfg.lua
 +++ b/src/luarocks/core/cfg.lua
 @@ -42,6 +42,7 @@ local platform_order = {
@@ -21,7 +21,7 @@ index 926d479..7c2914b 100644
     -- Windows
     "windows",
     "win32",
-@@ -152,6 +153,7 @@ local platform_sets = {
+@@ -163,6 +164,7 @@ local platform_sets = {
     netbsd = { unix = true, bsd = true, netbsd = true },
     haiku = { unix = true, haiku = true },
     linux = { unix = true, linux = true },
@@ -29,7 +29,7 @@ index 926d479..7c2914b 100644
     mingw = { windows = true, win32 = true, mingw32 = true, mingw = true },
     msys = { unix = true, cygwin = true, msys = true },
     msys2_mingw_w64 = { windows = true, win32 = true, mingw32 = true, mingw = true, msys = true, msys2_mingw_w64 = true },
-@@ -497,6 +499,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
+@@ -557,6 +559,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
        defaults.variables.MAKE = "gmake"
     end
  
