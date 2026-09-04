@@ -5,7 +5,6 @@ useconfigure='true'
 configopts=(
     '--enable-pc-files'
     '--enable-sigwinch'
-    '--enable-term-driver'
     '--with-pkg-config=/usr/local/lib/pkgconfig'
     '--with-pkg-config-libdir=/usr/local/lib/pkgconfig'
     '--with-shared'
