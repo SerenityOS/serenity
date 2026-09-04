@@ -7,6 +7,8 @@ depends=(
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    # Upstream declares 2.8 which is no longer supported
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.25"
 )
 files=(
     "https://github.com/abishekvashok/cmatrix/archive/${version}.tar.gz#722fb8e8d4879adf3185f720d5a927134e64c9c7346f603910d235385359f8c3"
