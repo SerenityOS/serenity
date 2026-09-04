@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lua'
-version='5.4.6'
+version='5.5.1'
 files=(
-    "http://www.lua.org/ftp/lua-${version}.tar.gz#7d5ea1b9cb6aa0b59ca3dde1c6adcb57ef83a1ba8e5432c0ecd06bf439b3ad88"
+    "http://www.lua.org/ftp/lua-${version}.tar.gz#1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce"
 )
 depends=(
     'readline'
@@ -11,7 +11,7 @@ launcher_name='Lua'
 launcher_category='D&evelopment'
 launcher_command='/usr/local/bin/lua -i'
 launcher_run_in_terminal='true'
-icon_file="./doc/logo.gif"
+icon_file="./doc/logo.png"
 makeopts+=(
     '-Csrc/'
     'serenity'

@@ -33,8 +33,11 @@ mkShell.override { stdenv = gccStdenv; } {
     gperf
     imagemagick
     libtool
+    # Must be installed for LPeg and luarocks, same version as
+    # the Lua port, ends up in PATH as 'lua'
+    lua5_5
+    # Must be installed for LPeg but not needed directly
     lua5_1
-    lua5_4
     luarocks
     lzip
     meson
