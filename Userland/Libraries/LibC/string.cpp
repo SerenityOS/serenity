@@ -219,6 +219,18 @@ char* stpcpy(char* dest, char const* src)
     return dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/stpncpy.html
+char* stpncpy(char* dest, char const* src, size_t n)
+{
+    size_t i;
+    for (i = 0; i < n && src[i] != '\0'; ++i)
+        dest[i] = src[i];
+    char* result = &dest[i];
+    for (; i < n; ++i)
+        dest[i] = '\0';
+    return result;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncpy.html
 char* strncpy(char* dest, char const* src, size_t n)
 {
