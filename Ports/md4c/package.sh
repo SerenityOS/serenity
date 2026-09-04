@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='md4c'
-version='0.5.2'
+version='0.5.3'
 workdir="md4c-release-${version}"
 files=(
-    "https://github.com/mity/md4c/archive/release-${version}.tar.gz#55d0111d48fb11883aaee91465e642b8b640775a4d6993c2d0e7a8092758ef21"
+    "https://github.com/mity/md4c/archive/release-${version}.tar.gz#353c346f376b87c954a13f3415ede2d51264cc61dc5abcd38ff1d2aa0d059b9e"
 )
 useconfigure='true'
 
