@@ -8,10 +8,10 @@ Subject: [PATCH] Detect SerenityOS using the `uname` command
  1 file changed, 5 insertions(+)
 
 diff --git a/src/luarocks/core/sysdetect.lua b/src/luarocks/core/sysdetect.lua
-index 02b8a49..b05f170 100644
+index 3a2527f4a5a73e1d1b7e419ca92433817b164d18..d4efb7e63ee05d6c6af6c4e765fcdedc2ea57d96 100644
 --- a/src/luarocks/core/sysdetect.lua
 +++ b/src/luarocks/core/sysdetect.lua
-@@ -189,6 +189,11 @@ local function detect_elf_system(fd, hdr, sections)
+@@ -282,6 +282,11 @@ local function detect_elf_system(fd, hdr, sections)
              return "linux"
           end
        end
