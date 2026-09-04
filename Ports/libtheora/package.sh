@@ -1,11 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=libtheora
-version=1.1.1
-useconfigure=true
-configopts=()
-use_fresh_config_sub=true
+port='libtheora'
+version='1.2.0'
+useconfigure='true'
 files=(
-    "https://ftp.osuosl.org/pub/xiph/releases/theora/libtheora-${version}.tar.bz2#b6ae1ee2fa3d42ac489287d3ec34c5885730b1296f0801ae577a35193d3affbc"
+    "https://ftp.osuosl.org/pub/xiph/releases/theora/libtheora-${version}.tar.gz#279327339903b544c28a92aeada7d0dcfd0397b59c2f368cc698ac56f515906e"
 )
 depends=("libvorbis")
 configopts=("--disable-examples" "--disable-static" "--enable-shared")
