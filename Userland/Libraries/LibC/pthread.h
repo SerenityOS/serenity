@@ -81,9 +81,10 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
         0, 0, CLOCK_MONOTONIC_COARSE \
     }
 
-// FIXME: Actually implement this!
 #define PTHREAD_RWLOCK_INITIALIZER \
-    NULL
+    {                              \
+        0                          \
+    }
 
 #define PTHREAD_KEYS_MAX 64
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
