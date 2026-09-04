@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=libogg
-version=1.3.5
-useconfigure=true
+port='libogg'
+version='1.3.6'
+useconfigure='true'
 configopts=("--disable-static" "--enable-shared")
-use_fresh_config_sub=true
 files=(
-    "https://github.com/xiph/ogg/releases/download/v${version}/libogg-${version}.tar.gz#0eb4b4b9420a0f51db142ba3f9c64b333f826532dc0f48c6410ae51f4799b664"
+    "https://github.com/xiph/ogg/releases/download/v${version}/libogg-${version}.tar.gz#83e6704730683d004d20e21b8f7f55dcb3383cdf84c0daedf30bde175f774638"
 )
