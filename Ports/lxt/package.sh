@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lxt'
-version='1.3b'
+version='1.3c'
 files=(
-    "http://stahlke.org/dan/lxt/lxt-${version}.tar.gz#7a3ab299a6d61a71b271fd13b847b5a1c22a5f95df78561a325c78d50b6a6bc7"
+    "http://stahlke.org/dan/lxt/lxt-${version}.tar.gz#44d3e50c88c42be3fdd7c31b39cf087dde73c9e2bfdf42bfea506a81e92a5427"
 )
 useconfigure='true'
 depends=(
