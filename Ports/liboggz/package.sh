@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=liboggz
-version=1.1.1
-useconfigure=true
-use_fresh_config_sub=true
+port='liboggz'
+version='1.1.3'
+useconfigure='true'
 files=(
-    "https://downloads.xiph.org/releases/liboggz/liboggz-${version}.tar.gz#6bafadb1e0a9ae4ac83304f38621a5621b8e8e32927889e65a98706d213d415a"
+    "https://downloads.xiph.org/releases/liboggz/liboggz-${version}.tar.gz#2466d03b67ef0bcba0e10fb352d1a9ffd9f96911657abce3cbb6ba429c656e2f"
 )
 depends=("libogg")
