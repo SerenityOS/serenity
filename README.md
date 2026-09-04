@@ -14,14 +14,6 @@ SerenityOS is a love letter to '90s user interfaces with a custom Unix-like core
 
 Roughly speaking, the goal is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by us, for us, based on the things we like.
 
-You can watch videos of the system being developed on YouTube:
-
--   [Andreas Kling's channel](https://youtube.com/andreaskling)
--   [Linus Groh's channel](https://youtube.com/linusgroh)
--   [kleines Filmröllchen's channel](https://www.youtube.com/c/kleinesfilmroellchen)
-
-## Screenshot
-
 ![Screenshot as of c03b788.png](Meta/Screenshots/screenshot-c03b788.png)
 
 ## Features
@@ -77,7 +69,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 -   **Conrad Pankoff** - [deoxxa](https://github.com/deoxxa)
 -   **Sergey Bugaev** - [bugaevc](https://github.com/bugaevc)
 -   **Liav A** - [supercomputer7](https://github.com/supercomputer7)
--   **Linus Groh** - [linusg](https://github.com/linusg) [![GitHub Sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub)](https://github.com/sponsors/linusg)
+-   **Linus Groh** - [linusg](https://github.com/linusg)
 -   **Ali Mohammad Pur** - [alimpfard](https://github.com/alimpfard)
 -   **Shannon Booth** - [shannonbooth](https://github.com/shannonbooth)
 -   **Hüseyin ASLITÜRK** - [asliturk](https://github.com/asliturk)
