@@ -10,10 +10,10 @@ Disabling the error path resolves this issue and the game still works fine witho
  1 file changed, 5 deletions(-)
 
 diff --git a/src/command.c b/src/command.c
-index e1a43522d..4336d19ac 100644
+index ab6cfc08af7c4cde9f756d868b02e42ffd29229d..b211766175cc32464618a15ef16d08770a43eefd 100644
 --- a/src/command.c
 +++ b/src/command.c
-@@ -1522,8 +1522,6 @@ static void Setvalue(consvar_t *var, const char *valstr, boolean stealth)
+@@ -1607,8 +1607,6 @@ static void Setvalue(consvar_t *var, const char *valstr, boolean stealth)
  				override = true;
  				overrideval = v;
  			}
@@ -22,7 +22,7 @@ index e1a43522d..4336d19ac 100644
  #undef MINVAL
  #undef MAXVAL
  		}
-@@ -1558,9 +1556,6 @@ static void Setvalue(consvar_t *var, const char *valstr, boolean stealth)
+@@ -1643,9 +1641,6 @@ static void Setvalue(consvar_t *var, const char *valstr, boolean stealth)
  							goto found;
  				}
  			}

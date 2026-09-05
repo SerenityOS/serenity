@@ -10,10 +10,10 @@ It seems like it cannot automatically find it so we help it a little.
  1 file changed, 1 insertion(+)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 80a3bdcd6..a01d32e1f 100644
+index a4c631102606ee3177c94f1bb7a35b100694bf4c..ce1eaac9c80f028e91a293d2f89e7cf09c291877 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -168,6 +168,7 @@ set(SRB2_SDL2_EXE_NAME "" CACHE STRING "Override executable binary output name")
+@@ -130,6 +130,7 @@ set(SRB2_SDL2_EXE_NAME "" CACHE STRING "Override executable binary output name")
  set(SRB2_SDL2_EXE_SUFFIX "" CACHE STRING "Optional executable suffix, separated by an underscore")
  
  include_directories(${CMAKE_CURRENT_BINARY_DIR}/src)
