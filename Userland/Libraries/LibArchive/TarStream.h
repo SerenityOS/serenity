@@ -61,9 +61,9 @@ private:
 class TarOutputStream {
 public:
     TarOutputStream(MaybeOwned<Stream>);
-    ErrorOr<void> add_file(StringView path, struct stat const&, ReadonlyBytes);
-    ErrorOr<void> add_link(StringView path, struct stat const&, StringView);
-    ErrorOr<void> add_directory(StringView path, struct stat const&);
+    ErrorOr<void> add_file(StringView path, struct stat const&, ReadonlyBytes, StringView group_name = {}, StringView owner_name = {});
+    ErrorOr<void> add_link(StringView path, struct stat const&, StringView, StringView group_name = {}, StringView owner_name = {});
+    ErrorOr<void> add_directory(StringView path, struct stat const&, StringView group_name = {}, StringView owner_name = {});
     ErrorOr<void> finish();
 
 private:
