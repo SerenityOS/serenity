@@ -17,10 +17,12 @@ set(SOURCES
     BigInt/Algorithms/SimpleOperations.cpp
     BigInt/SignedBigInteger.cpp
     BigInt/UnsignedBigInteger.cpp
+    Certificate/Certificate.cpp
     Checksum/Adler32.cpp
     Checksum/cksum.cpp
     Checksum/CRC32.cpp
     Cipher/AES.cpp
+    Cipher/Cipher.cpp
     Cipher/ChaCha20.cpp
     Curves/Curve25519.cpp
     Curves/Ed25519.cpp

@@ -83,6 +83,10 @@ protected:
             data = data.slice(0, size);
             break;
         }
+        case PaddingMode::ZeroLength: {
+            // No padding
+            break;
+        }
         default:
             // FIXME: support other padding modes
             VERIFY_NOT_REACHED();

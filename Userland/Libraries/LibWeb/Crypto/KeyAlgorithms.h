@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023, stelar7 <dudedbz@gmail.com>
  * Copyright (c) 2024, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2024, Jelle Raaijmakers <jelle@ladybird.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -119,6 +120,60 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(named_curve_getter);
 
     NamedCurve m_named_curve;
+};
+
+// https://w3c.github.io/webcrypto/#AesKeyAlgorithm-dictionary
+struct AesKeyAlgorithm : public KeyAlgorithm {
+    JS_OBJECT(AesKeyAlgorithm, KeyAlgorithm);
+    JS_DECLARE_ALLOCATOR(AesKeyAlgorithm);
+
+public:
+    static JS::NonnullGCPtr<AesKeyAlgorithm> create(JS::Realm&);
+
+    virtual ~AesKeyAlgorithm() override = default;
+
+    u16 length() const { return m_length; }
+    void set_length(u16 length) { m_length = length; }
+
+protected:
+    AesKeyAlgorithm(JS::Realm&);
+
+    virtual void initialize(JS::Realm&) override;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(length_getter);
+
+    u16 m_length;
+};
+
+// https://w3c.github.io/webcrypto/#HmacKeyAlgorithm-dictionary
+struct HmacKeyAlgorithm : public KeyAlgorithm {
+    JS_OBJECT(HmacKeyAlgorithm, KeyAlgorithm);
+    JS_DECLARE_ALLOCATOR(HmacKeyAlgorithm);
+
+public:
+    static JS::NonnullGCPtr<HmacKeyAlgorithm> create(JS::Realm&);
+
+    virtual ~HmacKeyAlgorithm() override = default;
+
+    JS::GCPtr<KeyAlgorithm> hash() const { return m_hash; }
+    void set_hash(JS::GCPtr<KeyAlgorithm> hash) { m_hash = hash; }
+
+    WebIDL::UnsignedLong length() const { return m_length; }
+    void set_length(WebIDL::UnsignedLong length) { m_length = length; }
+
+protected:
+    HmacKeyAlgorithm(JS::Realm&);
+
+    virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Visitor&) override;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(hash_getter);
+    JS_DECLARE_NATIVE_FUNCTION(length_getter);
+
+    JS::GCPtr<KeyAlgorithm> m_hash;
+    WebIDL::UnsignedLong m_length;
 };
 
 }
