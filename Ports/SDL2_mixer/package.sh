@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2_mixer'
-version='2.6.3'
+version='2.8.2'
 useconfigure='true'
 files=(
-    "https://github.com/libsdl-org/SDL_mixer/releases/download/release-${version}/SDL2_mixer-${version}.tar.gz#7a6ba86a478648ce617e3a5e9277181bc67f7ce9876605eea6affd4a0d6eea8f"
+    "https://github.com/libsdl-org/SDL_mixer/releases/download/release-${version}/SDL2_mixer-${version}.tar.gz#938dff531d00ace2296557a6599abe6f34599e2f34f0a4a08a397e2ccac8b8f7"
 )
 depends=(
     'libmodplug'

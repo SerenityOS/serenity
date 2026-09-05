@@ -1,10 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='rsync'
-version='3.4.1'
+version='3.5.0'
 useconfigure='true'
-use_fresh_config_sub='true'
 files=(
-    "https://download.samba.org/pub/rsync/src/rsync-${version}.tar.gz#2924bcb3a1ed8b551fc101f740b9f0fe0a202b115027647cf69850d65fd88c52"
+    "https://download.samba.org/pub/rsync/src/rsync-${version}.tar.gz#c7ffd1ef653e99540f661e47cb00b7f9cad1ee6b972399b16f93d672656e0d33"
 )
 configopts=(
     '--disable-xxhash'
