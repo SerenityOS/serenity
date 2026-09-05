@@ -448,7 +448,7 @@ private:
             Variant<TupleTypeForArgumentListOf<Fns>...> arguments;
         };
 
-        using FunctionsAndArgs = FunctionAndArgs<
+        using FunctionsAndArgs = AK::DedupAndApply<FunctionAndArgs,
             decltype(&GLContext::gl_begin),
             decltype(&GLContext::gl_clear),
             decltype(&GLContext::gl_clear_color),

@@ -41,6 +41,41 @@ struct TypeList {
     using Type = typename TypeListElement<N, TypeList<Types...>>::Type;
 };
 
+// Set of ordered unique types
+template<typename Result, typename...>
+struct TypeSet;
+
+template<typename... RT>
+struct TypeSet<TypeList<RT...>> {
+    using Types = TypeList<RT...>;
+};
+
+template<typename... RT, typename T, typename... Ts>
+struct TypeSet<TypeList<RT...>, T, Ts...> {
+    using Types = Conditional<(IsSame<T, RT> || ...),
+        TypeSet<TypeList<RT...>, Ts...>,
+        TypeSet<TypeList<RT..., T>, Ts...>>::Types;
+};
+
+#if __has_builtin(__builtin_dedup_pack)
+template<typename... Ts>
+consteval auto dedup_types() -> TypeSet<TypeList<__builtin_dedup_pack<Ts...>...>>::Types { return {}; }
+#else
+template<typename... Ts>
+consteval auto dedup_types() -> TypeSet<TypeList<>, Ts...>::Types { return {}; }
+#endif
+
+template<template<typename...> typename V, typename L, typename... Ts>
+struct DedupAndApplyHelper;
+
+template<template<typename...> typename V, typename... Ts>
+struct DedupAndApplyHelper<V, TypeList<Ts...>> {
+    using Type = V<Ts...>;
+};
+
+template<template<typename...> typename V, typename... Ts>
+using DedupAndApply = DedupAndApplyHelper<V, decltype(dedup_types<Ts...>())>::Type;
+
 template<typename T>
 struct TypeWrapper {
     using Type = T;
