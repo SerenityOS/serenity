@@ -161,7 +161,7 @@ void HTMLDetailsElement::update_shadow_tree_slots()
         if (!child.is_slottable())
             return TraversalDecision::Continue;
 
-        child.as_slottable().visit([&](auto& node) {
+        child.as_slottable().visit([&](auto node) {
             descendants_assignment.append(JS::make_handle(node));
         });
 

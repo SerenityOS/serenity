@@ -45,6 +45,12 @@ constexpr T&& move(T& arg)
     return static_cast<T&&>(arg);
 }
 
+template<typename Ref, typename T>
+constexpr auto&& forward_like(T&& val)
+{
+    return static_cast<LikeT<Ref, T>>(val);
+}
+
 // `new` will be constexpr in C++26, until then we need this
 template<typename T, typename... Args, class = decltype(::new(declval<void*>()) T(declval<Args>()...))>
 constexpr T* construct_at(T* location, Args&&... args) noexcept
@@ -103,6 +109,7 @@ struct tuple_size<tuple_size_implementation<T const volatile, decltype(tuple_siz
 #        include <__tuple/tuple_element.h>
 #        include <__tuple/tuple_size.h>
 #        include <__utility/forward.h>
+#        include <__utility/forward_like.h>
 #        include <__utility/move.h>
 #    else
 // FIXME: Find a smaller header to include in these cases
@@ -117,6 +124,7 @@ struct tuple_size<tuple_size_implementation<T const volatile, decltype(tuple_siz
 namespace AK {
 using std::construct_at;
 using std::forward;
+using std::forward_like;
 using std::move;
 using std::tuple_element;
 using std::tuple_size;

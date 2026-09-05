@@ -45,7 +45,7 @@ constexpr inline bool IsSharedSingleProducerCircularQueue<Core::SharedSingleProd
 template<typename T>
 constexpr inline bool IsVariant = false;
 template<typename... Ts>
-constexpr inline bool IsVariant<Variant<Ts...>> = true;
+constexpr inline bool IsVariant<AK::Detail::Variant<Ts...>> = true;
 
 template<typename T>
 constexpr inline bool IsVector = false;
