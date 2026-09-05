@@ -13,7 +13,7 @@ configopts=(
     "--enable-libiberty"
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/binutils/binutils-${version}.tar.xz#d75a94f4d73e7a4086f7513e67e439e8fcdcbb726ffe63f4661744e6256b2cf2"
+    "mirror://gnu/binutils/binutils-${version}.tar.xz#d75a94f4d73e7a4086f7513e67e439e8fcdcbb726ffe63f4661744e6256b2cf2"
 )
 depends=(
     'zlib'

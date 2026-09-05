@@ -10,7 +10,7 @@ depends=(
     'openssl'
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/wget/wget-${version}.tar.gz#766e48423e79359ea31e41db9e5c289675947a7fcf2efdcedb726ac9d0da3784"
+    "mirror://gnu/wget/wget-${version}.tar.gz#766e48423e79359ea31e41db9e5c289675947a7fcf2efdcedb726ac9d0da3784"
 )
 configopts=(
     '--with-ssl=openssl'

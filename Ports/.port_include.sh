@@ -115,9 +115,13 @@ fi
 mkdir -p "${PORT_BUILD_DIR}"
 cd "${PORT_BUILD_DIR}"
 
-# 1 = url
+# 1 = source
 # 2 = sha256sum
-FILES_SIMPLE_PATTERN='^(https?:\/\/.+)#([0-9a-f]{64})$'
+FILES_SIMPLE_PATTERN='^(https?:\/\/.+|mirror://[^/]+/.+)#([0-9a-f]{64})$'
+
+# 1 = type
+# 2 = path
+MIRROR_URL_PATTERN="^mirror://([^/]+)/(.+)$"
 
 # 1 = repository
 # 2 = revision
@@ -301,23 +305,87 @@ func_defined post_fetch || post_fetch() {
     :
 }
 
+MIRROR_URLS_gnu="https://ftpmirror.gnu.org/gnu/ https://ftp.gnu.org/gnu/"
+
+resolve_mirror_urls() {
+    local type="${1}"
+    local path="${2}"
+
+    local mirror_urls_variable="MIRROR_URLS_${type}"
+    local mirrors_string="${!mirror_urls_variable:-}"
+
+    if [ -z "${mirrors_string}" ]; then
+        echo "error: Unknown mirror '${type}'" >&2
+        return 1
+    fi
+
+    local mirrors
+    read -ra mirrors <<< "${mirrors_string}"
+
+    local mirror
+    for mirror in "${mirrors[@]}"; do
+        printf '%s%s\n' "${mirror}" "${path}"
+    done
+}
+
 do_download_file() {
     local url="$1"
     local filename="$2"
     local accept_existing="${3:-true}"
+    local expected_checksum="${4:-}"
+
+    local urls=("${url}")
+    local resolved_urls
+
+    if [[ "${url}" =~ ${MIRROR_URL_PATTERN} ]]; then
+        local type="${BASH_REMATCH[1]}"
+        local path="${BASH_REMATCH[2]}"
+        if ! resolved_urls="$(resolve_mirror_urls "${type}" "${path}")"; then
+            return 1
+        fi
+
+        urls=()
+        local resolved_url
+        while IFS= read -r resolved_url; do
+            urls+=("${resolved_url}")
+        done <<< "${resolved_urls}"
+    fi
 
     if $accept_existing && [ -f "$filename" ]; then
         echo "$filename already exists"
         return
     fi
 
-    echo "Downloading URL: ${url}"
+    local download_status=1
 
-    if which curl; then
-        run_nocd curl ${curlopts:-} "$url" --fail -L -o "$filename"
-    else
-        run_nocd pro "$url" > "$filename"
-    fi
+    for candidate_url in "${urls[@]}"; do
+        echo "Downloading URL: ${candidate_url}"
+        if which curl; then
+            if run_nocd curl ${curlopts:-} "$candidate_url" --fail -L -o "$filename"; then
+                return 0
+            else
+                download_status="$?"
+                rm -f "${filename}"
+            fi
+        else
+            if run_nocd pro "$candidate_url" > "$filename"; then
+                if [ -n "${expected_checksum}" ]; then
+                    local actual_checksum="$(sha256sum "$filename" | cut -f1 -d' ')"
+
+                    if [ "${actual_checksum}" != "${expected_checksum}" ]; then
+                        rm -f "${filename}"
+                        continue
+                    fi
+                fi
+
+                return 0
+            else
+                download_status="$?"
+                rm -f "${filename}"
+            fi
+        fi
+    done
+    return "${download_status}"
 }
 
 fetch_simple() {
@@ -329,7 +397,7 @@ fetch_simple() {
     tried_download_again=0
 
     while true; do
-        do_download_file "${url}" "${PORT_META_DIR}/${filename}"
+        do_download_file "${url}" "${PORT_META_DIR}/${filename}" true "${checksum}"
 
         actual_checksum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
 
