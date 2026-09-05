@@ -15,8 +15,7 @@ configure() {
     run cmake \
         -B 'build' \
         -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
-        -DCMAKE_BUILD_TYPE='Release' \
-        -DCMAKE_INSTALL_PREFIX="${SERENITY_INSTALL_ROOT}/usr/local/"
+        -DCMAKE_BUILD_TYPE='Release'
 }
 
 build() {

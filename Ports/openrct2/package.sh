@@ -34,7 +34,6 @@ configure() {
     cmake \
         -G Ninja \
         -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
-        -DCMAKE_INSTALL_PREFIX="${DESTDIR}/usr/local/" \
         -DCMAKE_BUILD_TYPE='Release' \
         -DDISABLE_DISCORD_RPC='ON' \
         -DDISABLE_GOOGLE_BENCHMARK='ON' \
