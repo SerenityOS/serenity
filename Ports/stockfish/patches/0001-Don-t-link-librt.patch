@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 5 Sep 2026 16:34:53 +0100
+Subject: [PATCH] Don't link librt
+
+---
+ Makefile | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index e5c94df37323255c94b750bcd1f2ff6b4a6a1b6a..3d8f1dbf86cd4b455b94a4684b1dd09e48fa75f1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -26,11 +26,7 @@ ifeq ($(KERNEL),Linux)
+ endif
+ 
+ ### Target operating system (may differ from KERNEL when cross-compiling)
+-TARGET_KERNEL := $(KERNEL)
+-ifeq ($(COMP),ndk)
+-	TARGET_KERNEL := Linux
+-	OS := Android
+-endif
++TARGET_KERNEL := Serenity
+ 
+ ### Command prefix to run the built executable (e.g. wine, sde, qemu)
+ ### Backward compatible alias: WINE_PATH (deprecated)
+@@ -698,7 +694,7 @@ ifneq ($(OS),Android)
+ 				add_lrt = no
+ 			endif
+ 
+-			ifeq ($(TARGET_KERNEL),Darwin)
++			ifneq ($(filter Darwin Serenity,$(TARGET_KERNEL)),)
+ 				add_lrt = no
+ 			endif
+ 
