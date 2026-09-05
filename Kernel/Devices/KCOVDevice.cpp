@@ -71,9 +71,9 @@ ErrorOr<void> KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspac
     }
 }
 
-ErrorOr<File::VMObjectAndMemoryType> KCOVDevice::vmobject_and_memory_type_for_mmap(Process& process, Memory::VirtualRange const&, u64&, bool)
+ErrorOr<File::VMObjectAndMemoryType> KCOVDevice::vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const&, u64&, bool)
 {
-    auto* kcov_instance = process.kcov_instance();
+    auto* kcov_instance = Process::current().kcov_instance();
     VERIFY(kcov_instance != nullptr); // Should have happened on fd open()
 
     if (!kcov_instance->vmobject())

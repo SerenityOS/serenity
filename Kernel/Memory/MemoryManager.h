@@ -128,7 +128,6 @@ class MemoryManager {
     friend class PageDirectory;
     friend class AnonymousVMObject;
     friend class Region;
-    friend class RegionTree;
     friend class VMObject;
     friend struct ::KmallocGlobalData;
 
@@ -243,7 +242,7 @@ private:
         Vector<NonnullOwnPtr<PhysicalRegion>> physical_regions;
         OwnPtr<PhysicalRegion> physical_pages_region;
 
-        RegionTree region_tree;
+        RegionTree<Region, PAGE_SIZE> region_tree;
 
         Vector<UsedMemoryRange> used_memory_ranges;
         Vector<PhysicalMemoryRange> physical_memory_ranges;

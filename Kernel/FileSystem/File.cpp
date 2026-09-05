@@ -35,7 +35,7 @@ ErrorOr<void> File::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
     return ENOTTY;
 }
 
-ErrorOr<File::VMObjectAndMemoryType> File::vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64&, bool)
+ErrorOr<File::VMObjectAndMemoryType> File::vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const&, u64&, bool)
 {
     return ENODEV;
 }

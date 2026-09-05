@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/riscv64/CSR.h>
 #include <Kernel/Library/StdLib.h>
-#include <Kernel/Memory/AddressSpace.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_RISCV64()
@@ -32,10 +32,10 @@ struct ThreadRegisters {
 
     FlatPtr frame_pointer() const { return x[7]; }
 
-    void set_initial_state(bool is_kernel_process, Memory::AddressSpace& space, FlatPtr kernel_stack_top)
+    void set_initial_state(bool is_kernel_process, Memory::PageDirectory const& page_directory, FlatPtr kernel_stack_top)
     {
         set_sp(kernel_stack_top);
-        satp = space.page_directory().satp();
+        satp = page_directory.satp();
         set_sstatus(is_kernel_process);
     }
 
@@ -45,11 +45,11 @@ struct ThreadRegisters {
         x[9] = entry_data; // a0
     }
 
-    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::AddressSpace& space)
+    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::PageDirectory const& page_directory)
     {
         set_ip(entry_ip);
         set_sp(userspace_sp);
-        satp = space.page_directory().satp();
+        satp = page_directory.satp();
         set_sstatus(false);
     }
 

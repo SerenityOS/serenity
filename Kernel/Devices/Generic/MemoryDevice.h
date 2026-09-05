@@ -19,7 +19,7 @@ public:
     static NonnullRefPtr<MemoryDevice> must_create();
     ~MemoryDevice();
 
-    virtual ErrorOr<VMObjectAndMemoryType> vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
+    virtual ErrorOr<VMObjectAndMemoryType> vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const&, u64& offset, bool shared) override;
 
 private:
     MemoryDevice();
