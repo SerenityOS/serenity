@@ -15,27 +15,35 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
+macro(add_cxx_compile_options)
+    set(args "")
+    foreach(arg ${ARGN})
+        string(APPEND args ${arg}$<SEMICOLON>)
+    endforeach()
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX,OBJCXX>:${args}>)
+endmacro()
+
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 
 add_compile_options(-Wcast-qual)
-add_compile_options(-Wdeprecated-copy)
 add_compile_options(-Wduplicated-cond)
 add_compile_options(-Wformat=2)
 add_compile_options(-Wimplicit-fallthrough)
 add_compile_options(-Wlogical-op)
 add_compile_options(-Wmisleading-indentation)
 add_compile_options(-Wmissing-declarations)
-add_compile_options(-Wnon-virtual-dtor)
-add_compile_options(-Wsuggest-override)
 add_compile_options(-Wundef)
 add_compile_options(-Wunused)
 add_compile_options(-Wwrite-strings)
 
-add_compile_options(-Wno-invalid-offsetof)
-
 add_compile_options(-Wno-unknown-warning-option)
 add_compile_options(-Wno-unused-command-line-argument)
+
+add_cxx_compile_options(-Wdeprecated-copy)
+add_cxx_compile_options(-Wnon-virtual-dtor)
+add_cxx_compile_options(-Wsuggest-override)
+add_cxx_compile_options(-Wno-invalid-offsetof)
 
 # This warning is triggered when one accepts or returns vectors from a function (that is not marked
 # with [[gnu::target(...)]]) which would have been otherwise passed in register if the current
@@ -78,10 +86,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
     # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
     add_compile_options(-Wno-expansion-to-defined)
-    add_compile_options(-Wno-literal-suffix)
+    add_cxx_compile_options(-Wno-literal-suffix)
 
     # FIXME: This warning seems useful but has too many false positives with GCC 13.
-    add_compile_options(-Wno-dangling-reference)
+    add_cxx_compile_options(-Wno-dangling-reference)
 
     # FIXME: This seems to produce way to many false positives with GCC 15
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
@@ -91,5 +99,5 @@ endif()
 
 if (UNIX AND NOT APPLE AND NOT ENABLE_FUZZERS)
     add_compile_options(-fno-semantic-interposition)
-    add_compile_options(-fvisibility-inlines-hidden)
+    add_cxx_compile_options(-fvisibility-inlines-hidden)
 endif()
