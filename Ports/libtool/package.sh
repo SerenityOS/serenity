@@ -7,7 +7,7 @@ depends=(
     'sed'
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/libtool/libtool-${version}.tar.xz#f81f5860666b0bc7d84baddefa60d1cb9fa6fceb2398cc3baca6afaa60266675"
+    "mirror://gnu/libtool/libtool-${version}.tar.xz#f81f5860666b0bc7d84baddefa60d1cb9fa6fceb2398cc3baca6afaa60266675"
 )
 configopts=("--prefix=/usr/local")
 

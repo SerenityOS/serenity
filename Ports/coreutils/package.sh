@@ -3,7 +3,7 @@ port='coreutils'
 version='9.9'
 useconfigure='true'
 files=(
-    "https://ftpmirror.gnu.org/gnu/coreutils/coreutils-${version}.tar.gz#91a719fcf923de686016f2c8d084a8be1f793f34173861273c4668f7c65af94a"
+    "mirror://gnu/coreutils/coreutils-${version}.tar.gz#91a719fcf923de686016f2c8d084a8be1f793f34173861273c4668f7c65af94a"
 )
 
 # Exclude some non-working utilities:

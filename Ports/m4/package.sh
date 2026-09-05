@@ -2,7 +2,7 @@
 port='m4'
 version='1.4.20'
 files=(
-    "https://ftpmirror.gnu.org/gnu/m4/m4-${version}.tar.gz#6ac4fc31ce440debe63987c2ebbf9d7b6634e67a7c3279257dc7361de8bdb3ef"
+    "mirror://gnu/m4/m4-${version}.tar.gz#6ac4fc31ce440debe63987c2ebbf9d7b6634e67a7c3279257dc7361de8bdb3ef"
 )
 useconfigure='true'
 
