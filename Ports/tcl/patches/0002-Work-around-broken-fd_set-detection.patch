@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 5 Sep 2026 16:57:09 +0100
+Subject: [PATCH] Work around broken fd_set detection
+
+We have it in sys/select.h according to POSIX but the configure script
+goes looking in sys/types.h (apparently for historic reasons).
+---
+ tclUnixPort.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tclUnixPort.h b/tclUnixPort.h
+index 7df1634374376390846cc07cc1a99a78ef6b1096..ed447087a3d83d85d8669bb181adde17ea89a325 100644
+--- a/tclUnixPort.h
++++ b/tclUnixPort.h
+@@ -428,6 +428,8 @@ extern int	gettimeofday(struct timeval *tp,
+  *---------------------------------------------------------------------------
+  */
+ 
++#undef NO_FD_SET
++
+ #ifndef NO_FD_SET
+ #   define SELECT_MASK	fd_set
+ #else /* NO_FD_SET */
