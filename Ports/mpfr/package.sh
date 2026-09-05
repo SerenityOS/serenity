@@ -7,7 +7,7 @@ configopts=(
     '--with-sysroot=/'
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/mpfr/mpfr-${version}.tar.xz#277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2"
+    "mirror://gnu/mpfr/mpfr-${version}.tar.xz#277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2"
 )
 depends=(
     'gmp'

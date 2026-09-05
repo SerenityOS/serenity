@@ -10,7 +10,7 @@ configopts=(
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/mpc/mpc-${version}.tar.gz#ab642492f5cf882b74aa0cb730cd410a81edcdbec895183ce930e706c1c759b8"
+    "mirror://gnu/mpc/mpc-${version}.tar.gz#ab642492f5cf882b74aa0cb730cd410a81edcdbec895183ce930e706c1c759b8"
 )
 depends=(
     'gmp'

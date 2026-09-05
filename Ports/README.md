@@ -197,11 +197,15 @@ An array of external files required by the port, one per line.
 The format of each entry is as follows:
 
 ```text
-URL#HASH
+SOURCE#HASH
 ```
 
-Where `URL` is the URL from where the file will be downloaded (using `curl`)
-and `HASH` is the SHA256 hash that will be used for verification.
+Where `SOURCE` is either a direct URL or a mirror source in the form
+`mirror://TYPE/PATH`, and `HASH` is the SHA256 hash that will be used for
+verification.
+
+For mirror sources, `TYPE` selects a configured list of mirror base URLs and
+`PATH` is appended to each of them. The resulting URLs are tried in order until a download succeeds.
 
 For example:
 
@@ -210,6 +214,17 @@ files=(
     "https://example.com/foo-${version}.tar.xz#9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
 )
 ```
+
+Or using a mirror source:
+
+```bash
+files=(
+    "mirror://gnu/binutils/binutils-${version}.tar.xz#9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
+)
+```
+
+Here, `gnu` is the mirror type and `binutils/binutils-${version}.tar.xz`
+is the path.
 
 If a file is a compressed tar archive, a gzip compressed file or a zip
 compressed file, it will be extracted.

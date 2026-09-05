@@ -5,7 +5,7 @@ depends=(
     'libiconv'
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/diffutils/diffutils-${version}.tar.xz#7c8b7f9fc8609141fdea9cece85249d308624391ff61dedaf528fcb337727dfd"
+    "mirror://gnu/diffutils/diffutils-${version}.tar.xz#7c8b7f9fc8609141fdea9cece85249d308624391ff61dedaf528fcb337727dfd"
 )
 useconfigure='true'
 configopts=(
