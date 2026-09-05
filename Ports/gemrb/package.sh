@@ -15,7 +15,6 @@ depends=(
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
-    "-DCMAKE_INSTALL_PREFIX=${DESTDIR}/usr/local/"
     '-DCMAKE_BUILD_TYPE=Release'
     '-DDISABLE_WERROR=1'
     '-DSTATIC_LINK=ON'

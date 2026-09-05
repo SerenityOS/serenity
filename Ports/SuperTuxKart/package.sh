@@ -29,7 +29,6 @@ depends=(
 
 configopts=(
     '-DCMAKE_BUILD_TYPE=STKRelease'
-    "-DCMAKE_INSTALL_PREFIX=${SERENITY_INSTALL_ROOT}/usr/local"
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
     '-DBUILD_RECORDER=OFF'
     '-DBUILD_SHARED_LIBS=OFF'

@@ -11,7 +11,6 @@ configopts=(
     '-DBUILD_TOOLS=OFF'
     '-DBUILD_TESTS=OFF'
     "-DFFMPEG_ROOT=${SERENITY_INSTALL_ROOT}/usr/local"
-    "-DCMAKE_INSTALL_PREFIX=${SERENITY_INSTALL_ROOT}/usr/local"
 )
 files=(
     "https://github.com/acoustid/chromaprint/releases/download/v${version}/chromaprint-${version}.tar.gz#3368805af0ee47b9df74df10b5001a44569e01df2844dab520031720dde9ad23"

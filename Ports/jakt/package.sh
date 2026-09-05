@@ -34,8 +34,7 @@ configure() {
         -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
         -DSERENITY_SOURCE_DIR="${SERENITY_SOURCE_DIR}" \
         -DCMAKE_BUILD_TYPE=Release \
-        -DJAKT_BOOTSTRAP_COMPILER="${install_path}/bin/jakt" \
-        -DCMAKE_INSTALL_PREFIX="${SERENITY_INSTALL_ROOT}/usr/local"
+        -DJAKT_BOOTSTRAP_COMPILER="${install_path}/bin/jakt"
 }
 
 build() {
