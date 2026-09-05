@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='rubberband'
-version='3.3.0'
+version='4.0.0'
 depends=(
     'libfftw3'
     'libopus'
@@ -20,7 +20,7 @@ configopts=(
     '-Ddefault_library=shared'
 )
 files=(
-    "https://breakfastquay.com/files/releases/rubberband-${version}.tar.bz2#d9ef89e2b8ef9f85b13ac3c2faec30e20acf2c9f3a9c8c45ce637f2bc95e576c"
+    "https://breakfastquay.com/files/releases/rubberband-${version}.tar.bz2#af050313ee63bc18b35b2e064e5dce05b276aaf6d1aa2b8a82ced1fe2f8028e9"
 )
 
 configure() {
