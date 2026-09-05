@@ -329,6 +329,8 @@ private:
         m_drawn_end_of_line_offset = 0;
         m_drawn_spans = {};
         m_paste_buffer.clear_with_capacity();
+        m_shown_lines = 0;
+        m_extra_forward_lines = 0;
     }
 
     ErrorOr<void> refresh_display();
