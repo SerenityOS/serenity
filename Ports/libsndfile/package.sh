@@ -19,6 +19,8 @@ configopts=(
     '-DENABLE_CPACK=OFF'
     '-DENABLE_STATIC_RUNTIME=OFF'
     '-DBUILD_SHARED_LIBS=ON'
+    # Upstream declares 3.1 which is no longer supported
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.25"
 )
 files=(
     "https://github.com/libsndfile/libsndfile/archive/refs/tags/${version}.tar.gz#ffe12ef8add3eaca876f04087734e6e8e029350082f3251f565fa9da55b52121"
