@@ -67,7 +67,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
     TRY(require_promise(Pledge::stdio));
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto addr = (FlatPtr)params.addr;
+    auto addr = params.addr.ptr();
     auto size = params.size;
     auto alignment = params.alignment ? params.alignment : PAGE_SIZE;
     auto prot = params.prot;
@@ -393,7 +393,7 @@ ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<Syscall::SC_set_mmap_name_
         return ENAMETOOLONG;
 
     auto name = TRY(try_copy_kstring_from_user(params.name));
-    auto range = TRY(Memory::expand_range_to_page_boundaries((FlatPtr)params.addr, params.size));
+    auto range = TRY(Memory::expand_range_to_page_boundaries(params.addr.ptr(), params.size));
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
         auto* region = space->find_region_from_range(range);
@@ -428,7 +428,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*>
     TRY(require_promise(Pledge::stdio));
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto old_range = TRY(Memory::expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size));
+    auto old_range = TRY(Memory::expand_range_to_page_boundaries(params.old_address.ptr(), params.old_size));
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
         auto* old_region = space->find_region_from_range(old_range);

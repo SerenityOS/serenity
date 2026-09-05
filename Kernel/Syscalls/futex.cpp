@@ -167,8 +167,8 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         return (int)woke_count;
     };
 
-    auto user_address = FlatPtr(params.userspace_address);
-    auto user_address2 = FlatPtr(params.userspace_address2);
+    auto user_address = params.userspace_address.ptr();
+    auto user_address2 = params.userspace_address2.ptr();
 
     auto do_wait = [&](u32 bitset) -> ErrorOr<FlatPtr> {
         bool did_create;
@@ -179,7 +179,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
             if (!user_value.has_value())
                 return EFAULT;
             if (user_value.value() != params.val) {
-                dbgln_if(FUTEX_DEBUG, "futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
+                dbgln_if(FUTEX_DEBUG, "futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address.ptr(), params.val);
                 return EAGAIN;
             }
             atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);

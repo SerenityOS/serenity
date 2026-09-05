@@ -371,9 +371,9 @@ struct Formatter<StringArgument> : StandardFormatter {
         }
 
         // TODO: Avoid trying to copy excessively long strings.
-        auto string_buffer = copy_from_process(string_argument.argument.characters, string_argument.argument.length);
+        auto string_buffer = copy_from_process(string_argument.argument.characters.ptr(), string_argument.argument.length);
         if (string_buffer.is_error()) {
-            builder.appendff("{}{{{:p}, {}b}}", string_buffer.error(), (void const*)string_argument.argument.characters, string_argument.argument.length);
+            builder.appendff("{}{{{:p}, {}b}}", string_buffer.error(), string_argument.argument.characters.ptr(), string_argument.argument.length);
         } else {
             auto view = StringView(string_buffer.value());
             if (!string_argument.trim_by.is_empty())
@@ -708,7 +708,7 @@ static ErrorOr<void> format_poll(FormattedSyscallBuilder& builder, Syscall::SC_p
     auto params = TRY(copy_from_process(params_p));
     builder.add_arguments(
         params.nfds,
-        PointerArgument { params.fds },
+        PointerArgument { params.fds.ptr() },
         TRY(copy_from_process(params.timeout)),
         PointerArgument { params.sigmask });
     return {};
@@ -827,7 +827,7 @@ struct MemoryProtectionFlags : BitflagBase {
 static ErrorOr<void> format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
 {
     auto params = TRY(copy_from_process(params_p));
-    builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment, StringArgument { params.name });
+    builder.add_arguments(params.addr.ptr(), params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment, StringArgument { params.name });
     return {};
 }
 
@@ -844,7 +844,7 @@ static void format_mprotect(FormattedSyscallBuilder& builder, void* addr, size_t
 static ErrorOr<void> format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_set_mmap_name_params* params_p)
 {
     auto params = TRY(copy_from_process(params_p));
-    builder.add_arguments(params.addr, params.size, StringArgument { params.name });
+    builder.add_arguments(params.addr.ptr(), params.size, StringArgument { params.name });
     return {};
 }
 
