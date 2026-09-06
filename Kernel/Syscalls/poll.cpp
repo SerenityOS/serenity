@@ -37,12 +37,8 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
 
     Vector<pollfd, FD_SETSIZE> fds_copy;
     if (params.nfds > 0) {
-        Checked<size_t> nfds_checked = sizeof(pollfd);
-        nfds_checked *= params.nfds;
-        if (nfds_checked.has_overflow())
-            return EFAULT;
         TRY(fds_copy.try_resize(params.nfds));
-        TRY(copy_from_user(fds_copy.data(), &params.fds[0], nfds_checked.value()));
+        TRY(copy_n_from_user(fds_copy.data(), params.fds, params.nfds));
     }
 
     Thread::SelectBlocker::FDVector fds_info;
@@ -131,7 +127,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
     }
 
     if (params.nfds > 0)
-        TRY(copy_n_to_user(&params.fds[0], fds_copy.data(), params.nfds));
+        TRY(copy_n_to_user(params.fds, fds_copy.data(), params.nfds));
 
     return fds_with_revents;
 }

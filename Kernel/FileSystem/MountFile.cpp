@@ -6,6 +6,7 @@
 
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
+#include <AK/Userspace.h>
 #include <Kernel/API/FileSystem/MountSpecificFlags.h>
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
@@ -78,7 +79,7 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
         auto user_mount_specific_data = static_ptr_cast<MountSpecificFlag const*>(arg);
         auto mount_specific_data = TRY(copy_typed_from_user(user_mount_specific_data));
 
-        Syscall::StringArgument user_key_string { reinterpret_cast<char const*>(mount_specific_data.key_string_addr), static_cast<size_t>(mount_specific_data.key_string_length) };
+        Syscall::StringArgument user_key_string { static_ptr_cast<char const*>(mount_specific_data.key_string_addr), static_cast<size_t>(mount_specific_data.key_string_length) };
         auto key_string = TRY(Process::get_syscall_name_string_fixed_buffer<MOUNT_SPECIFIC_FLAG_KEY_STRING_MAX_LENGTH>(user_key_string));
 
         switch (request) {
@@ -108,7 +109,7 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
             // NOTE: This is actually considered as simply boolean flag.
             case MountSpecificFlag::ValueType::Boolean: {
                 VERIFY(m_file_system_initializer.validate_mount_boolean_flag);
-                Userspace<u64*> user_value_addr(reinterpret_cast<FlatPtr>(mount_specific_data.value_addr));
+                auto user_value_addr = static_ptr_cast<u64 const*>(mount_specific_data.value_addr);
                 auto value_integer = TRY(copy_typed_from_user(user_value_addr));
                 if (value_integer != 0 && value_integer != 1)
                     return EDOM;
@@ -121,7 +122,7 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
             }
             case MountSpecificFlag::ValueType::UnsignedInteger: {
                 VERIFY(m_file_system_initializer.validate_mount_unsigned_integer_flag);
-                Userspace<u64*> user_value_addr(reinterpret_cast<FlatPtr>(mount_specific_data.value_addr));
+                auto user_value_addr = static_ptr_cast<u64 const*>(mount_specific_data.value_addr);
                 auto value_integer = TRY(copy_typed_from_user(user_value_addr));
                 TRY(m_file_system_initializer.validate_mount_unsigned_integer_flag(key_string.representable_view(), value_integer));
 
@@ -131,7 +132,7 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
             }
             case MountSpecificFlag::ValueType::SignedInteger: {
                 VERIFY(m_file_system_initializer.validate_mount_signed_integer_flag);
-                Userspace<i64*> user_value_addr(reinterpret_cast<FlatPtr>(mount_specific_data.value_addr));
+                auto user_value_addr = static_ptr_cast<i64 const*>(mount_specific_data.value_addr);
                 auto value_integer = TRY(copy_typed_from_user(user_value_addr));
                 TRY(m_file_system_initializer.validate_mount_signed_integer_flag(key_string.representable_view(), value_integer));
 

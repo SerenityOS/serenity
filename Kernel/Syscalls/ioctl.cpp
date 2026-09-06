@@ -11,12 +11,12 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
+ErrorOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, Userspace<void*> arg)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto description = TRY(open_file_description(fd));
     if (request == FIONBIO) {
-        description->set_blocking(TRY(copy_typed_from_user(Userspace<int const*>(arg))) == 0);
+        description->set_blocking(TRY(copy_typed_from_user(static_ptr_cast<int const*>(arg))) == 0);
         return 0;
     }
     if (request == FIOCLEX) {

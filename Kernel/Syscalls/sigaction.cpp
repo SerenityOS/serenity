@@ -94,10 +94,10 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
 
     stack_ptr += sizeof(siginfo); // We don't need this here.
 
-    auto ucontext = TRY(copy_typed_from_user<__ucontext>(stack_ptr));
+    auto ucontext = TRY(copy_typed_from_user(Userspace<__ucontext const*> { stack_ptr }));
     stack_ptr += sizeof(__ucontext);
 
-    auto saved_return_value = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
+    auto saved_return_value = TRY(copy_typed_from_user(Userspace<FlatPtr const*> { stack_ptr }));
 
     Thread::current()->m_signal_mask = ucontext.uc_sigmask;
     Thread::current()->m_currently_handled_signal = 0;

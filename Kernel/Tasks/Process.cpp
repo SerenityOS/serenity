@@ -814,8 +814,7 @@ ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<cha
 
 ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::StringArgument const& path)
 {
-    Userspace<char const*> path_characters((FlatPtr)path.characters);
-    return get_syscall_path_argument(path_characters, path.length);
+    return get_syscall_path_argument(path.characters, path.length);
 }
 
 ErrorOr<void> Process::dump_core()

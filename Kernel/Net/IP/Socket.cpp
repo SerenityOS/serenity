@@ -368,7 +368,7 @@ ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descrip
         memcpy(&out_addr.sin_addr, &packet->peer_address, sizeof(IPv4Address));
         out_addr.sin_port = htons(packet->peer_port);
         out_addr.sin_family = AF_INET;
-        Userspace<sockaddr_in*> dest_addr = addr.ptr();
+        Userspace<sockaddr_in*> dest_addr { addr.ptr() };
         SOCKET_TRY(copy_to_user(dest_addr, &out_addr));
 
         socklen_t out_length = sizeof(sockaddr_in);
