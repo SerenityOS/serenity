@@ -73,6 +73,7 @@ BINUTILS_MD5SUM="81bb6810bcd1119819dc0804956e1c92"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
 BINUTILS_BASE_URL="https://ftpmirror.gnu.org/gnu/binutils"
+BINUTILS_BASE_FALLBACK="https://ftp.gnu.org/gnu/binutils"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
@@ -81,6 +82,7 @@ GCC_MD5SUM="19b777fb19ea4982731392481306f0d3"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.xz"
 GCC_BASE_URL="https://ftpmirror.gnu.org/gnu/gcc"
+GCC_BASE_FALLBACK="https://ftp.gnu.org/gnu/gcc"
 
 buildstep() {
     NAME=$1
@@ -133,7 +135,17 @@ pushd "$DIR/Tarballs"
     fi
     if [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
         rm -f $BINUTILS_PKG
-        curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
+        if ! curl --fail -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG" ; then
+            curl --fail -LO "$BINUTILS_BASE_FALLBACK/$BINUTILS_PKG"
+        fi
+
+        md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
+        if [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
+            rm -f $BINUTILS_PKG
+            echo "Invalid binutils checksum"
+            exit 1
+        fi
+
     else
         echo "Skipped downloading binutils"
     fi
@@ -145,7 +157,17 @@ pushd "$DIR/Tarballs"
     fi
     if [ "$md5" != ${GCC_MD5SUM} ] ; then
         rm -f $GCC_PKG
-        curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
+        if ! curl --fail -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG" ; then
+            curl --fail -LO "$GCC_BASE_FALLBACK/$GCC_NAME/$GCC_PKG"
+        fi
+
+        md5="$($MD5SUM $GCC_PKG | cut -f1 -d' ')"
+        if [ "$md5" != ${GCC_MD5SUM} ] ; then
+            rm -f $GCC_PKG
+            echo "Invalid gcc checksum"
+            exit 1
+        fi
+
     else
         echo "Skipped downloading gcc"
     fi
