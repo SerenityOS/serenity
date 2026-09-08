@@ -67,6 +67,7 @@ typedef struct __locale_t_impl* locale_t;
 
 struct lconv* localeconv(void);
 void freelocale(locale_t);
+char const* getlocalename_l(int, locale_t);
 locale_t newlocale(int, char const*, locale_t);
 char* setlocale(int category, char const* locale);
 locale_t uselocale(locale_t);
