@@ -19,3 +19,8 @@ configure includes the code for detecting dynamic linker characteristics
 twice, and it also queries the C++ compiler for shared library support.
 
 
+## `0002-gnulib-Port-getlocalename_l_unsafe-to-SerenityOS.patch`
+
+gnulib: Port getlocalename_l_unsafe to SerenityOS
+
+
