@@ -35,6 +35,8 @@ enum {
 #define LC_MESSAGES_MASK (1 << LC_MESSAGES)
 #define LC_ALL_MASK (LC_NUMERIC_MASK | LC_CTYPE_MASK | LC_COLLATE_MASK | LC_TIME_MASK | LC_MONETARY_MASK | LC_MESSAGES_MASK)
 
+#define LC_GLOBAL_LOCALE ((locale_t) - 1)
+
 struct lconv {
     char* decimal_point;
     char* thousands_sep;
