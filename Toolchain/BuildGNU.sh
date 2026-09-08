@@ -7,6 +7,7 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 . "${DIR}/../Meta/shell_include.sh"
+. "${DIR}/../Meta/download_file.sh"
 
 exit_if_running_as_root "Do not run BuildGNU.sh as root, your Build directory will become root-owned"
 
@@ -69,18 +70,18 @@ mkdir -p "$DIR/Tarballs"
 
 # FIXME: When updating this version to the next release, remove the 'development=false' workaround patch.
 BINUTILS_VERSION="2.46.0"
-BINUTILS_MD5SUM="81bb6810bcd1119819dc0804956e1c92"
+BINUTILS_SHA256="d75a94f4d73e7a4086f7513e67e439e8fcdcbb726ffe63f4661744e6256b2cf2"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
-BINUTILS_BASE_URL="https://ftpmirror.gnu.org/gnu/binutils"
+BINUTILS_BASE_URL="mirror://gnu/binutils"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
 GCC_VERSION="16.2.0"
-GCC_MD5SUM="19b777fb19ea4982731392481306f0d3"
+GCC_SHA256="e6738e29597f733270731aa90600f37ffdc045079dfc27ec7e8192cc81085c3e"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.xz"
-GCC_BASE_URL="https://ftpmirror.gnu.org/gnu/gcc"
+GCC_BASE_URL="mirror://gnu/gcc"
 
 buildstep() {
     NAME=$1
@@ -126,29 +127,8 @@ fi
 
 # === DOWNLOAD AND PATCH ===
 pushd "$DIR/Tarballs"
-    md5=""
-    if [ -e "$BINUTILS_PKG" ]; then
-        md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
-        echo "binutils md5='$md5'"
-    fi
-    if [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
-        rm -f $BINUTILS_PKG
-        curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
-    else
-        echo "Skipped downloading binutils"
-    fi
-
-    md5=""
-    if [ -e "$GCC_PKG" ]; then
-        md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
-        echo "gcc md5='$md5'"
-    fi
-    if [ "$md5" != ${GCC_MD5SUM} ] ; then
-        rm -f $GCC_PKG
-        curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
-    else
-        echo "Skipped downloading gcc"
-    fi
+    download_file "${BINUTILS_BASE_URL}/${BINUTILS_PKG}" "${BINUTILS_PKG}" "${BINUTILS_SHA256}"
+    download_file "${GCC_BASE_URL}/${GCC_NAME}/${GCC_PKG}" "${GCC_PKG}" "${GCC_SHA256}"
 
     patch_md5="$(${MD5SUM} "${DIR}"/Patches/binutils/*.patch)"
 
