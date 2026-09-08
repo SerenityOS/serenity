@@ -29,6 +29,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
