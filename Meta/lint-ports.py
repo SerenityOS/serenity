@@ -21,6 +21,7 @@ GIT_HASH_REGEX = re.compile(r'^[0-9a-f]{40}$')
 PORT_TABLE_FILE = 'AvailablePorts.md'
 IGNORE_FILES = {
     '.gitignore',
+    '.download_file.sh',
     '.port_include.sh',
     '.strip_env.sh',
     PORT_TABLE_FILE,
