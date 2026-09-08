@@ -70,6 +70,12 @@ void freelocale(locale_t)
     // FIXME: Implement this.
 }
 
+char const* getlocalename_l(int, locale_t)
+{
+    // FIXME: Implement this.
+    return "C";
+}
+
 locale_t newlocale(int, char const*, locale_t)
 {
     // FIXME: Implement this.
