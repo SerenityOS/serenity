@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-SERENITY_PORTS_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}/Root/usr/Ports"
+DESTDIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}/Root/usr"
 
-for file in $(git ls-files "${SERENITY_SOURCE_DIR}/Ports"); do
-    if [ "$(basename "$file")" != ".hosted_defs.sh" ]; then
-        target=${SERENITY_PORTS_DIR}/$(realpath --relative-to="${SERENITY_SOURCE_DIR}/Ports" "$file")
-        mkdir -p "$(dirname "$target")" && cp "$file" "$target"
-    fi
-done
+git ls-files --full-name "${SERENITY_SOURCE_DIR}/Ports" | \
+  rsync -aHL \
+    --chown=0:0 --inplace --update \
+    --files-from=- \
+    --exclude="Ports/.hosted_defs.sh" \
+    "${SERENITY_SOURCE_DIR}" "${DESTDIR}"
