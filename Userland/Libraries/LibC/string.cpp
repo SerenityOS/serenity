@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#define __STRING_FORCE_C_DECLARATION
+#include <string.h>
+
 #include <AK/Format.h>
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
@@ -17,7 +20,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 extern "C" {
 
