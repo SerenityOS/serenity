@@ -409,7 +409,7 @@ char* getenv(char const* name)
 {
     size_t vl = strlen(name);
     for (size_t i = 0; environ[i]; ++i) {
-        char const* decl = environ[i];
+        char* decl = environ[i];
         char* eq = strchr(decl, '=');
         if (!eq)
             continue;
