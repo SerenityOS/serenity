@@ -24,6 +24,13 @@ struct ToJSONOptions {
     StringView input_path;
 };
 
+static ErrorOr<bool> parse_bool(JsonValue const& value, StringView error)
+{
+    if (auto b = value.get_bool(); b.has_value())
+        return b.value();
+    return Error::from_string_view(error);
+}
+
 static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue const& value)
 {
     if (!value.is_string())
@@ -128,12 +135,9 @@ static Vector<i8> default_refinement_adaptive_template_pixels(u8 gr_template)
 
 static ErrorOr<Gfx::MQArithmeticEncoder::Trailing7FFFHandling> jbig2_trailing_7fff_handling_from_json(JsonValue const& value)
 {
-    if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
-        if (strip_trailing_7fffs.value())
-            return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
-        return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
-    }
-    return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+    if (TRY(parse_bool(value, "expected bool for \"strip_trailing_7fffs\""sv)))
+        return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
+    return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
 }
 
 struct JSONRect {
@@ -273,11 +277,8 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
         }
 
         if (key == "invert") {
-            if (auto invert_value = value.get_bool(); invert_value.has_value()) {
-                invert = invert_value.value();
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"invert\"");
+            invert = TRY(parse_bool(value, "expected bool for \"invert\""sv));
+            return {};
         }
 
         if (key == "repeat_x") {
@@ -452,21 +453,15 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "uses_huffman_encoding"sv) {
-            if (auto uses_huffman_encoding = value.get_bool(); uses_huffman_encoding.has_value()) {
-                if (uses_huffman_encoding.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"uses_huffman_encoding\"");
+            if (TRY(parse_bool(value, "expected bool for \"uses_huffman_encoding\""sv)))
+                flags |= 1u;
+            return {};
         }
 
         if (key == "uses_refinement_or_aggregate_coding"sv) {
-            if (auto uses_refinement_or_aggregate_coding = value.get_bool(); uses_refinement_or_aggregate_coding.has_value()) {
-                if (uses_refinement_or_aggregate_coding.value())
-                    flags |= 1u << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"uses_refinement_or_aggregate_coding\"");
+            if (TRY(parse_bool(value, "expected bool for \"uses_refinement_or_aggregate_coding\""sv)))
+                flags |= 1u << 1;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_height_differences"sv) {
@@ -514,21 +509,15 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
         }
 
         if (key == "is_bitmap_coding_context_used"sv) {
-            if (auto is_bitmap_coding_context_used = value.get_bool(); is_bitmap_coding_context_used.has_value()) {
-                if (is_bitmap_coding_context_used.value())
-                    flags |= 1u << 8;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_bitmap_coding_context_used\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_bitmap_coding_context_used\""sv)))
+                flags |= 1u << 8;
+            return {};
         }
 
         if (key == "is_bitmap_coding_context_retained"sv) {
-            if (auto is_bitmap_coding_context_retained = value.get_bool(); is_bitmap_coding_context_retained.has_value()) {
-                if (is_bitmap_coding_context_retained.value())
-                    flags |= 1u << 9;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_bitmap_coding_context_retained\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_bitmap_coding_context_retained\""sv)))
+                flags |= 1u << 9;
+            return {};
         }
 
         if (key == "template"sv) {
@@ -658,11 +647,8 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "exported"sv) {
-            if (auto exported = value.get_bool(); exported.has_value()) {
-                is_exported = exported.value();
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"exported\"");
+            is_exported = TRY(parse_bool(value, "expected bool for \"exported\""sv));
+            return {};
         }
 
         if ((key == "image_data"sv || key == "refines_symbol_to"sv) && image.has_value()) {
@@ -754,11 +740,8 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> jbig2_symbo
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "height_class_collective_bitmap_is_compressed"sv) {
-            if (auto height_class_collective_bitmap_is_compressed = value.get_bool(); height_class_collective_bitmap_is_compressed.has_value()) {
-                height_class.is_collective_bitmap_compressed = height_class_collective_bitmap_is_compressed.value();
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"height_class_collective_bitmap_is_compressed\"");
+            height_class.is_collective_bitmap_compressed = TRY(parse_bool(value, "expected bool for \"height_class_collective_bitmap_is_compressed\""sv));
+            return {};
         }
 
         if (key == "symbols"sv) {
@@ -827,13 +810,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
 
         if (key == "export_flags_for_referred_to_symbols"sv) {
             if (value.is_array()) {
-                for (auto const& flag_value : value.as_array().values()) {
-                    if (auto flag = flag_value.get_bool(); flag.has_value()) {
-                        export_flags_for_referred_to_symbols.append(flag.value());
-                    } else {
-                        return Error::from_string_literal("expected bools in array for \"export_flags_for_referred_to_symbols\"");
-                    }
-                }
+                for (auto const& flag_value : value.as_array().values())
+                    export_flags_for_referred_to_symbols.append(TRY(parse_bool(flag_value, "expected bool in array for \"export_flags_for_referred_to_symbols\""sv)));
                 return {};
             }
             return Error::from_string_literal("expected array for \"export_flags_for_referred_to_symbols\"");
@@ -909,21 +887,15 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "uses_huffman_encoding"sv) {
-            if (auto uses_huffman_encoding = value.get_bool(); uses_huffman_encoding.has_value()) {
-                if (uses_huffman_encoding.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"uses_huffman_encoding\"");
+            if (TRY(parse_bool(value, "expected bool for \"uses_huffman_encoding\""sv)))
+                flags |= 1u;
+            return {};
         }
 
         if (key == "uses_refinement_coding"sv) {
-            if (auto uses_refinement_coding = value.get_bool(); uses_refinement_coding.has_value()) {
-                if (uses_refinement_coding.value())
-                    flags |= 1u << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"uses_refinement_coding\"");
+            if (TRY(parse_bool(value, "expected bool for \"uses_refinement_coding\""sv)))
+                flags |= 1u << 1;
+            return {};
         }
 
         if (key == "strip_size"sv) {
@@ -959,12 +931,9 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "is_transposed"sv) {
-            if (auto is_transposed = value.get_bool(); is_transposed.has_value()) {
-                if (is_transposed.value())
-                    flags |= 1u << 6;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_transposed\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_transposed\""sv)))
+                flags |= 1u << 6;
+            return {};
         }
 
         if (key == "combination_operator"sv) {
@@ -1403,12 +1372,9 @@ static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& ob
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_modified_modified_read"sv) {
-            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
-                if (is_modified_modified_read.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_modified_modified_read\""sv)))
+                flags |= 1u;
+            return {};
         }
 
         if (key == "pd_template"sv) {
@@ -1676,12 +1642,9 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_modified_modified_read"sv) {
-            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
-                if (is_modified_modified_read.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_modified_modified_read\""sv)))
+                flags |= 1u;
+            return {};
         }
 
         if (key == "ht_template"sv) {
@@ -1695,12 +1658,9 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
         }
 
         if (key == "enable_skip"sv) {
-            if (auto enable_skip = value.get_bool(); enable_skip.has_value()) {
-                if (enable_skip.value())
-                    flags |= 1u << 3;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"enable_skip\"");
+            if (TRY(parse_bool(value, "expected bool for \"enable_skip\""sv)))
+                flags |= 1u << 3;
+            return {};
         }
 
         if (key == "combination_operator"sv) {
@@ -1950,12 +1910,9 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_modified_modified_read"sv) {
-            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
-                if (is_modified_modified_read.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_modified_modified_read\""sv)))
+                flags |= 1u;
+            return {};
         }
 
         if (key == "gb_template"sv) {
@@ -1969,21 +1926,15 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
         }
 
         if (key == "use_typical_prediction"sv) {
-            if (auto use_typical_prediction = value.get_bool(); use_typical_prediction.has_value()) {
-                if (use_typical_prediction.value())
-                    flags |= 1u << 3;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"use_typical_prediction\"");
+            if (TRY(parse_bool(value, "expected bool for \"use_typical_prediction\""sv)))
+                flags |= 1u << 3;
+            return {};
         }
 
         if (key == "use_extended_template"sv) {
-            if (auto use_extended_template = value.get_bool(); use_extended_template.has_value()) {
-                if (use_extended_template.value())
-                    flags |= 1u << 4;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"use_extended_template\"");
+            if (TRY(parse_bool(value, "expected bool for \"use_extended_template\""sv)))
+                flags |= 1u << 4;
+            return {};
         }
 
         dbgln("generic_region flag key {}", key);
@@ -2144,12 +2095,9 @@ static ErrorOr<u8> jbig2_refinement_region_flags_from_json(JsonObject const& obj
         }
 
         if (key == "use_typical_prediction"sv) {
-            if (auto use_typical_prediction = value.get_bool(); use_typical_prediction.has_value()) {
-                if (use_typical_prediction.value())
-                    flags |= 1u << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"use_typical_prediction\"");
+            if (TRY(parse_bool(value, "expected bool for \"use_typical_prediction\""sv)))
+                flags |= 1u << 1;
+            return {};
         }
 
         dbgln("generic_refinement_region flag key {}", key);
@@ -2274,21 +2222,15 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_eventually_lossless"sv) {
-            if (auto is_eventually_lossless = value.get_bool(); is_eventually_lossless.has_value()) {
-                if (is_eventually_lossless.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_eventually_lossless\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_eventually_lossless\""sv)))
+                flags |= 1u;
+            return {};
         }
 
         if (key == "might_contain_refinements"sv) {
-            if (auto might_contain_refinements = value.get_bool(); might_contain_refinements.has_value()) {
-                if (might_contain_refinements.value())
-                    flags |= 1u << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"might_contain_refinements\"");
+            if (TRY(parse_bool(value, "expected bool for \"might_contain_refinements\""sv)))
+                flags |= 1u << 1;
+            return {};
         }
 
         if (key == "default_color"sv) {
@@ -2325,30 +2267,21 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
         }
 
         if (key == "requires_auxiliary_buffers"sv) {
-            if (auto requires_auxiliary_buffers = value.get_bool(); requires_auxiliary_buffers.has_value()) {
-                if (requires_auxiliary_buffers.value())
-                    flags |= 1u << 5;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"requires_auxiliary_buffers\"");
+            if (TRY(parse_bool(value, "expected bool for \"requires_auxiliary_buffers\""sv)))
+                flags |= 1u << 5;
+            return {};
         }
 
         if (key == "direct_region_segments_override_default_combination_operator"sv) {
-            if (auto direct_region_segments_override_default_combination_operator = value.get_bool(); direct_region_segments_override_default_combination_operator.has_value()) {
-                if (direct_region_segments_override_default_combination_operator.value())
-                    flags |= 1u << 6;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"direct_region_segments_override_default_combination_operator\"");
+            if (TRY(parse_bool(value, "expected bool for \"direct_region_segments_override_default_combination_operator\""sv)))
+                flags |= 1u << 6;
+            return {};
         }
 
         if (key == "might_contain_coloured_segments"sv) {
-            if (auto might_contain_coloured_segments = value.get_bool(); might_contain_coloured_segments.has_value()) {
-                if (might_contain_coloured_segments.value())
-                    flags |= 1u << 7;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"might_contain_coloured_segments\"");
+            if (TRY(parse_bool(value, "expected bool for \"might_contain_coloured_segments\""sv)))
+                flags |= 1u << 7;
+            return {};
         }
 
         dbgln("page_information flag key {}", key);
@@ -2364,12 +2297,9 @@ static ErrorOr<u16> jbig2_page_information_striping_information_from_json(JsonOb
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_striped"sv) {
-            if (auto is_striped = value.get_bool(); is_striped.has_value()) {
-                if (is_striped.value())
-                    striping_information |= 0x8000u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_striped\"");
+            if (TRY(parse_bool(value, "expected bool for \"is_striped\""sv)))
+                striping_information |= 0x8000u;
+            return {};
         }
 
         if (key == "maximum_stripe_size"sv) {
@@ -2501,12 +2431,9 @@ static ErrorOr<u8> jbig2_tables_flags_from_json(JsonObject const& object)
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "has_out_of_band_symbol"sv) {
-            if (auto has_out_of_band_symbol = value.get_bool(); has_out_of_band_symbol.has_value()) {
-                if (has_out_of_band_symbol.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"has_out_of_band_symbol\"");
+            if (TRY(parse_bool(value, "expected bool for \"has_out_of_band_symbol\""sv)))
+                flags |= 1u;
+            return {};
         }
 
         if (key == "prefix_bit_count"sv) {
@@ -2714,12 +2641,9 @@ static ErrorOr<Gfx::JBIG2::SegmentHeaderData::Reference> jbig2_referred_to_segme
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "retained"sv) {
-            if (auto retained = value.get_bool(); retained.has_value()) {
-                reference.retention_flag = retained.value();
-                has_retention_flag = true;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"retained\"");
+            reference.retention_flag = TRY(parse_bool(value, "expected bool for \"retained\""sv));
+            has_retention_flag = true;
+            return {};
         }
 
         if (key == "segment_number"sv) {
@@ -2781,19 +2705,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "force_32_bit_page_association"sv) {
-            if (auto force_32_bit_page_association = value.get_bool(); force_32_bit_page_association.has_value()) {
-                header.force_32_bit_page_association = force_32_bit_page_association.value();
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"force_32_bit_page_association\"");
+            header.force_32_bit_page_association = TRY(parse_bool(value, "expected bool for \"force_32_bit_page_association\""sv));
+            return {};
         }
 
         if (key == "is_immediate_generic_region_of_initially_unknown_size"sv) {
-            if (auto is_immediate_generic_region_of_initially_unknown_size = value.get_bool(); is_immediate_generic_region_of_initially_unknown_size.has_value()) {
-                header.is_immediate_generic_region_of_initially_unknown_size = is_immediate_generic_region_of_initially_unknown_size.value();
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_immediate_generic_region_of_initially_unknown_size\"");
+            header.is_immediate_generic_region_of_initially_unknown_size = TRY(parse_bool(value, "expected bool for \"is_immediate_generic_region_of_initially_unknown_size\""sv));
+            return {};
         }
 
         if (key == "page_association"sv) {
@@ -2813,11 +2731,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "retained"sv) {
-            if (auto retained = value.get_bool(); retained.has_value()) {
-                header.retention_flag = retained.value();
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"retained\"");
+            header.retention_flag = TRY(parse_bool(value, "expected bool for \"retained\""sv));
+            return {};
         }
 
         if (key == "data"sv) {
