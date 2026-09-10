@@ -37,6 +37,20 @@ static ErrorOr<void> set_bool(bool& out, JsonValue const& value, StringView erro
     return {};
 }
 
+static ErrorOr<i32> parse_i32(JsonValue const& value, StringView error)
+{
+    if (auto i = value.get_i32(); i.has_value())
+        return i.value();
+    return Error::from_string_view(error);
+}
+
+template<class T>
+static ErrorOr<void> set_i32(T& out, JsonValue const& value, StringView error)
+{
+    out = TRY(parse_i32(value, error));
+    return {};
+}
+
 static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue const& value)
 {
     if (!value.is_string())
@@ -567,21 +581,11 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
             return Error::from_string_literal("expected u32 for \"symbol_id\"");
         }
 
-        if (key == "delta_x_offset"sv) {
-            if (auto delta_x_offset_json = value.get_i32(); delta_x_offset_json.has_value()) {
-                delta_x_offset = delta_x_offset_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"delta_x_offset\"");
-        }
+        if (key == "delta_x_offset"sv)
+            return set_i32(delta_x_offset, value, "expected i32 for \"delta_x_offset\""sv);
 
-        if (key == "delta_y_offset"sv) {
-            if (auto delta_y_offset_json = value.get_i32(); delta_y_offset_json.has_value()) {
-                delta_y_offset = delta_y_offset_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"delta_y_offset\"");
-        }
+        if (key == "delta_y_offset"sv)
+            return set_i32(delta_y_offset, value, "expected i32 for \"delta_y_offset\""sv);
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -618,13 +622,8 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsin
 {
     Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips refines_using_strips;
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "initial_strip_t"sv) {
-            if (auto initial_strip_t = value.get_i32(); initial_strip_t.has_value()) {
-                refines_using_strips.initial_strip_t = initial_strip_t.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"initial_strip_t\"");
-        }
+        if (key == "initial_strip_t"sv)
+            return set_i32(refines_using_strips.initial_strip_t, value, "expected i32 for \"initial_strip_t\""sv);
 
         if (key == "strips"sv) {
             if (value.is_array()) {
@@ -686,21 +685,11 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
             return Error::from_string_literal("expected object for \"refines_using_strips\"");
         }
 
-        if (key == "width"sv) {
-            if (auto width_json = value.get_i32(); width_json.has_value()) {
-                width = width_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"width\"");
-        }
+        if (key == "width"sv)
+            return set_i32(width, value, "expected i32 for \"width\""sv);
 
-        if (key == "height"sv) {
-            if (auto height_json = value.get_i32(); height_json.has_value()) {
-                height = height_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"height\"");
-        }
+        if (key == "height"sv)
+            return set_i32(height, value, "expected i32 for \"height\""sv);
 
         dbgln("height_class.symbol key {}", key);
         return Error::from_string_literal("unknown height_class.symbol key");
@@ -1103,37 +1092,17 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
     RefPtr<Gfx::BilevelImage> image;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "delta_width"sv) {
-            if (auto delta_width_json = value.get_i32(); delta_width_json.has_value()) {
-                delta_width = delta_width_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"delta_width\"");
-        }
+        if (key == "delta_width"sv)
+            return set_i32(delta_width, value, "expected i32 for \"delta_width\""sv);
 
-        if (key == "delta_height"sv) {
-            if (auto delta_height_json = value.get_i32(); delta_height_json.has_value()) {
-                delta_height = delta_height_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"delta_height\"");
-        }
+        if (key == "delta_height"sv)
+            return set_i32(delta_height, value, "expected i32 for \"delta_height\""sv);
 
-        if (key == "delta_x_offset"sv) {
-            if (auto delta_x_offset_json = value.get_i32(); delta_x_offset_json.has_value()) {
-                delta_x_offset = delta_x_offset_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"delta_x_offset\"");
-        }
+        if (key == "delta_x_offset"sv)
+            return set_i32(delta_x_offset, value, "expected i32 for \"delta_x_offset\""sv);
 
-        if (key == "delta_y_offset"sv) {
-            if (auto delta_y_offset_json = value.get_i32(); delta_y_offset_json.has_value()) {
-                delta_y_offset = delta_y_offset_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"delta_y_offset\"");
-        }
+        if (key == "delta_y_offset"sv)
+            return set_i32(delta_y_offset, value, "expected i32 for \"delta_y_offset\""sv);
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -1178,21 +1147,11 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance> jbig2_text_region_sy
             return Error::from_string_literal("expected u32 for \"symbol_id\"");
         }
 
-        if (key == "instance_s"sv) {
-            if (auto instance_s = value.get_i32(); instance_s.has_value()) {
-                instance.s = instance_s.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"instance_s\"");
-        }
+        if (key == "instance_s"sv)
+            return set_i32(instance.s, value, "expected i32 for \"instance_s\""sv);
 
-        if (key == "instance_t"sv) {
-            if (auto instance_t = value.get_i32(); instance_t.has_value()) {
-                instance.t = instance_t.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"instance_t\"");
-        }
+        if (key == "instance_t"sv)
+            return set_i32(instance.t, value, "expected i32 for \"instance_t\""sv);
 
         if (key == "instance_refines_symbol_to"sv) {
             if (value.is_object()) {
@@ -1227,13 +1186,8 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip> jbig2_text_region_strip_from_json(To
     Gfx::JBIG2::TextRegionStrip strip;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "strip_t"sv) {
-            if (auto strip_t = value.get_i32(); strip_t.has_value()) {
-                strip.strip_t = strip_t.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"strip_t\"");
-        }
+        if (key == "strip_t"sv)
+            return set_i32(strip.strip_t, value, "expected i32 for \"strip_t\""sv);
 
         if (key == "instances"sv) {
             if (value.is_array()) {
@@ -1307,13 +1261,8 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
             return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
         }
 
-        if (key == "initial_strip_t"sv) {
-            if (auto initial_strip_t = value.get_i32(); initial_strip_t.has_value()) {
-                text_region.initial_strip_t = initial_strip_t.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"initial_strip_t\"");
-        }
+        if (key == "initial_strip_t"sv)
+            return set_i32(text_region.initial_strip_t, value, "expected i32 for \"initial_strip_t\""sv);
 
         if (key == "strips"sv) {
             if (value.is_array()) {
@@ -1483,21 +1432,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return Error::from_string_literal("expected u32 for \"grayscale_height\"");
         }
 
-        if (key == "grid_offset_x_times_256"sv) {
-            if (auto grid_offset_x_times_256_json = value.get_i32(); grid_offset_x_times_256_json.has_value()) {
-                grid_offset_x_times_256 = grid_offset_x_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"grid_offset_x_times_256\"");
-        }
+        if (key == "grid_offset_x_times_256"sv)
+            return set_i32(grid_offset_x_times_256, value, "expected i32 for \"grid_offset_x_times_256\""sv);
 
-        if (key == "grid_offset_y_times_256"sv) {
-            if (auto grid_offset_y_times_256_json = value.get_i32(); grid_offset_y_times_256_json.has_value()) {
-                grid_offset_y_times_256 = grid_offset_y_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"grid_offset_y_times_256\"");
-        }
+        if (key == "grid_offset_y_times_256"sv)
+            return set_i32(grid_offset_y_times_256, value, "expected i32 for \"grid_offset_y_times_256\""sv);
 
         if (key == "grid_vector_x_times_256"sv) {
             if (auto grid_vector_x_times_256_json = value.get_u32(); grid_vector_x_times_256_json.has_value()) {
@@ -1809,21 +1748,11 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
             return Error::from_string_literal("expected u32 for \"grayscale_height\"");
         }
 
-        if (key == "grid_offset_x_times_256"sv) {
-            if (auto grid_offset_x_times_256_json = value.get_i32(); grid_offset_x_times_256_json.has_value()) {
-                grid_offset_x_times_256 = grid_offset_x_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"grid_offset_x_times_256\"");
-        }
+        if (key == "grid_offset_x_times_256"sv)
+            return set_i32(grid_offset_x_times_256, value, "expected i32 for \"grid_offset_x_times_256\""sv);
 
-        if (key == "grid_offset_y_times_256"sv) {
-            if (auto grid_offset_y_times_256_json = value.get_i32(); grid_offset_y_times_256_json.has_value()) {
-                grid_offset_y_times_256 = grid_offset_y_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"grid_offset_y_times_256\"");
-        }
+        if (key == "grid_offset_y_times_256"sv)
+            return set_i32(grid_offset_y_times_256, value, "expected i32 for \"grid_offset_y_times_256\""sv);
 
         if (key == "grid_vector_x_times_256"sv) {
             if (auto grid_vector_x_times_256_json = value.get_u32(); grid_vector_x_times_256_json.has_value()) {
@@ -2517,21 +2446,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::Segme
             return Error::from_string_literal("expected object for \"flags\"");
         }
 
-        if (key == "lowest_value"sv) {
-            if (auto lowest_value = value.get_i32(); lowest_value.has_value()) {
-                data.lowest_value = lowest_value.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"lowest_value\"");
-        }
+        if (key == "lowest_value"sv)
+            return set_i32(data.lowest_value, value, "expected i32 for \"lowest_value\""sv);
 
-        if (key == "highest_value"sv) {
-            if (auto highest_value = value.get_i32(); highest_value.has_value()) {
-                data.highest_value = highest_value.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 for \"highest_value\"");
-        }
+        if (key == "highest_value"sv)
+            return set_i32(data.highest_value, value, "expected i32 for \"highest_value\""sv);
 
         if (key == "entries"sv) {
             if (value.is_array()) {
