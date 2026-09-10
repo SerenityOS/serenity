@@ -31,6 +31,12 @@ static ErrorOr<bool> parse_bool(JsonValue const& value, StringView error)
     return Error::from_string_view(error);
 }
 
+static ErrorOr<void> set_bool(bool& out, JsonValue const& value, StringView error)
+{
+    out = TRY(parse_bool(value, error));
+    return {};
+}
+
 static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue const& value)
 {
     if (!value.is_string())
@@ -276,10 +282,8 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
             return Error::from_string_literal("expected object for \"crop\"");
         }
 
-        if (key == "invert") {
-            invert = TRY(parse_bool(value, "expected bool for \"invert\""sv));
-            return {};
-        }
+        if (key == "invert")
+            return set_bool(invert, value, "expected bool for \"invert\""sv);
 
         if (key == "repeat_x") {
             if (auto repeat_x_value = value.get_i32(); repeat_x_value.has_value() && repeat_x_value.value() >= 1) {
@@ -646,10 +650,8 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
     Gfx::IntSize size;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "exported"sv) {
-            is_exported = TRY(parse_bool(value, "expected bool for \"exported\""sv));
-            return {};
-        }
+        if (key == "exported"sv)
+            return set_bool(is_exported, value, "expected bool for \"exported\""sv);
 
         if ((key == "image_data"sv || key == "refines_symbol_to"sv) && image.has_value()) {
             return Error::from_string_literal("only one of \"image_data\" or \"refines_symbol_to\" may be specified");
@@ -739,10 +741,8 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> jbig2_symbo
     Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass height_class;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "height_class_collective_bitmap_is_compressed"sv) {
-            height_class.is_collective_bitmap_compressed = TRY(parse_bool(value, "expected bool for \"height_class_collective_bitmap_is_compressed\""sv));
-            return {};
-        }
+        if (key == "height_class_collective_bitmap_is_compressed"sv)
+            return set_bool(height_class.is_collective_bitmap_compressed, value, "expected bool for \"height_class_collective_bitmap_is_compressed\""sv);
 
         if (key == "symbols"sv) {
             if (value.is_array()) {
@@ -2704,15 +2704,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
             return Error::from_string_literal("expected string for \"type\"");
         }
 
-        if (key == "force_32_bit_page_association"sv) {
-            header.force_32_bit_page_association = TRY(parse_bool(value, "expected bool for \"force_32_bit_page_association\""sv));
-            return {};
-        }
+        if (key == "force_32_bit_page_association"sv)
+            return set_bool(header.force_32_bit_page_association, value, "expected bool for \"force_32_bit_page_association\""sv);
 
-        if (key == "is_immediate_generic_region_of_initially_unknown_size"sv) {
-            header.is_immediate_generic_region_of_initially_unknown_size = TRY(parse_bool(value, "expected bool for \"is_immediate_generic_region_of_initially_unknown_size\""sv));
-            return {};
-        }
+        if (key == "is_immediate_generic_region_of_initially_unknown_size"sv)
+            return set_bool(header.is_immediate_generic_region_of_initially_unknown_size, value, "expected bool for \"is_immediate_generic_region_of_initially_unknown_size\""sv);
 
         if (key == "page_association"sv) {
             if (auto page_association = value.get_u32(); page_association.has_value()) {
@@ -2730,10 +2726,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
             return Error::from_string_literal("expected array for \"referred_to_segments\"");
         }
 
-        if (key == "retained"sv) {
-            header.retention_flag = TRY(parse_bool(value, "expected bool for \"retained\""sv));
-            return {};
-        }
+        if (key == "retained"sv)
+            return set_bool(header.retention_flag, value, "expected bool for \"retained\""sv);
 
         if (key == "data"sv) {
             if (value.is_object()) {
