@@ -33,62 +33,62 @@ extern "C" {
 
 int iswalnum(wint_t wc)
 {
-    return __inline_isalnum(wc);
+    return isalnum(wc);
 }
 
 int iswalpha(wint_t wc)
 {
-    return __inline_isalpha(wc);
+    return isalpha(wc);
 }
 
 int iswcntrl(wint_t wc)
 {
-    return __inline_iscntrl(wc);
+    return iscntrl(wc);
 }
 
 int iswdigit(wint_t wc)
 {
-    return __inline_isdigit(wc);
+    return isdigit(wc);
 }
 
 int iswxdigit(wint_t wc)
 {
-    return __inline_isxdigit(wc);
+    return isxdigit(wc);
 }
 
 int iswspace(wint_t wc)
 {
-    return __inline_isspace(wc);
+    return isspace(wc);
 }
 
 int iswpunct(wint_t wc)
 {
-    return __inline_ispunct(wc);
+    return ispunct(wc);
 }
 
 int iswprint(wint_t wc)
 {
-    return __inline_isprint(wc);
+    return isprint(wc);
 }
 
 int iswgraph(wint_t wc)
 {
-    return __inline_isgraph(wc);
+    return isgraph(wc);
 }
 
 int iswlower(wint_t wc)
 {
-    return __inline_islower(wc);
+    return islower(wc);
 }
 
 int iswupper(wint_t wc)
 {
-    return __inline_isupper(wc);
+    return isupper(wc);
 }
 
 int iswblank(wint_t wc)
 {
-    return __inline_isblank(wc);
+    return isblank(wc);
 }
 
 int iswctype(wint_t wc, wctype_t charclass)
@@ -178,12 +178,12 @@ wctype_t wctype(char const* property)
 
 wint_t towlower(wint_t wc)
 {
-    return __inline_tolower(wc);
+    return tolower(wc);
 }
 
 wint_t towupper(wint_t wc)
 {
-    return __inline_toupper(wc);
+    return toupper(wc);
 }
 
 wint_t towctrans(wint_t wc, wctrans_t desc)
