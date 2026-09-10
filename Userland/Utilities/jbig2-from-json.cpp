@@ -163,11 +163,17 @@ static Vector<i8> default_refinement_adaptive_template_pixels(u8 gr_template)
     return {};
 }
 
-static ErrorOr<Gfx::MQArithmeticEncoder::Trailing7FFFHandling> jbig2_trailing_7fff_handling_from_json(JsonValue const& value)
+static ErrorOr<Gfx::MQArithmeticEncoder::Trailing7FFFHandling> parse_jbig2_trailing_7fff_handling_from_json(JsonValue const& value)
 {
     if (TRY(parse_bool(value, "expected bool for \"strip_trailing_7fffs\""sv)))
         return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
     return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
+}
+
+static ErrorOr<void> set_jbig2_trailing_7fff_handling_from_json(Gfx::MQArithmeticEncoder::Trailing7FFFHandling& out, JsonValue const& value)
+{
+    out = TRY(parse_jbig2_trailing_7fff_handling_from_json(value));
+    return {};
 }
 
 struct JSONRect {
@@ -562,10 +568,8 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
             return Error::from_string_literal("expected object for \"image_data\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
 
         dbgln("symbol_dict symbol refines_symbol_to key {}", key);
         return Error::from_string_literal("unknown symbol_dict symbol refines_symbol_to key");
@@ -781,10 +785,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
             return Error::from_string_literal("expected array for \"height_classes\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
 
         dbgln("symbol_dictionary key {}", key);
         return Error::from_string_literal("unknown symbol_dictionary key");
@@ -1079,10 +1081,8 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
             return Error::from_string_literal("expected object for \"image_data\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
 
         dbgln("text_region symbol_instance refinement_data key {}", key);
         return Error::from_string_literal("unknown text_region symbol_instance refinement_data key");
@@ -1234,10 +1234,8 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
             return Error::from_string_literal("expected array for \"strips\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            text_region.trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(text_region.trailing_7fff_handling, value);
 
         dbgln("text_region key {}", key);
         return Error::from_string_literal("unknown text_region key");
@@ -1369,10 +1367,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return set_u32(gray_max, value, "expected u32 or \"from_tiles\" for \"gray_max\""sv);
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
 
         if (key == "grayscale_width"sv)
             return set_u32(grayscale_width, value, "expected u32 for \"grayscale_width\""sv);
@@ -1712,10 +1708,8 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
             return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
 
         if (key == "graymap_data"sv) {
             if (value.is_object()) {
@@ -1856,10 +1850,8 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
             return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -2006,10 +1998,8 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
             return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv) {
-            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
-            return {};
-        }
+        if (key == "strip_trailing_7fffs"sv)
+            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
