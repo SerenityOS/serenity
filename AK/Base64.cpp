@@ -83,7 +83,7 @@ static ErrorOr<ByteBuffer> decode_base64_impl(StringView input, ReadonlySpan<i16
     return output;
 }
 
-static ErrorOr<String> encode_base64_impl(ReadonlyBytes input, ReadonlySpan<char> alphabet)
+static ErrorOr<String> encode_base64_impl(ReadonlyBytes input, ReadonlySpan<char> alphabet, OmitPadding omit_padding)
 {
     Vector<u8> output;
     TRY(output.try_ensure_capacity(calculate_base64_encoded_length(input)));
@@ -112,8 +112,12 @@ static ErrorOr<String> encode_base64_impl(ReadonlyBytes input, ReadonlySpan<char
 
         output.unchecked_append(alphabet[index0]);
         output.unchecked_append(alphabet[index1]);
-        output.unchecked_append(is_16bit ? '=' : alphabet[index2]);
-        output.unchecked_append(is_8bit ? '=' : alphabet[index3]);
+
+        if (!is_16bit || omit_padding == OmitPadding::No)
+            output.unchecked_append(is_16bit ? '=' : alphabet[index2]);
+
+        if (!is_8bit || omit_padding == OmitPadding::No)
+            output.unchecked_append(is_8bit ? '=' : alphabet[index3]);
     }
 
     return String::from_utf8_without_validation(output);
@@ -131,13 +135,13 @@ ErrorOr<ByteBuffer> decode_base64url(StringView input)
     return decode_base64_impl(input, lookup_table);
 }
 
-ErrorOr<String> encode_base64(ReadonlyBytes input)
+ErrorOr<String> encode_base64(ReadonlyBytes input, OmitPadding omit_padding)
 {
-    return encode_base64_impl(input, base64_alphabet);
+    return encode_base64_impl(input, base64_alphabet, omit_padding);
 }
-ErrorOr<String> encode_base64url(ReadonlyBytes input)
+ErrorOr<String> encode_base64url(ReadonlyBytes input, OmitPadding omit_padding)
 {
-    return encode_base64_impl(input, base64url_alphabet);
+    return encode_base64_impl(input, base64url_alphabet, omit_padding);
 }
 
 }

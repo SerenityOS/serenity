@@ -65,8 +65,13 @@ consteval auto base64url_lookup_table()
 [[nodiscard]] ErrorOr<ByteBuffer> decode_base64(StringView);
 [[nodiscard]] ErrorOr<ByteBuffer> decode_base64url(StringView);
 
-[[nodiscard]] ErrorOr<String> encode_base64(ReadonlyBytes);
-[[nodiscard]] ErrorOr<String> encode_base64url(ReadonlyBytes);
+enum class OmitPadding {
+    No,
+    Yes,
+};
+
+[[nodiscard]] ErrorOr<String> encode_base64(ReadonlyBytes, OmitPadding = OmitPadding::No);
+[[nodiscard]] ErrorOr<String> encode_base64url(ReadonlyBytes, OmitPadding = OmitPadding::No);
 }
 
 #if USING_AK_GLOBALLY

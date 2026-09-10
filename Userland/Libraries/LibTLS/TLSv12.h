@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Certificate.h"
 #include <AK/IPv4Address.h>
 #include <AK/Queue.h>
 #include <AK/WeakPtr.h>
@@ -15,6 +14,7 @@
 #include <LibCore/Timer.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibCrypto/Certificate/Certificate.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Curves/EllipticCurve.h>
 #include <LibCrypto/Hash/HashManager.h>
@@ -23,6 +23,8 @@
 #include <LibTLS/TLSPacketBuilder.h>
 
 namespace TLS {
+
+using Crypto::Certificate::Certificate;
 
 inline void print_buffer(ReadonlyBytes buffer)
 {
@@ -138,6 +140,8 @@ constexpr CipherAlgorithm get_cipher_algorithm(CipherSuite suite)
         return CipherAlgorithm::Invalid;
     }
 }
+
+ErrorOr<SupportedGroup> oid_to_curve(Vector<int> curve);
 
 struct Options {
     static Vector<CipherSuite> default_usable_cipher_suites()
@@ -551,4 +555,23 @@ private:
     RefPtr<Core::Timer> m_handshake_timeout_timer;
 };
 
+class DefaultRootCACertificates {
+public:
+    DefaultRootCACertificates();
+
+    Vector<Certificate> const& certificates() const { return m_ca_certificates; }
+
+    static ErrorOr<Vector<Certificate>> parse_pem_root_certificate_authorities(ByteBuffer&);
+    static ErrorOr<Vector<Certificate>> load_certificates(Span<ByteString> custom_cert_paths = {});
+
+    static DefaultRootCACertificates& the();
+
+    static void set_default_certificate_paths(Span<ByteString> paths);
+
+private:
+    Vector<Certificate> m_ca_certificates;
+};
+
 }
+
+using TLS::DefaultRootCACertificates;

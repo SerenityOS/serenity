@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <LibCrypto/Certificate/Certificate.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
-#include <LibTLS/Certificate.h>
 
 namespace CertificateSettings {
 
@@ -49,11 +49,11 @@ public:
     virtual ErrorOr<String> column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual ErrorOr<void> load();
-    virtual ErrorOr<size_t> add(Vector<Certificate> const&);
-    virtual Certificate get(int index);
+    virtual ErrorOr<size_t> add(Vector<Crypto::Certificate::Certificate> const&);
+    virtual Crypto::Certificate::Certificate get(int index);
 
 private:
-    Vector<Certificate> m_certificates;
+    Vector<Crypto::Certificate::Certificate> m_certificates;
 };
 
 class CertificateStoreWidget : public GUI::SettingsWindow::Tab {
