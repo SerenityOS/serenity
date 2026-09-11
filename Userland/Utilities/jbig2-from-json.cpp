@@ -136,6 +136,11 @@ static ErrorOr<Gfx::JBIG2::CombinationOperator> parse_jbig2_combination_operator
     return Error::from_string_view(error);
 }
 
+static ErrorOr<u8> parse_jbig2_combination_operator_bits(JsonValue const& value, AllowReplace allow_replace, StringView error)
+{
+    return to_underlying(TRY(parse_jbig2_combination_operator_from_json(value, allow_replace, error)));
+}
+
 static ErrorOr<u8> parse_jbig2_color_from_json(JsonValue const& value, StringView error)
 {
     if (is_string_literal(value, "white"sv))
@@ -405,11 +410,8 @@ static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject c
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "external_combination_operator"sv) {
-            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::Yes, "expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\""sv));
-            flags |= to_underlying(op);
-            return {};
-        }
+        if (key == "external_combination_operator"sv)
+            return set_bits(flags, parse_jbig2_combination_operator_bits(value, AllowReplace::Yes, "expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\""sv), 0);
 
         dbgln("region_segment_information flag key {}", key);
         return Error::from_string_literal("unknown region_segment_information flag key");
@@ -779,9 +781,7 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
 
         if (key == "combination_operator"sv) {
             // "replace" is only valid in a region segment information's external_combination_operator, not here.
-            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::No, "expected \"or\", \"and\", \"xor\", or \"xnor\" for \"combination_operator\""sv));
-            flags |= to_underlying(op) << 7;
-            return {};
+            return set_bits(flags, parse_jbig2_combination_operator_bits(value, AllowReplace::No, "expected \"or\", \"and\", \"xor\", or \"xnor\" for \"combination_operator\""sv), 7);
         }
 
         if (key == "default_pixel_value"sv)
@@ -1236,11 +1236,8 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
         if (key == "enable_skip"sv)
             return set_bits(flags, parse_bit(value, "expected bool for \"enable_skip\""sv), 3);
 
-        if (key == "combination_operator"sv) {
-            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::Yes, "expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\""sv));
-            flags |= to_underlying(op) << 4;
-            return {};
-        }
+        if (key == "combination_operator"sv)
+            return set_bits(flags, parse_jbig2_combination_operator_bits(value, AllowReplace::Yes, "expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\""sv), 4);
 
         if (key == "default_pixel_value"sv)
             return set_bits(flags, parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_pixel_value\""sv), 7);
@@ -1631,9 +1628,7 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
 
         if (key == "default_combination_operator"sv) {
             // "replace" is only valid in a region segment information's external_combination_operator, not here.
-            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::No, "expected \"or\", \"and\", \"xor\", or \"xnor\" for \"default_combination_operator\""sv));
-            flags |= to_underlying(op) << 3;
-            return {};
+            return set_bits(flags, parse_jbig2_combination_operator_bits(value, AllowReplace::No, "expected \"or\", \"and\", \"xor\", or \"xnor\" for \"default_combination_operator\""sv), 3);
         }
 
         if (key == "requires_auxiliary_buffers"sv)
