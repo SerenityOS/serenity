@@ -81,6 +81,13 @@ static ErrorOr<JsonArray const*> parse_array(JsonValue const& value, StringView 
     return Error::from_string_view(error);
 }
 
+static ErrorOr<JsonObject const*> parse_object(JsonValue const& value, StringView error)
+{
+    if (value.is_object())
+        return &value.as_object();
+    return Error::from_string_view(error);
+}
+
 template<class T, class V>
 static ErrorOr<void> set(T& out, ErrorOr<V>&& in)
 {
@@ -304,11 +311,8 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_bitmap_from_json(ToJSONOptions 
         }
 
         if (key == "crop") {
-            if (value.is_object()) {
-                crop_rect = TRY(jbig2_rect_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"crop\"");
+            crop_rect = TRY(jbig2_rect_from_json(*TRY(parse_object(value, "expected object for \"crop\""sv))));
+            return {};
         }
 
         dbgln("match_image key {}", key);
@@ -350,11 +354,8 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
         }
 
         if (key == "crop") {
-            if (value.is_object()) {
-                crop_rect = TRY(jbig2_rect_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"crop\"");
+            crop_rect = TRY(jbig2_rect_from_json(*TRY(parse_object(value, "expected object for \"crop\""sv))));
+            return {};
         }
 
         if (key == "invert")
@@ -470,12 +471,9 @@ static ErrorOr<RegionSegmentInformationJSON> jbig2_region_segment_information_fr
             return set(result.region_segment_information.y_location, parse_u32(value, "expected u32 for \"y\""sv));
 
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                u8 flags = TRY(jbig2_region_segment_information_flags_from_json(value.as_object()));
-                result.region_segment_information.flags = flags;
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            u8 flags = TRY(jbig2_region_segment_information_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            result.region_segment_information.flags = flags;
+            return {};
         }
 
         dbgln("region_segment_information key {}", key);
@@ -568,11 +566,8 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
             return set(delta_y_offset, parse_i32(value, "expected i32 for \"delta_y_offset\""sv));
 
         if (key == "image_data"sv) {
-            if (value.is_object()) {
-                image = TRY(jbig2_image_from_json(options, value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"image_data\"");
+            image = TRY(jbig2_image_from_json(options, *TRY(parse_object(value, "expected object for \"image_data\""sv))));
+            return {};
         }
 
         if (key == "strip_trailing_7fffs"sv)
@@ -632,32 +627,23 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
         }
 
         if (key == "image_data"sv) {
-            if (value.is_object()) {
-                auto image_json = TRY(jbig2_image_from_json(options, value.as_object()));
-                size = { image_json->width(), image_json->height() };
-                image = move(image_json);
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"image_data\"");
+            auto image_json = TRY(jbig2_image_from_json(options, *TRY(parse_object(value, "expected object for \"image_data\""sv))));
+            size = { image_json->width(), image_json->height() };
+            image = move(image_json);
+            return {};
         }
 
         if (key == "refines_symbol_to"sv) {
-            if (value.is_object()) {
-                auto refined_symbol = TRY(jbig2_symbol_dictionary_refined_symbol_from_json(options, value.as_object()));
-                size = { refined_symbol.refines_to->width(), refined_symbol.refines_to->height() };
-                image = move(refined_symbol);
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"refines_symbol_to\"");
+            auto refined_symbol = TRY(jbig2_symbol_dictionary_refined_symbol_from_json(options, *TRY(parse_object(value, "expected object for \"refines_symbol_to\""sv))));
+            size = { refined_symbol.refines_to->width(), refined_symbol.refines_to->height() };
+            image = move(refined_symbol);
+            return {};
         }
 
         if (key == "refines_using_strips"sv) {
-            if (value.is_object()) {
-                auto refines_using_strips = TRY(jbig2_symbol_dictionary_refines_using_strips_from_json(options, value.as_object()));
-                image = move(refines_using_strips);
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"refines_using_strips\"");
+            auto refines_using_strips = TRY(jbig2_symbol_dictionary_refines_using_strips_from_json(options, *TRY(parse_object(value, "expected object for \"refines_using_strips\""sv))));
+            image = move(refines_using_strips);
+            return {};
         }
 
         if (key == "width"sv)
@@ -691,11 +677,8 @@ static ErrorOr<Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symb
 {
     Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> symbols;
 
-    for (auto const& value : array.values()) {
-        if (!value.is_object())
-            return Error::from_string_literal("expected object for height class symbol");
-        symbols.append(TRY(jbig2_symbol_dictionary_height_class_symbol_from_json(options, value.as_object())));
-    }
+    for (auto const& value : array.values())
+        symbols.append(TRY(jbig2_symbol_dictionary_height_class_symbol_from_json(options, *TRY(parse_object(value, "expected object for height class symbol"sv)))));
 
     return symbols;
 }
@@ -724,11 +707,8 @@ static ErrorOr<Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass>> jbi
 {
     Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> height_classes;
 
-    for (auto const& value : array.values()) {
-        if (!value.is_object())
-            return Error::from_string_literal("expected object for height class");
-        height_classes.append(TRY(jbig2_symbol_dictionary_height_class_from_json(options, value.as_object())));
-    }
+    for (auto const& value : array.values())
+        height_classes.append(TRY(jbig2_symbol_dictionary_height_class_from_json(options, *TRY(parse_object(value, "expected object for height class"sv)))));
 
     return height_classes;
 }
@@ -746,11 +726,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                flags = TRY(jbig2_symbol_dictionary_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            flags = TRY(jbig2_symbol_dictionary_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "adaptive_template_pixels"sv) {
@@ -969,11 +946,8 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
             return set(delta_y_offset, parse_i32(value, "expected i32 for \"delta_y_offset\""sv));
 
         if (key == "image_data"sv) {
-            if (value.is_object()) {
-                image = TRY(jbig2_image_from_json(options, value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"image_data\"");
+            image = TRY(jbig2_image_from_json(options, *TRY(parse_object(value, "expected object for \"image_data\""sv))));
+            return {};
         }
 
         if (key == "strip_trailing_7fffs"sv)
@@ -1011,11 +985,8 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance> jbig2_text_region_sy
             return set(instance.t, parse_i32(value, "expected i32 for \"instance_t\""sv));
 
         if (key == "instance_refines_symbol_to"sv) {
-            if (value.is_object()) {
-                instance.refinement_data = TRY(jbig2_text_region_symbol_instance_refinement_data_from_json(options, value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"instance_refines_symbol_to\"");
+            instance.refinement_data = TRY(jbig2_text_region_symbol_instance_refinement_data_from_json(options, *TRY(parse_object(value, "expected object for \"instance_refines_symbol_to\""sv))));
+            return {};
         }
 
         dbgln("text_region symbol_instance key {}", key);
@@ -1029,11 +1000,8 @@ static ErrorOr<Vector<Gfx::JBIG2::TextRegionStrip::SymbolInstance>> jbig2_text_r
 {
     Vector<Gfx::JBIG2::TextRegionStrip::SymbolInstance> instances;
 
-    for (auto const& item : array.values()) {
-        if (!item.is_object())
-            return Error::from_string_literal("expected object for text_region symbol_instance");
-        instances.append(TRY(jbig2_text_region_symbol_instance_from_json(options, item.as_object())));
-    }
+    for (auto const& item : array.values())
+        instances.append(TRY(jbig2_text_region_symbol_instance_from_json(options, *TRY(parse_object(item, "expected object for text_region symbol_instance"sv)))));
 
     return instances;
 }
@@ -1062,11 +1030,8 @@ static ErrorOr<Vector<Gfx::JBIG2::TextRegionStrip>> jbig2_text_region_strips_fro
 {
     Vector<Gfx::JBIG2::TextRegionStrip> strips;
 
-    for (auto const& item : array.values()) {
-        if (!item.is_object())
-            return Error::from_string_literal("expected object for text_region strip");
-        strips.append(TRY(jbig2_text_region_strip_from_json(options, item.as_object())));
-    }
+    for (auto const& item : array.values())
+        strips.append(TRY(jbig2_text_region_strip_from_json(options, *TRY(parse_object(item, "expected object for text_region strip"sv)))));
 
     return strips;
 }
@@ -1081,30 +1046,21 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
-            if (value.is_object()) {
-                auto region_segment_information = TRY(jbig2_region_segment_information_from_json(value.as_object()));
-                if (region_segment_information.use_width_from_image || region_segment_information.use_height_from_image)
-                    return Error::from_string_literal("can't use \"from_image\" with text_region");
-                text_region.region_segment_information = region_segment_information.region_segment_information;
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"region_segment_information\"");
+            auto region_segment_information = TRY(jbig2_region_segment_information_from_json(*TRY(parse_object(value, "expected object for \"region_segment_information\""sv))));
+            if (region_segment_information.use_width_from_image || region_segment_information.use_height_from_image)
+                return Error::from_string_literal("can't use \"from_image\" with text_region");
+            text_region.region_segment_information = region_segment_information.region_segment_information;
+            return {};
         }
 
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                text_region.flags = TRY(jbig2_text_region_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            text_region.flags = TRY(jbig2_text_region_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "huffman_flags"sv) {
-            if (value.is_object()) {
-                text_region.huffman_flags = TRY(jbig2_text_region_huffman_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"huffman_flags\"");
+            text_region.huffman_flags = TRY(jbig2_text_region_huffman_flags_from_json(*TRY(parse_object(value, "expected object for \"huffman_flags\""sv))));
+            return {};
         }
 
         if (key == "refinement_adaptive_template_pixels"sv) {
@@ -1203,11 +1159,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                flags = TRY(jbig2_pattern_dictionary_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            flags = TRY(jbig2_pattern_dictionary_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "pattern_width"sv)
@@ -1256,9 +1209,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             if (value.is_array()) {
                 size_t width = 0;
                 for (auto const& [i, image_json] : enumerate(value.as_array().values())) {
-                    if (!image_json.is_object())
-                        return Error::from_string_literal("expected object for \"image_data\" array entries");
-                    auto tile_image = TRY(jbig2_image_from_json(options, image_json.as_object()));
+                    auto tile_image = TRY(jbig2_image_from_json(options, *TRY(parse_object(image_json, "expected object for \"image_data\" array entries"sv))));
+
                     if (i == 0) {
                         width = tile_image->width();
                         image = TRY(Gfx::BilevelImage::create(width * value.as_array().size(), tile_image->height()));
@@ -1468,22 +1420,16 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
-            if (value.is_object()) {
-                auto region_segment_information_json = TRY(jbig2_region_segment_information_from_json(value.as_object()));
-                if (region_segment_information_json.use_width_from_image || region_segment_information_json.use_height_from_image)
-                    return Error::from_string_literal("can't use \"from_image\" with halftone_region");
-                region_segment_information = region_segment_information_json.region_segment_information;
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"region_segment_information\"");
+            auto region_segment_information_json = TRY(jbig2_region_segment_information_from_json(*TRY(parse_object(value, "expected object for \"region_segment_information\""sv))));
+            if (region_segment_information_json.use_width_from_image || region_segment_information_json.use_height_from_image)
+                return Error::from_string_literal("can't use \"from_image\" with halftone_region");
+            region_segment_information = region_segment_information_json.region_segment_information;
+            return {};
         }
 
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                flags = TRY(jbig2_halftone_region_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            flags = TRY(jbig2_halftone_region_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "grayscale_width"sv)
@@ -1612,22 +1558,16 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     RefPtr<Gfx::BilevelImage> image;
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
-            if (value.is_object()) {
-                region_segment_information = TRY(jbig2_region_segment_information_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"region_segment_information\"");
+            region_segment_information = TRY(jbig2_region_segment_information_from_json(*TRY(parse_object(value, "expected object for \"region_segment_information\""sv))));
+            return {};
         }
 
         if (key == "real_height_for_generic_region_of_initially_unknown_size"sv)
             return set(real_height_for_generic_region_of_initially_unknown_size, parse_u32(value, "expected u32 for \"real_height_for_generic_region_of_initially_unknown_size\""sv));
 
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                flags = TRY(jbig2_generic_region_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            flags = TRY(jbig2_generic_region_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "adaptive_template_pixels"sv) {
@@ -1639,11 +1579,8 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
             return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         if (key == "image_data"sv) {
-            if (value.is_object()) {
-                image = TRY(jbig2_image_from_json(options, value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"image_data\"");
+            image = TRY(jbig2_image_from_json(options, *TRY(parse_object(value, "expected object for \"image_data\""sv))));
+            return {};
         }
 
         dbgln("generic_region key {}", key);
@@ -1746,19 +1683,13 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
     RefPtr<Gfx::BilevelImage> image;
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
-            if (value.is_object()) {
-                region_segment_information = TRY(jbig2_region_segment_information_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"region_segment_information\"");
+            region_segment_information = TRY(jbig2_region_segment_information_from_json(*TRY(parse_object(value, "expected object for \"region_segment_information\""sv))));
+            return {};
         }
 
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                flags = TRY(jbig2_refinement_region_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            flags = TRY(jbig2_refinement_region_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "adaptive_template_pixels"sv) {
@@ -1770,11 +1701,8 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
             return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         if (key == "image_data"sv) {
-            if (value.is_object()) {
-                image = TRY(jbig2_image_from_json(options, value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"image_data\"");
+            image = TRY(jbig2_image_from_json(options, *TRY(parse_object(value, "expected object for \"image_data\""sv))));
+            return {};
         }
 
         dbgln("generic_refinement_region key {}", key);
@@ -1926,19 +1854,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
             return set(data.page_y_resolution, parse_u32(value, "expected u32 for \"page_y_resolution\""sv));
 
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                data.flags = TRY(jbig2_page_information_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            data.flags = TRY(jbig2_page_information_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "striping_information"sv) {
-            if (value.is_object()) {
-                data.striping_information = TRY(jbig2_page_information_striping_information_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"striping_information\"");
+            data.striping_information = TRY(jbig2_page_information_striping_information_from_json(*TRY(parse_object(value, "expected object for \"striping_information\""sv))));
+            return {};
         }
 
         dbgln("page_information key {}", key);
@@ -2015,24 +1937,21 @@ static ErrorOr<Vector<Gfx::JBIG2::TablesData::Entry>> jbig2_tables_entries_from_
     Vector<Gfx::JBIG2::TablesData::Entry> entries;
 
     for (auto const& value : array.values()) {
-        if (value.is_object()) {
-            Gfx::JBIG2::TablesData::Entry entry;
+        Gfx::JBIG2::TablesData::Entry entry;
 
-            TRY(value.as_object().try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-                if (key == "prefix_length"sv)
-                    return set(entry.prefix_length, parse_u32(value, "expected u32 for \"prefix_length\""sv));
+        auto const& table_entry_object = *TRY(parse_object(value, "tables entries should be objects"sv));
+        TRY(table_entry_object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+            if (key == "prefix_length"sv)
+                return set(entry.prefix_length, parse_u32(value, "expected u32 for \"prefix_length\""sv));
 
-                if (key == "range_length"sv)
-                    return set(entry.range_length, parse_u32(value, "expected u32 for \"range_length\""sv));
+            if (key == "range_length"sv)
+                return set(entry.range_length, parse_u32(value, "expected u32 for \"range_length\""sv));
 
-                dbgln("tables entry key {}", key);
-                return Error::from_string_literal("unknown tables entry key");
-            }));
+            dbgln("tables entry key {}", key);
+            return Error::from_string_literal("unknown tables entry key");
+        }));
 
-            entries.append(entry);
-            continue;
-        }
-        return Error::from_string_literal("tables entries should be objects");
+        entries.append(entry);
     }
 
     return entries;
@@ -2047,11 +1966,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::Segme
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "flags"sv) {
-            if (value.is_object()) {
-                data.flags = TRY(jbig2_tables_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
+            data.flags = TRY(jbig2_tables_flags_from_json(*TRY(parse_object(value, "expected object for \"flags\""sv))));
+            return {};
         }
 
         if (key == "lowest_value"sv)
@@ -2166,11 +2082,8 @@ static ErrorOr<Vector<Gfx::JBIG2::SegmentHeaderData::Reference>> jbig2_referred_
 {
     Vector<Gfx::JBIG2::SegmentHeaderData::Reference> referred_to_segments;
 
-    for (auto const& value : array.values()) {
-        if (!value.is_object())
-            return Error::from_string_literal("referred_to_segments elements should be objects");
-        TRY(referred_to_segments.try_append(TRY(jbig2_referred_to_segment_from_json(value.as_object()))));
-    }
+    for (auto const& value : array.values())
+        TRY(referred_to_segments.try_append(TRY(jbig2_referred_to_segment_from_json(*TRY(parse_object(value, "referred_to_segments elements should be objects"sv))))));
 
     return referred_to_segments;
 }
@@ -2212,11 +2125,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
             return set(header.retention_flag, parse_bool(value, "expected bool for \"retained\""sv));
 
         if (key == "data"sv) {
-            if (value.is_object()) {
-                segment_data_object = value.as_object();
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"data\"");
+            segment_data_object = *TRY(parse_object(value, "expected object for \"data\""sv));
+            return {};
         }
 
         dbgln("segment key {}", key);
@@ -2278,11 +2188,8 @@ static ErrorOr<Vector<Gfx::JBIG2::SegmentData>> jbig2_segments_from_json(ToJSONO
 {
     Vector<Gfx::JBIG2::SegmentData> segments;
 
-    for (auto const& segment_value : segments_array.values()) {
-        if (!segment_value.is_object())
-            return Error::from_string_literal("segment should be object");
-        segments.append(TRY(jbig2_segment_from_json(options, segment_value.as_object())));
-    }
+    for (auto const& segment_value : segments_array.values())
+        segments.append(TRY(jbig2_segment_from_json(options, *TRY(parse_object(segment_value, "segment should be object"sv)))));
 
     return segments;
 }
@@ -2291,9 +2198,7 @@ static ErrorOr<Gfx::JBIG2::FileData> jbig2_data_from_json(ToJSONOptions const& o
 {
     Gfx::JBIG2::FileData jbig2;
 
-    if (!json.is_object())
-        return Error::from_string_literal("top-level should be object");
-    auto const& object = json.as_object();
+    auto const& object = *TRY(parse_object(json, "top-level should be object"sv));
 
     if (auto global_header = object.get_object("global_header"sv); global_header.has_value())
         jbig2.header = TRY(jbig2_header_from_json(global_header.value()));
