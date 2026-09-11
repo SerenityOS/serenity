@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <andreas@ladybird.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,29 +15,23 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
-#include <LibWeb/HTML/DOMStringMap.h>
 #include <LibWeb/HTML/ElementInternals.h>
 #include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/HTMLAreaElement.h>
+#include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLLabelElement.h>
-#include <LibWeb/HTML/NavigableContainer.h>
-#include <LibWeb/HTML/VisibilityState.h>
+#include <LibWeb/HTML/HTMLParagraphElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Box.h>
-#include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/UIEvents/EventNames.h>
-#include <LibWeb/UIEvents/FocusEvent.h>
-#include <LibWeb/UIEvents/MouseEvent.h>
 #include <LibWeb/UIEvents/PointerEvent.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -62,16 +56,9 @@ void HTMLElement::initialize(JS::Realm& realm)
 void HTMLElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_dataset);
+    HTMLOrSVGElement::visit_edges(visitor);
     visitor.visit(m_labels);
     visitor.visit(m_attached_internals);
-}
-
-JS::NonnullGCPtr<DOMStringMap> HTMLElement::dataset()
-{
-    if (!m_dataset)
-        m_dataset = DOMStringMap::create(*this);
-    return *m_dataset;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-dir
@@ -156,25 +143,72 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(StringView content_e
 void HTMLElement::set_inner_text(StringView text)
 {
     // 1. Let fragment be the rendered text fragment for value given element's node document.
+    auto fragment = rendered_text_fragment(text);
+
     // 2. Replace all with fragment within element.
-    remove_all_children();
-    append_rendered_text_fragment(text);
+    replace_all(fragment);
 
     set_needs_style_update(true);
 }
 
-// https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute:dom-outertext-2
-WebIDL::ExceptionOr<void> HTMLElement::set_outer_text(String)
+// https://html.spec.whatwg.org/multipage/dom.html#merge-with-the-next-text-node
+static void merge_with_the_next_text_node(DOM::Text& node)
 {
-    dbgln("FIXME: Implement HTMLElement::set_outer_text()");
+    // 1. Let next be node's next sibling.
+    auto next = node.next_sibling();
+
+    // 2. If next is not a Text node, then return.
+    if (!is<DOM::Text>(next))
+        return;
+
+    // 3. Replace data with node, node's data's length, 0, and next's data.
+    MUST(node.replace_data(node.length_in_utf16_code_units(), 0, static_cast<DOM::Text const&>(*next).data()));
+
+    // 4. Remove next.
+    next->remove();
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute:dom-outertext-2
+WebIDL::ExceptionOr<void> HTMLElement::set_outer_text(String const& value)
+{
+    // 1. If this's parent is null, then throw a "NoModificationAllowedError" DOMException.
+    if (!parent())
+        return WebIDL::NoModificationAllowedError::create(realm(), "setOuterText: parent is null"_string);
+
+    // 2. Let next be this's next sibling.
+    auto* next = next_sibling();
+
+    // 3. Let previous be this's previous sibling.
+    auto* previous = previous_sibling();
+
+    // 4. Let fragment be the rendered text fragment for the given value given this's node document.
+    auto fragment = rendered_text_fragment(value);
+
+    // 5. If fragment has no children, then append a new Text node whose data is the empty string and node document is this's node document to fragment.
+    if (!fragment->has_children())
+        MUST(fragment->append_child(document().create_text_node(String {})));
+
+    // 6. Replace this with fragment within this's parent.
+    MUST(parent()->replace_child(fragment, *this));
+
+    // 7. If next is non-null and next's previous sibling is a Text node, then merge with the next text node given next's previous sibling.
+    if (next && is<DOM::Text>(next->previous_sibling()))
+        merge_with_the_next_text_node(static_cast<DOM::Text&>(*next->previous_sibling()));
+
+    // 8. If previous is a Text node, then merge with the next text node given previous.
+    if (is<DOM::Text>(previous))
+        merge_with_the_next_text_node(static_cast<DOM::Text&>(*previous));
+
+    set_needs_style_update(true);
     return {};
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#rendered-text-fragment
-void HTMLElement::append_rendered_text_fragment(StringView input)
+JS::NonnullGCPtr<DOM::DocumentFragment> HTMLElement::rendered_text_fragment(StringView input)
 {
-    // FIXME: 1. Let fragment be a new DocumentFragment whose node document is document.
-    //      Instead of creating a DocumentFragment the nodes are appended directly.
+    // 1. Let fragment be a new DocumentFragment whose node document is document.
+    //    Instead of creating a DocumentFragment the nodes are appended directly.
+    auto fragment = heap().allocate<DOM::DocumentFragment>(realm(), document());
 
     // 2. Let position be a position variable for input, initially pointing at the start of input.
     // 3. Let text be the empty string.
@@ -188,7 +222,7 @@ void HTMLElement::append_rendered_text_fragment(StringView input)
 
         // 2. If text is not the empty string, then append a new Text node whose data is text and node document is document to fragment.
         if (!text.is_empty()) {
-            MUST(append_child(document().create_text_node(MUST(String::from_utf8(text)))));
+            MUST(fragment->append_child(document().create_text_node(MUST(String::from_utf8(text)))));
         }
 
         // 3. While position is not past the end of input, and the code point at position is either U+000A LF or U+000D CR:
@@ -204,35 +238,159 @@ void HTMLElement::append_rendered_text_fragment(StringView input)
 
             // 3. Append the result of creating an element given document, br, and the HTML namespace to fragment.
             auto br_element = DOM::create_element(document(), HTML::TagNames::br, Namespace::HTML).release_value();
-            MUST(append_child(br_element));
+            MUST(fragment->append_child(br_element));
         }
     }
+
+    // 5. Return fragment.
+    return fragment;
+}
+
+struct RequiredLineBreakCount {
+    int count { 0 };
+};
+
+// https://html.spec.whatwg.org/multipage/dom.html#rendered-text-collection-steps
+static Vector<Variant<String, RequiredLineBreakCount>> rendered_text_collection_steps(DOM::Node const& node)
+{
+    // 1. Let items be the result of running the rendered text collection steps with each child node of node in tree order, and then concatenating the results to a single list.
+    Vector<Variant<String, RequiredLineBreakCount>> items;
+    node.for_each_child([&](auto const& child) {
+        auto child_items = rendered_text_collection_steps(child);
+        items.extend(move(child_items));
+        return IterationDecision::Continue;
+    });
+
+    // NOTE: Steps are re-ordered here a bit.
+
+    // 3. If node is not being rendered, then return items.
+    //    For the purpose of this step, the following elements must act as described
+    //    if the computed value of the 'display' property is not 'none':
+    //    FIXME: - select elements have an associated non-replaced inline CSS box whose child boxes include only those of optgroup and option element child nodes;
+    //    FIXME: - optgroup elements have an associated non-replaced block-level CSS box whose child boxes include only those of option element child nodes; and
+    //    FIXME: - option element have an associated non-replaced block-level CSS box whose child boxes are as normal for non-replaced block-level CSS boxes.
+    auto* layout_node = node.layout_node();
+    if (!layout_node)
+        return items;
+
+    auto const& computed_values = layout_node->computed_values();
+
+    // 2. If node's computed value of 'visibility' is not 'visible', then return items.
+    if (computed_values.visibility() != CSS::Visibility::Visible)
+        return items;
+
+    // AD-HOC: If node's computed value of 'content-visibility' is 'hidden', then return items.
+    if (computed_values.content_visibility() == CSS::ContentVisibility::Hidden)
+        return items;
+
+    // 4. If node is a Text node, then for each CSS text box produced by node, in content order,
+    //    compute the text of the box after application of the CSS 'white-space' processing rules
+    //    and 'text-transform' rules, set items to the list of the resulting strings, and return items.
+
+    //    FIXME: The CSS 'white-space' processing rules are slightly modified:
+    //           collapsible spaces at the end of lines are always collapsed,
+    //           but they are only removed if the line is the last line of the block,
+    //           or it ends with a br element. Soft hyphens should be preserved. [CSSTEXT]
+
+    if (is<DOM::Text>(node)) {
+        auto const* layout_text_node = verify_cast<Layout::TextNode>(layout_node);
+        items.append(layout_text_node->text_for_rendering());
+        return items;
+    }
+
+    // 5. If node is a br element, then append a string containing a single U+000A LF code point to items.
+    if (is<HTML::HTMLBRElement>(node)) {
+        items.append("\n"_string);
+        return items;
+    }
+
+    auto display = computed_values.display();
+
+    // 6. If node's computed value of 'display' is 'table-cell', and node's CSS box is not the last 'table-cell' box of its enclosing 'table-row' box, then append a string containing a single U+0009 TAB code point to items.
+    if (display.is_table_cell() && node.next_sibling())
+        items.append("\t"_string);
+
+    // 7. If node's computed value of 'display' is 'table-row', and node's CSS box is not the last 'table-row' box of the nearest ancestor 'table' box, then append a string containing a single U+000A LF code point to items.
+    if (display.is_table_row() && node.next_sibling())
+        items.append("\n"_string);
+
+    // 8. If node is a p element, then append 2 (a required line break count) at the beginning and end of items.
+    if (is<HTML::HTMLParagraphElement>(node)) {
+        items.prepend(RequiredLineBreakCount { 2 });
+        items.append(RequiredLineBreakCount { 2 });
+    }
+
+    // 9. If node's used value of 'display' is block-level or 'table-caption', then append 1 (a required line break count) at the beginning and end of items. [CSSDISPLAY]
+    if (display.is_block_outside() || display.is_table_caption()) {
+        items.prepend(RequiredLineBreakCount { 1 });
+        items.append(RequiredLineBreakCount { 1 });
+    }
+
+    // 10. Return items.
+    return items;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#get-the-text-steps
 String HTMLElement::get_the_text_steps()
 {
-    // FIXME: Implement this according to spec.
-
-    StringBuilder builder;
-
-    // innerText for element being rendered takes visibility into account, so force a layout and then walk the layout tree.
+    // 1. If element is not being rendered or if the user agent is a non-CSS user agent, then return element's descendant text content.
     document().update_layout();
     if (!layout_node())
-        return text_content().value_or(String {});
+        return descendant_text_content();
 
-    Function<void(Layout::Node const&)> recurse = [&](auto& node) {
-        for (auto* child = node.first_child(); child; child = child->next_sibling()) {
-            if (is<Layout::TextNode>(child))
-                builder.append(verify_cast<Layout::TextNode>(*child).text_for_rendering());
-            if (is<Layout::BreakNode>(child))
-                builder.append('\n');
-            recurse(*child);
+    // 2. Let results be a new empty list.
+    Vector<Variant<String, RequiredLineBreakCount>> results;
+
+    // 3. For each child node node of element:
+    for_each_child([&](Node const& node) {
+        // 1. Let current be the list resulting in running the rendered text collection steps with node.
+        //    Each item in results will either be a string or a positive integer (a required line break count).
+        auto current = rendered_text_collection_steps(node);
+
+        // 2. For each item item in current, append item to results.
+        results.extend(move(current));
+        return IterationDecision::Continue;
+    });
+
+    // 4. Remove any items from results that are the empty string.
+    results.remove_all_matching([](auto& item) {
+        return item.visit(
+            [](String const& string) { return string.is_empty(); },
+            [](RequiredLineBreakCount const&) { return false; });
+    });
+
+    // 5. Remove any runs of consecutive required line break count items at the start or end of results.
+    while (!results.is_empty() && results.first().has<RequiredLineBreakCount>())
+        results.take_first();
+    while (!results.is_empty() && results.last().has<RequiredLineBreakCount>())
+        results.take_last();
+
+    // 6. Replace each remaining run of consecutive required line break count items
+    //    with a string consisting of as many U+000A LF code points as the maximum of the values
+    //    in the required line break count items.
+    for (size_t i = 0; i < results.size(); ++i) {
+        if (!results[i].has<RequiredLineBreakCount>())
+            continue;
+
+        int max_line_breaks = results[i].get<RequiredLineBreakCount>().count;
+        size_t j = i + 1;
+        while (j < results.size() && results[j].has<RequiredLineBreakCount>()) {
+            max_line_breaks = max(max_line_breaks, results[j].get<RequiredLineBreakCount>().count);
+            ++j;
         }
-    };
-    recurse(*layout_node());
 
-    return MUST(builder.to_string());
+        results.remove(i, j - i);
+        results.insert(i, MUST(String::repeated('\n', max_line_breaks)));
+    }
+
+    // 7. Return the concatenation of the string items in results.
+    StringBuilder builder;
+    for (auto& item : results) {
+        item.visit(
+            [&](String const& string) { builder.append(string); },
+            [&](RequiredLineBreakCount const&) {});
+    }
+    return builder.to_string_without_validation();
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-innertext
@@ -466,26 +624,23 @@ void HTMLElement::attribute_changed(FlyString const& name, Optional<String> cons
 #undef __ENUMERATE
 }
 
-// https://html.spec.whatwg.org/multipage/interaction.html#dom-focus
-void HTMLElement::focus()
+void HTMLElement::attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_)
 {
-    // 1. If the element is marked as locked for focus, then return.
-    if (m_locked_for_focus)
-        return;
+    Base::attribute_change_steps(local_name, old_value, value, namespace_);
+    HTMLOrSVGElement::attribute_change_steps(local_name, old_value, value, namespace_);
+}
 
-    // 2. Mark the element as locked for focus.
-    m_locked_for_focus = true;
+WebIDL::ExceptionOr<void> HTMLElement::cloned(Web::DOM::Node& copy, bool clone_children)
+{
+    TRY(Base::cloned(copy, clone_children));
+    TRY(HTMLOrSVGElement::cloned(copy, clone_children));
+    return {};
+}
 
-    // 3. Run the focusing steps for the element.
-    run_focusing_steps(this);
-
-    // FIXME: 4. If the value of the preventScroll dictionary member of options is false,
-    //           then scroll the element into view with scroll behavior "auto",
-    //           block flow direction position set to an implementation-defined value,
-    //           and inline base direction position set to an implementation-defined value.
-
-    // 5. Unmark the element as locked for focus.
-    m_locked_for_focus = false;
+void HTMLElement::inserted()
+{
+    Base::inserted();
+    HTMLOrSVGElement::inserted();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fire-a-synthetic-pointer-event
@@ -558,15 +713,6 @@ void HTMLElement::click()
 
     // 5. Unset this element's click in progress flag.
     m_click_in_progress = false;
-}
-
-// https://html.spec.whatwg.org/multipage/interaction.html#dom-blur
-void HTMLElement::blur()
-{
-    // The blur() method, when invoked, should run the unfocusing steps for the element on which the method was called.
-    run_unfocusing_steps(this);
-
-    // User agents may selectively or uniformly ignore calls to this method for usability reasons.
 }
 
 Optional<ARIA::Role> HTMLElement::default_role() const

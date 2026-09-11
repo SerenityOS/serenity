@@ -59,8 +59,6 @@
 #    include <Ladybird/Utilities.h>
 #endif
 
-constexpr int DEFAULT_TIMEOUT_MS = 30000; // 30sec
-
 static StringView s_current_test_path;
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
@@ -248,7 +246,7 @@ static StringView test_result_to_string(TestResult result)
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = DEFAULT_TIMEOUT_MS)
+static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, bool rebaseline, int timeout_in_milliseconds)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
@@ -314,13 +312,18 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
         return TestResult::Skipped;
     }
 
-    auto expectation_file_or_error = Core::File::open(expectation_path, Core::File::OpenMode::Read);
+    auto expectation_file_or_error = Core::File::open(expectation_path, rebaseline ? Core::File::OpenMode::Write : Core::File::OpenMode::Read);
     if (expectation_file_or_error.is_error()) {
         warnln("Failed opening '{}': {}", expectation_path, expectation_file_or_error.error());
         return expectation_file_or_error.release_error();
     }
 
     auto expectation_file = expectation_file_or_error.release_value();
+
+    if (rebaseline) {
+        TRY(expectation_file->write_until_depleted(result));
+        return TestResult::Pass;
+    }
 
     auto expectation = TRY(String::from_utf8(StringView(TRY(expectation_file->read_until_eof()).bytes())));
 
@@ -348,7 +351,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     return TestResult::Fail;
 }
 
-static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, bool dump_failed_ref_tests, int timeout_in_milliseconds = DEFAULT_TIMEOUT_MS)
+static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, bool dump_failed_ref_tests, int timeout_in_milliseconds)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
@@ -407,7 +410,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
     return TestResult::Fail;
 }
 
-static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, bool dump_failed_ref_tests)
+static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, bool dump_failed_ref_tests, bool rebaseline, int per_test_timeout_in_seconds)
 {
     // Clear the current document.
     // FIXME: Implement a debug-request to do this more thoroughly.
@@ -463,9 +466,9 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     switch (mode) {
     case TestMode::Text:
     case TestMode::Layout:
-        return run_dump_test(view, input_path, expectation_path, mode);
+        return run_dump_test(view, input_path, expectation_path, mode, rebaseline, per_test_timeout_in_seconds * 1000);
     case TestMode::Ref:
-        return run_ref_test(view, input_path, dump_failed_ref_tests);
+        return run_ref_test(view, input_path, dump_failed_ref_tests, per_test_timeout_in_seconds * 1000);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -540,7 +543,7 @@ static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
     return {};
 }
 
-static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path, StringView test_glob, bool dump_failed_ref_tests, bool dump_gc_graph)
+static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path, StringView test_glob, bool dump_failed_ref_tests, bool dump_gc_graph, bool rebaseline, int per_test_timeout_in_seconds)
 {
     view.clear_content_filters();
 
@@ -585,7 +588,7 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
             continue;
         }
 
-        test.result = TRY(run_test(view, test.input_path, test.expectation_path, test.mode, dump_failed_ref_tests));
+        test.result = TRY(run_test(view, test.input_path, test.expectation_path, test.mode, dump_failed_ref_tests, rebaseline, per_test_timeout_in_seconds));
         switch (*test.result) {
         case TestResult::Pass:
             ++pass_count;
@@ -644,6 +647,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView test_root_path;
     ByteString test_glob;
     Vector<ByteString> certificates;
+    bool rebaseline { false };
+    int per_test_timeout_in_seconds { 30 };
 
 #if !defined(AK_OS_SERENITY)
     platform_init();
@@ -663,6 +668,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode");
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
+    args_parser.add_option(rebaseline, "Rebaseline any executed layout or text tests", "rebaseline");
+    args_parser.add_option(per_test_timeout_in_seconds, "Per-test timeout (default: 30)", "per-test-timeout", 't', "seconds");
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -689,7 +696,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!test_root_path.is_empty()) {
         test_glob = ByteString::formatted("*{}*", test_glob);
-        return run_tests(*view, test_root_path, test_glob, dump_failed_ref_tests, dump_gc_graph);
+        return run_tests(*view, test_root_path, test_glob, dump_failed_ref_tests, dump_gc_graph, rebaseline, per_test_timeout_in_seconds);
     }
 
     auto url = WebView::sanitize_url(raw_url);
@@ -699,12 +706,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (dump_layout_tree) {
-        TRY(run_dump_test(*view, raw_url, ""sv, TestMode::Layout));
+        TRY(run_dump_test(*view, raw_url, ""sv, TestMode::Layout, rebaseline, per_test_timeout_in_seconds));
         return 0;
     }
 
     if (dump_text) {
-        TRY(run_dump_test(*view, raw_url, ""sv, TestMode::Text));
+        TRY(run_dump_test(*view, raw_url, ""sv, TestMode::Text, rebaseline, per_test_timeout_in_seconds));
         return 0;
     }
 
