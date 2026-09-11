@@ -1105,10 +1105,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
 
         // FIXME: Make this more flexible.
         if (key == "image_data"sv) {
-            if (value.is_object()) {
-                image = TRY(jbig2_image_from_json(options, value.as_object()));
-                return {};
-            }
+            if (value.is_object())
+                return set(image, jbig2_image_from_json(options, value.as_object()));
             if (value.is_array()) {
                 size_t width = 0;
                 for (auto const& [i, image_json] : enumerate(value.as_array().values())) {
