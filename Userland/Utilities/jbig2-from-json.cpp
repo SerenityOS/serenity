@@ -103,10 +103,16 @@ static bool is_string_literal(JsonValue const& value, StringView string)
 }
 
 template<class T, class V>
+static ErrorOr<void> set(T& out, V&& in)
+{
+    out = in;
+    return {};
+}
+
+template<class T, class V>
 static ErrorOr<void> set(T& out, ErrorOr<V>&& in)
 {
-    out = TRY(in);
-    return {};
+    return set(out, TRY(in));
 }
 
 template<class T, class V>
@@ -165,10 +171,8 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
 
     TRY(header_object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "number_of_pages"sv) {
-            if (value.is_null()) {
-                header.number_of_pages = {};
-                return {};
-            }
+            if (value.is_null())
+                return set(header.number_of_pages, OptionalNone {});
             return set(header.number_of_pages, parse_u32(value, "expected u32 or `null` for \"number_of_pages\""sv));
         }
 
@@ -434,23 +438,17 @@ static ErrorOr<RegionSegmentInformationJSON> jbig2_region_segment_information_fr
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "width"sv) {
-            if (is_string_literal(value, "from_image_data"sv)) {
-                result.use_width_from_image = true;
-                return {};
-            }
+            if (is_string_literal(value, "from_image_data"sv))
+                return set(result.use_width_from_image, true);
             result.region_segment_information.width = TRY(parse_u32(value, "expected u32 or \"from_image_data\" for \"width\""sv));
-            result.use_width_from_image = false;
-            return {};
+            return set(result.use_width_from_image, false);
         }
 
         if (key == "height"sv) {
-            if (is_string_literal(value, "from_image_data"sv)) {
-                result.use_height_from_image = true;
-                return {};
-            }
+            if (is_string_literal(value, "from_image_data"sv))
+                return set(result.use_height_from_image, true);
             result.region_segment_information.height = TRY(parse_u32(value, "expected u32 or \"from_image_data\" for \"height\""sv));
-            result.use_height_from_image = false;
-            return {};
+            return set(result.use_height_from_image, false);
         }
 
         if (key == "x"sv)
@@ -595,21 +593,18 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
         if (key == "image_data"sv) {
             auto image_json = TRY(jbig2_image_from_json(options, *TRY(parse_object(value, "expected object for \"image_data\""sv))));
             size = { image_json->width(), image_json->height() };
-            image = move(image_json);
-            return {};
+            return set(image, move(image_json));
         }
 
         if (key == "refines_symbol_to"sv) {
             auto refined_symbol = TRY(jbig2_symbol_dictionary_refined_symbol_from_json(options, *TRY(parse_object(value, "expected object for \"refines_symbol_to\""sv))));
             size = { refined_symbol.refines_to->width(), refined_symbol.refines_to->height() };
-            image = move(refined_symbol);
-            return {};
+            return set(image, move(refined_symbol));
         }
 
         if (key == "refines_using_strips"sv) {
             auto refines_using_strips = TRY(jbig2_symbol_dictionary_refines_using_strips_from_json(options, *TRY(parse_object(value, "expected object for \"refines_using_strips\""sv))));
-            image = move(refines_using_strips);
-            return {};
+            return set(image, move(refines_using_strips));
         }
 
         if (key == "width"sv)
@@ -974,8 +969,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
             auto region_segment_information = TRY(jbig2_region_segment_information_from_json(*TRY(parse_object(value, "expected object for \"region_segment_information\""sv))));
             if (region_segment_information.use_width_from_image || region_segment_information.use_height_from_image)
                 return Error::from_string_literal("can't use \"from_image\" with text_region");
-            text_region.region_segment_information = region_segment_information.region_segment_information;
-            return {};
+            return set(text_region.region_segment_information, region_segment_information.region_segment_information);
         }
 
         if (key == "flags"sv)
@@ -1081,10 +1075,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return set(pattern_height, parse_u32_in_range(value, 1, 255, "expected non-zero u8 for \"pattern_height\""sv));
 
         if (key == "gray_max"sv) {
-            if (is_string_literal(value, "from_tiles"sv)) {
-                gray_max_from_tiles = true;
-                return {};
-            }
+            if (is_string_literal(value, "from_tiles"sv))
+                return set(gray_max_from_tiles, true);
             return set(gray_max, parse_u32(value, "expected u32 or \"from_tiles\" for \"gray_max\""sv));
         }
 
@@ -1135,14 +1127,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         }
 
         if (key == "method"sv) {
-            if (is_string_literal(value, "distinct_image_tiles"sv)) {
-                method = Method::DistinctImageTiles;
-                return {};
-            }
-            if (is_string_literal(value, "unique_image_tiles"sv)) {
-                method = Method::UniqueImageTiles;
-                return {};
-            }
+            if (is_string_literal(value, "distinct_image_tiles"sv))
+                return set(method, Method::DistinctImageTiles);
+            if (is_string_literal(value, "unique_image_tiles"sv))
+                return set(method, Method::UniqueImageTiles);
             return Error::from_string_literal("expected \"distinct_image_tiles\" or \"unique_image_tiles\" for \"method\"");
         }
 
@@ -1270,8 +1258,7 @@ static ErrorOr<Variant<Vector<u64>, NonnullRefPtr<Gfx::Bitmap>>> jbig2_halftone_
                     return Error::from_string_literal("expected u64 for \"graymap_data\" elements");
                 }
             }
-            graymap = move(graymap_data);
-            return {};
+            return set(graymap, move(graymap_data));
         }
 
         if (key == "match_image") {
@@ -1313,8 +1300,7 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
             auto region_segment_information_json = TRY(jbig2_region_segment_information_from_json(*TRY(parse_object(value, "expected object for \"region_segment_information\""sv))));
             if (region_segment_information_json.use_width_from_image || region_segment_information_json.use_height_from_image)
                 return Error::from_string_literal("can't use \"from_image\" with halftone_region");
-            region_segment_information = region_segment_information_json.region_segment_information;
-            return {};
+            return set(region_segment_information, region_segment_information_json.region_segment_information);
         }
 
         if (key == "flags"sv)
@@ -1348,8 +1334,7 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
                 Vector<u64> graymap;
                 for (u32 i = 0; i < grayscale_width * grayscale_height; ++i)
                     TRY(graymap.try_append(i));
-                grayscale_image = move(graymap);
-                return {};
+                return set(grayscale_image, move(graymap));
             }
             return Error::from_string_literal("expected object or \"identity_tile_indices\" for \"graymap_data\"");
         }
@@ -1677,10 +1662,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
             return set(data.bitmap_width, parse_u32(value, "expected u32 for \"page_width\""sv));
 
         if (key == "page_height"sv) {
-            if (value.is_null()) {
-                data.bitmap_height = 0xffff'ffff;
-                return {};
-            }
+            if (value.is_null())
+                return set(data.bitmap_height, 0xffff'ffff);
             return set(data.bitmap_height, parse_u32(value, "expected u32 or null for \"page_height\""sv));
         }
 
@@ -1836,14 +1819,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_extension_from_json(Gfx::JBIG2::Se
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "type"sv) {
-            if (is_string_literal(value, "single_byte_coded_comment"sv)) {
-                data.type = Gfx::JBIG2::ExtensionType::SingleByteCodedComment;
-                return {};
-            }
-            if (is_string_literal(value, "multi_byte_coded_comment"sv)) {
-                data.type = Gfx::JBIG2::ExtensionType::MultiByteCodedComment;
-                return {};
-            }
+            if (is_string_literal(value, "single_byte_coded_comment"sv))
+                return set(data.type, Gfx::JBIG2::ExtensionType::SingleByteCodedComment);
+            if (is_string_literal(value, "multi_byte_coded_comment"sv))
+                return set(data.type, Gfx::JBIG2::ExtensionType::MultiByteCodedComment);
             return Error::from_string_literal("expected \"single_byte_coded_comment\" or \"multi_byte_coded_comment\" for \"type\"");
         }
 
