@@ -90,6 +90,20 @@ static ErrorOr<Gfx::JBIG2::CombinationOperator> parse_jbig2_combination_operator
     return Error::from_string_view(error);
 }
 
+static ErrorOr<u8> parse_jbig2_color_from_json(JsonValue const& value, StringView error)
+{
+    if (!value.is_string())
+        return Error::from_string_view(error);
+
+    auto const& string = value.as_string();
+    if (string == "white"sv)
+        return 0;
+    if (string == "black"sv)
+        return 1;
+
+    return Error::from_string_view(error);
+}
+
 static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue const& value)
 {
     if (!value.is_string())
@@ -907,17 +921,9 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "default_pixel_value"sv) {
-            if (value.is_string()) {
-                auto const& s = value.as_string();
-                if (s == "white"sv)
-                    flags |= 0;
-                else if (s == "black"sv)
-                    flags |= 1u << 9;
-                else
-                    return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
+            u8 color = TRY(parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_pixel_value\""sv));
+            flags |= color << 9;
+            return {};
         }
 
         if (key == "delta_s_offset"sv) {
@@ -1543,17 +1549,9 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
         }
 
         if (key == "default_pixel_value"sv) {
-            if (value.is_string()) {
-                auto const& s = value.as_string();
-                if (s == "white"sv)
-                    flags |= 0;
-                else if (s == "black"sv)
-                    flags |= 1u << 7;
-                else
-                    return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
+            u8 color = TRY(parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_pixel_value\""sv));
+            flags |= color << 7;
+            return {};
         }
 
         dbgln("halftone_region flag key {}", key);
@@ -2056,17 +2054,9 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
         }
 
         if (key == "default_color"sv) {
-            if (value.is_string()) {
-                auto const& s = value.as_string();
-                if (s == "white"sv)
-                    flags |= 0;
-                else if (s == "black"sv)
-                    flags |= 1u << 2;
-                else
-                    return Error::from_string_literal("expected \"white\" or \"black\" for \"default_color\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"white\" or \"black\" for \"default_color\"");
+            u8 color = TRY(parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_color\""sv));
+            flags |= color << 2;
+            return {};
         }
 
         if (key == "default_combination_operator"sv) {
