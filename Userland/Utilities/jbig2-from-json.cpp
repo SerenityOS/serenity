@@ -31,12 +31,6 @@ static ErrorOr<bool> parse_bool(JsonValue const& value, StringView error)
     return Error::from_string_view(error);
 }
 
-static ErrorOr<void> set_bool(bool& out, JsonValue const& value, StringView error)
-{
-    out = TRY(parse_bool(value, error));
-    return {};
-}
-
 static ErrorOr<u8> parse_bit(JsonValue const& value, StringView error)
 {
     return static_cast<u8>(TRY(parse_bool(value, error)));
@@ -49,13 +43,6 @@ static ErrorOr<i32> parse_i32(JsonValue const& value, StringView error)
     return Error::from_string_view(error);
 }
 
-template<class T>
-static ErrorOr<void> set_i32(T& out, JsonValue const& value, StringView error)
-{
-    out = TRY(parse_i32(value, error));
-    return {};
-}
-
 static ErrorOr<i32> parse_i32_in_range(JsonValue const& value, i32 min, i32 max, StringView error)
 {
     i32 i = TRY(parse_i32(value, error));
@@ -64,25 +51,11 @@ static ErrorOr<i32> parse_i32_in_range(JsonValue const& value, i32 min, i32 max,
     return i;
 }
 
-template<class T>
-static ErrorOr<void> set_i32_in_range(T& out, JsonValue const& value, i32 min, i32 max, StringView error)
-{
-    out = TRY(parse_i32_in_range(value, min, max, error));
-    return {};
-}
-
 static ErrorOr<u32> parse_u32(JsonValue const& value, StringView error)
 {
     if (auto i = value.get_u32(); i.has_value())
         return i.value();
     return Error::from_string_view(error);
-}
-
-template<class T>
-static ErrorOr<void> set_u32(T& out, JsonValue const& value, StringView error)
-{
-    out = TRY(parse_u32(value, error));
-    return {};
 }
 
 static ErrorOr<u32> parse_u32_in_range(JsonValue const& value, u32 min, u32 max, StringView error)
@@ -93,19 +66,19 @@ static ErrorOr<u32> parse_u32_in_range(JsonValue const& value, u32 min, u32 max,
     return i;
 }
 
-template<class T>
-static ErrorOr<void> set_u32_in_range(T& out, JsonValue const& value, u32 min, u32 max, StringView error)
-{
-    out = TRY(parse_u32_in_range(value, min, max, error));
-    return {};
-}
-
 static ErrorOr<u32> parse_u32_in_set(JsonValue const& value, Vector<u32>&& values, StringView error)
 {
     u32 i = TRY(parse_u32(value, error));
     if (!values.contains_slow(i))
         return Error::from_string_view(error);
     return i;
+}
+
+template<class T, class V>
+static ErrorOr<void> set(T& out, ErrorOr<V>&& in)
+{
+    out = TRY(in);
+    return {};
 }
 
 enum class AllowReplace {
@@ -171,7 +144,7 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
                 header.number_of_pages = {};
                 return {};
             }
-            return set_u32(header.number_of_pages, value, "expected u32 or `null` for \"number_of_pages\""sv);
+            return set(header.number_of_pages, parse_u32(value, "expected u32 or `null` for \"number_of_pages\""sv));
         }
 
         if (key == "organization"sv) {
@@ -264,12 +237,6 @@ static ErrorOr<Gfx::MQArithmeticEncoder::Trailing7FFFHandling> parse_jbig2_trail
     return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
 }
 
-static ErrorOr<void> set_jbig2_trailing_7fff_handling_from_json(Gfx::MQArithmeticEncoder::Trailing7FFFHandling& out, JsonValue const& value)
-{
-    out = TRY(parse_jbig2_trailing_7fff_handling_from_json(value));
-    return {};
-}
-
 struct JSONRect {
     Optional<u32> x;
     Optional<u32> y;
@@ -283,16 +250,16 @@ static ErrorOr<JSONRect> jbig2_rect_from_json(JsonObject const& object)
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "x"sv)
-            return set_u32(rect.x, value, "expected u32 for \"x\""sv);
+            return set(rect.x, parse_u32(value, "expected u32 for \"x\""sv));
 
         if (key == "y"sv)
-            return set_u32(rect.y, value, "expected u32 for \"y\""sv);
+            return set(rect.y, parse_u32(value, "expected u32 for \"y\""sv));
 
         if (key == "width"sv)
-            return set_u32(rect.width, value, "expected u32 for \"width\""sv);
+            return set(rect.width, parse_u32(value, "expected u32 for \"width\""sv));
 
         if (key == "height"sv)
-            return set_u32(rect.height, value, "expected u32 for \"height\""sv);
+            return set(rect.height, parse_u32(value, "expected u32 for \"height\""sv));
 
         dbgln("rect key {}", key);
         return Error::from_string_literal("unknown rect key");
@@ -387,13 +354,13 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
         }
 
         if (key == "invert")
-            return set_bool(invert, value, "expected bool for \"invert\""sv);
+            return set(invert, parse_bool(value, "expected bool for \"invert\""sv));
 
         if (key == "repeat_x")
-            return set_i32_in_range(repeat_x, value, 1, NumericLimits<i32>::max(), "expected i32 >= 1 for \"repeat_x\""sv);
+            return set(repeat_x, parse_i32_in_range(value, 1, NumericLimits<i32>::max(), "expected i32 >= 1 for \"repeat_x\""sv));
 
         if (key == "repeat_y")
-            return set_i32_in_range(repeat_y, value, 1, NumericLimits<i32>::max(), "expected i32 >= 1 for \"repeat_y\""sv);
+            return set(repeat_y, parse_i32_in_range(value, 1, NumericLimits<i32>::max(), "expected i32 >= 1 for \"repeat_y\""sv));
 
         dbgln("image_data key {}", key);
         return Error::from_string_literal("unknown image_data key");
@@ -493,10 +460,10 @@ static ErrorOr<RegionSegmentInformationJSON> jbig2_region_segment_information_fr
         }
 
         if (key == "x"sv)
-            return set_u32(result.region_segment_information.x_location, value, "expected u32 for \"x\""sv);
+            return set(result.region_segment_information.x_location, parse_u32(value, "expected u32 for \"x\""sv));
 
         if (key == "y"sv)
-            return set_u32(result.region_segment_information.y_location, value, "expected u32 for \"y\""sv);
+            return set(result.region_segment_information.y_location, parse_u32(value, "expected u32 for \"y\""sv));
 
         if (key == "flags"sv) {
             if (value.is_object()) {
@@ -588,13 +555,13 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "symbol_id"sv)
-            return set_u32(symbol_id, value, "expected u32 for \"symbol_id\""sv);
+            return set(symbol_id, parse_u32(value, "expected u32 for \"symbol_id\""sv));
 
         if (key == "delta_x_offset"sv)
-            return set_i32(delta_x_offset, value, "expected i32 for \"delta_x_offset\""sv);
+            return set(delta_x_offset, parse_i32(value, "expected i32 for \"delta_x_offset\""sv));
 
         if (key == "delta_y_offset"sv)
-            return set_i32(delta_y_offset, value, "expected i32 for \"delta_y_offset\""sv);
+            return set(delta_y_offset, parse_i32(value, "expected i32 for \"delta_y_offset\""sv));
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -605,7 +572,7 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
         }
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
+            return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         dbgln("symbol_dict symbol refines_symbol_to key {}", key);
         return Error::from_string_literal("unknown symbol_dict symbol refines_symbol_to key");
@@ -630,7 +597,7 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsin
     Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips refines_using_strips;
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "initial_strip_t"sv)
-            return set_i32(refines_using_strips.initial_strip_t, value, "expected i32 for \"initial_strip_t\""sv);
+            return set(refines_using_strips.initial_strip_t, parse_i32(value, "expected i32 for \"initial_strip_t\""sv));
 
         if (key == "strips"sv) {
             if (value.is_array()) {
@@ -657,7 +624,7 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "exported"sv)
-            return set_bool(is_exported, value, "expected bool for \"exported\""sv);
+            return set(is_exported, parse_bool(value, "expected bool for \"exported\""sv));
 
         if ((key == "image_data"sv || key == "refines_symbol_to"sv) && image.has_value()) {
             return Error::from_string_literal("only one of \"image_data\" or \"refines_symbol_to\" may be specified");
@@ -693,10 +660,10 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbi
         }
 
         if (key == "width"sv)
-            return set_i32(width, value, "expected i32 for \"width\""sv);
+            return set(width, parse_i32(value, "expected i32 for \"width\""sv));
 
         if (key == "height"sv)
-            return set_i32(height, value, "expected i32 for \"height\""sv);
+            return set(height, parse_i32(value, "expected i32 for \"height\""sv));
 
         dbgln("height_class.symbol key {}", key);
         return Error::from_string_literal("unknown height_class.symbol key");
@@ -738,7 +705,7 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> jbig2_symbo
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "height_class_collective_bitmap_is_compressed"sv)
-            return set_bool(height_class.is_collective_bitmap_compressed, value, "expected bool for \"height_class_collective_bitmap_is_compressed\""sv);
+            return set(height_class.is_collective_bitmap_compressed, parse_bool(value, "expected bool for \"height_class_collective_bitmap_is_compressed\""sv));
 
         if (key == "symbols"sv) {
             if (value.is_array()) {
@@ -816,7 +783,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
         }
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
+            return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         dbgln("symbol_dictionary key {}", key);
         return Error::from_string_literal("unknown symbol_dictionary key");
@@ -998,16 +965,16 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "delta_width"sv)
-            return set_i32(delta_width, value, "expected i32 for \"delta_width\""sv);
+            return set(delta_width, parse_i32(value, "expected i32 for \"delta_width\""sv));
 
         if (key == "delta_height"sv)
-            return set_i32(delta_height, value, "expected i32 for \"delta_height\""sv);
+            return set(delta_height, parse_i32(value, "expected i32 for \"delta_height\""sv));
 
         if (key == "delta_x_offset"sv)
-            return set_i32(delta_x_offset, value, "expected i32 for \"delta_x_offset\""sv);
+            return set(delta_x_offset, parse_i32(value, "expected i32 for \"delta_x_offset\""sv));
 
         if (key == "delta_y_offset"sv)
-            return set_i32(delta_y_offset, value, "expected i32 for \"delta_y_offset\""sv);
+            return set(delta_y_offset, parse_i32(value, "expected i32 for \"delta_y_offset\""sv));
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -1018,7 +985,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
         }
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
+            return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         dbgln("text_region symbol_instance refinement_data key {}", key);
         return Error::from_string_literal("unknown text_region symbol_instance refinement_data key");
@@ -1043,13 +1010,13 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance> jbig2_text_region_sy
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "symbol_id"sv)
-            return set_u32(instance.symbol_id, value, "expected u32 for \"symbol_id\""sv);
+            return set(instance.symbol_id, parse_u32(value, "expected u32 for \"symbol_id\""sv));
 
         if (key == "instance_s"sv)
-            return set_i32(instance.s, value, "expected i32 for \"instance_s\""sv);
+            return set(instance.s, parse_i32(value, "expected i32 for \"instance_s\""sv));
 
         if (key == "instance_t"sv)
-            return set_i32(instance.t, value, "expected i32 for \"instance_t\""sv);
+            return set(instance.t, parse_i32(value, "expected i32 for \"instance_t\""sv));
 
         if (key == "instance_refines_symbol_to"sv) {
             if (value.is_object()) {
@@ -1085,7 +1052,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip> jbig2_text_region_strip_from_json(To
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "strip_t"sv)
-            return set_i32(strip.strip_t, value, "expected i32 for \"strip_t\""sv);
+            return set(strip.strip_t, parse_i32(value, "expected i32 for \"strip_t\""sv));
 
         if (key == "instances"sv) {
             if (value.is_array()) {
@@ -1157,7 +1124,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
         }
 
         if (key == "initial_strip_t"sv)
-            return set_i32(text_region.initial_strip_t, value, "expected i32 for \"initial_strip_t\""sv);
+            return set(text_region.initial_strip_t, parse_i32(value, "expected i32 for \"initial_strip_t\""sv));
 
         if (key == "strips"sv) {
             if (value.is_array()) {
@@ -1168,7 +1135,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
         }
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(text_region.trailing_7fff_handling, value);
+            return set(text_region.trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         dbgln("text_region key {}", key);
         return Error::from_string_literal("unknown text_region key");
@@ -1258,10 +1225,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         }
 
         if (key == "pattern_width"sv)
-            return set_u32_in_range(pattern_width, value, 1, 255, "expected non-zero u8 for \"pattern\""sv);
+            return set(pattern_width, parse_u32_in_range(value, 1, 255, "expected non-zero u8 for \"pattern\""sv));
 
         if (key == "pattern_height"sv)
-            return set_u32_in_range(pattern_height, value, 1, 255, "expected non-zero u8 for \"pattern_height\""sv);
+            return set(pattern_height, parse_u32_in_range(value, 1, 255, "expected non-zero u8 for \"pattern_height\""sv));
 
         if (key == "gray_max"sv) {
             if (value.is_string()) {
@@ -1270,29 +1237,29 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
                 gray_max_from_tiles = true;
                 return {};
             }
-            return set_u32(gray_max, value, "expected u32 or \"from_tiles\" for \"gray_max\""sv);
+            return set(gray_max, parse_u32(value, "expected u32 or \"from_tiles\" for \"gray_max\""sv));
         }
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
+            return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         if (key == "grayscale_width"sv)
-            return set_u32(grayscale_width, value, "expected u32 for \"grayscale_width\""sv);
+            return set(grayscale_width, parse_u32(value, "expected u32 for \"grayscale_width\""sv));
 
         if (key == "grayscale_height"sv)
-            return set_u32(grayscale_height, value, "expected u32 for \"grayscale_height\""sv);
+            return set(grayscale_height, parse_u32(value, "expected u32 for \"grayscale_height\""sv));
 
         if (key == "grid_offset_x_times_256"sv)
-            return set_i32(grid_offset_x_times_256, value, "expected i32 for \"grid_offset_x_times_256\""sv);
+            return set(grid_offset_x_times_256, parse_i32(value, "expected i32 for \"grid_offset_x_times_256\""sv));
 
         if (key == "grid_offset_y_times_256"sv)
-            return set_i32(grid_offset_y_times_256, value, "expected i32 for \"grid_offset_y_times_256\""sv);
+            return set(grid_offset_y_times_256, parse_i32(value, "expected i32 for \"grid_offset_y_times_256\""sv));
 
         if (key == "grid_vector_x_times_256"sv)
-            return set_u32_in_range(grid_vector_x_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_x_times_256\""sv);
+            return set(grid_vector_x_times_256, parse_u32_in_range(value, 0, 0xffff, "expected u16 for \"grid_vector_x_times_256\""sv));
 
         if (key == "grid_vector_y_times_256"sv)
-            return set_u32_in_range(grid_vector_y_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_y_times_256\""sv);
+            return set(grid_vector_y_times_256, parse_u32_in_range(value, 0, 0xffff, "expected u16 for \"grid_vector_y_times_256\""sv));
 
         // FIXME: Make this more flexible.
         if (key == "image_data"sv) {
@@ -1540,25 +1507,25 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
         }
 
         if (key == "grayscale_width"sv)
-            return set_u32(grayscale_width, value, "expected u32 for \"grayscale_width\""sv);
+            return set(grayscale_width, parse_u32(value, "expected u32 for \"grayscale_width\""sv));
 
         if (key == "grayscale_height"sv)
-            return set_u32(grayscale_height, value, "expected u32 for \"grayscale_height\""sv);
+            return set(grayscale_height, parse_u32(value, "expected u32 for \"grayscale_height\""sv));
 
         if (key == "grid_offset_x_times_256"sv)
-            return set_i32(grid_offset_x_times_256, value, "expected i32 for \"grid_offset_x_times_256\""sv);
+            return set(grid_offset_x_times_256, parse_i32(value, "expected i32 for \"grid_offset_x_times_256\""sv));
 
         if (key == "grid_offset_y_times_256"sv)
-            return set_i32(grid_offset_y_times_256, value, "expected i32 for \"grid_offset_y_times_256\""sv);
+            return set(grid_offset_y_times_256, parse_i32(value, "expected i32 for \"grid_offset_y_times_256\""sv));
 
         if (key == "grid_vector_x_times_256"sv)
-            return set_u32_in_range(grid_vector_x_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_x_times_256\""sv);
+            return set(grid_vector_x_times_256, parse_u32_in_range(value, 0, 0xffff, "expected u16 for \"grid_vector_x_times_256\""sv));
 
         if (key == "grid_vector_y_times_256"sv)
-            return set_u32_in_range(grid_vector_y_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_y_times_256\""sv);
+            return set(grid_vector_y_times_256, parse_u32_in_range(value, 0, 0xffff, "expected u16 for \"grid_vector_y_times_256\""sv));
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
+            return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         if (key == "graymap_data"sv) {
             if (value.is_object()) {
@@ -1673,7 +1640,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         }
 
         if (key == "real_height_for_generic_region_of_initially_unknown_size"sv)
-            return set_u32(real_height_for_generic_region_of_initially_unknown_size, value, "expected u32 for \"real_height_for_generic_region_of_initially_unknown_size\""sv);
+            return set(real_height_for_generic_region_of_initially_unknown_size, parse_u32(value, "expected u32 for \"real_height_for_generic_region_of_initially_unknown_size\""sv));
 
         if (key == "flags"sv) {
             if (value.is_object()) {
@@ -1689,7 +1656,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         }
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
+            return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -1820,7 +1787,7 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
         }
 
         if (key == "strip_trailing_7fffs"sv)
-            return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
+            return set(trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));
 
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -1962,21 +1929,21 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "page_width"sv)
-            return set_u32(data.bitmap_width, value, "expected u32 for \"page_width\""sv);
+            return set(data.bitmap_width, parse_u32(value, "expected u32 for \"page_width\""sv));
 
         if (key == "page_height"sv) {
             if (value.is_null()) {
                 data.bitmap_height = 0xffff'ffff;
                 return {};
             }
-            return set_u32(data.bitmap_height, value, "expected u32 or null for \"page_height\""sv);
+            return set(data.bitmap_height, parse_u32(value, "expected u32 or null for \"page_height\""sv));
         }
 
         if (key == "page_x_resolution"sv)
-            return set_u32(data.page_x_resolution, value, "expected u32 for \"page_x_resolution\""sv);
+            return set(data.page_x_resolution, parse_u32(value, "expected u32 for \"page_x_resolution\""sv));
 
         if (key == "page_y_resolution"sv)
-            return set_u32(data.page_y_resolution, value, "expected u32 for \"page_y_resolution\""sv);
+            return set(data.page_y_resolution, parse_u32(value, "expected u32 for \"page_y_resolution\""sv));
 
         if (key == "flags"sv) {
             if (value.is_object()) {
@@ -2017,7 +1984,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_stripe_from_json(Gfx::JBIG2
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "y_coordinate"sv)
-            return set_u32(y_coordinate, value, "expected u32 for \"y_coordinate\""sv);
+            return set(y_coordinate, parse_u32(value, "expected u32 for \"y_coordinate\""sv));
 
         dbgln("end_of_stripe key {}", key);
         return Error::from_string_literal("unknown end_of_stripe key");
@@ -2073,10 +2040,10 @@ static ErrorOr<Vector<Gfx::JBIG2::TablesData::Entry>> jbig2_tables_entries_from_
 
             TRY(value.as_object().try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
                 if (key == "prefix_length"sv)
-                    return set_u32(entry.prefix_length, value, "expected u32 for \"prefix_length\""sv);
+                    return set(entry.prefix_length, parse_u32(value, "expected u32 for \"prefix_length\""sv));
 
                 if (key == "range_length"sv)
-                    return set_u32(entry.range_length, value, "expected u32 for \"range_length\""sv);
+                    return set(entry.range_length, parse_u32(value, "expected u32 for \"range_length\""sv));
 
                 dbgln("tables entry key {}", key);
                 return Error::from_string_literal("unknown tables entry key");
@@ -2108,10 +2075,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::Segme
         }
 
         if (key == "lowest_value"sv)
-            return set_i32(data.lowest_value, value, "expected i32 for \"lowest_value\""sv);
+            return set(data.lowest_value, parse_i32(value, "expected i32 for \"lowest_value\""sv));
 
         if (key == "highest_value"sv)
-            return set_i32(data.highest_value, value, "expected i32 for \"highest_value\""sv);
+            return set(data.highest_value, parse_i32(value, "expected i32 for \"highest_value\""sv));
 
         if (key == "entries"sv) {
             if (value.is_array()) {
@@ -2122,13 +2089,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::Segme
         }
 
         if (key == "lower_range_prefix_length"sv)
-            return set_u32_in_range(data.lower_range_prefix_length, value, 0, 255, "expected u8 for \"lower_range_prefix_length\""sv);
+            return set(data.lower_range_prefix_length, parse_u32_in_range(value, 0, 255, "expected u8 for \"lower_range_prefix_length\""sv));
 
         if (key == "upper_range_prefix_length"sv)
-            return set_u32_in_range(data.upper_range_prefix_length, value, 0, 255, "expected u8 for \"upper_range_prefix_length\""sv);
+            return set(data.upper_range_prefix_length, parse_u32_in_range(value, 0, 255, "expected u8 for \"upper_range_prefix_length\""sv));
 
         if (key == "out_of_band_prefix_length"sv)
-            return set_u32_in_range(data.out_of_band_prefix_length, value, 0, 255, "expected u8 for \"out_of_band_prefix_length\""sv);
+            return set(data.out_of_band_prefix_length, parse_u32_in_range(value, 0, 255, "expected u8 for \"out_of_band_prefix_length\""sv));
 
         dbgln("tables key {}", key);
         return Error::from_string_literal("unknown tables key");
@@ -2245,7 +2212,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
 
     TRY(segment_object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "segment_number"sv)
-            return set_u32(header.segment_number, value, "expected u32 for \"segment_number\""sv);
+            return set(header.segment_number, parse_u32(value, "expected u32 for \"segment_number\""sv));
 
         if (key == "type"sv) {
             if (value.is_string()) {
@@ -2256,13 +2223,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "force_32_bit_page_association"sv)
-            return set_bool(header.force_32_bit_page_association, value, "expected bool for \"force_32_bit_page_association\""sv);
+            return set(header.force_32_bit_page_association, parse_bool(value, "expected bool for \"force_32_bit_page_association\""sv));
 
         if (key == "is_immediate_generic_region_of_initially_unknown_size"sv)
-            return set_bool(header.is_immediate_generic_region_of_initially_unknown_size, value, "expected bool for \"is_immediate_generic_region_of_initially_unknown_size\""sv);
+            return set(header.is_immediate_generic_region_of_initially_unknown_size, parse_bool(value, "expected bool for \"is_immediate_generic_region_of_initially_unknown_size\""sv));
 
         if (key == "page_association"sv)
-            return set_u32(header.page_association, value, "expected u32 for \"page_association\""sv);
+            return set(header.page_association, parse_u32(value, "expected u32 for \"page_association\""sv));
 
         if (key == "referred_to_segments"sv) {
             if (value.is_array()) {
@@ -2273,7 +2240,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "retained"sv)
-            return set_bool(header.retention_flag, value, "expected bool for \"retained\""sv);
+            return set(header.retention_flag, parse_bool(value, "expected bool for \"retained\""sv));
 
         if (key == "data"sv) {
             if (value.is_object()) {
