@@ -104,16 +104,16 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
     return header;
 }
 
-static Optional<Vector<i8>> jbig2_adaptive_template_pixels_from_json(JsonValue const& value)
+static ErrorOr<Vector<i8>> parse_jbig2_adaptive_template_pixels_from_json(JsonValue const& value, StringView error)
 {
     if (!value.is_array())
-        return OptionalNone {};
+        return Error::from_string_view(error);
 
     Vector<i8> adaptive_template_pixels;
     for (auto const& value : value.as_array().values()) {
         auto element = value.get_i32();
         if (!element.has_value() || (element.value() < -128 || element.value() > 127))
-            return OptionalNone {};
+            return Error::from_string_view(error);
         adaptive_template_pixels.append(static_cast<i8>(element.value()));
     }
     return adaptive_template_pixels;
@@ -753,19 +753,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
         }
 
         if (key == "adaptive_template_pixels"sv) {
-            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
-                adaptive_template_pixels = adaptive_template_pixels_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
+            adaptive_template_pixels = TRY(parse_jbig2_adaptive_template_pixels_from_json(value, "expected array of i8 for \"adaptive_template_pixels\""sv));
+            return {};
         }
 
         if (key == "refinement_adaptive_template_pixels"sv) {
-            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
-                refinement_adaptive_template_pixels = adaptive_template_pixels_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
+            refinement_adaptive_template_pixels = TRY(parse_jbig2_adaptive_template_pixels_from_json(value, "expected array of i8 for \"refinement_adaptive_template_pixels\""sv));
+            return {};
         }
 
         if (key == "export_flags_for_referred_to_symbols"sv) {
@@ -1216,11 +1210,8 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
         }
 
         if (key == "refinement_adaptive_template_pixels"sv) {
-            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
-                refinement_adaptive_template_pixels = adaptive_template_pixels_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
+            refinement_adaptive_template_pixels = TRY(parse_jbig2_adaptive_template_pixels_from_json(value, "expected array of i8 for \"refinement_adaptive_template_pixels\""sv));
+            return {};
         }
 
         if (key == "initial_strip_t"sv)
@@ -1843,11 +1834,8 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         }
 
         if (key == "adaptive_template_pixels"sv) {
-            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
-                adaptive_template_pixels = adaptive_template_pixels_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
+            adaptive_template_pixels = TRY(parse_jbig2_adaptive_template_pixels_from_json(value, "expected array of i8 for \"adaptive_template_pixels\""sv));
+            return {};
         }
 
         if (key == "strip_trailing_7fffs"sv)
@@ -1991,11 +1979,8 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
         }
 
         if (key == "adaptive_template_pixels"sv) {
-            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
-                adaptive_template_pixels = adaptive_template_pixels_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
+            adaptive_template_pixels = TRY(parse_jbig2_adaptive_template_pixels_from_json(value, "expected array of i8 for \"adaptive_template_pixels\""sv));
+            return {};
         }
 
         if (key == "strip_trailing_7fffs"sv)
