@@ -65,6 +65,31 @@ static ErrorOr<void> set_u32(T& out, JsonValue const& value, StringView error)
     return {};
 }
 
+enum class AllowReplace {
+    No,
+    Yes,
+};
+
+static ErrorOr<Gfx::JBIG2::CombinationOperator> parse_jbig2_combination_operator_from_json(JsonValue const& value, AllowReplace allow_replace, StringView error)
+{
+    if (!value.is_string())
+        return Error::from_string_view(error);
+
+    auto const& string = value.as_string();
+    if (string == "or")
+        return Gfx::JBIG2::CombinationOperator::Or;
+    if (string == "and")
+        return Gfx::JBIG2::CombinationOperator::And;
+    if (string == "xor")
+        return Gfx::JBIG2::CombinationOperator::Xor;
+    if (string == "xnor")
+        return Gfx::JBIG2::CombinationOperator::XNor;
+    if (string == "replace" && allow_replace == AllowReplace::Yes)
+        return Gfx::JBIG2::CombinationOperator::Replace;
+
+    return Error::from_string_view(error);
+}
+
 static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue const& value)
 {
     if (!value.is_string())
@@ -359,23 +384,9 @@ static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject c
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "external_combination_operator"sv) {
-            if (value.is_string()) {
-                auto const& s = value.as_string();
-                if (s == "or"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or);
-                else if (s == "and"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And);
-                else if (s == "xor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor);
-                else if (s == "xnor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor);
-                else if (s == "replace"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Replace);
-                else
-                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
+            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::Yes, "expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\""sv));
+            flags |= to_underlying(op);
+            return {};
         }
 
         dbgln("region_segment_information flag key {}", key);
@@ -889,22 +900,10 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "combination_operator"sv) {
-            if (value.is_string()) {
-                // "replace" is only valid in a region segment information's external_combination_operator, not here.
-                auto const& s = value.as_string();
-                if (s == "or"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or) << 7;
-                else if (s == "and"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And) << 7;
-                else if (s == "xor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor) << 7;
-                else if (s == "xnor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor) << 7;
-                else
-                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"combination_operator\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"combination_operator\"");
+            // "replace" is only valid in a region segment information's external_combination_operator, not here.
+            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::No, "expected \"or\", \"and\", \"xor\", or \"xnor\" for \"combination_operator\""sv));
+            flags |= to_underlying(op) << 7;
+            return {};
         }
 
         if (key == "default_pixel_value"sv) {
@@ -1538,23 +1537,9 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
         }
 
         if (key == "combination_operator"sv) {
-            if (value.is_string()) {
-                auto const& s = value.as_string();
-                if (s == "or"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or) << 4;
-                else if (s == "and"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And) << 4;
-                else if (s == "xor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor) << 4;
-                else if (s == "xnor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor) << 4;
-                else if (s == "replace"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Replace) << 4;
-                else
-                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\"");
+            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::Yes, "expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\""sv));
+            flags |= to_underlying(op) << 4;
+            return {};
         }
 
         if (key == "default_pixel_value"sv) {
@@ -2085,22 +2070,10 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
         }
 
         if (key == "default_combination_operator"sv) {
-            if (value.is_string()) {
-                // "replace" is only valid in a region segment information's external_combination_operator, not here.
-                auto const& s = value.as_string();
-                if (s == "or"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or) << 3;
-                else if (s == "and"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And) << 3;
-                else if (s == "xor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor) << 3;
-                else if (s == "xnor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor) << 3;
-                else
-                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"default_combination_operator\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"default_combination_operator\"");
+            // "replace" is only valid in a region segment information's external_combination_operator, not here.
+            auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::No, "expected \"or\", \"and\", \"xor\", or \"xnor\" for \"default_combination_operator\""sv));
+            flags |= to_underlying(op) << 3;
+            return {};
         }
 
         if (key == "requires_auxiliary_buffers"sv) {
