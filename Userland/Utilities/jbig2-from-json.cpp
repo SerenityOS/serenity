@@ -100,6 +100,14 @@ static ErrorOr<void> set_u32_in_range(T& out, JsonValue const& value, u32 min, u
     return {};
 }
 
+static ErrorOr<u32> parse_u32_in_set(JsonValue const& value, Vector<u32>&& values, StringView error)
+{
+    u32 i = TRY(parse_u32(value, error));
+    if (!values.contains_slow(i))
+        return Error::from_string_view(error);
+    return i;
+}
+
 enum class AllowReplace {
     No,
     Yes,
@@ -521,47 +529,27 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
         }
 
         if (key == "huffman_table_selection_for_height_differences"sv) {
-            if (auto huffman_table_selection_for_height_differences = value.get_uint(); huffman_table_selection_for_height_differences.has_value()) {
-                if (huffman_table_selection_for_height_differences.value() <= 3) {
-                    flags |= huffman_table_selection_for_height_differences.value() << 2;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_4", "standard_table_5", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_height_differences\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_height_differences\""sv)) << 2;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_width_differences"sv) {
-            if (auto huffman_table_selection_for_width_differences = value.get_uint(); huffman_table_selection_for_width_differences.has_value()) {
-                if (huffman_table_selection_for_width_differences.value() <= 3) {
-                    flags |= huffman_table_selection_for_width_differences.value() << 4;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_2", "standard_table_3", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_width_differences\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_width_differences\""sv)) << 4;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_bitmap_sizes"sv) {
-            if (auto huffman_table_selection_for_bitmap_sizes = value.get_uint(); huffman_table_selection_for_bitmap_sizes.has_value()) {
-                if (huffman_table_selection_for_bitmap_sizes.value() <= 1) {
-                    flags |= huffman_table_selection_for_bitmap_sizes.value() << 6;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
-            return Error::from_string_literal("expected 0 or 1 for \"huffman_table_selection_for_bitmap_sizes\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_bitmap_sizes\""sv)) << 6;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_number_of_symbol_instances"sv) {
-            if (auto huffman_table_selection_for_number_of_symbol_instances = value.get_uint(); huffman_table_selection_for_number_of_symbol_instances.has_value()) {
-                if (huffman_table_selection_for_number_of_symbol_instances.value() <= 1) {
-                    flags |= huffman_table_selection_for_number_of_symbol_instances.value() << 7;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
-            return Error::from_string_literal("expected 0 or 1 for \"huffman_table_selection_for_number_of_symbol_instances\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_number_of_symbol_instances\""sv)) << 7;
+            return {};
         }
 
         if (key == "is_bitmap_coding_context_used"sv) {
@@ -881,17 +869,9 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "strip_size"sv) {
-            if (auto strip_size = value.get_uint(); strip_size.has_value()) {
-                switch (strip_size.value()) {
-                case 1:
-                case 2:
-                case 4:
-                case 8:
-                    flags |= AK::log2(strip_size.value()) << 2;
-                    return {};
-                }
-            }
-            return Error::from_string_literal("expected 1, 2, 4, or 8 for \"strip_size\"");
+            auto strip_size = TRY(parse_u32_in_set(value, { 1, 2, 4, 8 }, "expected 1, 2, 4, or 8 for \"strip_size\""sv));
+            flags |= AK::log2(strip_size) << 2;
+            return {};
         }
 
         if (key == "reference_corner"sv) {
@@ -954,91 +934,51 @@ static ErrorOr<u16> jbig2_text_region_huffman_flags_from_json(JsonObject const& 
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "huffman_table_selection_for_first_s"sv) {
-            if (auto huffman_table_selection_for_first_s = value.get_uint(); huffman_table_selection_for_first_s.has_value()) {
-                if (huffman_table_selection_for_first_s.value() <= 3) {
-                    flags |= huffman_table_selection_for_first_s.value();
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_6", "standard_table_7", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_first_s\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_first_s\""sv));
+            return {};
         }
 
         if (key == "huffman_table_selection_for_subsequent_s"sv) {
-            if (auto huffman_table_selection_for_subsequent_s = value.get_uint(); huffman_table_selection_for_subsequent_s.has_value()) {
-                if (huffman_table_selection_for_subsequent_s.value() <= 3) {
-                    flags |= huffman_table_selection_for_subsequent_s.value() << 2;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_8", "standard_table_9", "standard_table_10", "custom" for values 0, 1, 2, 3.
-            return Error::from_string_literal("expected 0, 1, 2, or 3 for \"huffman_table_selection_for_subsequent_s\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 2, 3 }, "expected 0, 1, 2, or 3 for \"huffman_table_selection_for_subsequent_s\""sv)) << 2;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_t"sv) {
-            if (auto huffman_table_selection_for_t = value.get_uint(); huffman_table_selection_for_t.has_value()) {
-                if (huffman_table_selection_for_t.value() <= 3) {
-                    flags |= huffman_table_selection_for_t.value() << 4;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_11", "standard_table_12", "standard_table_13", "custom" for values 0, 1, 2, 3.
-            return Error::from_string_literal("expected 0, 1, 2, or 3 for \"huffman_table_selection_for_t\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 2, 3 }, "expected 0, 1, 2, or 3 for \"huffman_table_selection_for_t\""sv)) << 4;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_width"sv) {
-            if (auto huffman_table_selection_for_refinement_delta_width = value.get_uint(); huffman_table_selection_for_refinement_delta_width.has_value()) {
-                if (huffman_table_selection_for_refinement_delta_width.value() <= 3) {
-                    flags |= huffman_table_selection_for_refinement_delta_width.value() << 6;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_width\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_width\""sv)) << 6;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_height"sv) {
-            if (auto huffman_table_selection_for_refinement_delta_height = value.get_uint(); huffman_table_selection_for_refinement_delta_height.has_value()) {
-                if (huffman_table_selection_for_refinement_delta_height.value() <= 3) {
-                    flags |= huffman_table_selection_for_refinement_delta_height.value() << 8;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_height\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_height\""sv)) << 8;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_x_offset"sv) {
-            if (auto huffman_table_selection_for_refinement_delta_x_offset = value.get_uint(); huffman_table_selection_for_refinement_delta_x_offset.has_value()) {
-                if (huffman_table_selection_for_refinement_delta_x_offset.value() <= 3) {
-                    flags |= huffman_table_selection_for_refinement_delta_x_offset.value() << 10;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_x_offset\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_x_offset\""sv)) << 10;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_y_offset"sv) {
-            if (auto huffman_table_selection_for_refinement_delta_y_offset = value.get_uint(); huffman_table_selection_for_refinement_delta_y_offset.has_value()) {
-                if (huffman_table_selection_for_refinement_delta_y_offset.value() <= 3) {
-                    flags |= huffman_table_selection_for_refinement_delta_y_offset.value() << 12;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_y_offset\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_y_offset\""sv)) << 12;
+            return {};
         }
 
         if (key == "huffman_table_selection_for_refinement_size_table"sv) {
-            if (auto huffman_table_selection_for_refinement_size_table = value.get_uint(); huffman_table_selection_for_refinement_size_table.has_value()) {
-                if (huffman_table_selection_for_refinement_size_table.value() <= 1) {
-                    flags |= huffman_table_selection_for_refinement_size_table.value() << 14;
-                    return {};
-                }
-            }
             // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
-            return Error::from_string_literal("expected 0 or 1 for \"huffman_table_selection_for_refinement_size_table\"");
+            flags |= TRY(parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_refinement_size_table\""sv)) << 14;
+            return {};
         }
 
         dbgln("text_region huffman_flags key {}", key);
