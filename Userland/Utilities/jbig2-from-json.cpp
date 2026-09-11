@@ -95,6 +95,13 @@ static ErrorOr<ByteString const*> parse_string(JsonValue const& value, StringVie
     return Error::from_string_view(error);
 }
 
+static bool is_string_literal(JsonValue const& value, StringView string)
+{
+    if (!value.is_string())
+        return false;
+    return value.as_string() == string;
+}
+
 template<class T, class V>
 static ErrorOr<void> set(T& out, ErrorOr<V>&& in)
 {
@@ -116,49 +123,34 @@ enum class AllowReplace {
 
 static ErrorOr<Gfx::JBIG2::CombinationOperator> parse_jbig2_combination_operator_from_json(JsonValue const& value, AllowReplace allow_replace, StringView error)
 {
-    if (!value.is_string())
-        return Error::from_string_view(error);
-
-    auto const& string = value.as_string();
-    if (string == "or")
+    if (is_string_literal(value, "or"sv))
         return Gfx::JBIG2::CombinationOperator::Or;
-    if (string == "and")
+    if (is_string_literal(value, "and"sv))
         return Gfx::JBIG2::CombinationOperator::And;
-    if (string == "xor")
+    if (is_string_literal(value, "xor"sv))
         return Gfx::JBIG2::CombinationOperator::Xor;
-    if (string == "xnor")
+    if (is_string_literal(value, "xnor"sv))
         return Gfx::JBIG2::CombinationOperator::XNor;
-    if (string == "replace" && allow_replace == AllowReplace::Yes)
+    if (is_string_literal(value, "replace"sv) && allow_replace == AllowReplace::Yes)
         return Gfx::JBIG2::CombinationOperator::Replace;
-
     return Error::from_string_view(error);
 }
 
 static ErrorOr<u8> parse_jbig2_color_from_json(JsonValue const& value, StringView error)
 {
-    if (!value.is_string())
-        return Error::from_string_view(error);
-
-    auto const& string = value.as_string();
-    if (string == "white"sv)
+    if (is_string_literal(value, "white"sv))
         return 0;
-    if (string == "black"sv)
+    if (is_string_literal(value, "black"sv))
         return 1;
-
     return Error::from_string_view(error);
 }
 
 static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue const& value)
 {
-    if (!value.is_string())
-        return Error::from_string_literal("expected string for \"organization\"");
-
-    auto const& string = value.as_string();
-    if (string == "sequential")
+    if (is_string_literal(value, "sequential"sv))
         return Gfx::JBIG2::Organization::Sequential;
-    if (string == "random_access")
+    if (is_string_literal(value, "random_access"sv))
         return Gfx::JBIG2::Organization::RandomAccess;
-
     return Error::from_string_literal("organization must be \"sequential\" or \"random_access\"");
 }
 
@@ -440,9 +432,7 @@ static ErrorOr<RegionSegmentInformationJSON> jbig2_region_segment_information_fr
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "width"sv) {
-            if (value.is_string()) {
-                if (value.as_string() != "from_image_data"sv)
-                    return Error::from_string_literal("expected \"from_image_data\" for \"width\" when it is a string");
+            if (is_string_literal(value, "from_image_data"sv)) {
                 result.use_width_from_image = true;
                 return {};
             }
@@ -452,9 +442,7 @@ static ErrorOr<RegionSegmentInformationJSON> jbig2_region_segment_information_fr
         }
 
         if (key == "height"sv) {
-            if (value.is_string()) {
-                if (value.as_string() != "from_image_data"sv)
-                    return Error::from_string_literal("expected \"from_image_data\" for \"height\" when it is a string");
+            if (is_string_literal(value, "from_image_data"sv)) {
                 result.use_height_from_image = true;
                 return {};
             }
@@ -773,21 +761,17 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "reference_corner"sv) {
-            if (value.is_string()) {
-                auto const& s = value.as_string();
-                if (s == "bottom_left"sv)
-                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomLeft) << 4;
-                else if (s == "top_left"sv)
-                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopLeft) << 4;
-                else if (s == "bottom_right"sv)
-                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomRight) << 4;
-                else if (s == "top_right"sv)
-                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopRight) << 4;
-                else
-                    return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
+            if (is_string_literal(value, "bottom_left"sv))
+                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomLeft) << 4;
+            else if (is_string_literal(value, "top_left"sv))
+                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopLeft) << 4;
+            else if (is_string_literal(value, "bottom_right"sv))
+                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomRight) << 4;
+            else if (is_string_literal(value, "top_right"sv))
+                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopRight) << 4;
+            else
+                return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
+            return {};
         }
 
         if (key == "is_transposed"sv)
@@ -1097,9 +1081,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return set(pattern_height, parse_u32_in_range(value, 1, 255, "expected non-zero u8 for \"pattern_height\""sv));
 
         if (key == "gray_max"sv) {
-            if (value.is_string()) {
-                if (value.as_string() != "from_tiles"sv)
-                    return Error::from_string_literal("expected u32 or \"from_tiles\" for \"gray_max\"");
+            if (is_string_literal(value, "from_tiles"sv)) {
                 gray_max_from_tiles = true;
                 return {};
             }
@@ -1153,16 +1135,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         }
 
         if (key == "method"sv) {
-            if (value.is_string()) {
-                auto const& method_json = value.as_string();
-                if (method_json == "distinct_image_tiles"sv) {
-                    method = Method::DistinctImageTiles;
-                    return {};
-                }
-                if (method_json == "unique_image_tiles"sv) {
-                    method = Method::UniqueImageTiles;
-                    return {};
-                }
+            if (is_string_literal(value, "distinct_image_tiles"sv)) {
+                method = Method::DistinctImageTiles;
+                return {};
+            }
+            if (is_string_literal(value, "unique_image_tiles"sv)) {
+                method = Method::UniqueImageTiles;
+                return {};
             }
             return Error::from_string_literal("expected \"distinct_image_tiles\" or \"unique_image_tiles\" for \"method\"");
         }
@@ -1368,14 +1347,12 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
         if (key == "graymap_data"sv) {
             if (value.is_object())
                 return set(grayscale_image, jbig2_halftone_graymap_from_json(options, value.as_object()));
-            if (value.is_string()) {
-                if (value.as_string() == "identity_tile_indices"sv) {
-                    Vector<u64> graymap;
-                    for (u32 i = 0; i < grayscale_width * grayscale_height; ++i)
-                        TRY(graymap.try_append(i));
-                    grayscale_image = move(graymap);
-                    return {};
-                }
+            if (is_string_literal(value, "identity_tile_indices"sv)) {
+                Vector<u64> graymap;
+                for (u32 i = 0; i < grayscale_width * grayscale_height; ++i)
+                    TRY(graymap.try_append(i));
+                grayscale_image = move(graymap);
+                return {};
             }
             return Error::from_string_literal("expected object or \"identity_tile_indices\" for \"graymap_data\"");
         }
@@ -1864,16 +1841,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_extension_from_json(Gfx::JBIG2::Se
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "type"sv) {
-            if (value.is_string()) {
-                auto const& type = value.as_string();
-                if (type == "single_byte_coded_comment"sv) {
-                    data.type = Gfx::JBIG2::ExtensionType::SingleByteCodedComment;
-                    return {};
-                }
-                if (type == "multi_byte_coded_comment"sv) {
-                    data.type = Gfx::JBIG2::ExtensionType::MultiByteCodedComment;
-                    return {};
-                }
+            if (is_string_literal(value, "single_byte_coded_comment"sv)) {
+                data.type = Gfx::JBIG2::ExtensionType::SingleByteCodedComment;
+                return {};
+            }
+            if (is_string_literal(value, "multi_byte_coded_comment"sv)) {
+                data.type = Gfx::JBIG2::ExtensionType::MultiByteCodedComment;
+                return {};
             }
             return Error::from_string_literal("expected \"single_byte_coded_comment\" or \"multi_byte_coded_comment\" for \"type\"");
         }
