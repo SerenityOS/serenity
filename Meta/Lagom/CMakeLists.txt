@@ -691,6 +691,7 @@ if (BUILD_LAGOM)
             Kernel/POSIX
             LibCompress
             LibCrypto
+            LibC/TestMathAgainstMPFR
             LibDisassembly
             LibGL
             LibGfx

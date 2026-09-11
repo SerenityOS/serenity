@@ -17,6 +17,7 @@
 #include <AK/StdLibExtras.h>
 #include <assert.h>
 #include <fenv.h>
+#include <limits.h>
 #include <math.h>
 #include <stdint.h>
 
@@ -176,7 +177,7 @@ static FloatType internal_nextafter(FloatType x, bool up)
 }
 
 template<typename FloatT>
-static int internal_ilogb(FloatT x) NOEXCEPT
+static int internal_ilogb(FloatT x)
 {
     if (x == 0)
         return FP_ILOGB0;
@@ -195,7 +196,7 @@ static int internal_ilogb(FloatT x) NOEXCEPT
 }
 
 template<typename FloatT>
-static FloatT internal_modf(FloatT x, FloatT* intpart) NOEXCEPT
+static FloatT internal_modf(FloatT x, FloatT* intpart)
 {
     FloatT integer_part = internal_to_integer(x, RoundingMode::ToZero);
     *intpart = integer_part;
@@ -206,7 +207,7 @@ static FloatT internal_modf(FloatT x, FloatT* intpart) NOEXCEPT
 }
 
 template<typename FloatT>
-static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
+static FloatT internal_scalbn(FloatT x, int exponent)
 {
     if (x == 0 || !isfinite(x) || isnan(x) || exponent == 0)
         return x;
@@ -268,7 +269,7 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
 }
 
 template<typename FloatT>
-static FloatT internal_gamma(FloatT x) NOEXCEPT
+static FloatT internal_gamma(FloatT x)
 {
     if (isnan(x))
         return (FloatT)NAN;
@@ -315,46 +316,46 @@ Float internal_lgamma(Float value, int* sign)
 
 extern "C" {
 
-float nanf(char const* s) NOEXCEPT
+float nanf(char const* s)
 {
     return __builtin_nanf(s);
 }
 
-double nan(char const* s) NOEXCEPT
+double nan(char const* s)
 {
     return __builtin_nan(s);
 }
 
-long double nanl(char const* s) NOEXCEPT
+long double nanl(char const* s)
 {
     return __builtin_nanl(s);
 }
 
-#define MAKE_AK_BACKED1(name)                     \
-    long double name##l(long double arg) NOEXCEPT \
-    {                                             \
-        return AK::name<long double>(arg);        \
-    }                                             \
-    double name(double arg) NOEXCEPT              \
-    {                                             \
-        return AK::name<double>(arg);             \
-    }                                             \
-    float name##f(float arg) NOEXCEPT             \
-    {                                             \
-        return AK::name<float>(arg);              \
+#define MAKE_AK_BACKED1(name)              \
+    long double name##l(long double arg)   \
+    {                                      \
+        return AK::name<long double>(arg); \
+    }                                      \
+    double name(double arg)                \
+    {                                      \
+        return AK::name<double>(arg);      \
+    }                                      \
+    float name##f(float arg)               \
+    {                                      \
+        return AK::name<float>(arg);       \
     }
-#define MAKE_AK_BACKED2(name)                                        \
-    long double name##l(long double arg1, long double arg2) NOEXCEPT \
-    {                                                                \
-        return AK::name<long double>(arg1, arg2);                    \
-    }                                                                \
-    double name(double arg1, double arg2) NOEXCEPT                   \
-    {                                                                \
-        return AK::name<double>(arg1, arg2);                         \
-    }                                                                \
-    float name##f(float arg1, float arg2) NOEXCEPT                   \
-    {                                                                \
-        return AK::name<float>(arg1, arg2);                          \
+#define MAKE_AK_BACKED2(name)                               \
+    long double name##l(long double arg1, long double arg2) \
+    {                                                       \
+        return AK::name<long double>(arg1, arg2);           \
+    }                                                       \
+    double name(double arg1, double arg2)                   \
+    {                                                       \
+        return AK::name<double>(arg1, arg2);                \
+    }                                                       \
+    float name##f(float arg1, float arg2)                   \
+    {                                                       \
+        return AK::name<float>(arg1, arg2);                 \
     }
 
 MAKE_AK_BACKED1(sin);
@@ -385,7 +386,7 @@ MAKE_AK_BACKED2(fmod);
 MAKE_AK_BACKED2(pow);
 MAKE_AK_BACKED2(remainder);
 
-long double truncl(long double x) NOEXCEPT
+long double truncl(long double x)
 {
 #if ARCH(X86_64)
     if (fabsl(x) < LONG_LONG_MAX) {
@@ -405,7 +406,7 @@ long double truncl(long double x) NOEXCEPT
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
-double trunc(double x) NOEXCEPT
+double trunc(double x)
 {
 #if ARCH(X86_64)
     if (fabs(x) < LONG_LONG_MAX) {
@@ -430,7 +431,7 @@ double trunc(double x) NOEXCEPT
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
-float truncf(float x) NOEXCEPT
+float truncf(float x)
 {
 #if ARCH(X86_64)
     if (fabsf(x) < LONG_LONG_MAX) {
@@ -586,22 +587,22 @@ long long llrintf(float value)
 }
 
 // On systems where FLT_RADIX == 2, ldexp is equivalent to scalbn
-long double ldexpl(long double x, int exp) NOEXCEPT
+long double ldexpl(long double x, int exp)
 {
     return internal_scalbn(x, exp);
 }
 
-double ldexp(double x, int exp) NOEXCEPT
+double ldexp(double x, int exp)
 {
     return internal_scalbn(x, exp);
 }
 
-float ldexpf(float x, int exp) NOEXCEPT
+float ldexpf(float x, int exp)
 {
     return internal_scalbn(x, exp);
 }
 
-[[maybe_unused]] static long double ampsin(long double angle) NOEXCEPT
+[[maybe_unused]] static long double ampsin(long double angle)
 {
     long double looped_angle = fmodl(M_PI + angle, M_PI * 2) - M_PI;
     long double looped_angle_squared = looped_angle * looped_angle;
@@ -618,55 +619,55 @@ float ldexpf(float x, int exp) NOEXCEPT
     return quadratic_term + linear_term;
 }
 
-int ilogbl(long double x) NOEXCEPT
+int ilogbl(long double x)
 {
     return internal_ilogb(x);
 }
 
-int ilogb(double x) NOEXCEPT
+int ilogb(double x)
 {
     return internal_ilogb(x);
 }
 
-int ilogbf(float x) NOEXCEPT
+int ilogbf(float x)
 {
     return internal_ilogb(x);
 }
 
-long double logbl(long double x) NOEXCEPT
+long double logbl(long double x)
 {
     return ilogbl(x);
 }
 
-double logb(double x) NOEXCEPT
+double logb(double x)
 {
     return ilogb(x);
 }
 
-float logbf(float x) NOEXCEPT
+float logbf(float x)
 {
     return ilogbf(x);
 }
 
-double frexp(double x, int* exp) NOEXCEPT
+double frexp(double x, int* exp)
 {
     *exp = (x == 0) ? 0 : (1 + ilogb(x));
     return scalbn(x, -(*exp));
 }
 
-float frexpf(float x, int* exp) NOEXCEPT
+float frexpf(float x, int* exp)
 {
     *exp = (x == 0) ? 0 : (1 + ilogbf(x));
     return scalbnf(x, -(*exp));
 }
 
-long double frexpl(long double x, int* exp) NOEXCEPT
+long double frexpl(long double x, int* exp)
 {
     *exp = (x == 0) ? 0 : (1 + ilogbl(x));
     return scalbnl(x, -(*exp));
 }
 
-double round(double x) NOEXCEPT
+double round(double x)
 {
 #if ARCH(RISCV64)
     if (fabs(x) < LONG_LONG_MAX) {
@@ -681,7 +682,7 @@ double round(double x) NOEXCEPT
     return internal_to_integer(x, RoundingMode::ToEven);
 }
 
-float roundf(float x) NOEXCEPT
+float roundf(float x)
 {
 #if ARCH(RISCV64)
     if (fabsf(x) < LONG_LONG_MAX) {
@@ -696,43 +697,12 @@ float roundf(float x) NOEXCEPT
     return internal_to_integer(x, RoundingMode::ToEven);
 }
 
-long double roundl(long double value) NOEXCEPT
+long double roundl(long double value)
 {
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
-long lroundf(float value) NOEXCEPT
-{
-#if ARCH(RISCV64)
-    i64 output;
-    asm("fcvt.l.s %0, %1, rmm"
-        : "=r"(output)
-        : "f"(value));
-    return output;
-#endif
-
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long lround(double value) NOEXCEPT
-{
-#if ARCH(RISCV64)
-    i64 output;
-    asm("fcvt.l.d %0, %1, rmm"
-        : "=r"(output)
-        : "f"(value));
-    return output;
-#endif
-
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long lroundl(long double value) NOEXCEPT
-{
-    return internal_to_integer(value, RoundingMode::ToEven);
-}
-
-long long llroundf(float value) NOEXCEPT
+long lroundf(float value)
 {
 #if ARCH(RISCV64)
     i64 output;
@@ -745,7 +715,7 @@ long long llroundf(float value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
-long long llround(double value) NOEXCEPT
+long lround(double value)
 {
 #if ARCH(RISCV64)
     i64 output;
@@ -758,12 +728,43 @@ long long llround(double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
-long long llroundl(long double value) NOEXCEPT
+long lroundl(long double value)
 {
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
-float floorf(float value) NOEXCEPT
+long long llroundf(float value)
+{
+#if ARCH(RISCV64)
+    i64 output;
+    asm("fcvt.l.s %0, %1, rmm"
+        : "=r"(output)
+        : "f"(value));
+    return output;
+#endif
+
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llround(double value)
+{
+#if ARCH(RISCV64)
+    i64 output;
+    asm("fcvt.l.d %0, %1, rmm"
+        : "=r"(output)
+        : "f"(value));
+    return output;
+#endif
+
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llroundl(long double value)
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+float floorf(float value)
 {
 #if ARCH(RISCV64)
     if (fabsf(value) < LONG_LONG_MAX) {
@@ -782,7 +783,7 @@ float floorf(float value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::Down);
 }
 
-double floor(double value) NOEXCEPT
+double floor(double value)
 {
 #if ARCH(RISCV64)
     if (fabs(value) < LONG_LONG_MAX) {
@@ -801,7 +802,7 @@ double floor(double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::Down);
 }
 
-long double floorl(long double value) NOEXCEPT
+long double floorl(long double value)
 {
 #if ARCH(X86_64)
     AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
@@ -812,7 +813,7 @@ long double floorl(long double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::Down);
 }
 
-float ceilf(float value) NOEXCEPT
+float ceilf(float value)
 {
 #if ARCH(RISCV64)
     if (fabsf(value) < LONG_LONG_MAX) {
@@ -831,7 +832,7 @@ float ceilf(float value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::Up);
 }
 
-double ceil(double value) NOEXCEPT
+double ceil(double value)
 {
 #if ARCH(RISCV64)
     if (fabs(value) < LONG_LONG_MAX) {
@@ -850,7 +851,7 @@ double ceil(double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::Up);
 }
 
-long double ceill(long double value) NOEXCEPT
+long double ceill(long double value)
 {
 #if ARCH(X86_64)
     AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
@@ -861,105 +862,105 @@ long double ceill(long double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::Up);
 }
 
-long double modfl(long double x, long double* intpart) NOEXCEPT
+long double modfl(long double x, long double* intpart)
 {
     return internal_modf(x, intpart);
 }
 
-double modf(double x, double* intpart) NOEXCEPT
+double modf(double x, double* intpart)
 {
     return internal_modf(x, intpart);
 }
 
-float modff(float x, float* intpart) NOEXCEPT
+float modff(float x, float* intpart)
 {
     return internal_modf(x, intpart);
 }
 
-double gamma(double x) NOEXCEPT
+double gamma(double x)
 {
     // Stirling approximation
     return sqrt(2.0 * M_PI / x) * pow(x / M_E, x);
 }
 
-long double tgammal(long double value) NOEXCEPT
+long double tgammal(long double value)
 {
     return internal_gamma(value);
 }
 
-double tgamma(double value) NOEXCEPT
+double tgamma(double value)
 {
     return internal_gamma(value);
 }
 
-float tgammaf(float value) NOEXCEPT
+float tgammaf(float value)
 {
     return internal_gamma(value);
 }
 
 int signgam = 0;
 
-long double lgammal(long double value) NOEXCEPT
+long double lgammal(long double value)
 {
     return lgammal_r(value, &signgam);
 }
 
-double lgamma(double value) NOEXCEPT
+double lgamma(double value)
 {
     return lgamma_r(value, &signgam);
 }
 
-float lgammaf(float value) NOEXCEPT
+float lgammaf(float value)
 {
     return lgammaf_r(value, &signgam);
 }
 
-long double lgammal_r(long double value, int* sign) NOEXCEPT
+long double lgammal_r(long double value, int* sign)
 {
     return internal_lgamma(value, sign);
 }
 
-double lgamma_r(double value, int* sign) NOEXCEPT
+double lgamma_r(double value, int* sign)
 {
     return internal_lgamma(value, sign);
 }
 
-float lgammaf_r(float value, int* sign) NOEXCEPT
+float lgammaf_r(float value, int* sign)
 {
     return internal_lgamma(value, sign);
 }
 
-long double expm1l(long double x) NOEXCEPT
+long double expm1l(long double x)
 {
     return expl(x) - 1;
 }
 
-double expm1(double x) NOEXCEPT
+double expm1(double x)
 {
     return exp(x) - 1;
 }
 
-float expm1f(float x) NOEXCEPT
+float expm1f(float x)
 {
     return expf(x) - 1;
 }
 
-long double log1pl(long double x) NOEXCEPT
+long double log1pl(long double x)
 {
     return logl(1 + x);
 }
 
-double log1p(double x) NOEXCEPT
+double log1p(double x)
 {
     return log(1 + x);
 }
 
-float log1pf(float x) NOEXCEPT
+float log1pf(float x)
 {
     return logf(1 + x);
 }
 
-long double erfl(long double x) NOEXCEPT
+long double erfl(long double x)
 {
     // algorithm taken from Abramowitz and Stegun (no. 26.2.17)
     long double t = 1 / (1 + 0.47047l * fabsl(x));
@@ -971,117 +972,117 @@ long double erfl(long double x) NOEXCEPT
     return answer;
 }
 
-double erf(double x) NOEXCEPT
+double erf(double x)
 {
     return (double)erfl(x);
 }
 
-float erff(float x) NOEXCEPT
+float erff(float x)
 {
     return (float)erf(x);
 }
 
-long double erfcl(long double x) NOEXCEPT
+long double erfcl(long double x)
 {
     return 1 - erfl(x);
 }
 
-double erfc(double x) NOEXCEPT
+double erfc(double x)
 {
     return 1 - erf(x);
 }
 
-float erfcf(float x) NOEXCEPT
+float erfcf(float x)
 {
     return 1 - erff(x);
 }
 
-double nextafter(double x, double target) NOEXCEPT
+double nextafter(double x, double target)
 {
     if (x == target)
         return target;
     return internal_nextafter(x, target >= x);
 }
 
-float nextafterf(float x, float target) NOEXCEPT
+float nextafterf(float x, float target)
 {
     if (x == target)
         return target;
     return internal_nextafter(x, target >= x);
 }
 
-long double nextafterl(long double x, long double target) NOEXCEPT
+long double nextafterl(long double x, long double target)
 {
     return internal_nextafter(x, target >= x);
 }
 
-double nexttoward(double x, long double target) NOEXCEPT
-{
-    if (x == target)
-        return target;
-    return internal_nextafter(x, target >= x);
-}
-
-float nexttowardf(float x, long double target) NOEXCEPT
+double nexttoward(double x, long double target)
 {
     if (x == target)
         return target;
     return internal_nextafter(x, target >= x);
 }
 
-long double nexttowardl(long double x, long double target) NOEXCEPT
+float nexttowardf(float x, long double target)
 {
     if (x == target)
         return target;
     return internal_nextafter(x, target >= x);
 }
 
-float copysignf(float x, float y) NOEXCEPT
+long double nexttowardl(long double x, long double target)
+{
+    if (x == target)
+        return target;
+    return internal_nextafter(x, target >= x);
+}
+
+float copysignf(float x, float y)
 {
     return AK::copysign(x, y);
 }
 
-double copysign(double x, double y) NOEXCEPT
+double copysign(double x, double y)
 {
     return AK::copysign(x, y);
 }
 
-long double copysignl(long double x, long double y) NOEXCEPT
+long double copysignl(long double x, long double y)
 {
     return AK::copysign(x, y);
 }
 
-float scalbnf(float x, int exponent) NOEXCEPT
+float scalbnf(float x, int exponent)
 {
     return internal_scalbn(x, exponent);
 }
 
-double scalbn(double x, int exponent) NOEXCEPT
+double scalbn(double x, int exponent)
 {
     return internal_scalbn(x, exponent);
 }
 
-long double scalbnl(long double x, int exponent) NOEXCEPT
+long double scalbnl(long double x, int exponent)
 {
     return internal_scalbn(x, exponent);
 }
 
-float scalblnf(float x, long exponent) NOEXCEPT
+float scalblnf(float x, long exponent)
 {
     return internal_scalbn(x, exponent);
 }
 
-double scalbln(double x, long exponent) NOEXCEPT
+double scalbln(double x, long exponent)
 {
     return internal_scalbn(x, exponent);
 }
 
-long double scalblnl(long double x, long exponent) NOEXCEPT
+long double scalblnl(long double x, long exponent)
 {
     return internal_scalbn(x, exponent);
 }
 
-long double fmaxl(long double x, long double y) NOEXCEPT
+long double fmaxl(long double x, long double y)
 {
     if (isnan(x))
         return y;
@@ -1091,7 +1092,7 @@ long double fmaxl(long double x, long double y) NOEXCEPT
     return x > y ? x : y;
 }
 
-double fmax(double x, double y) NOEXCEPT
+double fmax(double x, double y)
 {
     if (isnan(x))
         return y;
@@ -1101,7 +1102,7 @@ double fmax(double x, double y) NOEXCEPT
     return x > y ? x : y;
 }
 
-float fmaxf(float x, float y) NOEXCEPT
+float fmaxf(float x, float y)
 {
     if (isnan(x))
         return y;
@@ -1111,7 +1112,7 @@ float fmaxf(float x, float y) NOEXCEPT
     return x > y ? x : y;
 }
 
-long double fminl(long double x, long double y) NOEXCEPT
+long double fminl(long double x, long double y)
 {
     if (isnan(x))
         return y;
@@ -1121,7 +1122,7 @@ long double fminl(long double x, long double y) NOEXCEPT
     return x < y ? x : y;
 }
 
-double fmin(double x, double y) NOEXCEPT
+double fmin(double x, double y)
 {
     if (isnan(x))
         return y;
@@ -1131,7 +1132,7 @@ double fmin(double x, double y) NOEXCEPT
     return x < y ? x : y;
 }
 
-float fminf(float x, float y) NOEXCEPT
+float fminf(float x, float y)
 {
     if (isnan(x))
         return y;
@@ -1142,32 +1143,32 @@ float fminf(float x, float y) NOEXCEPT
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fma.html
-long double fmal(long double x, long double y, long double z) NOEXCEPT
+long double fmal(long double x, long double y, long double z)
 {
     return (x * y) + z;
 }
 
-double fma(double x, double y, double z) NOEXCEPT
+double fma(double x, double y, double z)
 {
     return (x * y) + z;
 }
 
-float fmaf(float x, float y, float z) NOEXCEPT
+float fmaf(float x, float y, float z)
 {
     return (x * y) + z;
 }
 
-long double nearbyintl(long double value) NOEXCEPT
+long double nearbyintl(long double value)
 {
     return internal_to_integer(value, RoundingMode { fegetround() });
 }
 
-double nearbyint(double value) NOEXCEPT
+double nearbyint(double value)
 {
     return internal_to_integer(value, RoundingMode { fegetround() });
 }
 
-float nearbyintf(float value) NOEXCEPT
+float nearbyintf(float value)
 {
     return internal_to_integer(value, RoundingMode { fegetround() });
 }
