@@ -12,6 +12,7 @@ function(lagom_tool tool)
 endfunction()
 
 add_subdirectory(CodeGenerators)
+add_subdirectory(CompareAKMathAgainstMPFR)
 add_subdirectory(ConfigureComponents)
 add_subdirectory(PrekernelPEImageGenerator)
 add_subdirectory(IPCMagicLinter)

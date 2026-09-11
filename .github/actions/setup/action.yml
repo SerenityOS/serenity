@@ -29,7 +29,7 @@ runs:
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 
         sudo apt-get update
-        sudo apt-get install ccache clang-20 clang++-20 clang-format-20 lld-20 gcc-14 g++-14 qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libegl1-mesa-dev libclang-20-dev
+        sudo apt-get install ccache clang-20 clang++-20 clang-format-20 lld-20 gcc-14 g++-14 qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libegl1-mesa-dev libclang-20-dev libmpfr-dev
 
         sudo apt-get remove clang-{14..18} clang++-{14..18} libclang-{14..18}-dev llvm-{14..18}
         sudo apt-get install clang-20 clang++-20 llvm-20 llvm-20-dev
@@ -86,7 +86,7 @@ runs:
       run: |
         set -e
         brew update
-        brew install coreutils bash ninja wabt ccache unzip qt llvm@18
+        brew install coreutils bash ninja wabt ccache unzip qt llvm@18 mpfr
 
     - name: 'Select Xcode version'
       if: ${{ inputs.os == 'macOS' }}
