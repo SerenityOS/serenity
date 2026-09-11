@@ -65,6 +65,21 @@ static ErrorOr<void> set_u32(T& out, JsonValue const& value, StringView error)
     return {};
 }
 
+static ErrorOr<u32> parse_u32_in_range(JsonValue const& value, u32 min, u32 max, StringView error)
+{
+    u32 i = TRY(parse_u32(value, error));
+    if (i < min || i > max)
+        return Error::from_string_view(error);
+    return i;
+}
+
+template<class T>
+static ErrorOr<void> set_u32_in_range(T& out, JsonValue const& value, u32 min, u32 max, StringView error)
+{
+    out = TRY(parse_u32_in_range(value, min, max, error));
+    return {};
+}
+
 enum class AllowReplace {
     No,
     Yes,
@@ -542,23 +557,13 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
         }
 
         if (key == "template"sv) {
-            if (auto template_ = value.get_uint(); template_.has_value()) {
-                if (template_.value() <= 3) {
-                    flags |= template_.value() << 10;
-                    return {};
-                }
-            }
-            return Error::from_string_literal("expected 0, 1, 2, or 3 for \"template\"");
+            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"template\""sv)) << 10;
+            return {};
         }
 
         if (key == "refinement_template"sv) {
-            if (auto refinement_template = value.get_uint(); refinement_template.has_value()) {
-                if (refinement_template.value() <= 1) {
-                    flags |= refinement_template.value() << 12;
-                    return {};
-                }
-            }
-            return Error::from_string_literal("expected 0 or 1 for \"refinement_template\"");
+            flags |= TRY(parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"refinement_template\""sv)) << 12;
+            return {};
         }
 
         dbgln("symbol_dictionary flag key {}", key);
@@ -935,13 +940,8 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "refinement_template"sv) {
-            if (auto refinement_template = value.get_uint(); refinement_template.has_value()) {
-                if (refinement_template.value() <= 1) {
-                    flags |= refinement_template.value() << 15;
-                    return {};
-                }
-            }
-            return Error::from_string_literal("expected 0 or 1 for \"refinement_template\"");
+            flags |= TRY(parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"refinement_template\""sv)) << 15;
+            return {};
         }
 
         dbgln("text_region flag key {}", key);
@@ -1283,13 +1283,8 @@ static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& ob
         }
 
         if (key == "pd_template"sv) {
-            if (auto pd_template = value.get_uint(); pd_template.has_value()) {
-                if (pd_template.value() > 3)
-                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"pd_template\"");
-                flags |= pd_template.value() << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected uint for \"pd_template\"");
+            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"pd_template\""sv)) << 1;
+            return {};
         }
 
         dbgln("pattern_dictionary flag key {}", key);
@@ -1333,25 +1328,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return Error::from_string_literal("expected object for \"flags\"");
         }
 
-        if (key == "pattern_width"sv) {
-            if (auto pattern_width_json = value.get_u32(); pattern_width_json.has_value()) {
-                if (pattern_width_json.value() == 0 || pattern_width_json.value() > 255)
-                    return Error::from_string_literal("expected non-zero u8 for \"pattern_width\"");
-                pattern_width = pattern_width_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u8 for \"pattern_width\"");
-        }
+        if (key == "pattern_width"sv)
+            return set_u32_in_range(pattern_width, value, 1, 255, "expected non-zero u8 for \"pattern\""sv);
 
-        if (key == "pattern_height"sv) {
-            if (auto pattern_height_json = value.get_u32(); pattern_height_json.has_value()) {
-                if (pattern_height_json.value() == 0 || pattern_height_json.value() > 255)
-                    return Error::from_string_literal("expected non-zero u8 for \"pattern_height\"");
-                pattern_height = pattern_height_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u8 for \"pattern_height\"");
-        }
+        if (key == "pattern_height"sv)
+            return set_u32_in_range(pattern_height, value, 1, 255, "expected non-zero u8 for \"pattern_height\""sv);
 
         if (key == "gray_max"sv) {
             if (value.is_string()) {
@@ -1378,25 +1359,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         if (key == "grid_offset_y_times_256"sv)
             return set_i32(grid_offset_y_times_256, value, "expected i32 for \"grid_offset_y_times_256\""sv);
 
-        if (key == "grid_vector_x_times_256"sv) {
-            if (auto grid_vector_x_times_256_json = value.get_u32(); grid_vector_x_times_256_json.has_value()) {
-                if (grid_vector_x_times_256_json.value() > 0xffff)
-                    return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
-                grid_vector_x_times_256 = grid_vector_x_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
-        }
+        if (key == "grid_vector_x_times_256"sv)
+            return set_u32_in_range(grid_vector_x_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_x_times_256\""sv);
 
-        if (key == "grid_vector_y_times_256"sv) {
-            if (auto grid_vector_y_times_256_json = value.get_u32(); grid_vector_y_times_256_json.has_value()) {
-                if (grid_vector_y_times_256_json.value() > 0xffff)
-                    return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
-                grid_vector_y_times_256 = grid_vector_y_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
-        }
+        if (key == "grid_vector_y_times_256"sv)
+            return set_u32_in_range(grid_vector_y_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_y_times_256\""sv);
 
         // FIXME: Make this more flexible.
         if (key == "image_data"sv) {
@@ -1527,13 +1494,8 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
         }
 
         if (key == "ht_template"sv) {
-            if (auto ht_template = value.get_uint(); ht_template.has_value()) {
-                if (ht_template.value() > 3)
-                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"ht_template\"");
-                flags |= ht_template.value() << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected uint for \"ht_template\"");
+            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"ht_template\""sv)) << 1;
+            return {};
         }
 
         if (key == "enable_skip"sv) {
@@ -1662,25 +1624,11 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
         if (key == "grid_offset_y_times_256"sv)
             return set_i32(grid_offset_y_times_256, value, "expected i32 for \"grid_offset_y_times_256\""sv);
 
-        if (key == "grid_vector_x_times_256"sv) {
-            if (auto grid_vector_x_times_256_json = value.get_u32(); grid_vector_x_times_256_json.has_value()) {
-                if (grid_vector_x_times_256_json.value() > 0xffff)
-                    return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
-                grid_vector_x_times_256 = grid_vector_x_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
-        }
+        if (key == "grid_vector_x_times_256"sv)
+            return set_u32_in_range(grid_vector_x_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_x_times_256\""sv);
 
-        if (key == "grid_vector_y_times_256"sv) {
-            if (auto grid_vector_y_times_256_json = value.get_u32(); grid_vector_y_times_256_json.has_value()) {
-                if (grid_vector_y_times_256_json.value() > 0xffff)
-                    return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
-                grid_vector_y_times_256 = grid_vector_y_times_256_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
-        }
+        if (key == "grid_vector_y_times_256"sv)
+            return set_u32_in_range(grid_vector_y_times_256, value, 0, 0xffff, "expected u16 for \"grid_vector_y_times_256\""sv);
 
         if (key == "strip_trailing_7fffs"sv)
             return set_jbig2_trailing_7fff_handling_from_json(trailing_7fff_handling, value);
@@ -1751,13 +1699,8 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
         }
 
         if (key == "gb_template"sv) {
-            if (auto gb_template = value.get_uint(); gb_template.has_value()) {
-                if (gb_template.value() > 3)
-                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"gb_template\"");
-                flags |= gb_template.value() << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected uint for \"gb_template\"");
+            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"gb_template\""sv)) << 1;
+            return {};
         }
 
         if (key == "use_typical_prediction"sv) {
@@ -1910,13 +1853,8 @@ static ErrorOr<u8> jbig2_refinement_region_flags_from_json(JsonObject const& obj
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "gr_template"sv) {
-            if (auto gr_template = value.get_uint(); gr_template.has_value()) {
-                if (gr_template.value() > 1)
-                    return Error::from_string_literal("expected 0 or 1 for \"gr_template\"");
-                flags |= gr_template.value();
-                return {};
-            }
-            return Error::from_string_literal("expected uint for \"gr_template\"");
+            flags |= TRY(parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"gr_template\""sv));
+            return {};
         }
 
         if (key == "use_typical_prediction"sv) {
@@ -2103,13 +2041,8 @@ static ErrorOr<u16> jbig2_page_information_striping_information_from_json(JsonOb
         }
 
         if (key == "maximum_stripe_size"sv) {
-            if (auto maximum_stripe_size = value.get_u32(); maximum_stripe_size.has_value()) {
-                if (maximum_stripe_size.value() > 0x7FFF)
-                    return Error::from_string_literal("maximum_stripe_size should be <= 32767");
-                striping_information |= maximum_stripe_size.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u32 for \"maximum_stripe_size\"");
+            striping_information |= TRY(parse_u32_in_range(value, 0, 0x7FFF, "maximum_stripe_size should be <= 32767"sv));
+            return {};
         }
 
         dbgln("page_information striping_information key {}", key);
@@ -2214,23 +2147,13 @@ static ErrorOr<u8> jbig2_tables_flags_from_json(JsonObject const& object)
         }
 
         if (key == "prefix_bit_count"sv) {
-            if (auto prefix_bit_count = value.get_u32(); prefix_bit_count.has_value()) {
-                if (prefix_bit_count.value() == 0 || prefix_bit_count.value() > 8)
-                    return Error::from_string_literal("expected 1..8 for \"prefix_bit_count\"");
-                flags |= (prefix_bit_count.value() - 1) << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected 1..8 for \"prefix_bit_count\"");
+            flags |= (TRY(parse_u32_in_range(value, 1, 8, "expected 1..8 for \"prefix_bit_count\""sv)) - 1) << 1;
+            return {};
         }
 
         if (key == "range_bit_count"sv) {
-            if (auto range_bit_count = value.get_u32(); range_bit_count.has_value()) {
-                if (range_bit_count.value() == 0 || range_bit_count.value() > 8)
-                    return Error::from_string_literal("expected 1..8 for \"range_bit_count\"");
-                flags |= (range_bit_count.value() - 1) << 4;
-                return {};
-            }
-            return Error::from_string_literal("expected 1..8 for \"range_bit_count\"");
+            flags |= (TRY(parse_u32_in_range(value, 1, 8, "expected 1..8 for \"range_bit_count\""sv)) - 1) << 4;
+            return {};
         }
 
         dbgln("tables flag key {}", key);
@@ -2298,35 +2221,14 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::Segme
             return Error::from_string_literal("expected array for \"entries\"");
         }
 
-        if (key == "lower_range_prefix_length"sv) {
-            if (auto lower_range_prefix_length = value.get_u32(); lower_range_prefix_length.has_value()) {
-                if (lower_range_prefix_length.value() > 255)
-                    return Error::from_string_literal("expected u8 for \"lower_range_prefix_length\"");
-                data.lower_range_prefix_length = lower_range_prefix_length.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u8 for \"lower_range_prefix_length\"");
-        }
+        if (key == "lower_range_prefix_length"sv)
+            return set_u32_in_range(data.lower_range_prefix_length, value, 0, 255, "expected u8 for \"lower_range_prefix_length\""sv);
 
-        if (key == "upper_range_prefix_length"sv) {
-            if (auto upper_range_prefix_length = value.get_u32(); upper_range_prefix_length.has_value()) {
-                if (upper_range_prefix_length.value() > 255)
-                    return Error::from_string_literal("expected u8 for \"upper_range_prefix_length\"");
-                data.upper_range_prefix_length = upper_range_prefix_length.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u8 for \"upper_range_prefix_length\"");
-        }
+        if (key == "upper_range_prefix_length"sv)
+            return set_u32_in_range(data.upper_range_prefix_length, value, 0, 255, "expected u8 for \"upper_range_prefix_length\""sv);
 
-        if (key == "out_of_band_prefix_length"sv) {
-            if (auto out_of_band_prefix_length = value.get_u32(); out_of_band_prefix_length.has_value()) {
-                if (out_of_band_prefix_length.value() > 255)
-                    return Error::from_string_literal("expected u8 for \"out_of_band_prefix_length\"");
-                data.out_of_band_prefix_length = out_of_band_prefix_length.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u8 for \"out_of_band_prefix_length\"");
-        }
+        if (key == "out_of_band_prefix_length"sv)
+            return set_u32_in_range(data.out_of_band_prefix_length, value, 0, 255, "expected u8 for \"out_of_band_prefix_length\""sv);
 
         dbgln("tables key {}", key);
         return Error::from_string_literal("unknown tables key");
