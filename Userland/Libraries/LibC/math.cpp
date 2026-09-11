@@ -1066,7 +1066,7 @@ long double scalbnl(long double x, int exponent) NOEXCEPT
     return internal_scalbn(x, exponent);
 }
 
-float scalbnlf(float x, long exponent) NOEXCEPT
+float scalblnf(float x, long exponent) NOEXCEPT
 {
     return internal_scalbn(x, exponent);
 }
