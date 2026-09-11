@@ -102,6 +102,13 @@ static ErrorOr<void> set(T& out, ErrorOr<V>&& in)
     return {};
 }
 
+template<class T, class V>
+static ErrorOr<void> set_bits(T& out, ErrorOr<V>&& in, u8 shift)
+{
+    out |= TRY(in) << shift;
+    return {};
+}
+
 enum class AllowReplace {
     No,
     Yes,
@@ -476,59 +483,43 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
     u16 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "uses_huffman_encoding"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"uses_huffman_encoding\""sv));
-            return {};
-        }
+        if (key == "uses_huffman_encoding"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"uses_huffman_encoding\""sv), 0);
 
-        if (key == "uses_refinement_or_aggregate_coding"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"uses_refinement_or_aggregate_coding\""sv)) << 1;
-            return {};
-        }
+        if (key == "uses_refinement_or_aggregate_coding"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"uses_refinement_or_aggregate_coding\""sv), 1);
 
         if (key == "huffman_table_selection_for_height_differences"sv) {
             // FIXME: Also allow names "standard_table_4", "standard_table_5", "custom" for values 0, 1, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_height_differences\""sv)) << 2;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_height_differences\""sv), 2);
         }
 
         if (key == "huffman_table_selection_for_width_differences"sv) {
             // FIXME: Also allow names "standard_table_2", "standard_table_3", "custom" for values 0, 1, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_width_differences\""sv)) << 4;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_width_differences\""sv), 4);
         }
 
         if (key == "huffman_table_selection_for_bitmap_sizes"sv) {
             // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_bitmap_sizes\""sv)) << 6;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_bitmap_sizes\""sv), 6);
         }
 
         if (key == "huffman_table_selection_for_number_of_symbol_instances"sv) {
             // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_number_of_symbol_instances\""sv)) << 7;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_number_of_symbol_instances\""sv), 7);
         }
 
-        if (key == "is_bitmap_coding_context_used"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"is_bitmap_coding_context_used\""sv)) << 8;
-            return {};
-        }
+        if (key == "is_bitmap_coding_context_used"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"is_bitmap_coding_context_used\""sv), 8);
 
-        if (key == "is_bitmap_coding_context_retained"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"is_bitmap_coding_context_retained\""sv)) << 9;
-            return {};
-        }
+        if (key == "is_bitmap_coding_context_retained"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"is_bitmap_coding_context_retained\""sv), 9);
 
-        if (key == "template"sv) {
-            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"template\""sv)) << 10;
-            return {};
-        }
+        if (key == "template"sv)
+            return set_bits(flags, parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"template\""sv), 10);
 
-        if (key == "refinement_template"sv) {
-            flags |= TRY(parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"refinement_template\""sv)) << 12;
-            return {};
-        }
+        if (key == "refinement_template"sv)
+            return set_bits(flags, parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"refinement_template\""sv), 12);
 
         dbgln("symbol_dictionary flag key {}", key);
         return Error::from_string_literal("unknown symbol_dictionary flag key");
@@ -769,15 +760,11 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
     u16 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "uses_huffman_encoding"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"uses_huffman_encoding\""sv));
-            return {};
-        }
+        if (key == "uses_huffman_encoding"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"uses_huffman_encoding\""sv), 0);
 
-        if (key == "uses_refinement_coding"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"uses_refinement_coding\""sv)) << 1;
-            return {};
-        }
+        if (key == "uses_refinement_coding"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"uses_refinement_coding\""sv), 1);
 
         if (key == "strip_size"sv) {
             auto strip_size = TRY(parse_u32_in_set(value, { 1, 2, 4, 8 }, "expected 1, 2, 4, or 8 for \"strip_size\""sv));
@@ -803,10 +790,8 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
             return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
         }
 
-        if (key == "is_transposed"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"is_transposed\""sv)) << 6;
-            return {};
-        }
+        if (key == "is_transposed"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"is_transposed\""sv), 6);
 
         if (key == "combination_operator"sv) {
             // "replace" is only valid in a region segment information's external_combination_operator, not here.
@@ -815,11 +800,8 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
             return {};
         }
 
-        if (key == "default_pixel_value"sv) {
-            u8 color = TRY(parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_pixel_value\""sv));
-            flags |= color << 9;
-            return {};
-        }
+        if (key == "default_pixel_value"sv)
+            return set_bits(flags, parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_pixel_value\""sv), 9);
 
         if (key == "delta_s_offset"sv) {
             auto offset = TRY(parse_i32_in_range(value, -16, 15, "expected value in [-16, 15] for \"delta_s_offset\""sv));
@@ -827,10 +809,8 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
             return {};
         }
 
-        if (key == "refinement_template"sv) {
-            flags |= TRY(parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"refinement_template\""sv)) << 15;
-            return {};
-        }
+        if (key == "refinement_template"sv)
+            return set_bits(flags, parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"refinement_template\""sv), 15);
 
         dbgln("text_region flag key {}", key);
         return Error::from_string_literal("unknown text_region flag key");
@@ -846,50 +826,42 @@ static ErrorOr<u16> jbig2_text_region_huffman_flags_from_json(JsonObject const& 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "huffman_table_selection_for_first_s"sv) {
             // FIXME: Also allow names "standard_table_6", "standard_table_7", "custom" for values 0, 1, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_first_s\""sv));
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_first_s\""sv), 0);
         }
 
         if (key == "huffman_table_selection_for_subsequent_s"sv) {
             // FIXME: Also allow names "standard_table_8", "standard_table_9", "standard_table_10", "custom" for values 0, 1, 2, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 2, 3 }, "expected 0, 1, 2, or 3 for \"huffman_table_selection_for_subsequent_s\""sv)) << 2;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 2, 3 }, "expected 0, 1, 2, or 3 for \"huffman_table_selection_for_subsequent_s\""sv), 2);
         }
 
         if (key == "huffman_table_selection_for_t"sv) {
             // FIXME: Also allow names "standard_table_11", "standard_table_12", "standard_table_13", "custom" for values 0, 1, 2, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 2, 3 }, "expected 0, 1, 2, or 3 for \"huffman_table_selection_for_t\""sv)) << 4;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 2, 3 }, "expected 0, 1, 2, or 3 for \"huffman_table_selection_for_t\""sv), 4);
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_width"sv) {
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_width\""sv)) << 6;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_width\""sv), 6);
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_height"sv) {
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_height\""sv)) << 8;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_height\""sv), 8);
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_x_offset"sv) {
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_x_offset\""sv)) << 10;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_x_offset\""sv), 10);
         }
 
         if (key == "huffman_table_selection_for_refinement_delta_y_offset"sv) {
             // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_y_offset\""sv)) << 12;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1, 3 }, "expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_y_offset\""sv), 12);
         }
 
         if (key == "huffman_table_selection_for_refinement_size_table"sv) {
             // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
-            flags |= TRY(parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_refinement_size_table\""sv)) << 14;
-            return {};
+            return set_bits(flags, parse_u32_in_set(value, { 0, 1 }, "expected 0 or 1 for \"huffman_table_selection_for_refinement_size_table\""sv), 14);
         }
 
         dbgln("text_region huffman_flags key {}", key);
@@ -1076,15 +1048,11 @@ static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& ob
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_modified_modified_read"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"is_modified_modified_read\""sv));
-            return {};
-        }
+        if (key == "is_modified_modified_read"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"is_modified_modified_read\""sv), 0);
 
-        if (key == "pd_template"sv) {
-            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"pd_template\""sv)) << 1;
-            return {};
-        }
+        if (key == "pd_template"sv)
+            return set_bits(flags, parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"pd_template\""sv), 1);
 
         dbgln("pattern_dictionary flag key {}", key);
         return Error::from_string_literal("unknown pattern_dictionary flag key");
@@ -1280,20 +1248,14 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_modified_modified_read"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"is_modified_modified_read\""sv));
-            return {};
-        }
+        if (key == "is_modified_modified_read"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"is_modified_modified_read\""sv), 0);
 
-        if (key == "ht_template"sv) {
-            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"ht_template\""sv)) << 1;
-            return {};
-        }
+        if (key == "ht_template"sv)
+            return set_bits(flags, parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"ht_template\""sv), 1);
 
-        if (key == "enable_skip"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"enable_skip\""sv)) << 3;
-            return {};
-        }
+        if (key == "enable_skip"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"enable_skip\""sv), 3);
 
         if (key == "combination_operator"sv) {
             auto op = TRY(parse_jbig2_combination_operator_from_json(value, AllowReplace::Yes, "expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\""sv));
@@ -1301,11 +1263,8 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
             return {};
         }
 
-        if (key == "default_pixel_value"sv) {
-            u8 color = TRY(parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_pixel_value\""sv));
-            flags |= color << 7;
-            return {};
-        }
+        if (key == "default_pixel_value"sv)
+            return set_bits(flags, parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_pixel_value\""sv), 7);
 
         dbgln("halftone_region flag key {}", key);
         return Error::from_string_literal("unknown halftone_region flag key");
@@ -1463,25 +1422,17 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_modified_modified_read"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"is_modified_modified_read\""sv));
-            return {};
-        }
+        if (key == "is_modified_modified_read"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"is_modified_modified_read\""sv), 0);
 
-        if (key == "gb_template"sv) {
-            flags |= TRY(parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"gb_template\""sv)) << 1;
-            return {};
-        }
+        if (key == "gb_template"sv)
+            return set_bits(flags, parse_u32_in_range(value, 0, 3, "expected 0, 1, 2, or 3 for \"gb_template\""sv), 1);
 
-        if (key == "use_typical_prediction"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"use_typical_prediction\""sv)) << 3;
-            return {};
-        }
+        if (key == "use_typical_prediction"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"use_typical_prediction\""sv), 3);
 
-        if (key == "use_extended_template"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"use_extended_template\""sv)) << 4;
-            return {};
-        }
+        if (key == "use_extended_template"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"use_extended_template\""sv), 4);
 
         dbgln("generic_region flag key {}", key);
         return Error::from_string_literal("unknown generic_region flag key");
@@ -1595,15 +1546,11 @@ static ErrorOr<u8> jbig2_refinement_region_flags_from_json(JsonObject const& obj
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "gr_template"sv) {
-            flags |= TRY(parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"gr_template\""sv));
-            return {};
-        }
+        if (key == "gr_template"sv)
+            return set_bits(flags, parse_u32_in_range(value, 0, 1, "expected 0 or 1 for \"gr_template\""sv), 0);
 
-        if (key == "use_typical_prediction"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"use_typical_prediction\""sv)) << 1;
-            return {};
-        }
+        if (key == "use_typical_prediction"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"use_typical_prediction\""sv), 1);
 
         dbgln("generic_refinement_region flag key {}", key);
         return Error::from_string_literal("unknown generic_refinement_region flag key");
@@ -1696,21 +1643,14 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_eventually_lossless"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"is_eventually_lossless\""sv));
-            return {};
-        }
+        if (key == "is_eventually_lossless"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"is_eventually_lossless\""sv), 0);
 
-        if (key == "might_contain_refinements"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"might_contain_refinements\""sv)) << 1;
-            return {};
-        }
+        if (key == "might_contain_refinements"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"might_contain_refinements\""sv), 1);
 
-        if (key == "default_color"sv) {
-            u8 color = TRY(parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_color\""sv));
-            flags |= color << 2;
-            return {};
-        }
+        if (key == "default_color"sv)
+            return set_bits(flags, parse_jbig2_color_from_json(value, "expected \"white\" or \"black\" for \"default_color\""sv), 2);
 
         if (key == "default_combination_operator"sv) {
             // "replace" is only valid in a region segment information's external_combination_operator, not here.
@@ -1719,20 +1659,14 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
             return {};
         }
 
-        if (key == "requires_auxiliary_buffers"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"requires_auxiliary_buffers\""sv)) << 5;
-            return {};
-        }
+        if (key == "requires_auxiliary_buffers"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"requires_auxiliary_buffers\""sv), 5);
 
-        if (key == "direct_region_segments_override_default_combination_operator"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"direct_region_segments_override_default_combination_operator\""sv)) << 6;
-            return {};
-        }
+        if (key == "direct_region_segments_override_default_combination_operator"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"direct_region_segments_override_default_combination_operator\""sv), 6);
 
-        if (key == "might_contain_coloured_segments"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"might_contain_coloured_segments\""sv)) << 7;
-            return {};
-        }
+        if (key == "might_contain_coloured_segments"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"might_contain_coloured_segments\""sv), 7);
 
         dbgln("page_information flag key {}", key);
         return Error::from_string_literal("unknown page_information flag key");
@@ -1746,15 +1680,11 @@ static ErrorOr<u16> jbig2_page_information_striping_information_from_json(JsonOb
     u16 striping_information = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_striped"sv) {
-            striping_information |= TRY(parse_bit(value, "expected bool for \"is_striped\""sv)) << 15;
-            return {};
-        }
+        if (key == "is_striped"sv)
+            return set_bits(striping_information, parse_bit(value, "expected bool for \"is_striped\""sv), 15);
 
-        if (key == "maximum_stripe_size"sv) {
-            striping_information |= TRY(parse_u32_in_range(value, 0, 0x7FFF, "maximum_stripe_size should be <= 32767"sv));
-            return {};
-        }
+        if (key == "maximum_stripe_size"sv)
+            return set_bits(striping_information, parse_u32_in_range(value, 0, 0x7FFF, "maximum_stripe_size should be <= 32767"sv), 0);
 
         dbgln("page_information striping_information key {}", key);
         return Error::from_string_literal("unknown page_information striping_information key");
@@ -1841,10 +1771,8 @@ static ErrorOr<u8> jbig2_tables_flags_from_json(JsonObject const& object)
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "has_out_of_band_symbol"sv) {
-            flags |= TRY(parse_bit(value, "expected bool for \"has_out_of_band_symbol\""sv));
-            return {};
-        }
+        if (key == "has_out_of_band_symbol"sv)
+            return set_bits(flags, parse_bit(value, "expected bool for \"has_out_of_band_symbol\""sv), 0);
 
         if (key == "prefix_bit_count"sv) {
             flags |= (TRY(parse_u32_in_range(value, 1, 8, "expected 1..8 for \"prefix_bit_count\""sv)) - 1) << 1;
