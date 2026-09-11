@@ -37,6 +37,11 @@ static ErrorOr<void> set_bool(bool& out, JsonValue const& value, StringView erro
     return {};
 }
 
+static ErrorOr<u8> parse_bit(JsonValue const& value, StringView error)
+{
+    return static_cast<u8>(TRY(parse_bool(value, error)));
+}
+
 static ErrorOr<i32> parse_i32(JsonValue const& value, StringView error)
 {
     if (auto i = value.get_i32(); i.has_value())
@@ -506,14 +511,12 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "uses_huffman_encoding"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"uses_huffman_encoding\""sv)))
-                flags |= 1u;
+            flags |= TRY(parse_bit(value, "expected bool for \"uses_huffman_encoding\""sv));
             return {};
         }
 
         if (key == "uses_refinement_or_aggregate_coding"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"uses_refinement_or_aggregate_coding\""sv)))
-                flags |= 1u << 1;
+            flags |= TRY(parse_bit(value, "expected bool for \"uses_refinement_or_aggregate_coding\""sv)) << 1;
             return {};
         }
 
@@ -562,14 +565,12 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
         }
 
         if (key == "is_bitmap_coding_context_used"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_bitmap_coding_context_used\""sv)))
-                flags |= 1u << 8;
+            flags |= TRY(parse_bit(value, "expected bool for \"is_bitmap_coding_context_used\""sv)) << 8;
             return {};
         }
 
         if (key == "is_bitmap_coding_context_retained"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_bitmap_coding_context_retained\""sv)))
-                flags |= 1u << 9;
+            flags |= TRY(parse_bit(value, "expected bool for \"is_bitmap_coding_context_retained\""sv)) << 9;
             return {};
         }
 
@@ -870,14 +871,12 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "uses_huffman_encoding"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"uses_huffman_encoding\""sv)))
-                flags |= 1u;
+            flags |= TRY(parse_bit(value, "expected bool for \"uses_huffman_encoding\""sv));
             return {};
         }
 
         if (key == "uses_refinement_coding"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"uses_refinement_coding\""sv)))
-                flags |= 1u << 1;
+            flags |= TRY(parse_bit(value, "expected bool for \"uses_refinement_coding\""sv)) << 1;
             return {};
         }
 
@@ -914,8 +913,7 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "is_transposed"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_transposed\""sv)))
-                flags |= 1u << 6;
+            flags |= TRY(parse_bit(value, "expected bool for \"is_transposed\""sv)) << 6;
             return {};
         }
 
@@ -1269,8 +1267,7 @@ static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& ob
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_modified_modified_read"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_modified_modified_read\""sv)))
-                flags |= 1u;
+            flags |= TRY(parse_bit(value, "expected bool for \"is_modified_modified_read\""sv));
             return {};
         }
 
@@ -1480,8 +1477,7 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_modified_modified_read"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_modified_modified_read\""sv)))
-                flags |= 1u;
+            flags |= TRY(parse_bit(value, "expected bool for \"is_modified_modified_read\""sv));
             return {};
         }
 
@@ -1491,8 +1487,7 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
         }
 
         if (key == "enable_skip"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"enable_skip\""sv)))
-                flags |= 1u << 3;
+            flags |= TRY(parse_bit(value, "expected bool for \"enable_skip\""sv)) << 3;
             return {};
         }
 
@@ -1685,8 +1680,7 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_modified_modified_read"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_modified_modified_read\""sv)))
-                flags |= 1u;
+            flags |= TRY(parse_bit(value, "expected bool for \"is_modified_modified_read\""sv));
             return {};
         }
 
@@ -1696,14 +1690,12 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
         }
 
         if (key == "use_typical_prediction"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"use_typical_prediction\""sv)))
-                flags |= 1u << 3;
+            flags |= TRY(parse_bit(value, "expected bool for \"use_typical_prediction\""sv)) << 3;
             return {};
         }
 
         if (key == "use_extended_template"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"use_extended_template\""sv)))
-                flags |= 1u << 4;
+            flags |= TRY(parse_bit(value, "expected bool for \"use_extended_template\""sv)) << 4;
             return {};
         }
 
@@ -1842,8 +1834,7 @@ static ErrorOr<u8> jbig2_refinement_region_flags_from_json(JsonObject const& obj
         }
 
         if (key == "use_typical_prediction"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"use_typical_prediction\""sv)))
-                flags |= 1u << 1;
+            flags |= TRY(parse_bit(value, "expected bool for \"use_typical_prediction\""sv)) << 1;
             return {};
         }
 
@@ -1956,14 +1947,12 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_eventually_lossless"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_eventually_lossless\""sv)))
-                flags |= 1u;
+            flags |= TRY(parse_bit(value, "expected bool for \"is_eventually_lossless\""sv));
             return {};
         }
 
         if (key == "might_contain_refinements"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"might_contain_refinements\""sv)))
-                flags |= 1u << 1;
+            flags |= TRY(parse_bit(value, "expected bool for \"might_contain_refinements\""sv)) << 1;
             return {};
         }
 
@@ -1981,20 +1970,17 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
         }
 
         if (key == "requires_auxiliary_buffers"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"requires_auxiliary_buffers\""sv)))
-                flags |= 1u << 5;
+            flags |= TRY(parse_bit(value, "expected bool for \"requires_auxiliary_buffers\""sv)) << 5;
             return {};
         }
 
         if (key == "direct_region_segments_override_default_combination_operator"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"direct_region_segments_override_default_combination_operator\""sv)))
-                flags |= 1u << 6;
+            flags |= TRY(parse_bit(value, "expected bool for \"direct_region_segments_override_default_combination_operator\""sv)) << 6;
             return {};
         }
 
         if (key == "might_contain_coloured_segments"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"might_contain_coloured_segments\""sv)))
-                flags |= 1u << 7;
+            flags |= TRY(parse_bit(value, "expected bool for \"might_contain_coloured_segments\""sv)) << 7;
             return {};
         }
 
@@ -2011,8 +1997,7 @@ static ErrorOr<u16> jbig2_page_information_striping_information_from_json(JsonOb
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "is_striped"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"is_striped\""sv)))
-                striping_information |= 0x8000u;
+            striping_information |= TRY(parse_bit(value, "expected bool for \"is_striped\""sv)) << 15;
             return {};
         }
 
@@ -2117,8 +2102,7 @@ static ErrorOr<u8> jbig2_tables_flags_from_json(JsonObject const& object)
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "has_out_of_band_symbol"sv) {
-            if (TRY(parse_bool(value, "expected bool for \"has_out_of_band_symbol\""sv)))
-                flags |= 1u;
+            flags |= TRY(parse_bit(value, "expected bool for \"has_out_of_band_symbol\""sv));
             return {};
         }
 
