@@ -184,6 +184,22 @@ static ErrorOr<Vector<i8>> parse_jbig2_adaptive_template_pixels_from_json(JsonVa
     return adaptive_template_pixels;
 }
 
+template<unsigned N>
+static ErrorOr<Array<Gfx::JBIG2::AdaptiveTemplatePixel, N>> jbig2_adaptive_template_pixels_to_array(Vector<i8> const& adaptive_template_pixels, size_t number_of_adaptive_template_pixels, StringView error)
+{
+    VERIFY(number_of_adaptive_template_pixels <= N);
+    if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
+        dbgln("expected {} entries, got {}", number_of_adaptive_template_pixels * 2, adaptive_template_pixels.size());
+        return Error::from_string_view(error);
+    }
+    Array<Gfx::JBIG2::AdaptiveTemplatePixel, N> template_pixels {};
+    for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        template_pixels[i].x = adaptive_template_pixels[2 * i];
+        template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
+    }
+    return template_pixels;
+}
+
 static Vector<i8> default_adaptive_template_pixels(u8 gb_template, bool use_extended_template)
 {
     // Default to Table 5 – The nominal values of the AT pixel locations
@@ -825,15 +841,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
     size_t number_of_adaptive_template_pixels = 0;
     if (!uses_huffman_encoding)
         number_of_adaptive_template_pixels = symbol_template == 0 ? 4 : 1;
-    if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
-        dbgln("expected {} entries, got {}", number_of_adaptive_template_pixels * 2, adaptive_template_pixels.size());
-        return Error::from_string_literal("symbol_dictionary \"data\" object has wrong number of \"adaptive_template_pixels\"");
-    }
-    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 4> template_pixels {};
-    for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
-        template_pixels[i].x = adaptive_template_pixels[2 * i];
-        template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
-    }
+    auto template_pixels = TRY(jbig2_adaptive_template_pixels_to_array<4>(adaptive_template_pixels, number_of_adaptive_template_pixels, "symbol_dictionary \"data\" object has wrong number of \"adaptive_template_pixels\""sv));
 
     bool uses_refinement_or_aggregate_coding = (flags & 2) != 0;
     u8 symbol_refinement_template = (flags >> 12) & 1;
@@ -841,15 +849,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
         refinement_adaptive_template_pixels = default_refinement_adaptive_template_pixels(symbol_refinement_template);
 
     size_t number_of_refinement_adaptive_template_pixels = uses_refinement_or_aggregate_coding && symbol_refinement_template == 0 ? 2 : 0;
-    if (refinement_adaptive_template_pixels.size() != number_of_refinement_adaptive_template_pixels * 2) {
-        dbgln("expected {} entries, got {}", number_of_refinement_adaptive_template_pixels * 2, refinement_adaptive_template_pixels.size());
-        return Error::from_string_literal("symbol_dictionary \"data\" object has wrong number of \"refinement_adaptive_template_pixels\"");
-    }
-    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 2> refinement_template_pixels {};
-    for (size_t i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
-        refinement_template_pixels[i].x = refinement_adaptive_template_pixels[2 * i];
-        refinement_template_pixels[i].y = refinement_adaptive_template_pixels[2 * i + 1];
-    }
+    auto refinement_template_pixels = TRY(jbig2_adaptive_template_pixels_to_array<2>(refinement_adaptive_template_pixels, number_of_refinement_adaptive_template_pixels, "symbol_dictionary \"data\" object has wrong number of \"refinement_adaptive_template_pixels\""sv));
 
     return Gfx::JBIG2::SegmentData {
         header,
@@ -1242,14 +1242,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
         refinement_adaptive_template_pixels = default_refinement_adaptive_template_pixels(refinement_template);
 
     size_t number_of_refinement_adaptive_template_pixels = uses_refinement_coding && refinement_template == 0 ? 2 : 0;
-    if (refinement_adaptive_template_pixels.size() != number_of_refinement_adaptive_template_pixels * 2) {
-        dbgln("expected {} entries, got {}", number_of_refinement_adaptive_template_pixels * 2, refinement_adaptive_template_pixels.size());
-        return Error::from_string_literal("text_region \"data\" object has wrong number of \"refinement_adaptive_template_pixels\"");
-    }
-    for (size_t i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
-        text_region.refinement_adaptive_template_pixels[i].x = refinement_adaptive_template_pixels[2 * i];
-        text_region.refinement_adaptive_template_pixels[i].y = refinement_adaptive_template_pixels[2 * i + 1];
-    }
+    text_region.refinement_adaptive_template_pixels = TRY(jbig2_adaptive_template_pixels_to_array<2>(refinement_adaptive_template_pixels, number_of_refinement_adaptive_template_pixels, "text_region \"data\" object has wrong number of \"refinement_adaptive_template_pixels\""sv));
 
     return text_region;
 }
@@ -1808,15 +1801,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         else
             number_of_adaptive_template_pixels = 1;
     }
-    if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
-        dbgln("expected {} entries, got {}", number_of_adaptive_template_pixels * 2, adaptive_template_pixels.size());
-        return Error::from_string_literal("generic_region \"data\" object has wrong number of \"adaptive_template_pixels\"");
-    }
-    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 12> template_pixels {};
-    for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
-        template_pixels[i].x = adaptive_template_pixels[2 * i];
-        template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
-    }
+    auto template_pixels = TRY(jbig2_adaptive_template_pixels_to_array<12>(adaptive_template_pixels, number_of_adaptive_template_pixels, "generic_region \"data\" object has wrong number of \"adaptive_template_pixels\""sv));
 
     return Gfx::JBIG2::GenericRegionSegmentData {
         region_segment_information.region_segment_information,
@@ -1939,15 +1924,7 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
         adaptive_template_pixels = default_refinement_adaptive_template_pixels(gr_template);
 
     size_t number_of_adaptive_template_pixels = gr_template == 0 ? 2 : 0;
-    if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
-        dbgln("expected {} entries, got {}", number_of_adaptive_template_pixels * 2, adaptive_template_pixels.size());
-        return Error::from_string_literal("generic_refinement_region \"data\" object has wrong number of \"adaptive_template_pixels\"");
-    }
-    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 2> template_pixels {};
-    for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
-        template_pixels[i].x = adaptive_template_pixels[2 * i];
-        template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
-    }
+    auto template_pixels = TRY(jbig2_adaptive_template_pixels_to_array<2>(adaptive_template_pixels, number_of_adaptive_template_pixels, "generic_refinement_region \"data\" object has wrong number of \"adaptive_template_pixels\""sv));
 
     return Gfx::JBIG2::GenericRefinementRegionSegmentData {
         region_segment_information.region_segment_information,
