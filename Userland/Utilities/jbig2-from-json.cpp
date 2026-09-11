@@ -116,10 +116,16 @@ static ErrorOr<void> set(T& out, ErrorOr<V>&& in)
 }
 
 template<class T, class V>
+static ErrorOr<void> set_bits(T& out, V&& in, u8 shift)
+{
+    out |= in << shift;
+    return {};
+}
+
+template<class T, class V>
 static ErrorOr<void> set_bits(T& out, ErrorOr<V>&& in, u8 shift)
 {
-    out |= TRY(in) << shift;
-    return {};
+    return set_bits(out, TRY(in), shift);
 }
 
 enum class AllowReplace {
@@ -753,22 +759,19 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
 
         if (key == "strip_size"sv) {
             auto strip_size = TRY(parse_u32_in_set(value, { 1, 2, 4, 8 }, "expected 1, 2, 4, or 8 for \"strip_size\""sv));
-            flags |= AK::log2(strip_size) << 2;
-            return {};
+            return set_bits(flags, AK::log2(strip_size), 2);
         }
 
         if (key == "reference_corner"sv) {
             if (is_string_literal(value, "bottom_left"sv))
-                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomLeft) << 4;
-            else if (is_string_literal(value, "top_left"sv))
-                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopLeft) << 4;
-            else if (is_string_literal(value, "bottom_right"sv))
-                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomRight) << 4;
-            else if (is_string_literal(value, "top_right"sv))
-                flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopRight) << 4;
-            else
-                return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
-            return {};
+                return set_bits(flags, to_underlying(Gfx::JBIG2::ReferenceCorner::BottomLeft), 4);
+            if (is_string_literal(value, "top_left"sv))
+                return set_bits(flags, to_underlying(Gfx::JBIG2::ReferenceCorner::TopLeft), 4);
+            if (is_string_literal(value, "bottom_right"sv))
+                return set_bits(flags, to_underlying(Gfx::JBIG2::ReferenceCorner::BottomRight), 4);
+            if (is_string_literal(value, "top_right"sv))
+                return set_bits(flags, to_underlying(Gfx::JBIG2::ReferenceCorner::TopRight), 4);
+            return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
         }
 
         if (key == "is_transposed"sv)
@@ -784,8 +787,7 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
 
         if (key == "delta_s_offset"sv) {
             auto offset = TRY(parse_i32_in_range(value, -16, 15, "expected value in [-16, 15] for \"delta_s_offset\""sv));
-            flags |= (offset & 0x1F) << 10;
-            return {};
+            return set_bits(flags, offset & 0x1F, 10);
         }
 
         if (key == "refinement_template"sv)
@@ -1729,15 +1731,11 @@ static ErrorOr<u8> jbig2_tables_flags_from_json(JsonObject const& object)
         if (key == "has_out_of_band_symbol"sv)
             return set_bits(flags, parse_bit(value, "expected bool for \"has_out_of_band_symbol\""sv), 0);
 
-        if (key == "prefix_bit_count"sv) {
-            flags |= (TRY(parse_u32_in_range(value, 1, 8, "expected 1..8 for \"prefix_bit_count\""sv)) - 1) << 1;
-            return {};
-        }
+        if (key == "prefix_bit_count"sv)
+            return set_bits(flags, TRY(parse_u32_in_range(value, 1, 8, "expected 1..8 for \"prefix_bit_count\""sv)) - 1, 1);
 
-        if (key == "range_bit_count"sv) {
-            flags |= (TRY(parse_u32_in_range(value, 1, 8, "expected 1..8 for \"range_bit_count\""sv)) - 1) << 4;
-            return {};
-        }
+        if (key == "range_bit_count"sv)
+            return set_bits(flags, TRY(parse_u32_in_range(value, 1, 8, "expected 1..8 for \"range_bit_count\""sv)) - 1, 4);
 
         dbgln("tables flag key {}", key);
         return Error::from_string_literal("unknown tables flag key");
