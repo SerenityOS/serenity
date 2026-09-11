@@ -51,6 +51,21 @@ static ErrorOr<void> set_i32(T& out, JsonValue const& value, StringView error)
     return {};
 }
 
+static ErrorOr<i32> parse_i32_in_range(JsonValue const& value, i32 min, i32 max, StringView error)
+{
+    i32 i = TRY(parse_i32(value, error));
+    if (i < min || i > max)
+        return Error::from_string_view(error);
+    return i;
+}
+
+template<class T>
+static ErrorOr<void> set_i32_in_range(T& out, JsonValue const& value, i32 min, i32 max, StringView error)
+{
+    out = TRY(parse_i32_in_range(value, min, max, error));
+    return {};
+}
+
 static ErrorOr<u32> parse_u32(JsonValue const& value, StringView error)
 {
     if (auto i = value.get_u32(); i.has_value())
@@ -164,12 +179,8 @@ static ErrorOr<Vector<i8>> parse_jbig2_adaptive_template_pixels_from_json(JsonVa
         return Error::from_string_view(error);
 
     Vector<i8> adaptive_template_pixels;
-    for (auto const& value : value.as_array().values()) {
-        auto element = value.get_i32();
-        if (!element.has_value() || (element.value() < -128 || element.value() > 127))
-            return Error::from_string_view(error);
-        adaptive_template_pixels.append(static_cast<i8>(element.value()));
-    }
+    for (auto const& value : value.as_array().values())
+        adaptive_template_pixels.append(static_cast<i8>(TRY(parse_i32_in_range(value, -128, 127, error))));
     return adaptive_template_pixels;
 }
 
@@ -349,21 +360,11 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
         if (key == "invert")
             return set_bool(invert, value, "expected bool for \"invert\""sv);
 
-        if (key == "repeat_x") {
-            if (auto repeat_x_value = value.get_i32(); repeat_x_value.has_value() && repeat_x_value.value() >= 1) {
-                repeat_x = repeat_x_value.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 >= 1 for \"repeat_x\"");
-        }
+        if (key == "repeat_x")
+            return set_i32_in_range(repeat_x, value, 1, NumericLimits<i32>::max(), "expected i32 >= 1 for \"repeat_x\""sv);
 
-        if (key == "repeat_y") {
-            if (auto repeat_y_value = value.get_i32(); repeat_y_value.has_value() && repeat_y_value.value() >= 1) {
-                repeat_y = repeat_y_value.value();
-                return {};
-            }
-            return Error::from_string_literal("expected i32 >= 1 for \"repeat_y\"");
-        }
+        if (key == "repeat_y")
+            return set_i32_in_range(repeat_y, value, 1, NumericLimits<i32>::max(), "expected i32 >= 1 for \"repeat_y\""sv);
 
         dbgln("image_data key {}", key);
         return Error::from_string_literal("unknown image_data key");
@@ -932,11 +933,9 @@ static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
         }
 
         if (key == "delta_s_offset"sv) {
-            if (auto delta_s_offset = value.get_i32(); delta_s_offset.has_value() && delta_s_offset.value() >= -16 && delta_s_offset.value() <= 15) {
-                flags |= (delta_s_offset.value() & 0x1F) << 10;
-                return {};
-            }
-            return Error::from_string_literal("expected value in [-16, 15] for \"delta_s_offset\"");
+            auto offset = TRY(parse_i32_in_range(value, -16, 15, "expected value in [-16, 15] for \"delta_s_offset\""sv));
+            flags |= (offset & 0x1F) << 10;
+            return {};
         }
 
         if (key == "refinement_template"sv) {
