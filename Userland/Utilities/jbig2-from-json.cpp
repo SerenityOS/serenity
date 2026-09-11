@@ -88,6 +88,13 @@ static ErrorOr<JsonObject const*> parse_object(JsonValue const& value, StringVie
     return Error::from_string_view(error);
 }
 
+static ErrorOr<ByteString const*> parse_string(JsonValue const& value, StringView error)
+{
+    if (value.is_string())
+        return &value.as_string();
+    return Error::from_string_view(error);
+}
+
 template<class T, class V>
 static ErrorOr<void> set(T& out, ErrorOr<V>&& in)
 {
@@ -303,11 +310,8 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_bitmap_from_json(ToJSONOptions 
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "from_file") {
-            if (value.is_string()) {
-                bitmap = TRY(jbig2_load_bitmap(options, value.as_string()));
-                return {};
-            }
-            return Error::from_string_literal("expected string for \"from_file\"");
+            bitmap = TRY(jbig2_load_bitmap(options, *TRY(parse_string(value, "expected string for \"from_file\""sv))));
+            return {};
         }
 
         if (key == "crop") {
@@ -345,12 +349,9 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "from_file") {
-            if (value.is_string()) {
-                auto bitmap = TRY(jbig2_load_bitmap(options, value.as_string()));
-                image = TRY(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::FloydSteinberg));
-                return {};
-            }
-            return Error::from_string_literal("expected string for \"from_file\"");
+            auto bitmap = TRY(jbig2_load_bitmap(options, *TRY(parse_string(value, "expected string for \"from_file\""sv))));
+            image = TRY(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::FloydSteinberg));
+            return {};
         }
 
         if (key == "crop") {
@@ -2028,13 +2029,9 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_extension_from_json(Gfx::JBIG2::Se
                 auto const& entry_array = *TRY(parse_array(entry, "expected array for \"entries\" elements"sv));
                 if (entry_array.values().size() != 2)
                     return Error::from_string_literal("expected 2 elements in \"entries\" elements");
-                if (!entry_array.values()[0].is_string())
-                    return Error::from_string_literal("expected string for \"entries\" element 0");
-                if (!entry_array.values()[1].is_string())
-                    return Error::from_string_literal("expected string for \"entries\" element 1");
                 TRY(data.entries.try_append({
-                    TRY(String::from_byte_string(entry_array.values()[0].as_string())),
-                    TRY(String::from_byte_string(entry_array.values()[1].as_string())),
+                    TRY(String::from_byte_string(*TRY(parse_string(entry_array.values()[0], "expected string for \"entries\" element 0"sv)))),
+                    TRY(String::from_byte_string(*TRY(parse_string(entry_array.values()[1], "expected string for \"entries\" element 1"sv)))),
                 }));
             }
             return {};
