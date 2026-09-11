@@ -17,6 +17,7 @@
 #include <AK/StdLibExtras.h>
 #include <assert.h>
 #include <fenv.h>
+#include <limits.h>
 #include <math.h>
 #include <stdint.h>
 
