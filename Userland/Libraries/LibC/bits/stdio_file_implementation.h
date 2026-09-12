@@ -11,7 +11,6 @@
 #include <AK/Types.h>
 #include <bits/FILE.h>
 #include <bits/pthread_integration.h>
-#include <bits/wchar.h>
 #include <pthread.h>
 #include <sys/types.h>
 

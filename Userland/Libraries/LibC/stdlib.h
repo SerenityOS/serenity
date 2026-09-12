@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <bits/wchar.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -60,11 +59,14 @@ int mkstemp(char*);
 int mkstemps(char*, int);
 char* mkdtemp(char*);
 void* bsearch(void const* key, void const* base, size_t nmemb, size_t size, int (*compar)(void const*, void const*));
+
+#define MB_CUR_MAX 4
 int mblen(char const*, size_t);
 size_t mbstowcs(wchar_t*, char const*, size_t);
 int mbtowc(wchar_t*, char const*, size_t);
 int wctomb(char*, wchar_t);
 size_t wcstombs(char*, wchar_t const*, size_t);
+
 char* realpath(char const* pathname, char* buffer);
 __attribute__((noreturn)) void _Exit(int status);
 

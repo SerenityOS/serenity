@@ -10,7 +10,6 @@
 #include <Kernel/API/serenity_limits.h>
 #include <bits/posix1_lim.h>
 #include <bits/stdint.h>
-#include <bits/wchar.h>
 
 #define PIPE_BUF 4096
 
@@ -74,3 +73,5 @@
 #define TZNAME_MAX 64
 
 #define PASS_MAX 128
+
+#define MB_LEN_MAX 16
