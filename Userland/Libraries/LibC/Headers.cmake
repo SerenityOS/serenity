@@ -17,7 +17,6 @@ set(HEADERS
     bits/stdint.h
     bits/stdio_file_implementation.h
     bits/utimens.h
-    bits/wchar.h
     bits/wchar_size.h
     net/if.h
     net/if_arp.h
