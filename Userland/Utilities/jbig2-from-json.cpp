@@ -650,6 +650,41 @@ static ErrorOr<Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symb
     return symbols;
 }
 
+static ErrorOr<Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol>> jbig2_symbol_dictionary_height_class_all_symbols_of_size_from_json(JsonObject const& object)
+{
+    Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> symbols;
+
+    u32 width = 0;
+    u32 height = 0;
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "width"sv)
+            return set(width, parse_u32(value, "expected u32 for \"width\""sv));
+
+        if (key == "height"sv)
+            return set(height, parse_u32(value, "expected u32 for \"height\""sv));
+
+        dbgln("height_class.symbols key {}", key);
+        return Error::from_string_literal("unknown height_class.all_symbols_of_size key");
+    }));
+
+    if (width * height >= 32)
+        return Error::from_string_literal("width * height must be less than 32 for \"all_symbols_of_size\"");
+
+    for (u32 mask = 0; mask < (1u << (width * height)); ++mask) {
+        auto image = TRY(Gfx::BilevelImage::create(width, height));
+        for (u32 y = 0; y < height; ++y)
+            for (u32 x = 0; x < width; ++x)
+                image->set_bit(x, y, (mask >> ((height - 1 - y) * width + (width - 1 - x))) & 1);
+        symbols.append(Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol {
+            .size = { width, height },
+            .is_exported = true,
+            .image = move(image),
+        });
+    }
+
+    return symbols;
+}
+
 static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> jbig2_symbol_dictionary_height_class_from_json(ToJSONOptions const& options, JsonObject const& object)
 {
     Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass height_class;
@@ -660,6 +695,9 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> jbig2_symbo
 
         if (key == "symbols"sv)
             return set(height_class.symbols, jbig2_symbol_dictionary_height_class_symbols_from_json(options, *TRY(parse_array(value, "expected array for \"height_class.symbols\""sv))));
+
+        if (key == "all_symbols_of_size"sv)
+            return set(height_class.symbols, jbig2_symbol_dictionary_height_class_all_symbols_of_size_from_json(*TRY(parse_object(value, "expected object for \"height_class.all_symbols_of_size\""sv))));
 
         dbgln("height_class key {}", key);
         return Error::from_string_literal("unknown height_class key");
@@ -958,6 +996,62 @@ static ErrorOr<Vector<Gfx::JBIG2::TextRegionStrip>> jbig2_text_region_strips_fro
     return strips;
 }
 
+static ErrorOr<Vector<Gfx::JBIG2::TextRegionStrip>> jbig2_text_region_strips_for_all_symbols_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    Vector<Gfx::JBIG2::TextRegionStrip> strips;
+
+    u32 symbol_width = 0;
+    u32 symbol_height = 0;
+    RefPtr<Gfx::BilevelImage> image;
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "symbol_width"sv)
+            return set(symbol_width, parse_u32(value, "expected u32 for \"symbol_width\""sv));
+
+        if (key == "symbol_height"sv)
+            return set(symbol_height, parse_u32(value, "expected u32 for \"symbol_height\""sv));
+
+        if (key == "image_data"sv)
+            return set(image, jbig2_image_from_json(options, *TRY(parse_object(value, "expected object for \"image_data\""sv))));
+
+        dbgln("text_region.all_symbols_of_size key {}", key);
+        return Error::from_string_literal("unknown text_region.all_symbols_of_size key");
+    }));
+
+    if (!symbol_width)
+        return Error::from_string_literal("\"symbol_width\" != 0 required for text_region.all_symbols_of_size");
+    if (!symbol_height)
+        return Error::from_string_literal("\"symbol_height\" != 0 required for text_region.all_symbols_of_size");
+    if (!image)
+        return Error::from_string_literal("\"image_data\" required for text_region.all_symbols_of_size");
+
+    for (size_t symbol_y = 0; symbol_y < image->height(); symbol_y += symbol_height) {
+        Gfx::JBIG2::TextRegionStrip strip;
+        strip.strip_t = static_cast<int>(symbol_y);
+        for (size_t symbol_x = 0; symbol_x < image->width(); symbol_x += symbol_width) {
+
+            u32 mask = 0;
+            for (size_t y = symbol_y; y < symbol_y + symbol_height; ++y) {
+                for (size_t x = symbol_x; x < symbol_x + symbol_width; ++x) {
+                    u8 bit = 0;
+                    if (x < image->width() && y < image->height())
+                        bit = image->get_bit(x, y) ? 1 : 0;
+                    mask = (mask << 1) | bit;
+                }
+            }
+
+            Gfx::JBIG2::TextRegionStrip::SymbolInstance instance;
+            instance.s = static_cast<int>(symbol_x);
+            instance.t = static_cast<int>(symbol_y);
+            instance.symbol_id = mask;
+            strip.symbol_instances.append(instance);
+        }
+
+        strips.append(move(strip));
+    }
+
+    return strips;
+}
+
 static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(ToJSONOptions const& options, Optional<JsonObject const&> object)
 {
     if (!object.has_value())
@@ -988,6 +1082,9 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
 
         if (key == "strips"sv)
             return set(text_region.strips, jbig2_text_region_strips_from_json(options, *TRY(parse_array(value, "expected array for \"strips\""sv))));
+
+        if (key == "strips_for_all_symbols"sv)
+            return set(text_region.strips, jbig2_text_region_strips_for_all_symbols_from_json(options, *TRY(parse_object(value, "expected object for \"strips_for_all_symbols\""sv))));
 
         if (key == "strip_trailing_7fffs"sv)
             return set(text_region.trailing_7fff_handling, parse_jbig2_trailing_7fff_handling_from_json(value));

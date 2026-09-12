@@ -1,0 +1,96 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "default_combination_operator": "xor",
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "height_classes": [
+                    {
+                        "all_symbols_of_size": {
+                            "width": 9,
+                            "height": 2
+                        }
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 2,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    },
+                    "width": 399,
+                    "height": 400
+                },
+                "flags": {
+                    "strip_size": 2,
+                    "reference_corner": "top_left",
+                    "is_transposed": false,
+                    "delta_s_offset": 0
+                },
+
+                "initial_strip_t": -4,
+                "strips_for_all_symbols": {
+                    "symbol_width": 9,
+                    "symbol_height": 2,
+                    "image_data": {
+                        "from_file": "bitmap-template0-all-ones.bmp"
+                    }
+                }
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap-xor.bmp"
+                }
+            }
+        },
+
+        {
+            "segment_number": 4,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
