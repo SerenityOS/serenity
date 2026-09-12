@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringView.h>
 #include <assert.h>
 #include <locale.h>
 #include <stdio.h>
@@ -45,6 +46,10 @@ static struct lconv default_locale = {
     default_empty_value
 };
 
+struct __locale_t_impl {
+    int category_mask {};
+};
+
 char* setlocale(int, char const* locale)
 {
     static char c_locale_string[2];
@@ -65,9 +70,10 @@ struct lconv* localeconv()
     return &default_locale;
 }
 
-void freelocale(locale_t)
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/freelocale.html
+void freelocale(locale_t locale)
 {
-    // FIXME: Implement this.
+    delete locale;
 }
 
 char const* getlocalename_l(int, locale_t)
@@ -76,9 +82,12 @@ char const* getlocalename_l(int, locale_t)
     return "C";
 }
 
-locale_t newlocale(int, char const*, locale_t)
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/newlocale.html
+locale_t newlocale(int category_mask, char const* locale, locale_t base)
 {
-    // FIXME: Implement this.
+    if (!base && (locale == "POSIX"sv || locale == "C"sv || locale == ""sv))
+        return new __locale_t_impl { category_mask };
+
     return nullptr;
 }
 
