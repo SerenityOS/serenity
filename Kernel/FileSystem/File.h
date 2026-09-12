@@ -96,7 +96,7 @@ public:
         NonnullLockRefPtr<Memory::VMObject> vmobject;
         Memory::MemoryType memory_type;
     };
-    virtual ErrorOr<VMObjectAndMemoryType> vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared);
+    virtual ErrorOr<VMObjectAndMemoryType> vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const&, u64& offset, bool shared);
 
     // Although this might be better described "name" or "description", these terms already have other meanings.
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const = 0;

@@ -399,7 +399,7 @@ InodeMetadata OpenFileDescription::metadata() const
     return {};
 }
 
-ErrorOr<File::VMObjectAndMemoryType> OpenFileDescription::vmobject_for_mmap(Process& process, Memory::VirtualRange const& range, u64& offset, bool shared)
+ErrorOr<File::VMObjectAndMemoryType> OpenFileDescription::vmobject_for_mmap(OpenFileDescription& process, Memory::VirtualRange const& range, u64& offset, bool shared)
 {
     return m_file->vmobject_and_memory_type_for_mmap(process, range, offset, shared);
 }

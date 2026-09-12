@@ -38,7 +38,7 @@ ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKerne
     return length;
 }
 
-ErrorOr<File::VMObjectAndMemoryType> MemoryDevice::vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const& range, u64& offset, bool)
+ErrorOr<File::VMObjectAndMemoryType> MemoryDevice::vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const& range, u64& offset, bool)
 {
     auto viewed_address = PhysicalAddress(offset);
 

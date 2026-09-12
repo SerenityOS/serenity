@@ -99,7 +99,7 @@ public:
     RefPtr<Custody> custody();
     RefPtr<Custody const> custody() const;
 
-    ErrorOr<File::VMObjectAndMemoryType> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared);
+    ErrorOr<File::VMObjectAndMemoryType> vmobject_for_mmap(OpenFileDescription&, Memory::VirtualRange const&, u64& offset, bool shared);
 
     bool is_blocking() const;
     void set_blocking(bool b);

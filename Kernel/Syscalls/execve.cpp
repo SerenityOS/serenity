@@ -656,7 +656,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     auto& regs = new_main_thread->m_regs;
     address_space().with([&](auto& space) {
-        regs.set_exec_state(load_result.entry_eip, new_userspace_sp, *space);
+        regs.set_exec_state(load_result.entry_eip, new_userspace_sp, space->page_directory());
     });
 
     {

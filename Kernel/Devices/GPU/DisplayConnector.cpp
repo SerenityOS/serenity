@@ -33,7 +33,7 @@ DisplayConnector::DisplayConnector(size_t framebuffer_resource_size, Memory::Mem
 {
 }
 
-ErrorOr<File::VMObjectAndMemoryType> DisplayConnector::vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool)
+ErrorOr<File::VMObjectAndMemoryType> DisplayConnector::vmobject_and_memory_type_for_mmap(OpenFileDescription&, Memory::VirtualRange const&, u64& offset, bool)
 {
     VERIFY(m_shared_framebuffer_vmobject);
     if (offset != 0)

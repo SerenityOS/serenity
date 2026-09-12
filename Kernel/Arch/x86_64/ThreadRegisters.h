@@ -8,7 +8,7 @@
 
 #include <AK/Platform.h>
 #include <AK/Types.h>
-#include <Kernel/Memory/AddressSpace.h>
+#include <Kernel/Arch/PageDirectory.h>
 
 namespace Kernel {
 
@@ -57,7 +57,7 @@ struct ThreadRegisters {
         return rbp;
     }
 
-    void set_initial_state(bool is_kernel_process, Memory::AddressSpace& space, FlatPtr kernel_stack_top)
+    void set_initial_state(bool is_kernel_process, Memory::PageDirectory const& page_directory, FlatPtr kernel_stack_top)
     {
         // Only IF is set when a process boots.
         set_flags(0x0202);
@@ -67,7 +67,7 @@ struct ThreadRegisters {
         else
             cs = GDT_SELECTOR_CODE3 | 3;
 
-        cr3 = space.page_directory().cr3();
+        cr3 = page_directory.cr3();
 
         if (is_kernel_process) {
             set_sp(kernel_stack_top);
@@ -85,12 +85,12 @@ struct ThreadRegisters {
         rdi = entry_data; // entry function argument is expected to be in regs.rdi
     }
 
-    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::AddressSpace& space)
+    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::PageDirectory const& page_directory)
     {
         cs = GDT_SELECTOR_CODE3 | 3;
         rip = entry_ip;
         rsp = userspace_sp;
-        cr3 = space.page_directory().cr3();
+        cr3 = page_directory.cr3();
     }
 };
 

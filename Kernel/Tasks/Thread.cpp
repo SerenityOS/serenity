@@ -87,7 +87,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & ~(FlatPtr)0x7u;
 
     m_process->address_space().with([&](auto& space) {
-        m_regs.set_initial_state(m_process->is_kernel_process(), *space, m_kernel_stack_top);
+        m_regs.set_initial_state(m_process->is_kernel_process(), space->page_directory(), m_kernel_stack_top);
     });
 
     // We need to add another reference if we could successfully create
