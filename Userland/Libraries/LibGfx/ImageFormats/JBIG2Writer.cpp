@@ -1987,10 +1987,6 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
     }
 
     if (uses_huffman_encoding) {
-        // FIXME: Maybe support this one day; the file format supports 32 bits per symbol.
-        if (!symbols.is_empty() && symbols.size() - 1 >= (1u << 15))
-            return Error::from_string_literal("JBIG2Writer: Cannot currently encode more than 32767 symbols with Huffman coding");
-
         // Compute optimal huffman table for symbol IDs.
         Vector<u16> histogram;
         histogram.resize(symbols.size());
@@ -2000,9 +1996,33 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
                     histogram[instance.symbol_id]++;
             }
         }
+
+        // Compress::generate_huffman_lengths() is u16-based and doesn't support more than 15 bits per symbol.
+        // Symbol dictionaries might have more than 32k, while a page has just a few thousand symbol instances.
+        // So collect only the used symbols, compute codes for them, and then expand then out to the full set again
+        // (unused symbols will get a code length of 0 either way). That way, we support symbol dictionaries with
+        // many symbols, as long as every text region only uses some of them.
+        Vector<u32> used_symbol_ids;
+        Vector<u16> used_symbols_histogram;
+        for (auto const& [symbol_id, count] : enumerate(histogram)) {
+            if (count > 0) {
+                used_symbol_ids.append(symbol_id);
+                used_symbols_histogram.append(count);
+            }
+        }
+
+        // FIXME: Maybe support this one day; the file format supports 32 bits per symbol.
+        if (!used_symbol_ids.is_empty() && used_symbol_ids.size() - 1 >= (1u << 15))
+            return Error::from_string_literal("JBIG2Writer: Cannot currently encode more than 32767 used symbol instances in a text region with Huffman coding");
+
+        Vector<u8> used_code_lengths;
+        used_code_lengths.resize(used_symbol_ids.size());
+        Compress::generate_huffman_lengths(used_code_lengths, used_symbols_histogram, 15);
+
         Vector<u8> code_lengths;
         code_lengths.resize(symbols.size());
-        Compress::generate_huffman_lengths(code_lengths, histogram, 15);
+        for (auto const& [i, symbol_id] : enumerate(used_symbol_ids))
+            code_lengths[symbol_id] = used_code_lengths[i];
 
         auto codes = TRY(JBIG2::assign_huffman_codes(code_lengths));
         for (auto const& [i, length] : enumerate(code_lengths)) {
