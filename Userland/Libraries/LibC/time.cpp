@@ -283,6 +283,9 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
         if (format[i] != '%') {
             builder.append(format[i]);
         } else {
+            bool has_e_modifier = false;
+            bool has_o_modifier = false;
+        continue_reading_operator:
             if (++i >= format_len)
                 return 0;
 
@@ -311,6 +314,11 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
             case 'e':
                 builder.appendff("{:2}", tm->tm_mday);
                 break;
+            case 'E':
+                if (has_e_modifier || has_o_modifier)
+                    return 0;
+                has_e_modifier = true;
+                goto continue_reading_operator;
             case 'h':
                 builder.append(short_month_names[tm->tm_mon]);
                 break;
@@ -336,6 +344,11 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
             case 'n':
                 builder.append('\n');
                 break;
+            case 'O':
+                if (has_e_modifier || has_o_modifier)
+                    return 0;
+                has_o_modifier = true;
+                goto continue_reading_operator;
             case 'p':
                 builder.append(tm->tm_hour < 12 ? "AM"sv : "PM"sv);
                 break;
