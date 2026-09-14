@@ -64,6 +64,7 @@ set(LIBTEST_BASED_SOURCES
     TestSignalDispatch.cpp
     TestSymlink.cpp
     TestTCPSocket.cpp
+    TestUDPSocket.cpp
     TestWXProtection.cpp
 )
 
