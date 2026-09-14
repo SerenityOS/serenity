@@ -271,7 +271,6 @@ char* asctime_r(const struct tm* tm, char* buffer)
     return buffer;
 }
 
-// FIXME: Some formats are not supported.
 size_t strftime(char* destination, size_t max_size, char const* format, const struct tm* tm)
 {
     tzset();
@@ -443,6 +442,10 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
             case 'Y':
                 builder.appendff("{}", tm->tm_year + 1900);
                 break;
+            case 'z':
+            case 'Z':
+                dbgln("FIXME: Unsupported format in strftime: %z/%Z");
+                return 0;
             case '%':
                 builder.append('%');
                 break;
