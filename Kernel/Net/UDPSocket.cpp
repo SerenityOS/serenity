@@ -77,7 +77,7 @@ ErrorOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserO
 {
     auto& ipv4_packet = *(IPv4Packet const*)(raw_ipv4_packet.data());
     auto& udp_packet = *static_cast<UDPPacket const*>(ipv4_packet.payload());
-    VERIFY(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
+    VERIFY(udp_packet.length() >= sizeof(UDPPacket));
     size_t read_size = min(buffer_size, udp_packet.length() - sizeof(UDPPacket));
     SOCKET_TRY(buffer.write(udp_packet.payload(), read_size));
     return read_size;
