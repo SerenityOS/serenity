@@ -107,3 +107,72 @@ TEST_CASE(strftime)
     EXPECT(strftime(str, sizeof str, "The year is %Y.", &t));
     EXPECT_EQ("The year is 2018."sv, str);
 }
+
+TEST_CASE(strftime_with_modifiers)
+{
+    char str[200];
+    tm t;
+    t.tm_sec = 7;
+    t.tm_min = 53;
+    t.tm_hour = 11;
+    t.tm_mday = 10;
+    t.tm_mon = 9;
+    t.tm_year = 118;
+    t.tm_wday = 3;
+    t.tm_yday = 282;
+    t.tm_isdst = -1;
+
+    EXPECT(strftime(str, sizeof str, "The century in the alternate representation is %EC.", &t));
+    EXPECT_EQ("The century in the alternate representation is 20."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The date in the alternate representation is %Ex.", &t));
+    EXPECT_EQ("The date in the alternate representation is 10/10/18."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The time in the alternate representation is %EX.", &t));
+    EXPECT_EQ("The time in the alternate representation is 11:53:07."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The year offset in the alternate representation is %Ey.", &t));
+    EXPECT_EQ("The year offset in the alternate representation is 18."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The year in the alternate representation is %EY.", &t));
+    EXPECT_EQ("The year in the alternate representation is 2018."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The day of the month in the alternate representation is %Od.", &t));
+    EXPECT_EQ("The day of the month in the alternate representation is 10."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The day of the month in the alternate representation is %Oe.", &t));
+    EXPECT_EQ("The day of the month in the alternate representation is 10."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The hour in the alternate representation is %OH.", &t));
+    EXPECT_EQ("The hour in the alternate representation is 11."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The hour in the alternate representation is %OI.", &t));
+    EXPECT_EQ("The hour in the alternate representation is 11."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The number of the month in the alternate representation is %Om.", &t));
+    EXPECT_EQ("The number of the month in the alternate representation is 10."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The minute in the alternate representation is %OM.", &t));
+    EXPECT_EQ("The minute in the alternate representation is 53."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The second in the alternate representation is %OS.", &t));
+    EXPECT_EQ("The second in the alternate representation is 07."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The day of the week in the alternate representation is %Ou.", &t));
+    EXPECT_EQ("The day of the week in the alternate representation is 3."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The week of the year in the alternate representation is %OU.", &t));
+    EXPECT_EQ("The week of the year in the alternate representation is 40."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The ISO week of the year in the alternate representation is %OV.", &t));
+    EXPECT_EQ("The ISO week of the year in the alternate representation is 41."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The day of the week in the alternate representation is %Ow.", &t));
+    EXPECT_EQ("The day of the week in the alternate representation is 3."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The week of the year in the alternate representation is %OW.", &t));
+    EXPECT_EQ("The week of the year in the alternate representation is 41."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The year in the alternate representation is %Oy.", &t));
+    EXPECT_EQ("The year in the alternate representation is 18."sv, str);
+}
