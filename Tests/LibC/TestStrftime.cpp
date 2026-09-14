@@ -35,6 +35,9 @@ TEST_CASE(strftime)
     EXPECT(strftime(str, sizeof str, "The full name of the month is %B.", &t));
     EXPECT_EQ("The full name of the month is October."sv, str);
 
+    EXPECT(strftime(str, sizeof str, "The date and time is %c.", &t));
+    EXPECT_EQ("The date and time is Wed Oct 10 11:53:07 2018."sv, str);
+
     EXPECT(strftime(str, sizeof str, "The century is %C.", &t));
     EXPECT_EQ("The century is 20."sv, str);
 
@@ -46,6 +49,15 @@ TEST_CASE(strftime)
 
     EXPECT(strftime(str, sizeof str, "The day of the month is %e.", &t));
     EXPECT_EQ("The day of the month is 10."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The date is %F.", &t));
+    EXPECT_EQ("The date is 2018-10-10."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The two last digits of the week based year is %g.", &t));
+    EXPECT_EQ("The two last digits of the week based year is 18."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The week based year is %G.", &t));
+    EXPECT_EQ("The week based year is 2018."sv, str);
 
     EXPECT(strftime(str, sizeof str, "The short name of the month is %h.", &t));
     EXPECT_EQ("The short name of the month is Oct."sv, str);
@@ -101,6 +113,12 @@ TEST_CASE(strftime)
     EXPECT(strftime(str, sizeof str, "The week of the year is %W.", &t));
     EXPECT_EQ("The week of the year is 41."sv, str);
 
+    EXPECT(strftime(str, sizeof str, "The locale's appropriate date representation is %x.", &t));
+    EXPECT_EQ("The locale's appropriate date representation is 10/10/18."sv, str);
+
+    EXPECT(strftime(str, sizeof str, "The locale's appropriate time representation is %X.", &t));
+    EXPECT_EQ("The locale's appropriate time representation is 11:53:07."sv, str);
+
     EXPECT(strftime(str, sizeof str, "The year is %y.", &t));
     EXPECT_EQ("The year is 18."sv, str);
 
@@ -121,6 +139,9 @@ TEST_CASE(strftime_with_modifiers)
     t.tm_wday = 3;
     t.tm_yday = 282;
     t.tm_isdst = -1;
+
+    EXPECT(strftime(str, sizeof str, "The date and time in the alternate representation is %Ec.", &t));
+    EXPECT_EQ("The date and time in the alternate representation is Wed Oct 10 11:53:07 2018."sv, str);
 
     EXPECT(strftime(str, sizeof str, "The century in the alternate representation is %EC.", &t));
     EXPECT_EQ("The century in the alternate representation is 20."sv, str);
