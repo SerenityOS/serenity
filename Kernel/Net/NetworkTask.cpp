@@ -484,6 +484,17 @@ void handle_udp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
     }
 
     auto& udp_packet = *static_cast<UDPPacket const*>(ipv4_packet.payload());
+
+    if (udp_packet.length() < sizeof(UDPPacket)) {
+        dbgln("handle_udp: UDP packet too short ({}, need {})", udp_packet.length(), sizeof(UDPPacket));
+        return;
+    }
+
+    if (udp_packet.length() > ipv4_packet.payload_size()) {
+        dbgln("handle_udp: UDP packet larger than the IPv4 payload ({}, payload is {})", udp_packet.length(), ipv4_packet.payload_size());
+        return;
+    }
+
     dbgln_if(UDP_DEBUG, "handle_udp: source={}:{}, destination={}:{}, length={}",
         ipv4_packet.source(), udp_packet.source_port(),
         ipv4_packet.destination(), udp_packet.destination_port(),
