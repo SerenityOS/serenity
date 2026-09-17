@@ -126,7 +126,7 @@ bool Mailbox::send_queue(void* queue, u32 queue_size)
 
     memcpy(transfer_buffer, queue, queue_size);
 
-    Aarch64::Asm::flush_data_cache(bit_cast<FlatPtr>(&transfer_buffer), queue_size);
+    Processor::flush_data_cache(VirtualAddress { &transfer_buffer }, queue_size);
 
     u32 request = static_cast<u32>(transfer_buffer_paddr & ~0xF) | (channel & 0xF);
     m_registers->write_data = request;
