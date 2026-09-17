@@ -145,16 +145,6 @@ inline FlatPtr get_cache_line_size()
     return 1 << log2_size;
 }
 
-inline void flush_data_cache(FlatPtr start, size_t size)
-{
-    auto const cache_size = get_cache_line_size();
-    for (FlatPtr addr = align_down_to(start, cache_size); addr < start + size; addr += cache_size)
-        asm volatile("dc civac, %[addr]" ::[addr] "r"(addr)
-            : "memory");
-    asm volatile("dsb sy" ::
-            : "memory");
-}
-
 inline FlatPtr get_mdscr_el1()
 {
     FlatPtr mdscr_el1;
