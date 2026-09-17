@@ -12,7 +12,7 @@
 
 namespace Crypto {
 
-enum PEMType {
+enum class PEMType {
     Certificate,
     PrivateKey,
 };

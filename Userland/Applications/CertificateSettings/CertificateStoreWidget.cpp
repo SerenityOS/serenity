@@ -12,6 +12,7 @@
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SortingProxyModel.h>
+#include <LibTLS/TLSv12.h>
 
 namespace CertificateSettings {
 
@@ -83,7 +84,7 @@ GUI::Variant CertificateStoreModel::data(GUI::ModelIndex const& index, GUI::Mode
     return {};
 }
 
-ErrorOr<size_t> CertificateStoreModel::add(Vector<Certificate> const& certificates)
+ErrorOr<size_t> CertificateStoreModel::add(Vector<Crypto::Certificate::Certificate> const& certificates)
 {
     auto size = m_certificates.size();
     TRY(m_certificates.try_extend(certificates));
@@ -123,7 +124,7 @@ ErrorOr<void> CertificateStoreWidget::import_pem()
     return {};
 }
 
-Certificate CertificateStoreModel::get(int index)
+Crypto::Certificate::Certificate CertificateStoreModel::get(int index)
 {
     return m_certificates.at(index);
 }
