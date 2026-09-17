@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -137,6 +138,16 @@ bool Mailbox::send_queue(void* queue, u32 queue_size)
         u32 response = m_registers->read_data;
         // We keep at most one message in flight and do synchronous communication, so response will always be == request for us.
         if (response == request) {
+            // Ensure that the data cache flush and memcpy() are done after the response == request check.
+            full_memory_fence();
+
+            // Ensure that stale cache lines are discarded before reading from the buffer.
+            // Cacheable memory regions can be allocated into cache lines at any time, e.g. because they were prefetched or speculatively read.
+            // We could use an invalidate-only cache operation here (flush_data_cache() both cleans and invalidates),
+            // but then we'd need to ensure that the buffer is aligned to the cache line size
+            // (which can vary from processor to processor) to not accidentally delete unrelated data from the caches.
+            Processor::flush_data_cache(VirtualAddress { &transfer_buffer }, queue_size);
+
             memcpy(queue, transfer_buffer, queue_size);
             return message_header->success();
         }
