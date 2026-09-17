@@ -621,6 +621,11 @@ public:
         return {};
     }
 
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic push
+// GCC incorrectly claims that this function can write out of bounds when it tries to inline it in GIFLoader's usage of LzwDecompressor::get_output().
+#    pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
     ErrorOr<void> try_append(T&& value)
     {
         TRY(try_grow_capacity(size() + 1));
@@ -631,6 +636,9 @@ public:
         ++m_size;
         return {};
     }
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic pop
+#endif
 
     ErrorOr<void> try_append(T const& value)
     requires(!contains_reference)
