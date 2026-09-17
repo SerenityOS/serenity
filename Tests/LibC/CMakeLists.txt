@@ -35,6 +35,7 @@ set(TEST_SOURCES
     TestStackSmash.cpp
     TestStdio.cpp
     TestStpncpy.cpp
+    TestStrftime.cpp
     TestStrlcpy.cpp
     TestStrtodAccuracy.cpp
     TestTruncate.cpp
