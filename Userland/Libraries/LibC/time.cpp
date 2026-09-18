@@ -388,8 +388,12 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
                 builder.appendff("{}", tm->tm_wday);
                 break;
             case 'W': {
-                int const wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
-                int const week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
+                // "The first Monday of January is the first day of week 1;
+                // days in the new year before this are in week 0."
+                int const beginning_week_1 = (tm->tm_yday - tm->tm_wday + 1) % 7;
+                int week_number = (tm->tm_yday - beginning_week_1) / 7;
+                if (tm->tm_yday >= tm->tm_wday - 1)
+                    week_number++;
                 builder.appendff("{:02}", week_number);
                 break;
             }
