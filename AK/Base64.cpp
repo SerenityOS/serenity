@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2026, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,12 +35,18 @@ static ErrorOr<ByteBuffer> decode_base64_impl(StringView input, ReadonlySpan<i16
 {
     input = input.trim_whitespace();
 
-    if (input.length() % 4 != 0)
+    auto const remainder = input.length() % 4;
+
+    if (remainder == 1 || (remainder != 0 && input.contains("="sv)))
         return Error::from_string_literal("Invalid length of Base64 encoded string");
 
     auto get = [&](size_t offset, bool* is_padding) -> ErrorOr<u8> {
-        if (offset >= input.length())
+        if (offset >= input.length()) {
+            if (is_padding)
+                *is_padding = true;
+
             return 0;
+        }
 
         auto ch = static_cast<unsigned char>(input[offset]);
         if (ch == '=') {

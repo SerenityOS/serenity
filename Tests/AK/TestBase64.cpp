@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Tom Lebreux <tomlebreux@hotmail.com>
+ * Copyright (c) 2026, Jamie Mansfield <jmansfield@cadixdev.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,6 +32,21 @@ TEST_CASE(test_decode)
     decode_equal("aGVsbG8/d29ybGQ="sv, "hello?world"sv);
 }
 
+TEST_CASE(test_decode_omit_padding)
+{
+    auto decode_equal = [&](StringView input, StringView expected) {
+        auto decoded = TRY_OR_FAIL(decode_base64(input));
+        EXPECT(ByteString::copy(decoded) == expected);
+        EXPECT(expected.length() <= calculate_base64_decoded_length(input.bytes()));
+    };
+
+    decode_equal("Zg"sv, "f"sv);
+    decode_equal("Zm8"sv, "fo"sv);
+    decode_equal("Zm9vYg"sv, "foob"sv);
+    decode_equal("Zm9vYmE"sv, "fooba"sv);
+    decode_equal("PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMC42MDUiIGhlaWdodD0iMTUuNTU1Ij48cGF0aCBmaWxsPSIjODg5IiBkPSJtMi44MjggMTUuNTU1IDcuNzc3LTcuNzc5TDIuODI4IDAgMCAyLjgyOGw0Ljk0OSA0Ljk0OEwwIDEyLjcyN2wyLjgyOCAyLjgyOHoiLz48L3N2Zz4"sv, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10.605\" height=\"15.555\"><path fill=\"#889\" d=\"m2.828 15.555 7.777-7.779L2.828 0 0 2.828l4.949 4.948L0 12.727l2.828 2.828z\"/></svg>"sv);
+}
+
 TEST_CASE(test_decode_invalid)
 {
     EXPECT(decode_base64(("asdf\xffqwe"sv)).is_error());
@@ -42,9 +58,7 @@ TEST_CASE(test_decode_invalid)
     EXPECT(decode_base64url("aGVsbG8/d29ybGQ="sv).is_error());
 
     EXPECT(decode_base64("Y"sv).is_error());
-    EXPECT(decode_base64("YQ"sv).is_error());
     EXPECT(decode_base64("YQ="sv).is_error());
-    EXPECT(decode_base64("PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMC42MDUiIGhlaWdodD0iMTUuNTU1Ij48cGF0aCBmaWxsPSIjODg5IiBkPSJtMi44MjggMTUuNTU1IDcuNzc3LTcuNzc5TDIuODI4IDAgMCAyLjgyOGw0Ljk0OSA0Ljk0OEwwIDEyLjcyN2wyLjgyOCAyLjgyOHoiLz48L3N2Zz4"sv).is_error());
 }
 
 TEST_CASE(test_decode_only_padding)
