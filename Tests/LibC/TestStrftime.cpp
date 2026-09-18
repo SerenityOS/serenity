@@ -98,6 +98,9 @@ TEST_CASE(strftime)
     EXPECT(strftime(str, sizeof str, "The day of the week is %w.", &t));
     EXPECT_EQ("The day of the week is 3."sv, str);
 
+    EXPECT(strftime(str, sizeof str, "The week of the year is %W.", &t));
+    EXPECT_EQ("The week of the year is 41."sv, str);
+
     EXPECT(strftime(str, sizeof str, "The year is %y.", &t));
     EXPECT_EQ("The year is 18."sv, str);
 
