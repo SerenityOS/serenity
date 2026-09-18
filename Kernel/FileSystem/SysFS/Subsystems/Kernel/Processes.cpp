@@ -5,7 +5,9 @@
  */
 
 #include <AK/JsonObjectSerializer.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Try.h>
+#include <AK/Vector.h>
 #include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Processes.h>
 #include <Kernel/Sections.h>
@@ -151,10 +153,18 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
         auto array = TRY(json.add_array("processes"sv));
         if (!Process::current().is_jailed())
             TRY(build_process(array, *Scheduler::colonel()));
+
+        // NOTE: Snapshot the process list first; holding the all-process lock
+        //       while taking thread locks can deadlock with the scheduler on SMP.
+        Vector<NonnullRefPtr<Process>> processes;
         TRY(Process::for_each_in_same_process_list([&](Process& process) -> ErrorOr<void> {
-            TRY(build_process(array, process));
+            TRY(processes.try_append(process));
             return {};
         }));
+
+        for (auto& process : processes)
+            TRY(build_process(array, *process));
+
         TRY(array.finish());
     }
 
