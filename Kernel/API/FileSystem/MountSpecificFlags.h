@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <AK/Userspace.h>
 
 #define MOUNT_SPECIFIC_FLAG_KEY_STRING_MAX_LENGTH 64
 
@@ -21,6 +22,6 @@ struct MountSpecificFlag {
     };
 
     ValueType value_type;
-    unsigned char const* key_string_addr;
-    void const* value_addr;
+    Userspace<char const*> key_string_addr;
+    Userspace<void const*> value_addr;
 };

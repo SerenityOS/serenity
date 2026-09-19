@@ -5,7 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
+#include <AK/Userspace.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/Region.h>
@@ -91,7 +93,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
     case PT_GETREGS: {
         if (!tracer->has_regs())
             return EINVAL;
-        auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
+        auto regs = static_ptr_cast<PtraceRegisters*>(params.addr);
         TRY(copy_to_user(regs, &tracer->regs()));
         break;
     }
@@ -101,7 +103,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
             return EINVAL;
 
         PtraceRegisters regs {};
-        TRY(copy_from_user(&regs, (PtraceRegisters const*)params.addr));
+        TRY(copy_from_user(&regs, static_ptr_cast<PtraceRegisters const*>(params.addr)));
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
         // Verify that the saved registers are in usermode context
@@ -142,13 +144,13 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
     }
 
     case PT_PEEK: {
-        auto data = TRY(peer->process().peek_user_data(Userspace<FlatPtr const*> { (FlatPtr)params.addr }));
+        auto data = TRY(peer->process().peek_user_data(static_ptr_cast<FlatPtr const*>(params.addr)));
         TRY(copy_to_user((FlatPtr*)params.data, &data));
         break;
     }
 
     case PT_POKE:
-        TRY(peer->process().poke_user_data(Userspace<FlatPtr*> { (FlatPtr)params.addr }, params.data));
+        TRY(peer->process().poke_user_data(static_ptr_cast<FlatPtr*>(params.addr), params.data));
         return 0;
 
     case PT_PEEKBUF: {
@@ -157,25 +159,25 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         // This is a comparatively large allocation on the Kernel stack.
         // However, we know that we're close to the root of the call stack, and the following calls shouldn't go too deep.
         Array<u8, PAGE_SIZE> buf;
-        FlatPtr tracee_ptr = (FlatPtr)params.addr;
+        FlatPtr tracee_ptr = params.addr.ptr();
         while (buf_params.buf.size > 0) {
             size_t copy_this_iteration = min(buf.size(), buf_params.buf.size);
             TRY(peer->process().peek_user_data(buf.span().slice(0, copy_this_iteration), Userspace<u8 const*> { tracee_ptr }));
             TRY(copy_to_user(buf_params.buf.data, buf.data(), copy_this_iteration));
             tracee_ptr += copy_this_iteration;
-            buf_params.buf.data += copy_this_iteration;
+            buf_params.buf.data = { buf_params.buf.data.ptr() + copy_this_iteration };
             buf_params.buf.size -= copy_this_iteration;
         }
         break;
     }
 
     case PT_PEEKDEBUG: {
-        auto data = TRY(peer->peek_debug_register(reinterpret_cast<uintptr_t>(params.addr)));
+        auto data = TRY(peer->peek_debug_register(params.addr.ptr()));
         TRY(copy_to_user((FlatPtr*)params.data, &data));
         break;
     }
     case PT_POKEDEBUG:
-        TRY(peer->poke_debug_register(reinterpret_cast<uintptr_t>(params.addr), params.data));
+        TRY(peer->poke_debug_register(params.addr.ptr(), params.data));
         return 0;
     default:
         return EINVAL;
