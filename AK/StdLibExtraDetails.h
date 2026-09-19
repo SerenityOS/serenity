@@ -359,6 +359,9 @@ inline constexpr bool IsFloatingPoint = __IsFloatingPoint<RemoveCV<T>>;
 template<typename ReferenceType, typename T>
 using CopyConst = Conditional<IsConst<ReferenceType>, AddConst<T>, RemoveConst<T>>;
 
+template<typename ReferenceType, typename T>
+using ApplyConstFrom = Conditional<IsConst<ReferenceType>, AddConst<T>, T>;
+
 template<typename... Ts>
 using Void = void;
 
@@ -460,6 +463,22 @@ struct __AssertSize : TrueType {
 
     consteval explicit operator bool() const { return value; }
 };
+
+template<typename Ref, typename U>
+struct __LikeT {
+    using StrippedRef = RemoveReference<Ref>;
+    using StrippedU = RemoveCVReference<U>;
+    using InnerType = Conditional<IsConst<StrippedRef>, AddConst<StrippedU>, StrippedU>;
+    using Type = Conditional<IsRvalueReference<Ref>, AddRvalueReference<InnerType>,
+        AddLvalueReference<InnerType>>;
+};
+
+template<typename Ref, typename U>
+using LikeT = __LikeT<Ref&&, U&>::Type;
+
+static_assert(IsSame<int&, LikeT<long&, int>>);
+static_assert(IsSame<int const&&, LikeT<long const&&, int&>>);
+static_assert(IsSame<int const&, LikeT<long const&, int&&>>);
 
 // Note: This type is useful, as the sizes will be visible in the
 //       compiler error messages, as they will be part of the
@@ -631,6 +650,7 @@ using AK::Detail::AddConst;
 using AK::Detail::AddConstToReferencedType;
 using AK::Detail::AddLvalueReference;
 using AK::Detail::AddRvalueReference;
+using AK::Detail::ApplyConstFrom;
 using AK::Detail::AssertSize;
 using AK::Detail::CommonType;
 using AK::Detail::Conditional;
@@ -689,6 +709,7 @@ using AK::Detail::IsUnion;
 using AK::Detail::IsUnsigned;
 using AK::Detail::IsVoid;
 using AK::Detail::IsVolatile;
+using AK::Detail::LikeT;
 using AK::Detail::MakeIndexSequence;
 using AK::Detail::MakeIntegerSequence;
 using AK::Detail::MakeSigned;
