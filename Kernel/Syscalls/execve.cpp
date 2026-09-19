@@ -85,21 +85,21 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
 
     auto push_on_new_stack = [&new_sp](FlatPtr value) {
         new_sp -= sizeof(FlatPtr);
-        Userspace<FlatPtr*> stack_ptr = new_sp;
+        Userspace<FlatPtr*> stack_ptr { new_sp };
         auto result = copy_to_user(stack_ptr, &value);
         VERIFY(!result.is_error());
     };
 
     auto push_aux_value_on_new_stack = [&new_sp](auxv_t value) {
         new_sp -= sizeof(auxv_t);
-        Userspace<auxv_t*> stack_ptr = new_sp;
+        Userspace<auxv_t*> stack_ptr { new_sp };
         auto result = copy_to_user(stack_ptr, &value);
         VERIFY(!result.is_error());
     };
 
     auto push_string_on_new_stack = [&new_sp](StringView string) {
         new_sp -= round_up_to_power_of_two(string.length() + 1, sizeof(FlatPtr));
-        Userspace<FlatPtr*> stack_ptr = new_sp;
+        Userspace<FlatPtr*> stack_ptr { new_sp };
         auto result = copy_to_user(stack_ptr, string.characters_without_null_termination(), string.length() + 1);
         VERIFY(!result.is_error());
     };

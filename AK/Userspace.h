@@ -51,7 +51,8 @@ public:
     bool operator==(nullptr_t) const { return m_ptr == 0; }
 
 #ifdef KERNEL
-    Userspace(FlatPtr ptr)
+    Userspace(nullptr_t) { }
+    explicit Userspace(FlatPtr ptr)
         : m_ptr(ptr)
     {
     }

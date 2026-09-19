@@ -165,7 +165,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
             TRY(peer->process().peek_user_data(buf.span().slice(0, copy_this_iteration), Userspace<u8 const*> { tracee_ptr }));
             TRY(copy_to_user(buf_params.buf.data, buf.data(), copy_this_iteration));
             tracee_ptr += copy_this_iteration;
-            buf_params.buf.data = { buf_params.buf.data.ptr() + copy_this_iteration };
+            buf_params.buf.data = Userspace<unsigned char*> { buf_params.buf.data.ptr() + copy_this_iteration };
             buf_params.buf.size -= copy_this_iteration;
         }
         break;
