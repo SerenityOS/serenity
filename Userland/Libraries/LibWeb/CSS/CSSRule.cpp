@@ -13,8 +13,9 @@
 
 namespace Web::CSS {
 
-CSSRule::CSSRule(JS::Realm& realm)
+CSSRule::CSSRule(JS::Realm& realm, Type type)
     : PlatformObject(realm)
+    , m_type(type)
 {
 }
 
@@ -81,6 +82,7 @@ FlyString const& CSSRule::parent_layer_internal_qualified_name_slow_case() const
         case Type::Namespace:
         case Type::Supports:
         case Type::NestedDeclarations:
+        case Type::Property:
             break;
         }
     }

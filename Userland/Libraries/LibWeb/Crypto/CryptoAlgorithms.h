@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2024, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2024, stelar7 <dudedbz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,6 +49,54 @@ struct AlgorithmParams {
     }
 
     String name;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
+// https://w3c.github.io/webcrypto/#aes-cbc
+struct AesCbcParams : public AlgorithmParams {
+    virtual ~AesCbcParams() override;
+    AesCbcParams(String name, ByteBuffer iv)
+        : AlgorithmParams(move(name))
+        , iv(move(iv))
+    {
+    }
+
+    ByteBuffer iv;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
+// https://w3c.github.io/webcrypto/#dfn-AesCtrParams
+struct AesCtrParams : public AlgorithmParams {
+    virtual ~AesCtrParams() override;
+    AesCtrParams(String name, ByteBuffer counter, u8 length)
+        : AlgorithmParams(move(name))
+        , counter(move(counter))
+        , length(length)
+    {
+    }
+
+    ByteBuffer counter;
+    u8 length;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
+// https://w3c.github.io/webcrypto/#dfn-AesGcmParams
+struct AesGcmParams : public AlgorithmParams {
+    virtual ~AesGcmParams() override;
+    AesGcmParams(String name, ByteBuffer iv, Optional<ByteBuffer> additional_data, Optional<u8> tag_length)
+        : AlgorithmParams(move(name))
+        , iv(move(iv))
+        , additional_data(move(additional_data))
+        , tag_length(tag_length)
+    {
+    }
+
+    ByteBuffer iv;
+    Optional<ByteBuffer> additional_data;
+    Optional<u8> tag_length;
 
     static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
 };
@@ -181,6 +230,36 @@ struct EcKeyGenParams : public AlgorithmParams {
     static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
 };
 
+// https://w3c.github.io/webcrypto/#dfn-AesKeyGenParams
+struct AesKeyGenParams : public AlgorithmParams {
+    virtual ~AesKeyGenParams() override;
+
+    AesKeyGenParams(String name, u16 length)
+        : AlgorithmParams(move(name))
+        , length(length)
+    {
+    }
+
+    u16 length;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
+// https://w3c.github.io/webcrypto/#dfn-AesDerivedKeyParams
+struct AesDerivedKeyParams : public AlgorithmParams {
+    virtual ~AesDerivedKeyParams() override;
+
+    AesDerivedKeyParams(String name, u16 length)
+        : AlgorithmParams(move(name))
+        , length(length)
+    {
+    }
+
+    u16 length;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
 class AlgorithmMethods {
 public:
     virtual ~AlgorithmMethods();
@@ -265,6 +344,60 @@ private:
     }
 };
 
+class AesCbc : public AlgorithmMethods {
+public:
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> encrypt(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> decrypt(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> import_key(AlgorithmParams const&, Bindings::KeyFormat, CryptoKey::InternalKeyData, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> export_key(Bindings::KeyFormat, JS::NonnullGCPtr<CryptoKey>) override;
+    virtual WebIDL::ExceptionOr<JS::Value> get_key_length(AlgorithmParams const&) override;
+
+    static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new AesCbc(realm)); }
+
+private:
+    explicit AesCbc(JS::Realm& realm)
+        : AlgorithmMethods(realm)
+    {
+    }
+};
+
+class AesCtr : public AlgorithmMethods {
+public:
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> import_key(AlgorithmParams const&, Bindings::KeyFormat, CryptoKey::InternalKeyData, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> export_key(Bindings::KeyFormat, JS::NonnullGCPtr<CryptoKey>) override;
+    virtual WebIDL::ExceptionOr<JS::Value> get_key_length(AlgorithmParams const&) override;
+    virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> encrypt(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> decrypt(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+
+    static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new AesCtr(realm)); }
+
+private:
+    explicit AesCtr(JS::Realm& realm)
+        : AlgorithmMethods(realm)
+    {
+    }
+};
+
+class AesGcm : public AlgorithmMethods {
+public:
+    virtual WebIDL::ExceptionOr<JS::Value> get_key_length(AlgorithmParams const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> import_key(AlgorithmParams const&, Bindings::KeyFormat, CryptoKey::InternalKeyData, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> export_key(Bindings::KeyFormat, JS::NonnullGCPtr<CryptoKey>) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> encrypt(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> decrypt(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, ByteBuffer const&) override;
+    virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+
+    static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new AesGcm(realm)); }
+
+private:
+    explicit AesGcm(JS::Realm& realm)
+        : AlgorithmMethods(realm)
+    {
+    }
+};
+
 class HKDF : public AlgorithmMethods {
 public:
     virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> import_key(AlgorithmParams const&, Bindings::KeyFormat, CryptoKey::InternalKeyData, bool, Vector<Bindings::KeyUsage> const&) override;
@@ -340,7 +473,38 @@ private:
     }
 };
 
+class X25519 : public AlgorithmMethods {
+public:
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> derive_bits(AlgorithmParams const&, JS::NonnullGCPtr<CryptoKey>, Optional<u32>) override;
+    virtual WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>>> generate_key(AlgorithmParams const&, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> import_key(AlgorithmParams const&, Bindings::KeyFormat, CryptoKey::InternalKeyData, bool, Vector<Bindings::KeyUsage> const&) override;
+    virtual WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Object>> export_key(Bindings::KeyFormat, JS::NonnullGCPtr<CryptoKey>) override;
+
+    static NonnullOwnPtr<AlgorithmMethods> create(JS::Realm& realm) { return adopt_own(*new X25519(realm)); }
+
+private:
+    explicit X25519(JS::Realm& realm)
+        : AlgorithmMethods(realm)
+    {
+    }
+};
+
+struct EcdhKeyDerivePrams : public AlgorithmParams {
+    virtual ~EcdhKeyDerivePrams() override;
+
+    EcdhKeyDerivePrams(String name, CryptoKey& public_key)
+        : AlgorithmParams(move(name))
+        , public_key(public_key)
+    {
+    }
+
+    JS::NonnullGCPtr<CryptoKey> public_key;
+
+    static JS::ThrowCompletionOr<NonnullOwnPtr<AlgorithmParams>> from_value(JS::VM&, JS::Value);
+};
+
 ErrorOr<String> base64_url_uint_encode(::Crypto::UnsignedBigInteger);
+WebIDL::ExceptionOr<ByteBuffer> base64_url_bytes_decode(JS::Realm&, String const& base64_url_string);
 WebIDL::ExceptionOr<::Crypto::UnsignedBigInteger> base64_url_uint_decode(JS::Realm&, String const& base64_url_string);
 
 }

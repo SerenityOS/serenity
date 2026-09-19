@@ -17,6 +17,7 @@ JS_DEFINE_ALLOCATOR(KeyAlgorithm);
 JS_DEFINE_ALLOCATOR(RsaKeyAlgorithm);
 JS_DEFINE_ALLOCATOR(RsaHashedKeyAlgorithm);
 JS_DEFINE_ALLOCATOR(EcKeyAlgorithm);
+JS_DEFINE_ALLOCATOR(AesKeyAlgorithm);
 
 template<typename T>
 static JS::ThrowCompletionOr<T*> impl_from(JS::VM& vm, StringView Name)
@@ -90,8 +91,6 @@ void RsaKeyAlgorithm::visit_edges(Visitor& visitor)
 
 WebIDL::ExceptionOr<void> RsaKeyAlgorithm::set_public_exponent(::Crypto::UnsignedBigInteger exponent)
 {
-    static_assert(AK::HostIsLittleEndian, "This code assumes a little endian host");
-
     auto& realm = this->realm();
     auto& vm = this->vm();
 
@@ -99,17 +98,22 @@ WebIDL::ExceptionOr<void> RsaKeyAlgorithm::set_public_exponent(::Crypto::Unsigne
 
     bool const remove_leading_zeroes = true;
     auto data_size = exponent.export_data(bytes.span(), remove_leading_zeroes);
-    auto data_slice = bytes.bytes().slice(bytes.size() - data_size, data_size);
+    auto data_slice_be = bytes.bytes().slice(bytes.size() - data_size, data_size);
 
     // The BigInteger typedef from the WebCrypto spec requires the bytes in the Uint8Array be ordered in Big Endian
 
-    Vector<u8, 32> byte_swapped_data;
-    byte_swapped_data.ensure_capacity(data_size);
-    for (size_t i = 0; i < data_size; ++i)
-        byte_swapped_data.append(data_slice[data_size - i - 1]);
-
-    m_public_exponent = TRY(JS::Uint8Array::create(realm, byte_swapped_data.size()));
-    m_public_exponent->viewed_array_buffer()->buffer().overwrite(0, byte_swapped_data.data(), byte_swapped_data.size());
+    if constexpr (AK::HostIsLittleEndian) {
+        Vector<u8, 32> data_slice_le;
+        data_slice_le.ensure_capacity(data_size);
+        for (size_t i = 0; i < data_size; ++i) {
+            data_slice_le.append(data_slice_be[data_size - i - 1]);
+        }
+        m_public_exponent = TRY(JS::Uint8Array::create(realm, data_slice_le.size()));
+        m_public_exponent->viewed_array_buffer()->buffer().overwrite(0, data_slice_le.data(), data_slice_le.size());
+    } else {
+        m_public_exponent = TRY(JS::Uint8Array::create(realm, data_slice_be.size()));
+        m_public_exponent->viewed_array_buffer()->buffer().overwrite(0, data_slice_be.data(), data_slice_be.size());
+    }
 
     return {};
 }
@@ -178,6 +182,31 @@ JS_DEFINE_NATIVE_FUNCTION(RsaHashedKeyAlgorithm::hash_getter)
         [&](JS::Handle<JS::Object> const& hash) -> JS::Value {
             return hash;
         });
+}
+
+JS::NonnullGCPtr<AesKeyAlgorithm> AesKeyAlgorithm::create(JS::Realm& realm)
+{
+    return realm.heap().allocate<AesKeyAlgorithm>(realm, realm);
+}
+
+AesKeyAlgorithm::AesKeyAlgorithm(JS::Realm& realm)
+    : KeyAlgorithm(realm)
+    , m_length(0)
+{
+}
+
+void AesKeyAlgorithm::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+
+    define_native_accessor(realm, "length", length_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(AesKeyAlgorithm::length_getter)
+{
+    auto* impl = TRY(impl_from<AesKeyAlgorithm>(vm, "AesKeyAlgorithm"sv));
+    auto length = TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->length(); }));
+    return length;
 }
 
 }
