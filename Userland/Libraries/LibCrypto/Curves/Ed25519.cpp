@@ -427,6 +427,9 @@ bool Ed25519::verify(ReadonlyBytes public_key, ReadonlyBytes signature, Readonly
     // NOTE: We dont care about F, since we dont implement Ed25519ctx or Ed25519PH
     // NOTE: C is the internal state, so its not a parameter
 
+    if (public_key.size() != key_size() || signature.size() != signature_size())
+        return false;
+
     auto half_signature_size = signature_size() / 2;
 
     // Decode the first half as a point R
