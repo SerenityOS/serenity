@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='coreutils'
-version='9.9'
+version='9.12'
 useconfigure='true'
 files=(
-    "mirror://gnu/coreutils/coreutils-${version}.tar.gz#91a719fcf923de686016f2c8d084a8be1f793f34173861273c4668f7c65af94a"
+    "mirror://gnu/coreutils/coreutils-${version}.tar.gz#14cbf5a4de0c7b7fa3b9fa7fada4c58b2defe33336aa8fd83d7622c5c4ebdc13"
 )
 
 # Exclude some non-working utilities:
