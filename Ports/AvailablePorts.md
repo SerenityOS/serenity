@@ -6,7 +6,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 
 | Port                                            | Name                                                          | Version                | Website                                                              |
 | ----------------------------------------------- | ------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------- |
-| [`abseil`](abseil/)                             | Abseil Common Libraries                                       | 20230802.0             | https://abseil.io/                                                   |
+| [`abseil`](abseil/)                             | Abseil Common Libraries                                       | 20260817.0             | https://abseil.io/                                                   |
 | [`aclock`](aclock/)                             | aclock                                                        | 2.3                    | https://github.com/tenox7/aclock                                     |
 | [`acpica-tools`](acpica-tools/)                 | ACPI Component Architecture Project Userspace Utilities       | R06_28_23              | https://github.com/acpica/acpica                                     |
 | [`alpine`](alpine/)                             | Alpine Email Client                                           | 2.26                   | https://alpineapp.email                                              |
