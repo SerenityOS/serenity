@@ -62,104 +62,104 @@ ErrorOr<Duration> copy_time_from_user<timespec const>(Userspace<timespec const*>
 template<>
 ErrorOr<Duration> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 
-Optional<u32> user_atomic_fetch_add_relaxed(u32 volatile* var, u32 val)
+Optional<u32> user_atomic_fetch_add_relaxed(Userspace<u32 volatile*> var, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_fetch_add_relaxed(var, val);
+    return Kernel::safe_atomic_fetch_add_relaxed(var.unsafe_userspace_ptr(), val);
 }
 
-Optional<u32> user_atomic_exchange_relaxed(u32 volatile* var, u32 val)
+Optional<u32> user_atomic_exchange_relaxed(Userspace<u32 volatile*> var, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_exchange_relaxed(var, val);
+    return Kernel::safe_atomic_exchange_relaxed(var.unsafe_userspace_ptr(), val);
 }
 
-Optional<u32> user_atomic_load_relaxed(u32 volatile* var)
+Optional<u32> user_atomic_load_relaxed(Userspace<u32 volatile*> var)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_load_relaxed(var);
+    return Kernel::safe_atomic_load_relaxed(var.unsafe_userspace_ptr());
 }
 
-bool user_atomic_store_relaxed(u32 volatile* var, u32 val)
+bool user_atomic_store_relaxed(Userspace<u32 volatile*> var, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return false; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return false;
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_store_relaxed(var, val);
+    return Kernel::safe_atomic_store_relaxed(var.unsafe_userspace_ptr(), val);
 }
 
-Optional<bool> user_atomic_compare_exchange_relaxed(u32 volatile* var, u32& expected, u32 val)
+Optional<bool> user_atomic_compare_exchange_relaxed(Userspace<u32 volatile*> var, u32& expected, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
     VERIFY(!Kernel::Memory::is_user_range(VirtualAddress(&expected), sizeof(expected)));
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_compare_exchange_relaxed(var, expected, val);
+    return Kernel::safe_atomic_compare_exchange_relaxed(var.unsafe_userspace_ptr(), expected, val);
 }
 
-Optional<u32> user_atomic_fetch_and_relaxed(u32 volatile* var, u32 val)
+Optional<u32> user_atomic_fetch_and_relaxed(Userspace<u32 volatile*> var, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_fetch_and_relaxed(var, val);
+    return Kernel::safe_atomic_fetch_and_relaxed(var.unsafe_userspace_ptr(), val);
 }
 
-Optional<u32> user_atomic_fetch_and_not_relaxed(u32 volatile* var, u32 val)
+Optional<u32> user_atomic_fetch_and_not_relaxed(Userspace<u32 volatile*> var, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_fetch_and_not_relaxed(var, val);
+    return Kernel::safe_atomic_fetch_and_not_relaxed(var.unsafe_userspace_ptr(), val);
 }
 
-Optional<u32> user_atomic_fetch_or_relaxed(u32 volatile* var, u32 val)
+Optional<u32> user_atomic_fetch_or_relaxed(Userspace<u32 volatile*> var, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_fetch_or_relaxed(var, val);
+    return Kernel::safe_atomic_fetch_or_relaxed(var.unsafe_userspace_ptr(), val);
 }
 
-Optional<u32> user_atomic_fetch_xor_relaxed(u32 volatile* var, u32 val)
+Optional<u32> user_atomic_fetch_xor_relaxed(Userspace<u32 volatile*> var, u32 val)
 {
-    if (FlatPtr(var) & 3)
+    if (var.ptr() & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(var.vaddr(), sizeof(u32));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
-    return Kernel::safe_atomic_fetch_xor_relaxed(var, val);
+    return Kernel::safe_atomic_fetch_xor_relaxed(var.unsafe_userspace_ptr(), val);
 }
 
 ErrorOr<void> copy_to_user(void* dest_ptr, void const* src_ptr, size_t n)

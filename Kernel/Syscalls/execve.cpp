@@ -8,6 +8,7 @@
 #include <AK/FixedArray.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
+#include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -85,21 +86,21 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
 
     auto push_on_new_stack = [&new_sp](FlatPtr value) {
         new_sp -= sizeof(FlatPtr);
-        Userspace<FlatPtr*> stack_ptr = new_sp;
+        Userspace<FlatPtr*> stack_ptr { new_sp };
         auto result = copy_to_user(stack_ptr, &value);
         VERIFY(!result.is_error());
     };
 
     auto push_aux_value_on_new_stack = [&new_sp](auxv_t value) {
         new_sp -= sizeof(auxv_t);
-        Userspace<auxv_t*> stack_ptr = new_sp;
+        Userspace<auxv_t*> stack_ptr { new_sp };
         auto result = copy_to_user(stack_ptr, &value);
         VERIFY(!result.is_error());
     };
 
     auto push_string_on_new_stack = [&new_sp](StringView string) {
         new_sp -= round_up_to_power_of_two(string.length() + 1, sizeof(FlatPtr));
-        Userspace<FlatPtr*> stack_ptr = new_sp;
+        Userspace<FlatPtr*> stack_ptr { new_sp };
         auto result = copy_to_user(stack_ptr, string.characters_without_null_termination(), string.length() + 1);
         VERIFY(!result.is_error());
     };
@@ -992,13 +993,9 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
         auto copy_user_strings = [](auto const& list, auto& output) -> ErrorOr<void> {
             if (!list.length)
                 return {};
-            Checked<size_t> size = sizeof(*list.strings);
-            size *= list.length;
-            if (size.has_overflow())
-                return EOVERFLOW;
             Vector<Syscall::StringArgument, 32> strings;
             TRY(strings.try_resize(list.length));
-            TRY(copy_from_user(strings.data(), list.strings, size.value()));
+            TRY(copy_n_from_user(strings.data(), list.strings, list.length));
             for (size_t i = 0; i < list.length; ++i) {
                 auto string = TRY(try_copy_kstring_from_user(strings[i]));
                 TRY(output.try_append(move(string)));

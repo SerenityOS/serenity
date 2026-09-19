@@ -219,23 +219,23 @@ enum Function {
 
 #ifdef AK_OS_SERENITY
 struct StringArgument {
-    char const* characters;
+    Userspace<char const*> characters;
     size_t length { 0 };
 };
 
 template<typename DataType, typename SizeType>
 struct MutableBufferArgument {
-    DataType* data { nullptr };
+    Userspace<DataType*> data { nullptr };
     SizeType size { 0 };
 };
 
 struct StringListArgument {
-    StringArgument* strings {};
+    Userspace<StringArgument*> strings { nullptr };
     size_t length { 0 };
 };
 
 struct SC_mmap_params {
-    void* addr;
+    Userspace<void*> addr;
     size_t size;
     size_t alignment;
     int32_t prot;
@@ -246,7 +246,7 @@ struct SC_mmap_params {
 };
 
 struct SC_mremap_params {
-    void* old_address;
+    Userspace<void*> old_address;
     size_t old_size;
     size_t new_size;
     int32_t flags;
@@ -260,7 +260,7 @@ struct SC_open_params {
 };
 
 struct SC_poll_params {
-    struct pollfd* fds;
+    Userspace<struct pollfd*> fds;
     unsigned nfds;
     const struct timespec* timeout;
     u32 const* sigmask;
@@ -269,18 +269,18 @@ struct SC_poll_params {
 struct SC_clock_nanosleep_params {
     int clock_id;
     int flags;
-    const struct timespec* requested_sleep;
+    Userspace<const struct timespec*> requested_sleep;
     struct timespec* remaining_sleep;
 };
 
 struct SC_clock_getres_params {
     int clock_id;
-    struct timespec* result;
+    Userspace<struct timespec*> result;
 };
 
 struct SC_accept4_params {
-    sockaddr* addr;
-    socklen_t* addrlen;
+    Userspace<sockaddr*> addr;
+    Userspace<socklen_t*> addrlen;
     int sockfd;
     int flags;
 };
@@ -289,8 +289,8 @@ struct SC_getsockopt_params {
     int sockfd;
     int level;
     int option;
-    void* value;
-    socklen_t* value_size;
+    Userspace<void*> value;
+    Userspace<socklen_t*> value_size;
 };
 
 struct SC_setsockopt_params {
@@ -303,14 +303,14 @@ struct SC_setsockopt_params {
 
 struct SC_getsockname_params {
     int sockfd;
-    sockaddr* addr;
-    socklen_t* addrlen;
+    Userspace<sockaddr*> addr;
+    Userspace<socklen_t*> addrlen;
 };
 
 struct SC_getpeername_params {
     int sockfd;
-    sockaddr* addr;
-    socklen_t* addrlen;
+    Userspace<sockaddr*> addr;
+    Userspace<socklen_t*> addrlen;
 };
 
 struct SC_socketpair_params {
@@ -321,23 +321,23 @@ struct SC_socketpair_params {
 };
 
 struct SC_futex_params {
-    u32* userspace_address;
+    Userspace<u32 volatile*> userspace_address;
     int futex_op;
     u32 val;
     union {
-        timespec const* timeout;
+        Userspace<timespec const*> timeout;
         uintptr_t val2;
     };
-    u32* userspace_address2;
+    Userspace<u32 volatile*> userspace_address2;
     u32 val3;
 };
 
 struct SC_setkeymap_params {
-    u32 const* map;
-    u32 const* shift_map;
-    u32 const* alt_map;
-    u32 const* altgr_map;
-    u32 const* shift_altgr_map;
+    Userspace<u32 const*> map;
+    Userspace<u32 const*> shift_map;
+    Userspace<u32 const*> alt_map;
+    Userspace<u32 const*> altgr_map;
+    Userspace<u32 const*> shift_altgr_map;
     StringArgument map_name;
 };
 
@@ -356,11 +356,11 @@ struct SC_unshare_enter_params {
 };
 
 struct SC_getkeymap_params {
-    u32* map;
-    u32* shift_map;
-    u32* alt_map;
-    u32* altgr_map;
-    u32* shift_altgr_map;
+    Userspace<u32*> map;
+    Userspace<u32*> shift_map;
+    Userspace<u32*> alt_map;
+    Userspace<u32*> altgr_map;
+    Userspace<u32*> shift_altgr_map;
     MutableBufferArgument<char, size_t> map_name;
 };
 
@@ -374,10 +374,10 @@ struct SC_create_thread_params {
     unsigned int guard_page_size = 0;          // Rounded up to PAGE_SIZE
     unsigned int reported_guard_page_size = 0; // The lie we tell callers
     unsigned int stack_size = 1 * MiB;         // Equal to Thread::default_userspace_stack_size
-    void* stack_location;                      // nullptr means any, o.w. process virtual address
-    void* (*entry)(void*);
-    void* entry_argument;
-    void* tls_pointer;
+    Userspace<void*> stack_location;           // nullptr means any, o.w. process virtual address
+    Userspace<void* (*)(void*)> entry;
+    Userspace<void*> entry_argument;
+    Userspace<void*> tls_pointer;
 };
 
 struct SC_realpath_params {
@@ -386,7 +386,7 @@ struct SC_realpath_params {
 };
 
 struct SC_set_mmap_name_params {
-    void* addr;
+    Userspace<void*> addr;
     size_t size;
     StringArgument name;
 };

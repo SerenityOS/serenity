@@ -43,15 +43,15 @@ ErrorOr<Duration> copy_time_from_user(timeval const*);
 template<typename T>
 ErrorOr<Duration> copy_time_from_user(Userspace<T*>);
 
-[[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(u32 volatile* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(u32 volatile* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_load_relaxed(u32 volatile* var);
-[[nodiscard]] bool user_atomic_store_relaxed(u32 volatile* var, u32 val);
-[[nodiscard]] Optional<bool> user_atomic_compare_exchange_relaxed(u32 volatile* var, u32& expected, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_and_relaxed(u32 volatile* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_and_not_relaxed(u32 volatile* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_or_relaxed(u32 volatile* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_xor_relaxed(u32 volatile* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(Userspace<u32 volatile*> var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(Userspace<u32 volatile*> var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_load_relaxed(Userspace<u32 volatile*> var);
+[[nodiscard]] bool user_atomic_store_relaxed(Userspace<u32 volatile*> var, u32 val);
+[[nodiscard]] Optional<bool> user_atomic_compare_exchange_relaxed(Userspace<u32 volatile*> var, u32& expected, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_and_relaxed(Userspace<u32 volatile*> var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_and_not_relaxed(Userspace<u32 volatile*> var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_or_relaxed(Userspace<u32 volatile*> var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_xor_relaxed(Userspace<u32 volatile*> var, u32 val);
 
 ErrorOr<void> copy_to_user(void*, void const*, size_t);
 ErrorOr<void> copy_from_user(void*, void const*, size_t);
@@ -149,7 +149,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_n_from_user(T* dest, Userspace<T const*> src, size_t count)
+[[nodiscard]] inline ErrorOr<void> copy_n_from_user(T* dest, Userspace<IdentityType<T> const*> src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
@@ -172,14 +172,6 @@ template<typename T>
 
 template<typename T>
 inline ErrorOr<T> copy_typed_from_user(Userspace<T const*> user_data)
-{
-    T data {};
-    TRY(copy_from_user(&data, user_data));
-    return data;
-}
-
-template<typename T>
-inline ErrorOr<T> copy_typed_from_user(Userspace<T*> user_data)
 {
     T data {};
     TRY(copy_from_user(&data, user_data));
