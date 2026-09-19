@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 19 Sep 2026 22:05:02 +0100
+Subject: [PATCH] Disable unsupported prctl call
+
+Serenity has prctl but doesn't define PR_SET_PDEATHSIG.
+---
+ src/timeout.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/timeout.c b/src/timeout.c
+index 94d2c41cb2f0f72d3cc815bbb297c821182df037..7147c3b08238a00d75acc4dcea91135509ed266f 100644
+--- a/src/timeout.c
++++ b/src/timeout.c
+@@ -605,7 +605,7 @@ main (int argc, char **argv)
+     }
+   else if (monitored_pid == 0)  /* child */
+     {
+-#if HAVE_PRCTL
++#if HAVE_PRCTL && !defined(__serenity__)
+       /* Add protection if the parent dies without signaling child.  */
+       prctl (PR_SET_PDEATHSIG, term_signal);
+ #endif

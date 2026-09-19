@@ -1,4 +1,4 @@
-From d96a158fbd2beba379c8db4384febd3e2f1f3d80 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Eduardo Casadei <educasadei@gmail.com>
 Date: Thu, 10 Sep 2026 17:51:48 -0400
 Subject: [PATCH] gnulib: Port getlocalename_l_unsafe to SerenityOS
@@ -8,10 +8,10 @@ Subject: [PATCH] gnulib: Port getlocalename_l_unsafe to SerenityOS
  1 file changed, 4 insertions(+)
 
 diff --git a/lib/getlocalename_l-unsafe.c b/lib/getlocalename_l-unsafe.c
-index e273882..5d10e59 100644
+index 150858f91a275a4d59c504cd28b8e3547342b51c..49a7115d2b3fb6c0f65690a28b07442a46f75ce8 100644
 --- a/lib/getlocalename_l-unsafe.c
 +++ b/lib/getlocalename_l-unsafe.c
-@@ -668,6 +668,10 @@ getlocalename_l_unsafe (int category, locale_t locale)
+@@ -665,6 +665,10 @@ getlocalename_l_unsafe (int category, locale_t locale)
        };
        const char *name = ((struct __locale_t *) locale)->mb_cur_max == 4 ? "C.UTF-8" : "C";
        return (struct string_with_storage) { name, STORAGE_INDEFINITE };
@@ -22,6 +22,3 @@ index e273882..5d10e59 100644
  #else
   #error "Please port gnulib getlocalename_l-unsafe.c to your platform! Report this to bug-gnulib."
  #endif
--- 
-2.53.0
-
