@@ -8,7 +8,7 @@ Subject: [PATCH] Remove LibC timezone support on Serenity
  1 file changed, 10 insertions(+)
 
 diff --git a/absl/time/internal/cctz/src/time_zone_libc.cc b/absl/time/internal/cctz/src/time_zone_libc.cc
-index d01461222e9e60461384733162d1e042aa51147b..8ac1db60e61610bfbc2adc9c2f4658affd65712b 100644
+index 362da1ab58be4f534d30a92b8fd62a49ca2ac2db..c879ad61a9714aa7a8862723f1bf233f3333f037 100644
 --- a/absl/time/internal/cctz/src/time_zone_libc.cc
 +++ b/absl/time/internal/cctz/src/time_zone_libc.cc
 @@ -91,6 +91,11 @@ auto tm_gmtoff(const std::tm& tm) -> decltype(tm.tm_gmtoff) {

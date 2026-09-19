@@ -8,15 +8,15 @@ Subject: [PATCH] Remove strptime support on Serenity
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/absl/time/internal/cctz/src/time_zone_format.cc b/absl/time/internal/cctz/src/time_zone_format.cc
-index 9b91f61cf09530fb3fc08c2a4091f61f86904a5e..d40858bc44c295a27efe4f9aa7da5241e5ba0381 100644
+index f97de2f959270866650d3e503618b64fd7f1e415..c2296de8abf4ae71091366074c5a0008ba2ab4f6 100644
 --- a/absl/time/internal/cctz/src/time_zone_format.cc
 +++ b/absl/time/internal/cctz/src/time_zone_format.cc
 @@ -13,7 +13,7 @@
  //   limitations under the License.
  
  #if !defined(HAS_STRPTIME)
--#if !defined(_MSC_VER) && !defined(__MINGW32__) && !defined(__VXWORKS__)
-+#if !defined(_MSC_VER) && !defined(__MINGW32__) && !defined(__VXWORKS__) && !defined(__serenity__)
+-#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__VXWORKS__)
++#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__VXWORKS__) || defined(__serenity__)
+ #define HAS_STRPTIME 0
+ #else
  #define HAS_STRPTIME 1  // Assume everyone else has strptime().
- #endif
- #endif
