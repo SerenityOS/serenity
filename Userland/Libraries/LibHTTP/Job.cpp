@@ -76,6 +76,14 @@ struct SyncStreamAsyncWrapper final : public AsyncInputStream {
         m_buffer.dequeue(bytes);
     }
 
+    Coroutine<ErrorOr<ReadonlyBytes>> read_some(size_t max_bytes)
+    {
+        auto [data, is_eof] = CO_TRY(co_await peek_or_eof());
+        if (is_eof)
+            co_return Bytes {};
+        co_return CO_TRY(co_await read(min(max_bytes, data.size())));
+    }
+
     Coroutine<ErrorOr<StringView>> read_line(size_t max_size)
     {
         co_return StringView { CO_TRY(co_await AsyncStreamHelpers::consume_until(*this, "\r\n"sv, max_size)) }.trim("\r\n"sv, TrimMode::Right);
@@ -420,7 +428,11 @@ auto Job::parse_body(auto& stream) -> Coroutine<ErrorOr<bool>>
             }
         }
 
-        auto payload = CO_TRY(ByteBuffer::copy(CO_TRY(co_await stream.read(read_size))));
+        // Responses without the Content-Length header are closed with an EOF.
+        auto is_close_delimited = !m_content_length.has_value() && !m_current_chunk_remaining_size.has_value();
+        auto payload = CO_TRY(ByteBuffer::copy(CO_TRY(is_close_delimited
+                ? co_await stream.read_some(read_size)
+                : co_await stream.read(read_size))));
 
         if (payload.is_empty() && !stream.is_open()) {
             co_await finish_up();
