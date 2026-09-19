@@ -420,7 +420,11 @@ auto Job::parse_body(auto& stream) -> Coroutine<ErrorOr<bool>>
             }
         }
 
-        auto payload = CO_TRY(ByteBuffer::copy(CO_TRY(co_await stream.read(read_size))));
+        // Responses without the Content-Length header are closed with an EOF.
+        auto is_close_delimited = !m_content_length.has_value() && !m_current_chunk_remaining_size.has_value();
+        auto payload = CO_TRY(ByteBuffer::copy(CO_TRY(is_close_delimited
+                ? co_await stream.read_some(read_size)
+                : co_await stream.read(read_size))));
 
         if (payload.is_empty() && !stream.is_open()) {
             co_await finish_up();
