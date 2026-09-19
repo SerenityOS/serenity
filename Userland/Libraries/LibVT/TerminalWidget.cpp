@@ -292,7 +292,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     if (visual_beep_active)
-        painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)));
+        painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)).with_alpha(m_opacity));
     else
         painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::DefaultBackground)).with_alpha(m_opacity));
     invalidate_cursor();
@@ -334,11 +334,8 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto row_rect = this->row_rect(visual_row);
         if (!event.rect().contains(row_rect))
             continue;
+
         auto& line = m_terminal.line(first_row_from_history + visual_row);
-
-        if (visual_beep_active)
-            painter.clear_rect(row_rect, terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)));
-
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
                 && !m_cursor_is_hidden
