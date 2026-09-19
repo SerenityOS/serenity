@@ -137,6 +137,14 @@ public:
         }
     }
 
+    Coroutine<ErrorOr<ReadonlyBytes>> read_some(size_t max_bytes)
+    {
+        auto [data, is_eof] = CO_TRY(co_await peek_or_eof());
+        if (is_eof)
+            co_return Bytes {};
+        co_return CO_TRY(co_await read(min(max_bytes, data.size())));
+    }
+
     template<typename T>
     Coroutine<ErrorOr<T>> read_object()
     {
