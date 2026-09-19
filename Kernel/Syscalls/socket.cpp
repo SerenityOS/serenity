@@ -337,7 +337,7 @@ template<Process::SockOrPeerName sock_or_peer_name, typename Params>
 ErrorOr<void> Process::get_sock_or_peer_name(Params const& params)
 {
     socklen_t addrlen_value;
-    TRY(copy_from_user(&addrlen_value, params.addrlen, sizeof(socklen_t)));
+    TRY(copy_from_user(&addrlen_value, params.addrlen));
 
     if (addrlen_value <= 0)
         return EINVAL;
@@ -387,7 +387,7 @@ ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params
     Userspace<socklen_t*> user_value_size((FlatPtr)params.value_size);
 
     socklen_t value_size;
-    TRY(copy_from_user(&value_size, params.value_size, sizeof(socklen_t)));
+    TRY(copy_from_user(&value_size, params.value_size));
 
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
