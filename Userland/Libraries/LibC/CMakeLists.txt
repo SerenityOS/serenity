@@ -3,7 +3,7 @@ set(SOURCES
     arch/${SERENITY_ARCH}/setjmp.S
     arpa/inet.cpp
     assert.cpp
-    ctype.cpp
+    ctype.c
     cxxabi.cpp
     dirent.cpp
     dlfcn.cpp
