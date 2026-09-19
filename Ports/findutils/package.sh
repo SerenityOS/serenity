@@ -1,9 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='findutils'
-version='4.10.0'
+version='4.11.0'
 useconfigure='true'
-use_fresh_config_sub='true'
-config_sub_paths=('build-aux/config.sub')
 files=(
-    "mirror://gnu/findutils/findutils-${version}.tar.xz#1387e0b67ff247d2abde998f90dfbf70c1491391a59ddfecb8ae698789f0a4f5"
+    "mirror://gnu/findutils/findutils-${version}.tar.xz#bfd19cb06cc71f3352d567e90284d8cdac02ac89774bbeadf0b533b0c11432fd"
 )
