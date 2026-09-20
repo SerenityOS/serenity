@@ -10,7 +10,7 @@ Subject: [PATCH] Add a header describing the glob implementation
 
 diff --git a/glob.h b/glob.h
 new file mode 100644
-index 0000000..c304b69
+index 0000000000000000000000000000000000000000..c304b695c34c5dfb6c5227b77f52d994e5fce197
 --- /dev/null
 +++ b/glob.h
 @@ -0,0 +1,115 @@

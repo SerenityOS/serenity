@@ -8,7 +8,7 @@ Subject: [PATCH] Use pcre2 for regex
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/dbm.c b/dbm.c
-index f6b1259..3dc034a 100644
+index 7dc07d0674adbed8af4e3ecb6376ca44c5a2ec52..87eea807ab6d85c3837a16145a3bf08976dd9251 100644
 --- a/dbm.c
 +++ b/dbm.c
 @@ -31,7 +31,7 @@
