@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='giflib'
-version='5.2.2'
+version='6.1.3'
 files=(
-    "https://downloads.sourceforge.net/project/giflib/giflib-5.x/giflib-${version}.tar.gz#be7ffbd057cadebe2aa144542fd90c6838c6a083b5e8a9048b8ee3b66b29d5fb"
+    "https://downloads.sourceforge.net/project/giflib/giflib-6.x/giflib-${version}.tar.gz#b65b66b99f0424b93525f987386f22fc5efb9da2bfc92ad4a532249aaffbab0e"
 )
 makeopts+=('UNAME=SerenityOS')
 installopts+=('UNAME=SerenityOS')
