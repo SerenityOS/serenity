@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libfuse'
-version='3.16.2'
+version='3.18.3'
 files=(
-    "https://github.com/libfuse/libfuse/releases/download/fuse-${version}/fuse-${version}.tar.gz#f797055d9296b275e981f5f62d4e32e089614fc253d1ef2985851025b8a0ce87"
+    "https://github.com/libfuse/libfuse/releases/download/fuse-${version}/fuse-${version}.tar.gz#bcd19582c5e30f7fe45dd86a5540e998590aa01903afc7ebcbeea6c8ac5421ee"
 )
 useconfigure='true'
 configopts=(

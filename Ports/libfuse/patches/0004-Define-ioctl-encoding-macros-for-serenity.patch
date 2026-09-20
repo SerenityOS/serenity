@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sun, 20 Sep 2026 10:18:31 +0100
+Subject: [PATCH] Define ioctl encoding macros for serenity
+
+---
+ include/fuse_kernel.h | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/include/fuse_kernel.h b/include/fuse_kernel.h
+index 94621f68a5cc8dd2d9eedbf2f0080e53b4cd4161..090085fb5bf18a664f50b479a8b75e93c5dee576 100644
+--- a/include/fuse_kernel.h
++++ b/include/fuse_kernel.h
+@@ -250,6 +250,41 @@
+ #include <stdint.h>
+ #endif
+ 
++#ifdef __serenity__
++// https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/ioctl.h
++#define _IOC_NRBITS   8
++#define _IOC_TYPEBITS 8
++#define _IOC_SIZEBITS 14
++#define _IOC_DIRBITS  2
++
++#define _IOC_NRMASK   ((1 << _IOC_NRBITS) - 1)
++#define _IOC_TYPEMASK ((1 << _IOC_TYPEBITS) - 1)
++#define _IOC_SIZEMASK ((1 << _IOC_SIZEBITS) - 1)
++#define _IOC_DIRMASK  ((1 << _IOC_DIRBITS) - 1)
++
++#define _IOC_NRSHIFT   0
++#define _IOC_TYPESHIFT (_IOC_NRSHIFT + _IOC_NRBITS)
++#define _IOC_SIZESHIFT (_IOC_TYPESHIFT + _IOC_TYPEBITS)
++#define _IOC_DIRSHIFT  (_IOC_SIZESHIFT + _IOC_SIZEBITS)
++
++#define _IOC_NONE  0U
++#define _IOC_WRITE 1U
++#define _IOC_READ  2U
++
++#define _IOC(dir, type, nr, size) \
++	(((dir) << _IOC_DIRSHIFT) | \
++	 ((type) << _IOC_TYPESHIFT) | \
++	 ((nr) << _IOC_NRSHIFT) | \
++	 ((size) << _IOC_SIZESHIFT))
++
++#define _IOC_TYPECHECK(t) (sizeof(t))
++
++#define _IO(type, nr)            _IOC(_IOC_NONE, (type), (nr), 0)
++#define _IOR(type, nr, argtype)  _IOC(_IOC_READ, (type), (nr), (_IOC_TYPECHECK(argtype)))
++#define _IOW(type, nr, argtype)  _IOC(_IOC_WRITE, (type), (nr), (_IOC_TYPECHECK(argtype)))
++#define _IOWR(type, nr, argtype) _IOC(_IOC_READ | _IOC_WRITE, (type), (nr), (_IOC_TYPECHECK(argtype)))
++#endif
++
+ /*
+  * Version negotiation:
+  *

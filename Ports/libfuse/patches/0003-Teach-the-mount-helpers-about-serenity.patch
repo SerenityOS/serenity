@@ -9,7 +9,7 @@ Subject: [PATCH] Teach the mount helpers about serenity
  2 files changed, 8 insertions(+)
 
 diff --git a/lib/helper.c b/lib/helper.c
-index 14a0df3..133904b 100644
+index 357a0b6b60df315e5cc349d03f4ec213d6689d3c..9cdca9755922ec96221f0fa21ccc2e68cf60a4d3 100644
 --- a/lib/helper.c
 +++ b/lib/helper.c
 @@ -178,6 +178,9 @@ static int fuse_helper_opt_proc(void *data, const char *arg, int key,
@@ -31,12 +31,12 @@ index 14a0df3..133904b 100644
  
  int fuse_parse_cmdline_312(struct fuse_args *args,
 diff --git a/lib/mount_bsd.c b/lib/mount_bsd.c
-index 666be7f..0dac299 100644
+index d49f62aacdbd9b9354468f27d5064694d530b3b1..3785ca5f9733b463f69a5a16161905dd47d57b3a 100644
 --- a/lib/mount_bsd.c
 +++ b/lib/mount_bsd.c
-@@ -34,7 +34,11 @@
- #include <paths.h>
- #include <limits.h>
+@@ -26,7 +26,11 @@
+ #include <errno.h>
+ #include <string.h>
  
 +#ifdef __serenity__
 +#define FUSERMOUNT_PROG		"fusermount"
