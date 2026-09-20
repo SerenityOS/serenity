@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lame'
-version='3.100'
+version='4.0'
 useconfigure='true'
 use_fresh_config_sub='true'
 configopts=(
@@ -9,5 +9,5 @@ configopts=(
     '--enable-dynamic-frontends'
 )
 files=(
-    "https://downloads.sourceforge.net/project/lame/lame/${version}/lame-${version}.tar.gz#ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
+    "https://downloads.sourceforge.net/project/lame/lame/${version}/lame-${version}.tar.gz#3df5124d5ad3a98312ffd7ba6a9b36230e4f8a3e66d3ce0f425e336c32d216eb"
 )
