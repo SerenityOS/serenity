@@ -30,6 +30,7 @@ mkShell.override { stdenv = gccStdenv; } {
     # For building and installing ports
     autoconf
     automake
+    bison
     gperf
     imagemagick
     libtool
