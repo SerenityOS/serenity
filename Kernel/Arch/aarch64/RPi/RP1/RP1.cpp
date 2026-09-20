@@ -77,7 +77,7 @@ ErrorOr<void> RP1::initialize()
 
     // Chapter 7. Ethernet
     auto gem_interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(device_identifier()));
-    auto gem = TRY(RP1GEMNetworkAdapter::create(*this, gem_interface_name.representable_view(), bar1_address.offset(0x10'0000), 6));
+    auto gem = TRY(RP1GEMNetworkAdapter::create(*this, gpio, gem_interface_name.representable_view(), bar1_address.offset(0x10'0000), 6));
 
     NetworkingManagement::the().register_adapter(gem).release_value_but_fixme_should_propagate_errors();
 

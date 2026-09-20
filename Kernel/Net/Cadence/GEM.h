@@ -49,6 +49,7 @@ protected:
     ErrorOr<void> initialize_rx_descriptors();
     ErrorOr<void> initialize_tx_descriptors();
 
+    virtual void reset_phy() = 0;
     virtual void register_and_enable_interrupt() = 0;
     virtual u32 mdio_clock_input_frequency() = 0;
 
