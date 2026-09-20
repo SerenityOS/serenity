@@ -1,14 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libgpg-error'
-version='1.48'
+version='1.61'
 files=(
-    "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${version}.tar.bz2#89ce1ae893e122924b858de84dc4f67aae29ffa610ebf668d5aa539045663d6f"
+    "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${version}.tar.bz2#7a85413f2bc354f4f8aa832b718af122e48965e9e0eb9012ee659c13c6385c93"
 )
 useconfigure='true'
-use_fresh_config_sub='true'
-config_sub_paths=(
-    'build-aux/config.sub'
-)
 depends=(
     'gettext'
 )
