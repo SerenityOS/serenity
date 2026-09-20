@@ -6,16 +6,16 @@ Subject: [PATCH] Disable some unneeded options
 Co-Authored-By: Manuel Palenzuela <manuelpalenzuelamerino@gmail.com>
 Co-Authored-By: Panagiotis Vasilopoulos <hello@alwayslivid.com>
 ---
- CMakeLists.txt | 32 ++++++++++++++++++--------------
- 1 file changed, 18 insertions(+), 14 deletions(-)
+ CMakeLists.txt | 34 +++++++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index b2e77241a2fbbb91c9057af038a3dea280b4ae7a..3e8899da4ed9871f0a1bc097e96925a9ad2e0766 100644
+index b79873b0693f4f34d910413113489a6f1c50bd9e..c58801b000b3ee82ce1dd5b1934ebbcad7ce267b 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -9,22 +9,26 @@ project(libzip
-   VERSION 1.10.1
-   LANGUAGES C)
+@@ -13,23 +13,27 @@ if(NOT libzip_VERSION_PATCH)
+   set(libzip_VERSION_PATCH 0)
+ endif()
  
 -option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" ON)
 -option(ENABLE_GNUTLS "Enable use of GnuTLS" ON)
@@ -43,16 +43,18 @@ index b2e77241a2fbbb91c9057af038a3dea280b4ae7a..3e8899da4ed9871f0a1bc097e96925a9
  
 -option(BUILD_TOOLS "Build tools in the src directory (zipcmp, zipmerge, ziptool)" ON)
 -option(BUILD_REGRESS "Build regression tests" ON)
+-option(BUILD_OSSFUZZ "Build fuzzers for ossfuzz" ON)
 -option(BUILD_EXAMPLES "Build examples" ON)
 -option(BUILD_DOC "Build documentation" ON)
 +option(BUILD_TOOLS "Build tools in the src directory (zipcmp, zipmerge, ziptool)" OFF)
 +option(BUILD_REGRESS "Build regression tests" OFF)
++option(BUILD_OSSFUZZ "Build fuzzers for ossfuzz" OFF)
 +option(BUILD_EXAMPLES "Build examples" OFF)
 +option(BUILD_DOC "Build documentation" OFF)
  
  include(CheckFunctionExists)
  include(CheckIncludeFiles)
-@@ -56,10 +60,10 @@ if(WIN32)
+@@ -61,10 +65,10 @@ if(WIN32)
    endif()
  endif()
  
