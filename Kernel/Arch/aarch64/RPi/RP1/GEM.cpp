@@ -4,14 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/GEM.h>
+#include <Kernel/Arch/aarch64/RPi/RP1/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/RP1/RP1.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Net/Cadence/GEMRegisters.h>
 
 namespace Kernel::RPi {
 
-ErrorOr<NonnullRefPtr<RP1GEMNetworkAdapter>> RP1GEMNetworkAdapter::create(RP1& rp1, StringView interface_name, PhysicalAddress paddr, InterruptNumber interrupt_number)
+// Taken from the devicetree. The reset pin is active-low.
+static constexpr u32 PHY_RESET_GPIO_PIN = 32;
+
+ErrorOr<NonnullRefPtr<RP1GEMNetworkAdapter>> RP1GEMNetworkAdapter::create(RP1& rp1, RP1GPIO& rp1_gpio, StringView interface_name, PhysicalAddress paddr, InterruptNumber interrupt_number)
 {
     auto registers_mapping = TRY(Memory::map_typed_writable<CadenceGEMNetworkAdapter::Registers volatile>(paddr));
 
@@ -28,17 +33,31 @@ ErrorOr<NonnullRefPtr<RP1GEMNetworkAdapter>> RP1GEMNetworkAdapter::create(RP1& r
         return EINVAL;
     }
 
-    auto adapter = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RP1GEMNetworkAdapter(rp1, interface_name, mac_address, move(registers_mapping), interrupt_number)));
+    rp1_gpio.set_output_override(PHY_RESET_GPIO_PIN, RP1GPIO::OutputOverride::ForceHigh);
+    rp1_gpio.set_output_enable_override(PHY_RESET_GPIO_PIN, RP1GPIO::OutputEnableOverride::ForceEnable);
+    rp1_gpio.set_pin_function(PHY_RESET_GPIO_PIN, RP1GPIO::FUNCTION_NONE);
+    rp1_gpio.set_pin_enabled(PHY_RESET_GPIO_PIN, true);
+
+    auto adapter = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RP1GEMNetworkAdapter(rp1, rp1_gpio, interface_name, mac_address, move(registers_mapping), interrupt_number)));
     TRY(adapter->initialize());
 
     return adapter;
 }
 
-RP1GEMNetworkAdapter::RP1GEMNetworkAdapter(RP1& rp1, StringView interface_name, MACAddress mac_address, Memory::TypedMapping<CadenceGEMNetworkAdapter::Registers volatile> registers, InterruptNumber interrupt_number)
+RP1GEMNetworkAdapter::RP1GEMNetworkAdapter(RP1& rp1, RP1GPIO& rp1_gpio, StringView interface_name, MACAddress mac_address, Memory::TypedMapping<CadenceGEMNetworkAdapter::Registers volatile> registers, InterruptNumber interrupt_number)
     : CadenceGEMNetworkAdapter(interface_name, mac_address, move(registers))
     , m_rp1(rp1)
+    , m_rp1_gpio(rp1_gpio)
     , m_interrupt_number(interrupt_number)
 {
+}
+
+void RP1GEMNetworkAdapter::reset_phy()
+{
+    // The 5 ms PHY reset time is taken from the devicetree.
+    m_rp1_gpio.set_output_override(PHY_RESET_GPIO_PIN, RP1GPIO::OutputOverride::ForceLow);
+    microseconds_delay(5'000);
+    m_rp1_gpio.set_output_override(PHY_RESET_GPIO_PIN, RP1GPIO::OutputOverride::ForceHigh);
 }
 
 void RP1GEMNetworkAdapter::register_and_enable_interrupt()

@@ -152,6 +152,8 @@ ErrorOr<void> CadenceGEMNetworkAdapter::initialize()
 
     m_registers->network_control |= Registers::NetworkControl::EnableManagementPort;
 
+    reset_phy();
+
     m_mdio_handling_process = TRY(spawn_mdio_handling_task(PHY_ID));
 
     TRY(initialize_rx_descriptors());
