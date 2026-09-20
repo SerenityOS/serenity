@@ -1,10 +1,22 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=libmad
-version=0.15.1b
-useconfigure=true
-use_fresh_config_sub=true
-use_fresh_config_guess=true
-configopts=("--disable-static")
-files=(
-    "https://downloads.sourceforge.net/mad/libmad-${version}.tar.gz#bbfac3ed6bfbc2823d3775ebb931087371e142bb0e9bb1bee51a76a6e0078690"
+port='libmad'
+version='0.16.4'
+workdir='libmad'
+useconfigure='true'
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    # Upstream declares 3.1 which is no longer supported
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.25"
+    "-DEXAMPLE=OFF"
 )
+files=(
+    "https://codeberg.org/tenacityteam/libmad/releases/download/${version}/libmad-${version}.tar.gz#0f6bfb36c554075494b5fc2c646d08de7364819540f23bab30ae73fa1b5cfe65"
+)
+
+configure() {
+    run cmake "${configopts[@]}"
+}
+
+install() {
+    run make install
+}
