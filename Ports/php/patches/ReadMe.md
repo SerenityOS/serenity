@@ -14,12 +14,7 @@ Build: Patch Serenity root directory into libtool
 PHP's libtool does not have sysroot support; this is the minimum change
 to get PHP to build.
 
-## `0003-Remove-include-of-sys-ipc.h.patch`
-
-Remove include of sys/ipc.h
-
-
-## `0004-Disable-unsupported-prctl-call.patch`
+## `0003-Disable-unsupported-prctl-call.patch`
 
 Disable unsupported prctl call
 
