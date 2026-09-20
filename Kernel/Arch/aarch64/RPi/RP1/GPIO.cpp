@@ -99,6 +99,30 @@ void RP1GPIO::set_pin_enabled(u32 pin_number, bool enabled)
     m_pads_bank_registers[bank_number]->pad_control[relative_pin_number] = pad_control;
 }
 
+void RP1GPIO::set_output_enable_override(u32 pin_number, OutputEnableOverride output_enable_override)
+{
+    auto [bank_number, relative_pin_number] = MUST(pin_number_to_bank_and_relative_pin_number(pin_number));
+
+    auto control = m_io_bank_registers[bank_number]->gpio[relative_pin_number].control;
+
+    control &= ~IOBankRegisters::CONTROL_OUTPUT_ENABLE_OVERRIDE_MASK;
+    control |= static_cast<u32>(output_enable_override) << IOBankRegisters::CONTROL_OUTPUT_ENABLE_OVERRIDE_OFFSET;
+
+    m_io_bank_registers[bank_number]->gpio[relative_pin_number].control = control;
+}
+
+void RP1GPIO::set_output_override(u32 pin_number, OutputOverride output_override)
+{
+    auto [bank_number, relative_pin_number] = MUST(pin_number_to_bank_and_relative_pin_number(pin_number));
+
+    auto control = m_io_bank_registers[bank_number]->gpio[relative_pin_number].control;
+
+    control &= ~IOBankRegisters::CONTROL_OUTPUT_OVERRIDE_MASK;
+    control |= static_cast<u32>(output_override) << IOBankRegisters::CONTROL_OUTPUT_OVERRIDE_OFFSET;
+
+    m_io_bank_registers[bank_number]->gpio[relative_pin_number].control = control;
+}
+
 RP1GPIO::RP1GPIO(RP1& rp1, Array<Memory::TypedMapping<IOBankRegisters volatile>, 3> io_bank_registers, Array<Memory::TypedMapping<PadsBankRegisters volatile>, 3> pads_bank_registers)
     : m_rp1(rp1)
     , m_io_bank_registers(move(io_bank_registers))

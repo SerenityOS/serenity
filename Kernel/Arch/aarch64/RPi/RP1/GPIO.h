@@ -24,6 +24,26 @@ public:
     void set_pin_function(u32 pin_number, u8 function);
     void set_pin_enabled(u32 pin_number, bool);
 
+    // FIXME: Instead of output (enable) overrides we should probably use the Registered IO interface to manually drive GPIOs.
+
+    enum class OutputEnableOverride {
+        UsePeripheralSignal = 0x0,
+        UseInvertedPeripheralSignal = 0x1,
+        ForceDisable = 0x2,
+        ForceEnable = 0x3,
+    };
+
+    void set_output_enable_override(u32 pin_number, OutputEnableOverride);
+
+    enum class OutputOverride {
+        UsePeripheralSignal = 0x0,
+        UseInvertedPeripheralSignal = 0x1,
+        ForceLow = 0x2,
+        ForceHigh = 0x3,
+    };
+
+    void set_output_override(u32 pin_number, OutputOverride);
+
     struct IOBankRegisters;
     struct PadsBankRegisters;
 
@@ -38,6 +58,12 @@ private:
 struct RP1GPIO::IOBankRegisters {
     static constexpr size_t CONTROL_FUNCTION_SELECT_OFFSET = 0;
     static constexpr size_t CONTROL_FUNCTION_SELECT_MASK = 0x1f << 0;
+
+    static constexpr size_t CONTROL_OUTPUT_ENABLE_OVERRIDE_OFFSET = 14;
+    static constexpr size_t CONTROL_OUTPUT_ENABLE_OVERRIDE_MASK = 0x3 << 14;
+
+    static constexpr size_t CONTROL_OUTPUT_OVERRIDE_OFFSET = 12;
+    static constexpr size_t CONTROL_OUTPUT_OVERRIDE_MASK = 0x3 << 12;
 
     struct {
         u32 status;
