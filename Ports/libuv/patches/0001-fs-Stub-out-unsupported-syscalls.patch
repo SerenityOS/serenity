@@ -8,7 +8,7 @@ Subject: [PATCH] fs: Stub out unsupported syscalls
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/src/unix/fs.c b/src/unix/fs.c
-index 717f3fab36939e017f09e0ac5f2a2f658140ae38..3fe0f11c75b404a5655df1c5c644e0b852ca94a4 100644
+index fc0fe0a269116b4c8291ac2e16664bcb56d3417f..37dd2acf63e89f9830131e7b4afd1aac5e61051f 100644
 --- a/src/unix/fs.c
 +++ b/src/unix/fs.c
 @@ -77,7 +77,8 @@
@@ -21,7 +21,7 @@ index 717f3fab36939e017f09e0ac5f2a2f658140ae38..3fe0f11c75b404a5655df1c5c644e0b8
  # include <sys/statvfs.h>
  #else
  # include <sys/statfs.h>
-@@ -683,7 +684,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
+@@ -678,7 +679,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
      defined(__MVS__)    || \
      defined(__NetBSD__) || \
      defined(__HAIKU__)  || \
@@ -31,7 +31,7 @@ index 717f3fab36939e017f09e0ac5f2a2f658140ae38..3fe0f11c75b404a5655df1c5c644e0b8
    struct statvfs buf;
  
    if (0 != statvfs(req->path, &buf))
-@@ -705,7 +707,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
+@@ -700,7 +702,8 @@ static int uv__fs_statfs(uv_fs_t* req) {
      defined(__OpenBSD__)  || \
      defined(__NetBSD__)   || \
      defined(__HAIKU__)    || \

@@ -8,7 +8,7 @@ Subject: [PATCH] include: Teach the header about serenity
  1 file changed, 2 insertions(+)
 
 diff --git a/include/uv/unix.h b/include/uv/unix.h
-index 7c972026f688e82c62b895f392bc46b3fef184b8..72bec95ee968af95b79781b03f3ef084239f88c9 100644
+index c6ba419da98b39a94f22ea4765a541573266f1c3..5c11b07fb8b1c217dc6f6ddcd31c30e98bc8df8c 100644
 --- a/include/uv/unix.h
 +++ b/include/uv/unix.h
 @@ -68,6 +68,8 @@

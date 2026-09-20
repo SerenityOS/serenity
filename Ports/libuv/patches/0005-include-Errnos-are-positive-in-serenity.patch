@@ -24,7 +24,7 @@ index ac00778cfc59fb55e361b24fc81a965a5e8f97e7..b3aaddf769e1f244c48025ece037402e
  #else
  # define UV__ERR(x) (x)
 diff --git a/src/uv-common.h b/src/uv-common.h
-index b9a8e976eefdd62cfad31f6d3ed9b6179776eaa4..20f30603dc3863f098effa4af64162d911d6e616 100644
+index 5452a549388cf94865a36bf8c4f93c07c50dc278..67bac5748b89617194ebb21136a41045c189bfdd 100644
 --- a/src/uv-common.h
 +++ b/src/uv-common.h
 @@ -42,7 +42,7 @@
