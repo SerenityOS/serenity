@@ -66,7 +66,7 @@ ErrorOr<NonnullRefPtr<RP1GPIO>> RP1GPIO::create(RP1& rp1, PhysicalAddress io_ban
 
 void RP1GPIO::set_pin_function(u32 pin_number, u8 function)
 {
-    VERIFY(function <= 8);
+    VERIFY(function <= 8 || function == FUNCTION_NONE);
 
     auto [bank_number, relative_pin_number] = MUST(pin_number_to_bank_and_relative_pin_number(pin_number));
 

@@ -19,6 +19,8 @@ class RP1GPIO : public AtomicRefCounted<RP1GPIO> {
 public:
     static ErrorOr<NonnullRefPtr<RP1GPIO>> create(RP1&, PhysicalAddress io_bank0_registers_paddr);
 
+    static constexpr u8 FUNCTION_NONE = 31;
+
     void set_pin_function(u32 pin_number, u8 function);
 
     struct IOBankRegisters;
