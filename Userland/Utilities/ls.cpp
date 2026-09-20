@@ -143,6 +143,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
+    AK::set_color_enabled(flag_colorize);
+
     if (flag_print_numeric || flag_hide_group || flag_hide_owner)
         flag_long = true;
 
@@ -273,31 +275,24 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
 
     size_t nprinted = 0;
 
-    if (!flag_colorize || !output_is_terminal) {
-        nprinted = printf("%s", name.characters());
-    } else {
-        char const* begin_color = "";
-        char const* end_color = "\033[0m";
-
-        if (st.st_mode & S_ISVTX)
-            begin_color = "\033[42;30;1m";
-        else if (st.st_mode & S_ISUID)
-            begin_color = "\033[41;1m";
-        else if (st.st_mode & S_ISGID)
-            begin_color = "\033[43;1m";
-        else if (S_ISLNK(st.st_mode))
-            begin_color = "\033[36;1m";
-        else if (S_ISDIR(st.st_mode))
-            begin_color = "\033[34;1m";
-        else if (st.st_mode & 0111)
-            begin_color = "\033[32;1m";
-        else if (S_ISSOCK(st.st_mode))
-            begin_color = "\033[35;1m";
-        else if (S_ISFIFO(st.st_mode) || S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
-            begin_color = "\033[33;1m";
-        printf("%s", begin_color);
+    if (st.st_mode & S_ISVTX)
+        nprinted = print_escaped(name, background(ANSIStyle::Magenta) | foreground(ANSIStyle::Black) | style(ANSIStyle::Bold));
+    else if (st.st_mode & S_ISUID)
+        nprinted = print_escaped(name, background(ANSIStyle::Red) | style(ANSIStyle::Bold));
+    else if (st.st_mode & S_ISGID)
+        nprinted = print_escaped(name, background(ANSIStyle::Yellow) | foreground(ANSIStyle::Black) | style(ANSIStyle::Bold));
+    else if (S_ISLNK(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Cyan) | style(ANSIStyle::Bold));
+    else if (S_ISDIR(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Blue) | style(ANSIStyle::Bold));
+    else if (st.st_mode & 0111)
+        nprinted = print_escaped(name, foreground(ANSIStyle::Green) | style(ANSIStyle::Bold));
+    else if (S_ISSOCK(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Magenta) | style(ANSIStyle::Bold));
+    else if (S_ISFIFO(st.st_mode) || S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
+        nprinted = print_escaped(name, foreground(ANSIStyle::Yellow) | style(ANSIStyle::Bold));
+    else {
         nprinted = print_escaped(name, ANSIStyle());
-        printf("%s", end_color);
     }
 
     if (S_ISLNK(st.st_mode)) {
