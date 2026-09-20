@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gemrb'
-version='0.9.2'
+version='0.9.5'
 useconfigure='true'
 files=(
-    "https://github.com/gemrb/gemrb/archive/refs/tags/v${version}.tar.gz#ea614c067483606dab680ab18cd50527f56803bd46e0888e3c786eec05d3bb7d"
+    "https://github.com/gemrb/gemrb/archive/refs/tags/v${version}.tar.gz#cf9528f5e2fcaf70a9addc02222ba58f9d814e7e1522a41000e0d4de19dbd3ae"
 )
 depends=(
     'freetype'
@@ -36,5 +36,6 @@ build() {
 }
 
 install() {
+    export DESTDIR="${SERENITY_INSTALL_ROOT}"
     ninja -C "${PORT_BUILD_DIR}/gemrb-${version}-build" install
 }
