@@ -330,18 +330,23 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
 static void print_permissions(mode_t mode, mode_t read_mode, mode_t write_mode, mode_t exec_mode, mode_t special_mode)
 {
     if (mode & read_mode) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgYellow);
         out("r");
     } else {
+        ANSIStyle::apply(stdout, ANSIStyle::FgDefault);
         out("-");
     }
 
     if (mode & write_mode) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgRed);
         out("w");
     } else {
+        ANSIStyle::apply(stdout, ANSIStyle::FgDefault);
         out("-");
     }
 
     if (mode & special_mode) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgMagenta);
         switch (special_mode) {
         case S_ISUID:
         case S_ISGID:
@@ -354,8 +359,10 @@ static void print_permissions(mode_t mode, mode_t read_mode, mode_t write_mode, 
     }
 
     if (mode & exec_mode) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgGreen);
         out("x");
     } else {
+        ANSIStyle::apply(stdout, ANSIStyle::FgDefault);
         out("-");
     }
 }
@@ -371,26 +378,37 @@ static bool print_filesystem_object(ByteString const& path, ByteString const& na
             printf("n/a ");
     }
 
-    if (S_ISDIR(st.st_mode))
-        printf("d");
-    else if (S_ISLNK(st.st_mode))
-        printf("l");
-    else if (S_ISBLK(st.st_mode))
-        printf("b");
-    else if (S_ISCHR(st.st_mode))
-        printf("c");
-    else if (S_ISFIFO(st.st_mode))
-        printf("f");
-    else if (S_ISSOCK(st.st_mode))
-        printf("s");
-    else if (S_ISREG(st.st_mode))
-        printf("-");
-    else
-        printf("?");
+    ANSIStyle::apply(stdout, ANSIStyle::Bold);
+
+    if (S_ISDIR(st.st_mode)) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgBlue);
+        out("d");
+    } else if (S_ISLNK(st.st_mode)) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgCyan);
+        out("l");
+    } else if (S_ISBLK(st.st_mode)) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgYellow);
+        out("b");
+    } else if (S_ISCHR(st.st_mode)) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgYellow);
+        out("c");
+    } else if (S_ISFIFO(st.st_mode)) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgYellow);
+        out("f");
+    } else if (S_ISSOCK(st.st_mode)) {
+        ANSIStyle::apply(stdout, ANSIStyle::FgMagenta);
+        out("s");
+    } else if (S_ISREG(st.st_mode)) {
+        out("-");
+    } else {
+        out("?");
+    }
 
     print_permissions(st.st_mode, S_IRUSR, S_IWUSR, S_IXUSR, S_ISUID);
     print_permissions(st.st_mode, S_IRGRP, S_IWGRP, S_IXGRP, S_ISGID);
     print_permissions(st.st_mode, S_IROTH, S_IWOTH, S_IXOTH, S_ISVTX);
+
+    ANSIStyle::apply(stdout, ANSIStyle::Reset);
 
     printf(" %3lu", st.st_nlink);
 
