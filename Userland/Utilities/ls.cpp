@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ANSIStyle.h>
 #include <AK/Assertions.h>
 #include <AK/ByteString.h>
 #include <AK/HashMap.h>
@@ -223,19 +224,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return status;
 }
 
-static int print_escaped(StringView name)
+static int print_escaped(StringView name, ANSIStyle ansi_style)
 {
     int nprinted = Utf8View(name).length();
 
+    ansi_style.apply(stdout);
+
     for (auto c : name) {
         if (is_ascii_control(c)) {
-            out("\\x{:02x}", c);
+            out(foreground(ANSIStyle::Red), "\\x{:02x}", c);
+            ansi_style.apply(stdout);
             nprinted += 3;
             continue;
         }
 
         out("{:c}", c);
     }
+
+    if (ansi_style.has_style())
+        style(ANSIStyle::Reset).apply(stdout);
 
     return nprinted;
 }
@@ -289,7 +296,7 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
         else if (S_ISFIFO(st.st_mode) || S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
             begin_color = "\033[33;1m";
         printf("%s", begin_color);
-        nprinted = print_escaped(name);
+        nprinted = print_escaped(name, ANSIStyle());
         printf("%s", end_color);
     }
 
@@ -299,7 +306,7 @@ static size_t print_name(const struct stat& st, ByteString const& name, Optional
             if (link_destination_or_error.is_error()) {
                 warnln("readlink of {} failed: {}", path_for_link_resolution.value(), link_destination_or_error.error());
             } else {
-                nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value());
+                nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value(), ANSIStyle());
             }
         } else {
             if (has_flag(flag_indicator_style, IndicatorStyle::SymbolicLink))
