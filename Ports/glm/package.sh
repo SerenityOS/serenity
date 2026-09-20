@@ -1,12 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=glm
-version=0.9.9.8
+port='glm'
+version='1.0.3'
 files=(
-    "https://github.com/g-truc/glm/releases/download/${version}/glm-${version}.zip#37e2a3d62ea3322e43593c34bae29f57e3e251ea89f4067506c94043769ade4c"
+    "https://github.com/g-truc/glm/releases/download/${version}/glm-${version}.zip#1c0a0fced9b0d87c7b7bc94e40be490cff6d4c83c25db8488d8f33754e7fdeb2"
 )
-depends=()
-workdir=glm
-useconfigure=true
+workdir='glm'
+useconfigure='true'
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 
 configure() {
