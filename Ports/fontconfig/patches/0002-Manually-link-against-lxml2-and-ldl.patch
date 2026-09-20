@@ -8,7 +8,7 @@ Subject: [PATCH] Manually link against lxml2 and ldl
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fontconfig.pc.in b/fontconfig.pc.in
-index 61b35fb..a3c45eb 100644
+index 61b35fbe5344decd53ada6bb09b79504b7947862..a3c45eb362752298657b1c7710d28a6fb72d18c2 100644
 --- a/fontconfig.pc.in
 +++ b/fontconfig.pc.in
 @@ -13,6 +13,6 @@ Description: Font configuration and customization library

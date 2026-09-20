@@ -17,12 +17,12 @@ static library into a shared library.
  1 file changed, 23 insertions(+)
 
 diff --git a/configure b/configure
-index cd2e462..23e9943 100755
+index f09f9d7e72090e171d2873cd7e38cb98f078fcad..b5ebf1c0fb0a7a0800ecd90c86e85e669e470824 100755
 --- a/configure
 +++ b/configure
-@@ -7525,6 +7525,10 @@ tpf*)
- os2*)
-   lt_cv_deplibs_check_method=pass_all
+@@ -7321,6 +7321,10 @@ case `echo X|tr X '\101'` in
+   lt_SP2NL='tr \100 \n'
+   lt_NL2SP='tr \r\n \100\100'
    ;;
 +
 +serenity*)
@@ -30,8 +30,8 @@ index cd2e462..23e9943 100755
 +  ;;
  esac
  
- fi
-@@ -10990,6 +10994,10 @@ lt_prog_compiler_static=
+ 
+@@ -11445,6 +11449,10 @@ lt_prog_compiler_static=
        lt_prog_compiler_static='-Bstatic'
        ;;
  
@@ -42,7 +42,7 @@ index cd2e462..23e9943 100755
      *)
        lt_prog_compiler_can_build_shared=no
        ;;
-@@ -12520,6 +12528,10 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
+@@ -12998,6 +13006,10 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
        hardcode_shlibpath_var=no
        ;;
  
@@ -53,8 +53,8 @@ index cd2e462..23e9943 100755
      *)
        ld_shlibs=no
        ;;
-@@ -13595,6 +13607,17 @@ uts4*)
-   shlibpath_var=LD_LIBRARY_PATH
+@@ -14637,6 +14649,17 @@ fi
+   no_undefined_flag=
    ;;
  
 +serenity*)
