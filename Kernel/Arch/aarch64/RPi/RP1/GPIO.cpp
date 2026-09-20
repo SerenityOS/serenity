@@ -10,6 +10,51 @@
 
 namespace Kernel::RPi {
 
+namespace {
+
+struct BankAndRelativePinNumber {
+    u8 bank_number;
+    u8 relative_pin_number;
+};
+
+ErrorOr<BankAndRelativePinNumber> pin_number_to_bank_and_relative_pin_number(u32 pin_number)
+{
+    struct PinRange {
+        u32 start;
+        u32 end;
+    };
+
+    static constexpr auto bank_map = to_array<PinRange>({
+        { 0, 28 },
+        { 28, 34 },
+        { 34, 54 },
+    });
+
+    bool found = false;
+    u8 bank_number = 0;
+    u8 relative_pin_number = 0;
+
+    for (auto [i, range] : enumerate(bank_map)) {
+        if (pin_number >= range.start && pin_number < range.end) {
+            bank_number = i;
+            relative_pin_number = pin_number - range.start;
+
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+        return EINVAL;
+
+    return BankAndRelativePinNumber {
+        .bank_number = bank_number,
+        .relative_pin_number = relative_pin_number,
+    };
+}
+
+}
+
 ErrorOr<NonnullRefPtr<RP1GPIO>> RP1GPIO::create(RP1& rp1, PhysicalAddress io_bank0_registers_paddr)
 {
     auto io_bank0_registers = TRY(Memory::map_typed_writable<IOBankRegisters volatile>(io_bank0_registers_paddr));
@@ -23,35 +68,14 @@ void RP1GPIO::set_pin_function(u32 pin_number, u8 function)
 {
     VERIFY(function <= 8);
 
-    struct PinRange {
-        u32 start;
-        u32 end;
-    };
+    auto [bank_number, relative_pin_number] = MUST(pin_number_to_bank_and_relative_pin_number(pin_number));
 
-    static constexpr auto bank_map = to_array<PinRange>({
-        { 0, 28 },
-        { 28, 34 },
-        { 34, 54 },
-    });
-
-    Optional<size_t> bank_number;
-    size_t relative_pin_number = 0;
-
-    for (auto [i, range] : enumerate(bank_map)) {
-        if (pin_number >= range.start && pin_number < range.end) {
-            bank_number = i;
-            relative_pin_number = pin_number - range.start;
-        }
-    }
-
-    VERIFY(bank_number.has_value());
-
-    auto control = m_io_bank_registers[*bank_number]->gpio[relative_pin_number].control;
+    auto control = m_io_bank_registers[bank_number]->gpio[relative_pin_number].control;
 
     control &= ~IOBankRegisters::CONTROL_FUNCTION_SELECT_MASK;
     control |= static_cast<u32>(function) << IOBankRegisters::CONTROL_FUNCTION_SELECT_OFFSET;
 
-    m_io_bank_registers[*bank_number]->gpio[relative_pin_number].control = control;
+    m_io_bank_registers[bank_number]->gpio[relative_pin_number].control = control;
 }
 
 RP1GPIO::RP1GPIO(RP1& rp1, Array<Memory::TypedMapping<IOBankRegisters volatile>, 3> io_bank_registers)
