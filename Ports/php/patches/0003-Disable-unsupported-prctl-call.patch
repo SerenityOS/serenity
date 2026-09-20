@@ -9,7 +9,7 @@ Serenity has prctl but doesn't define PR_SET_PDEATHSIG.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/sapi/cli/php_cli_server.c b/sapi/cli/php_cli_server.c
-index da6732f06e72a297315615352a8f399107b7e096..21a4e3224bc4cd27045c346fe1334c01adae1019 100644
+index 8d0852eb791f89f442b1fdbe4f41a7f059e0cac8..8089f203845486fd770b8acbe8a606a3949a63f2 100644
 --- a/sapi/cli/php_cli_server.c
 +++ b/sapi/cli/php_cli_server.c
 @@ -2486,7 +2486,7 @@ static char *php_cli_server_parse_addr(const char *addr, int *pport) {
