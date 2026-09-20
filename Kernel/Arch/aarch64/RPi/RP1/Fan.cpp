@@ -64,6 +64,7 @@ ErrorOr<NonnullOwnPtr<RP1Fan>> RP1Fan::create(RP1& rp1, RP1GPIO& gpio, RP1PWM& p
 ErrorOr<void> RP1Fan::initialize_and_start_handler_process()
 {
     m_rp1_gpio->set_pin_function(FAN_GPIO_PIN, 0); // Function 0 is PWM1.
+    m_rp1_gpio->set_pin_enabled(FAN_GPIO_PIN, true);
     m_rp1_pwm1->set_up_channel(FAN_PWM_CHANNEL, FAN_PWM_PERIOD_NS, FAN_SHOULD_INVERT_OUTPUT);
 
     auto [process, _] = TRY(Process::create_kernel_process("RP1 Fan Control Task"sv, [this]() { fan_control_thread(); }));
