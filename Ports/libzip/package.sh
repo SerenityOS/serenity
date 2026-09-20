@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libzip'
-version='1.10.1'
+version='1.11.4'
 files=(
-    "https://libzip.org/download/libzip-${version}.tar.gz#9669ae5dfe3ac5b3897536dc8466a874c8cf2c0e3b1fdd08d75b273884299363"
+    "https://libzip.org/download/libzip-${version}.tar.gz#82e9f2f2421f9d7c2466bbc3173cd09595a88ea37db0d559a9d0a2dc60dc722e"
 )
 useconfigure='true'
 depends=(
