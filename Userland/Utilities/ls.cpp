@@ -225,24 +225,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static int print_escaped(StringView name)
 {
-    int printed = 0;
-
-    Utf8View utf8_name(name);
-    if (utf8_name.validate()) {
-        out("{}", name);
-        return utf8_name.length();
-    }
+    int nprinted = Utf8View(name).length();
 
     for (auto c : name) {
-        if (is_ascii_printable(c)) {
-            putchar(c);
-            printed++;
-        } else {
-            printed += printf("\\%03d", c);
+        if (is_ascii_control(c)) {
+            out("\\x{:02x}", c);
+            nprinted += 3;
+            continue;
         }
+
+        out("{:c}", c);
     }
 
-    return printed;
+    return nprinted;
 }
 
 static ByteString& hostname()
