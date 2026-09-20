@@ -1,17 +1,18 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='frotz'
-version='2.54'
+version='2.55'
 files=(
-    "https://gitlab.com/DavidGriffith/frotz/-/archive/${version}/frotz-${version}.tar.bz2#756d7e11370c9c8e61573e350e2a5071e77fd2781be74c107bd432f817f3abc7"
+    "https://gitlab.com/DavidGriffith/frotz/-/archive/${version}/frotz-${version}.tar.bz2#92051a90c55fdcdf8c4336add2bf09b8329b468f3c0d2739dd850c00d1b9c8f1"
 )
 depends=("ncurses")
-
-build() {
-    run make \
-        PKG_CONFIG_CURSES=no \
-        CURSES_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses" \
-        CURSES_LDFLAGS="-lncurses -ltinfo" \
-        CURSES=ncurses \
-        USE_UTF8=no \
-        nosound
-}
+makeopts=(
+    "PKG_CONFIG_CURSES=no"
+    "CURSES_CFLAGS=-I${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"
+    "CURSES_LDFLAGS=-lncurses -ltinfo"
+    "CURSES=ncurses"
+    "USE_UTF8=no"
+    "nosound"
+)
+installopts=(
+    "nosound"
+)
