@@ -4,45 +4,44 @@ Date: Mon, 5 Feb 2024 00:55:02 +0400
 Subject: [PATCH] Disable unsupported functionality
 
 ---
- example/meson.build         | 11 +++++------
- include/fuse_mount_compat.h |  2 ++
- lib/fuse_loop_mt.c          |  4 ++++
- lib/meson.build             |  6 ++++--
- lib/mount_bsd.c             | 19 +++++++++++++++++++
- lib/mount_util.c            |  4 ++++
- meson.build                 |  2 +-
- test/meson.build            |  2 ++
- 8 files changed, 41 insertions(+), 9 deletions(-)
+ example/meson.build         | 9 ++++-----
+ include/fuse_mount_compat.h | 2 ++
+ lib/fuse_loop_mt.c          | 4 ++++
+ lib/meson.build             | 6 ++++--
+ lib/mount_bsd.c             | 8 ++++++++
+ lib/mount_util.c            | 4 ++++
+ meson.build                 | 2 +-
+ test/meson.build            | 4 ++++
+ 8 files changed, 31 insertions(+), 8 deletions(-)
 
 diff --git a/example/meson.build b/example/meson.build
-index e641543..3ee2630 100644
+index f32f892bba1b1494c5b4e53d07b240e62307709b..152961da86af529d59d0fc2794b65ae219b86a2e 100644
 --- a/example/meson.build
 +++ b/example/meson.build
 @@ -1,9 +1,8 @@
 -examples = [ 'passthrough', 'passthrough_fh',
--             'hello', 'hello_ll', 'hello_ll_uds',
++examples = [ 'passthrough',
+              'hello', 'hello_ll',
 -             'printcap', 'ioctl_client', 'poll_client',
 -             'ioctl', 'cuse', 'cuse_client' ]
-+examples = [ 'passthrough',
-+             'hello', 'hello_ll',
 +             'printcap', 'poll_client'  ]
  
 -if not platform.endswith('bsd') and platform != 'dragonfly'
 +if not platform.endswith('bsd') and platform != 'dragonfly' and platform != 'serenity'
-     examples += 'passthrough_ll'
+     examples += [ 'passthrough_ll' ]
  
-     # According to Conrad Meyer <cem@freebsd.org>, FreeBSD doesn't
-@@ -31,7 +30,7 @@ foreach ex : threaded_examples
+     if private_cfg.get('HAVE_CUSTOM_IO', false)
+@@ -35,7 +34,7 @@ foreach ex : threaded_examples
                 install: false)
  endforeach
  
--if not platform.endswith('bsd') and platform != 'dragonfly' and add_languages('cpp', required : false)
-+if not platform.endswith('bsd') and platform != 'dragonfly' and platform != 'serenity' and add_languages('cpp', required : false)
+-if platform != 'dragonfly' and add_languages('cpp', required : false)
++if platform != 'dragonfly' and platform != 'serenity' and add_languages('cpp', required : false)
      executable('passthrough_hp', 'passthrough_hp.cc',
                 dependencies: [ thread_dep, libfuse_dep ],
                 install: false)
 diff --git a/include/fuse_mount_compat.h b/include/fuse_mount_compat.h
-index 0142b51..f52b8f5 100644
+index be8d576cf959fba7acb25440fafd43f7e973964e..ae666773f70da5f0fd8f07e18ee8c2e5c38fe6f2 100644
 --- a/include/fuse_mount_compat.h
 +++ b/include/fuse_mount_compat.h
 @@ -11,7 +11,9 @@
@@ -54,20 +53,20 @@ index 0142b51..f52b8f5 100644
 +#endif
  
  /* Some libc don't define MS_*, so define them manually
-  * (values taken from https://elixir.bootlin.com/linux/v4.0.9/source/include/uapi/linux/fs.h#L68 on)
+  * (values taken from https://elixir.bootlin.com/linux/v6.10/source/include/uapi/linux/mount.h#L13 on)
 diff --git a/lib/fuse_loop_mt.c b/lib/fuse_loop_mt.c
-index 0200d73..edef914 100644
+index 7bdb1c76f22a2b847ec1498a937382f147fd2bb4..7f6aafe8a36404d5caaa61c1655f14aa58628753 100644
 --- a/lib/fuse_loop_mt.c
 +++ b/lib/fuse_loop_mt.c
-@@ -242,6 +242,7 @@ int fuse_start_thread(pthread_t *thread_id, void *(*func)(void *), void *arg)
- 	return 0;
+@@ -293,6 +293,7 @@ static int fuse_clone_chan_fd_default(struct fuse_session *se)
+ 	return clonefd;
  }
  
 +#ifndef __serenity__
  static struct fuse_chan *fuse_clone_chan(struct fuse_mt *mt)
  {
- 	int res;
-@@ -275,6 +276,7 @@ static struct fuse_chan *fuse_clone_chan(struct fuse_mt *mt)
+ 	int clonefd;
+@@ -316,6 +317,7 @@ static struct fuse_chan *fuse_clone_chan(struct fuse_mt *mt)
  
  	return newch;
  }
@@ -75,7 +74,7 @@ index 0200d73..edef914 100644
  
  static int fuse_loop_start_thread(struct fuse_mt *mt)
  {
-@@ -290,6 +292,7 @@ static int fuse_loop_start_thread(struct fuse_mt *mt)
+@@ -331,6 +333,7 @@ static int fuse_loop_start_thread(struct fuse_mt *mt)
  	w->mt = mt;
  
  	w->ch = NULL;
@@ -83,7 +82,7 @@ index 0200d73..edef914 100644
  	if (mt->clone_fd) {
  		w->ch = fuse_clone_chan(mt);
  		if(!w->ch) {
-@@ -299,6 +302,7 @@ static int fuse_loop_start_thread(struct fuse_mt *mt)
+@@ -340,6 +343,7 @@ static int fuse_loop_start_thread(struct fuse_mt *mt)
  			mt->clone_fd = 0;
  		}
  	}
@@ -92,10 +91,10 @@ index 0200d73..edef914 100644
  	res = fuse_start_thread(&w->thread_id, fuse_do_work, w);
  	if (res == -1) {
 diff --git a/lib/meson.build b/lib/meson.build
-index 9044630..93fecc8 100644
+index fcd95741c9d3748fa01d9ec52b417aca66745f26..79654df3cd6a1279caff8921c8c3e5b7bd99d0c4 100644
 --- a/lib/meson.build
 +++ b/lib/meson.build
-@@ -28,8 +28,10 @@ if host_machine.system().startswith('netbsd')
+@@ -36,8 +36,10 @@ if host_machine.system().startswith('netbsd')
     deps += [ cc.find_library('perfuse'),
               cc.find_library('puffs') ]
  else
@@ -109,31 +108,10 @@ index 9044630..93fecc8 100644
  
  fusermount_path = join_paths(get_option('prefix'), get_option('bindir'))
 diff --git a/lib/mount_bsd.c b/lib/mount_bsd.c
-index 73abc67..666be7f 100644
+index c12ab322e7dc86d5c8d2f2abc6b71488e82523cf..d49f62aacdbd9b9354468f27d5064694d530b3b1 100644
 --- a/lib/mount_bsd.c
 +++ b/lib/mount_bsd.c
-@@ -8,7 +8,9 @@
-   See the file COPYING.LIB.
- */
- 
-+#ifndef __serenity__
- #include "config.h"
-+#endif
- #include "fuse_i.h"
- #include "fuse_misc.h"
- #include "fuse_opt.h"
-@@ -18,8 +20,10 @@
- 
- #include <sys/stat.h>
- #include <sys/wait.h>
-+#ifndef __serenity__
- #include <sys/sysctl.h>
- #include <sys/user.h>
-+#endif
- #include <stdio.h>
- #include <stdlib.h>
- #include <unistd.h>
-@@ -115,10 +119,12 @@ static int fuse_mount_opt_proc(void *data, const char *arg, int key,
+@@ -110,10 +110,12 @@ static int fuse_mount_opt_proc(void *data, const char *arg, int key,
  	struct mount_opts *mo = data;
  
  	switch (key) {
@@ -146,39 +124,27 @@ index 73abc67..666be7f 100644
  	case KEY_KERN:
  		return fuse_opt_add_opt(&mo->kernel_opts, arg);
  	}
-@@ -130,12 +136,19 @@ static int fuse_mount_opt_proc(void *data, const char *arg, int key,
- void fuse_kern_unmount(const char *mountpoint, int fd)
+@@ -126,9 +128,15 @@ void fuse_kern_unmount(const char *mountpoint, int fd)
  {
- 	close(fd);
+ 	if (close(fd) < 0)
+ 		fuse_log(FUSE_LOG_ERR, "closing FD %d failed: %s", fd, strerror(errno));
 +#ifdef __serenity__
-+	umount(mountpoint);
++	if (umount(mountpoint) < 0)
++		fuse_log(FUSE_LOG_ERR, "unmounting %s failed: %s",
++			mountpoint, strerror(errno));
 +#else
- 	unmount(mountpoint, MNT_FORCE);
+ 	if (unmount(mountpoint, MNT_FORCE) < 0)
+ 		fuse_log(FUSE_LOG_ERR, "unmounting %s failed: %s",
+ 			mountpoint, strerror(errno));
 +#endif
  }
  
- /* Check if kernel is doing init in background */
- static int init_backgrounded(void)
- {
-+#ifdef __serenity__
-+	return 0;
-+#else
- 	unsigned ibg;
- 	size_t len;
- 
-@@ -145,6 +158,7 @@ static int init_backgrounded(void)
- 		return 0;
- 
- 	return ibg;
-+#endif
- }
- 
- 
+ static int fuse_mount_core(const char *mountpoint, const char *opts)
 diff --git a/lib/mount_util.c b/lib/mount_util.c
-index 8027a2e..cb305da 100644
+index 9a02745ddf971bf6cf660ff097e490aa81f76e3f..9b78b0deaedca18d74c000ab9623b0ee5d6afbca 100644
 --- a/lib/mount_util.c
 +++ b/lib/mount_util.c
-@@ -37,6 +37,10 @@
+@@ -38,6 +38,10 @@
  #define umount2(mnt, flags) unmount(mnt, ((flags) == 2) ? MNT_FORCE : 0)
  #endif
  
@@ -190,10 +156,10 @@ index 8027a2e..cb305da 100644
  #define mtab_needs_update(mnt) 0
  #else
 diff --git a/meson.build b/meson.build
-index 042c19c..bfddbb7 100644
+index 1e6cbb745d3decad05c9f51d4055d3f224d7ded7..83ffcdb2a71b01f2215da74f74e512e8836fae93 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -205,7 +205,7 @@ thread_dep = dependency('threads')
+@@ -324,7 +324,7 @@ thread_dep = dependency('threads')
  # Read build files from sub-directories
  #
  subdirs = [ 'lib', 'include']
@@ -203,10 +169,10 @@ index 042c19c..bfddbb7 100644
  endif
  
 diff --git a/test/meson.build b/test/meson.build
-index 3d74b9a..cc09527 100644
+index c34b62027f1b3f0c047999ae43bacc7a986467db..4fca2558bf33ae2feb66de78e14ef400d2168a59 100644
 --- a/test/meson.build
 +++ b/test/meson.build
-@@ -7,9 +7,11 @@ foreach prog: [ 'test_write_cache', 'test_setattr' ]
+@@ -7,18 +7,22 @@ foreach prog: [ 'test_write_cache', 'test_setattr', 'test_api_30', 'hello' ]
                       dependencies: thread_dep,
                       install: false)
  endforeach
@@ -217,4 +183,15 @@ index 3d74b9a..cc09527 100644
 +endif
  td += executable('readdir_inode', 'readdir_inode.c',
                   include_directories: include_dirs,
+                  install: false)
+ td += executable('release_unlink_race', 'release_unlink_race.c',
+                  dependencies: [ libfuse_dep ],
+                  install: false)
++if platform != 'serenity'
+ td += executable('test_want_conversion', 'test_want_conversion.c',
+                  dependencies: [ libfuse_dep ],
+                  install: false)
++endif
+ td += executable('test_signals', 'test_signals.c',
+                  dependencies: [ libfuse_dep, thread_dep ],
                   install: false)

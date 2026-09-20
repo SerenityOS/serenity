@@ -8,10 +8,10 @@ Subject: [PATCH] Install examples
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/example/meson.build b/example/meson.build
-index 3ee2630..4f39c68 100644
+index 152961da86af529d59d0fc2794b65ae219b86a2e..5101a21aa9828780b18a35ef28e494254fe9a3af 100644
 --- a/example/meson.build
 +++ b/example/meson.build
-@@ -20,14 +20,14 @@ threaded_examples = [ 'notify_inval_inode',
+@@ -24,14 +24,14 @@ threaded_examples = [ 'notify_inval_inode',
  foreach ex : examples
      executable(ex, ex + '.c',
                 dependencies: [ libfuse_dep ],
@@ -27,4 +27,4 @@ index 3ee2630..4f39c68 100644
 +               install: true)
  endforeach
  
- if not platform.endswith('bsd') and platform != 'dragonfly' and platform != 'serenity' and add_languages('cpp', required : false)
+ if platform != 'dragonfly' and platform != 'serenity' and add_languages('cpp', required : false)
