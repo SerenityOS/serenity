@@ -1,13 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libtool'
-version='2.5.4'
+version='2.6.2'
 useconfigure='true'
 depends=(
     'bash'
     'sed'
 )
 files=(
-    "mirror://gnu/libtool/libtool-${version}.tar.xz#f81f5860666b0bc7d84baddefa60d1cb9fa6fceb2398cc3baca6afaa60266675"
+    "mirror://gnu/libtool/libtool-${version}.tar.xz#2ef1067c16c97db930fd740cc9bc3d3ba9a583804ae5ac42cc3e8719e49e191e"
 )
 configopts=("--prefix=/usr/local")
 
