@@ -17,20 +17,22 @@ class RP1;
 
 class RP1GPIO : public AtomicRefCounted<RP1GPIO> {
 public:
-    static ErrorOr<NonnullRefPtr<RP1GPIO>> create(RP1&, PhysicalAddress io_bank0_registers_paddr);
+    static ErrorOr<NonnullRefPtr<RP1GPIO>> create(RP1&, PhysicalAddress io_bank0_registers_paddr, PhysicalAddress pads_bank0_registers_paddr);
 
     static constexpr u8 FUNCTION_NONE = 31;
 
     void set_pin_function(u32 pin_number, u8 function);
+    void set_pin_enabled(u32 pin_number, bool);
 
     struct IOBankRegisters;
     struct PadsBankRegisters;
 
 private:
-    RP1GPIO(RP1&, Array<Memory::TypedMapping<IOBankRegisters volatile>, 3> io_bank_registers);
+    RP1GPIO(RP1&, Array<Memory::TypedMapping<IOBankRegisters volatile>, 3> io_bank_registers, Array<Memory::TypedMapping<PadsBankRegisters volatile>, 3> pads_bank_registers);
 
     NonnullRefPtr<RP1> m_rp1;
     Array<Memory::TypedMapping<IOBankRegisters volatile>, 3> m_io_bank_registers;
+    Array<Memory::TypedMapping<PadsBankRegisters volatile>, 3> m_pads_bank_registers;
 };
 
 struct RP1GPIO::IOBankRegisters {
@@ -61,9 +63,14 @@ static_assert(AssertSize<RP1GPIO::IOBankRegisters, 0x128>());
 struct RP1GPIO::PadsBankRegisters {
     u32 voltage_select;
 
-    u32 gpio_pad_control[28];
+    enum class PadControl {
+        OutputDisable = 1u << 7,
+    };
+    PadControl pad_control[28];
 };
 
 static_assert(AssertSize<RP1GPIO::PadsBankRegisters, 0x74>());
+
+AK_ENUM_BITWISE_OPERATORS(RP1GPIO::PadsBankRegisters::PadControl);
 
 }

@@ -61,7 +61,7 @@ ErrorOr<void> RP1::initialize()
     auto clocks = TRY(RP1Clocks::create(*this, bar1_address.offset(0x1'8000)));
 
     // Section 3.1. GPIO
-    auto gpio = TRY(RP1GPIO::create(*this, bar1_address.offset(0xd'0000)));
+    auto gpio = TRY(RP1GPIO::create(*this, bar1_address.offset(0xd'0000), bar1_address.offset(0xf'0000)));
 
     // Section 3.4. PWM
     auto pwm1 = TRY(RP1PWM::create(*this, clocks, bar1_address.offset(0x9'c000), 1));
