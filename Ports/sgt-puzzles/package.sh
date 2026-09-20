@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='sgt-puzzles'
-version='20260905.43eefe8'
+version='20260912.ea09098'
 files=(
-    "https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles-${version}.tar.gz#87ce5b8258dd0c6270b4383d6325c894a77597337f874ceb2e5163210b6266ff"
+    "https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles-${version}.tar.gz#505832fb4d82682c965c84880fd42edfed6dec5f0930b55a4a6474bfd89044f4"
 )
 workdir="puzzles-${version}"
 useconfigure='true'
