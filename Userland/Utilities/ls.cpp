@@ -88,7 +88,6 @@ static bool flag_recursive = false;
 static bool flag_force_newline = false;
 
 static size_t terminal_columns = 0;
-static bool output_is_terminal = false;
 
 static HashMap<uid_t, ByteString> users;
 static HashMap<gid_t, ByteString> groups;
@@ -103,7 +102,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
     if (rc == 0) {
         terminal_columns = ws.ws_col;
-        output_is_terminal = true;
     }
 
     is_a_tty = isatty(STDOUT_FILENO);
