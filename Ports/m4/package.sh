@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='m4'
-version='1.4.20'
+version='1.4.21'
 files=(
-    "mirror://gnu/m4/m4-${version}.tar.gz#6ac4fc31ce440debe63987c2ebbf9d7b6634e67a7c3279257dc7361de8bdb3ef"
+    "mirror://gnu/m4/m4-${version}.tar.gz#38ae59f7a30bf9c108193cc5c25fbb06014f21e230c7ede2eff614f7b7c37ed8"
 )
 useconfigure='true'
 
