@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='genext2fs'
-version='1.5.0'
+version='1.6.3'
 files=(
-    "https://github.com/bestouff/genext2fs/archive/v${version}.tar.gz#d3861e4fe89131bd21fbd25cf0b683b727b5c030c4c336fadcd738ada830aab0"
+    "https://github.com/bestouff/genext2fs/archive/v${version}.tar.gz#e3503a5bae3fd4b5b2c2d4f49b5b7f8d08e7accb20ab28c0f9647389b2c8a079"
 )
 useconfigure='true'
 
