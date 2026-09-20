@@ -8,7 +8,7 @@ Subject: [PATCH] Fix mansearch.c
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/mansearch.c b/mansearch.c
-index 0c457f9..b036f39 100644
+index 59a35771970cb4ab0bae0c4a9b6cbbfd9eaadc3e..dbecf8a186f9ac62931e78fcdc79919ca891f35b 100644
 --- a/mansearch.c
 +++ b/mansearch.c
 @@ -26,9 +26,9 @@

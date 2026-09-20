@@ -10,7 +10,7 @@ Subject: [PATCH] Add an implementation of globs
 
 diff --git a/compat_glob.c b/compat_glob.c
 new file mode 100644
-index 0000000..d155c84
+index 0000000000000000000000000000000000000000..d155c84e0d45dc7ceb7c14ca8b289cd19e6349c5
 --- /dev/null
 +++ b/compat_glob.c
 @@ -0,0 +1,1174 @@

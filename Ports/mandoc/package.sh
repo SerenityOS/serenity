@@ -1,8 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=mandoc
-version=1.14.5
-useconfigure=true
+port='mandoc'
+version='1.14.6'
+useconfigure='true'
 files=(
-    "https://mandoc.bsd.lv/snapshots/mandoc-${version}.tar.gz#8219b42cb56fc07b2aa660574e6211ac38eefdbf21f41b698d3348793ba5d8f7"
+    "https://mandoc.bsd.lv/snapshots/mandoc-${version}.tar.gz#8bf0d570f01e70a6e124884088870cbed7537f36328d512909eb10cd53179d9c"
 )
-depends=("less" "pcre2" "zlib")
+depends=(
+    'less'
+    'pcre2'
+    'zlib'
+)

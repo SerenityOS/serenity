@@ -8,13 +8,13 @@ Subject: [PATCH] Use pcre2 for regex
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/dba_read.c b/dba_read.c
-index e976057..6183dcb 100644
+index 4fc3ee5eddcb49076ff6445f495aa1cee257068b..6ede1aaf2366aeea004c3256c48479d4e2e3aa32 100644
 --- a/dba_read.c
 +++ b/dba_read.c
-@@ -19,7 +19,7 @@
-  * The interface is defined in "dba.h".
-  * This file is seperate from dba.c because this also uses "dbm.h".
+@@ -21,7 +21,7 @@
   */
+ #include "config.h"
+ 
 -#include <regex.h>
 +#include <pcre2posix.h>
  #include <stdint.h>

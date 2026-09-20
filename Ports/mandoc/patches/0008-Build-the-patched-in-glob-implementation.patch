@@ -8,22 +8,22 @@ Subject: [PATCH] Build the patched-in glob implementation
  1 file changed, 2 insertions(+)
 
 diff --git a/Makefile b/Makefile
-index f4e2954..51a9816 100644
+index 48c4741812b62a3be4520d648ea8392a695c5688..c5c835fdfc77d95d96314facff86250565b02382 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -63,6 +63,7 @@ SRCS		 = arch.c \
+@@ -65,6 +65,7 @@ SRCS		 = arch.c \
  		   compat_fts.c \
  		   compat_getline.c \
  		   compat_getsubopt.c \
 +		   compat_glob.c \
  		   compat_isblank.c \
  		   compat_mkdtemp.c \
- 		   compat_ohash.c \
-@@ -251,6 +252,7 @@ COMPAT_OBJS	 = compat_err.o \
+ 		   compat_mkstemps.c \
+@@ -257,6 +258,7 @@ ALL_COBJS	 = compat_err.o \
  		   compat_fts.o \
  		   compat_getline.o \
  		   compat_getsubopt.o \
 +		   compat_glob.o \
  		   compat_isblank.o \
  		   compat_mkdtemp.o \
- 		   compat_ohash.o \
+ 		   compat_mkstemps.o \
