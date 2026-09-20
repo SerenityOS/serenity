@@ -5,15 +5,15 @@ Subject: [PATCH] build: Add platform-specific stubs and implementations
 
 ---
  CMakeLists.txt           |   2 +
- src/unix/serenity-core.c | 140 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 142 insertions(+)
+ src/unix/serenity-core.c | 128 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 130 insertions(+)
  create mode 100644 src/unix/serenity-core.c
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index c8425957cbd4d4ba28f0c0135b8c49f00c5dd507..4684ee906aa7d477b44ca4ed7cd43cf34ab5bb34 100644
+index ae0542946911b90a09f440f923250737e86a2383..38c2f9a6398236ee996423591fc7c4e6ac283fcb 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -441,9 +441,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
+@@ -442,9 +442,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
      src/unix/posix-poll.c
      src/unix/no-fsevents.c
      src/unix/no-proctitle.c
@@ -27,10 +27,10 @@ index c8425957cbd4d4ba28f0c0135b8c49f00c5dd507..4684ee906aa7d477b44ca4ed7cd43cf3
  
 diff --git a/src/unix/serenity-core.c b/src/unix/serenity-core.c
 new file mode 100644
-index 0000000000000000000000000000000000000000..462a0d58a688945192475a51101161edb62b0739
+index 0000000000000000000000000000000000000000..6572ad07d243a45351f304b3366f119f38e9dd20
 --- /dev/null
 +++ b/src/unix/serenity-core.c
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,128 @@
 +#include "uv.h"
 +#include "internal.h"
 +
@@ -48,18 +48,6 @@ index 0000000000000000000000000000000000000000..462a0d58a688945192475a51101161ed
 +  *count = 0;
 +  *addresses = NULL;
 +  return UV_ENOSYS;
-+}
-+
-+
-+void uv_free_interface_addresses(uv_interface_address_t* addresses,
-+                                 int count) {
-+  int i;
-+
-+  for (i = 0; i < count; i++) {
-+    uv__free(addresses[i].name);
-+  }
-+
-+  uv__free(addresses);
 +}
 +
 +
