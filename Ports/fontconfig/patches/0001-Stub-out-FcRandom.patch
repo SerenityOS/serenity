@@ -4,14 +4,14 @@ Date: Tue, 26 Oct 2021 11:34:34 +0000
 Subject: [PATCH] Stub out FcRandom()
 
 ---
- src/fccompat.c | 51 --------------------------------------------------
- 1 file changed, 51 deletions(-)
+ src/fccompat.c | 52 --------------------------------------------------
+ 1 file changed, 52 deletions(-)
 
 diff --git a/src/fccompat.c b/src/fccompat.c
-index 65ac84c..96e4087 100644
+index 798de63be013723c4a2c4112b923ef4bfb129d93..96e4087328af66bfa314bb250d4d0c961638c256 100644
 --- a/src/fccompat.c
 +++ b/src/fccompat.c
-@@ -184,54 +184,6 @@ FcRandom(void)
+@@ -184,55 +184,6 @@ FcRandom(void)
  {
      int32_t result;
  
@@ -59,14 +59,15 @@ index 65ac84c..96e4087 100644
 -#elif HAVE_LRAND48
 -    result = lrand48 ();
 -#elif HAVE_RAND_R
--    static unsigned int seed = time (NULL);
+-    static unsigned int seed;
 -
+-    seed = time (NULL);
 -    result = rand_r (&seed);
 -#elif HAVE_RAND
      static FcBool initialized = FcFalse;
  
      if (initialized != FcTrue)
-@@ -240,9 +192,6 @@ FcRandom(void)
+@@ -241,9 +192,6 @@ FcRandom(void)
  	initialized = FcTrue;
      }
      result = rand ();
