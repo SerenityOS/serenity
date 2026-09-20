@@ -1,11 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libxml2'
-version='2.11.5'
+version='2.15.4'
 files=(
-    "https://download.gnome.org/sources/libxml2/2.11/libxml2-${version}.tar.xz#3727b078c360ec69fa869de14bd6f75d7ee8d36987b071e6928d4720a28df3a6"
+    "https://download.gnome.org/sources/libxml2/2.15/libxml2-${version}.tar.xz#98087fd181d9070724f3fbc65c7377db03038eb92bd882374daff44940138821"
 )
 useconfigure='true'
-use_fresh_config_sub='true'
 configopts=(
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
     '--prefix=/usr/local'
