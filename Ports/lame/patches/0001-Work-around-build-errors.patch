@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sun, 20 Sep 2026 10:29:38 +0100
+Subject: [PATCH] Work around build errors
+
+Already fixed upstream:
+- https://sourceforge.net/p/lame/svn/6542/
+- https://sourceforge.net/p/lame/svn/6562/
+---
+ frontend/parse.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/frontend/parse.c b/frontend/parse.c
+index 4a6b6607e3716924f0005ea05373d2314a74eea0..b8192ca708b2447c7e0e1313b13ce87870be8907 100644
+--- a/frontend/parse.c
++++ b/frontend/parse.c
+@@ -410,14 +410,14 @@ set_id3v2tag(lame_global_flags* gfp, TextEncoding enc, int type, unsigned short
+         case TENC_UTF8:
+             switch (type)
+             {
+-                case 'a': return id3tag_set_textinfo_utf8(gfp, "TPE1", str);
+-                case 't': return id3tag_set_textinfo_utf8(gfp, "TIT2", str);
+-                case 'l': return id3tag_set_textinfo_utf8(gfp, "TALB", str);
+-                case 'g': return id3tag_set_textinfo_utf8(gfp, "TCON", str);
+-                case 'c': return id3tag_set_comment_ucs2(gfp, 0, 0, str);
+-                case 'n': return id3tag_set_textinfo_utf8(gfp, "TRCK", str);
+-                case 'y': return id3tag_set_textinfo_utf8(gfp, "TYER", str);
+-                case 'v': return id3tag_set_fieldvalue_ucs2(gfp, str);
++                case 'a': return id3tag_set_textinfo_utf8(gfp, "TPE1", (char*)str);
++                case 't': return id3tag_set_textinfo_utf8(gfp, "TIT2", (char*)str);
++                case 'l': return id3tag_set_textinfo_utf8(gfp, "TALB", (char*)str);
++                case 'g': return id3tag_set_textinfo_utf8(gfp, "TCON", (char*)str);
++                case 'c': return id3tag_set_comment_utf8(gfp, 0, 0, (char*)str);
++                case 'n': return id3tag_set_textinfo_utf8(gfp, "TRCK", (char*)str);
++                case 'y': return id3tag_set_textinfo_utf8(gfp, "TYER", (char*)str);
++                case 'v': return id3tag_set_fieldvalue(gfp, (char*)str);
+             }
+             ;;
+         case TENC_UTF16:
