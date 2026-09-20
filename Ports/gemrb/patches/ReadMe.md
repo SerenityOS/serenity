@@ -14,17 +14,3 @@ this is to hard-code these paths in the header file.
 Create SDL2 renderer as unaccelerated
 
 
-## `0003-Get-rid-of-swscanf-usage.patch`
-
-Get rid of swscanf() usage
-
-This function is currently not implemented in our LibC.
-
-## `0004-Be-a-bit-more-lenient-with-matching-savegame-directo.patch`
-
-Be a bit more lenient with matching savegame directories
-
-Our sscanf() implementation failed to match this case. Making it more
-inclusive should be fine, since invalid savegame directories probably
-won't contain the right files anyway.
-

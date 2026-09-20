@@ -8,10 +8,10 @@ Subject: [PATCH] Create SDL2 renderer as unaccelerated
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gemrb/plugins/SDLVideo/SDL20Video.cpp b/gemrb/plugins/SDLVideo/SDL20Video.cpp
-index 8d906ec6066cac11a91ebcc372810b3e0a4f71db..741f4085458a6b7cc03c7613e8fa93beb7a60a2d 100644
+index 859d6ec5175d83fd1c104ec978aa3be674ee7e29..760baac349affdbdfb920404bc438fcfb032b871 100644
 --- a/gemrb/plugins/SDLVideo/SDL20Video.cpp
 +++ b/gemrb/plugins/SDLVideo/SDL20Video.cpp
-@@ -171,7 +171,7 @@ int SDL20VideoDriver::CreateSDLDisplay(const char* title, bool vsync)
+@@ -185,7 +185,7 @@ int SDL20VideoDriver::CreateSDLDisplay(const char* title, bool vsync)
  	SetWindowIcon(window);
  #endif
  

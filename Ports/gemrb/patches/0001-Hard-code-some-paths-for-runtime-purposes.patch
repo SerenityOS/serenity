@@ -12,10 +12,10 @@ this is to hard-code these paths in the header file.
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/cmake/cmake_config.h.in b/cmake/cmake_config.h.in
-index 8368c3b0e9b1b67b9cbf18a1abd8b2194733094b..4bc1c7b283dce482b1e40561c46a82c954d79ac9 100644
+index b42a954c6f86fb3757b9d5f6fff055edcb831d13..a80a11a8dbe127e149144cae16cebca92f138820 100644
 --- a/cmake/cmake_config.h.in
 +++ b/cmake/cmake_config.h.in
-@@ -10,9 +10,9 @@
+@@ -8,9 +8,9 @@
  #cmakedefine HAVE_MEMALIGN 1
  #cmakedefine HAVE_ALIGNED_MALLOC 1
  #cmakedefine HAVE_POSIX_MEMALIGN 1
@@ -25,6 +25,6 @@ index 8368c3b0e9b1b67b9cbf18a1abd8b2194733094b..4bc1c7b283dce482b1e40561c46a82c9
 +#cmakedefine PLUGIN_DIR "/usr/local/lib/gemrb/plugins/"
 +#cmakedefine DATA_DIR "/usr/local/share/gemrb/"
 +#cmakedefine SYSCONF_DIR "/usr/local/etc/gemrb/"
- #cmakedefine NO_COLOR ${NOCOLOR}
  #cmakedefine OPENGL_BACKEND ${OPENGL_BACKEND}
  #cmakedefine NOFPSLIMIT ${NOFPSLIMIT}
+ #cmakedefine HAVE_UNISTD_H 1
