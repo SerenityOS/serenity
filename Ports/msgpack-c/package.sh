@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='msgpack-c'
-version='6.1.0'
-workdir='msgpack-c-c-6.1.0'
+version='7.0.2'
+workdir="msgpack-c-c-${version}"
 files=(
-    "https://github.com/msgpack/msgpack-c/archive/refs/tags/c-${version}.tar.gz#c23c4070dbe01f46044bf70c5349f29453d655935b6dc710714c008bca0825a7"
+    "https://github.com/msgpack/msgpack-c/archive/refs/tags/c-${version}.tar.gz#f720af974b72cda874c2c347d4bafef5385c4e7942a27b3c87d6fa482412d08c"
 )
 useconfigure='true'
 configopts=(
