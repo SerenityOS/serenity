@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='pkgconf'
-version='2.0.2'
+version='3.0.7'
 files=(
-    "https://distfiles.ariadne.space/pkgconf/pkgconf-${version}.tar.xz#ea5a25ef8f251eb5377ec0e21c75fb61894433cfbdbf0b2559ba33e4c2664401"
+    "https://distfiles.ariadne.space/pkgconf/pkgconf-${version}.tar.xz#c926ff491cbd9a331a589160811bd97ab1749b4d5198a519338f2cdfabe6940a"
 )
 useconfigure='true'
 use_fresh_config_sub='true'
