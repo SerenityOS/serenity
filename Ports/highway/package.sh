@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='highway'
-version='1.0.7'
+version='1.4.0'
 files=(
-    "https://github.com/google/highway/archive/refs/tags/${version}.tar.gz#5434488108186c170a5e2fca5e3c9b6ef59a1caa4d520b008a9b8be6b8abe6c5"
+    "https://github.com/google/highway/archive/refs/tags/${version}.tar.gz#e72241ac9524bb653ae52ced768b508045d4438726a303f10181a38f764a453c"
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
