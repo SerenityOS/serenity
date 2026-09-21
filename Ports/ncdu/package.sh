@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ncdu'
-version='1.18.1'
+version='1.22'
 files=(
-    "https://dev.yorhel.nl/download/ncdu-${version}.tar.gz#7c0fa1eb29d85aaed4ba174164bdbb8f011b5c390d017c57d668fc7231332405"
+    "https://dev.yorhel.nl/download/ncdu-${version}.tar.gz#0ad6c096dc04d5120581104760c01b8f4e97d4191d6c9ef79654fa3c691a176b"
 )
 useconfigure='true'
 depends=("ncurses")
