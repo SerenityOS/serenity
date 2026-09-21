@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openssl'
-version='3.6.0'
+version='4.0.2'
 useconfigure='true'
 configscript='Configure'
 files=(
-    "https://www.openssl.org/source/openssl-${version}.tar.gz#b6a5f44b7eb69e3fa35dbf15524405b44837a481d43d81daddde3ff21fcbb8e9"
+    "https://www.openssl.org/source/openssl-${version}.tar.gz#736b467530f916737b7031310ccb21d8218c6229e61e8e160cd1d3458cd543a8"
 )
 depends=(
     'zlib'
