@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Tue, 22 Sep 2026 19:26:14 +0100
+Subject: [PATCH] Use CLOCK_MONOTONIC instead of CLOCK_THREAD_CPUTIME_ID
+
+---
+ compats.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/compats.c b/compats.c
+index 72910aafb6e3419123d34f69998ba91bc7c0fe4d..e184a1a954f3133fa7487c7ba04078b647021665 100644
+--- a/compats.c
++++ b/compats.c
+@@ -1440,9 +1440,9 @@ _bcrypt_autorounds(void)
+ 	char buf[_PASSWORD_LEN];
+ 	int duration;
+ 
+-	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &before);
++	clock_gettime(CLOCK_MONOTONIC, &before);
+ 	bcrypt_newhash("testpassword", r, buf, sizeof(buf));
+-	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &after);
++	clock_gettime(CLOCK_MONOTONIC, &after);
+ 
+ 	duration = after.tv_sec - before.tv_sec;
+ 	duration *= 1000000;

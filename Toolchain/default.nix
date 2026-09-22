@@ -31,6 +31,7 @@ mkShell.override { stdenv = gccStdenv; } {
     autoconf
     automake
     bison
+    bmake
     gperf
     imagemagick
     libtool
