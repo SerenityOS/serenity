@@ -1,12 +1,18 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=dropbear
-version=2022.82
+port='dropbear'
+version='2026.94'
 files=(
-    "https://mirror.dropbear.nl/mirror/releases/dropbear-${version}.tar.bz2#3a038d2bbc02bf28bbdd20c012091f741a3ec5cbe460691811d714876aad75d1"
+    "https://mirror.dropbear.nl/mirror/releases/dropbear-${version}.tar.bz2#e098034a843699200c8c977a991fff73159735bf795d5f72ef672c41a6b1ae81"
 )
-useconfigure=true
-use_fresh_config_sub=true
-# don't care about zlib, less deps is better
-configopts=("--disable-zlib")
-# Serenity's utmp is not fully compatible with what dropbear expects.
-configopts+=("--disable-utmp" "--disable-wtmp" "--disable-login" "--disable-lastlog")
+useconfigure='true'
+depends=(
+    'zlib'
+)
+configopts=(
+    # Serenity's utmp is not fully compatible with what dropbear expects.
+    '--disable-utmp'
+    # Serenity doesn't have lastlog.
+    '--disable-lastlog'
+    # dropbear installs to sbin by default; we want it in bin.
+    '--sbindir=/usr/local/bin'
+)
