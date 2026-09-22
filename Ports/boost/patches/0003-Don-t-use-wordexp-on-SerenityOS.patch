@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Mon, 21 Sep 2026 21:52:43 +0100
+Subject: [PATCH] Don't use wordexp on SerenityOS
+
+---
+ libs/process/src/shell.cpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/libs/process/src/shell.cpp b/libs/process/src/shell.cpp
+index bf4bbfd8315946608593ca9a032a0f9687c2df20..a7a13f792332eb8e2f749f6231bcf68db57da8bf 100644
+--- a/libs/process/src/shell.cpp
++++ b/libs/process/src/shell.cpp
+@@ -19,7 +19,7 @@
+ #if defined(BOOST_PROCESS_V2_WINDOWS)
+ #include <windows.h>
+ #include <shellapi.h>
+-#elif !defined(__OpenBSD__) && !defined(__ANDROID__)
++#elif !defined(__OpenBSD__) && !defined(__ANDROID__) && !defined(__serenity__)
+ #include <wordexp.h>
+ #endif
+ 
+@@ -30,7 +30,7 @@ BOOST_PROCESS_V2_DECL const error_category& get_shell_category()
+ {
+     return system_category();
+ }
+-#elif !defined(__OpenBSD__) && !defined(__ANDROID__)
++#elif !defined(__OpenBSD__) && !defined(__ANDROID__) && !defined(__serenity__)
+ 
+ struct shell_category_t final : public error_category
+ {
+@@ -99,7 +99,7 @@ auto shell::args() const-> args_type
+     return input_.c_str();
+ }
+ 
+-#elif !defined(__OpenBSD__) && !defined(__ANDROID__)
++#elif !defined(__OpenBSD__) && !defined(__ANDROID__) && !defined(__serenity__)
+ 
+ void shell::parse_()
+ {

@@ -8,15 +8,15 @@ Subject: [PATCH] Fix building Boost.Interprocess
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/libs/interprocess/include/boost/interprocess/detail/workaround.hpp b/libs/interprocess/include/boost/interprocess/detail/workaround.hpp
-index 01b6c6eb05dddff8c8b6fbb0c5c279deb971b7c2..6fc793b6009c24f2db4fc6b1aefb2d4d3eb4cfae 100644
+index b9438a5f1722d5e4c79f72d895a0f7e20ab01538..b02e25c242ce3957e0aab4de5387a64553c58f4e 100644
 --- a/libs/interprocess/include/boost/interprocess/detail/workaround.hpp
 +++ b/libs/interprocess/include/boost/interprocess/detail/workaround.hpp
-@@ -37,7 +37,7 @@
+@@ -41,7 +41,7 @@
     //////////////////////////////////////////////////////
     //Check for XSI shared memory objects. They are available in nearly all UNIX platforms
     //////////////////////////////////////////////////////
--   #if !defined(__QNXNTO__) && !defined(__ANDROID__) && !defined(__HAIKU__) && !(__VXWORKS__)
-+   #if !defined(__QNXNTO__) && !defined(__ANDROID__) && !defined(__HAIKU__) && !(__VXWORKS__) && !defined(__serenity__)
+-   #if !defined(__QNXNTO__) && !defined(__ANDROID__) && !defined(__HAIKU__) && !defined(__VXWORKS__) && !defined(__EMSCRIPTEN__)
++   #if !defined(__QNXNTO__) && !defined(__ANDROID__) && !defined(__HAIKU__) && !defined(__VXWORKS__) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
        #define BOOST_INTERPROCESS_XSI_SHARED_MEMORY_OBJECTS
     #endif
  

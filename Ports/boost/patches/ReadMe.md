@@ -10,8 +10,8 @@ Add platform support for SerenityOS
 Fix building Boost.Interprocess
 
 
-## `0003-Fix-building-Boost.Python.patch`
+## `0003-Don-t-use-wordexp-on-SerenityOS.patch`
 
-Fix building Boost.Python
+Don't use wordexp on SerenityOS
 
 
