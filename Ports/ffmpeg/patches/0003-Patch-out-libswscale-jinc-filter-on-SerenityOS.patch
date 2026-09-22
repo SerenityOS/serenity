@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Tue, 22 Sep 2026 18:11:32 +0100
+Subject: [PATCH] Patch out libswscale jinc filter on SerenityOS
+
+We don't have j1(), but this function is not used in ffmpeg anyway.
+---
+ libswscale/filters.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/libswscale/filters.c b/libswscale/filters.c
+index fb54d2bbd8bb065afd4a0925f18b35cf3f8b3aa5..2aed6f263174f47b80fbd48ecacb3aeda904d416 100644
+--- a/libswscale/filters.c
++++ b/libswscale/filters.c
+@@ -404,6 +404,7 @@ av_unused static double sinc(double x, const double *params)
+     return sin(x) / x;
+ }
+ 
++#ifndef __serenity__
+ av_unused static double jinc(double x, const double *params)
+ {
+     if (x < 1e-8)
+@@ -411,6 +412,7 @@ av_unused static double jinc(double x, const double *params)
+     x *= M_PI;
+     return 2.0 * j1(x) / x;
+ }
++#endif
+ 
+ av_unused static double sphinx(double x, const double *params)
+ {

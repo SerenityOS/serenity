@@ -8,7 +8,7 @@ Subject: [PATCH] Adapt to the Serenity thread name interface
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/libavutil/thread.h b/libavutil/thread.h
-index 2c00c7cc35ada4209ab15ce612fdd61239f96bca..bf69b9ee0dd600296b129955bf9ca2dff0830a13 100644
+index 184e2d8c5f68a5f664bde06d8640d40bff21878c..9201793a6e991a3d980060a89a4eac0dea55c499 100644
 --- a/libavutil/thread.h
 +++ b/libavutil/thread.h
 @@ -24,7 +24,9 @@
