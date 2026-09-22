@@ -12,3 +12,9 @@ work in cpp, assume that it exists.
 Adapt to the Serenity thread name interface
 
 
+## `0003-Patch-out-libswscale-jinc-filter-on-SerenityOS.patch`
+
+Patch out libswscale jinc filter on SerenityOS
+
+We don't have j1(), but this function is not used in ffmpeg anyway.
+
