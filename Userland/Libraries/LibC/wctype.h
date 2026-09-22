@@ -17,7 +17,6 @@
 #include <time.h>
 #include <wchar.h>
 
-#include <assert.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
