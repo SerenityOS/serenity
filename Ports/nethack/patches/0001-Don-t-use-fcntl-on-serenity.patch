@@ -8,10 +8,10 @@ Subject: [PATCH] Don't use fcntl on serenity
  1 file changed, 2 insertions(+)
 
 diff --git a/include/unixconf.h b/include/unixconf.h
-index c126d68..cafe766 100644
+index e7ee915659b4b791ca286494514a7795d2a82f88..5f1e92a8335f6e81b580325463a0c5cff8a20c15 100644
 --- a/include/unixconf.h
 +++ b/include/unixconf.h
-@@ -246,8 +246,10 @@
+@@ -240,8 +240,10 @@
   * Comment out the USE_FCNTL if for some reason you have a strange
   * OS/filesystem combination for which fcntl(2) does not work. */
  #ifdef POSIX_TYPES

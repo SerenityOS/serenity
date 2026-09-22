@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='nethack'
-version='3.6.7'
+version='5.0.0'
 workdir="NetHack-${version}"
 files=(
-    "https://www.nethack.org/download/${version}/nethack-${version//.}-src.tgz#98cf67df6debf9668a61745aa84c09bcab362e5d33f5b944ec5155d44d2aacb2"
+    "https://www.nethack.org/download/${version}/nethack-${version//.}-src.tgz#2959b7886aac76185b90aea0c9f80d14343f604de0ae96b3dd2a760f7ab3bde9"
 )
 depends=(
     'ncurses'
@@ -12,14 +12,11 @@ depends=(
 
 build() {
     run sys/unix/setup.sh sys/unix/hints/serenity
+    run make fetch-lua
     if [ ! -f ${workdir}/util/makedefs.host ]; then
         host_env
         run make -C util makedefs "${makeopts[@]}"
         run cp util/makedefs util/makedefs.host
-        run make -C util dgn_comp "${makeopts[@]}"
-        run cp util/dgn_comp util/dgn_comp.host
-        run make -C util lev_comp "${makeopts[@]}"
-        run cp util/lev_comp util/lev_comp.host
         run make -C util dlb "${makeopts[@]}"
         run cp util/dlb util/dlb.host
         target_env

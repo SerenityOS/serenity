@@ -1,0 +1,91 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gbeutner@serenityos.org>
+Date: Sun, 11 Apr 2021 23:15:42 +0200
+Subject: [PATCH] Use host tools where needed
+
+---
+ sys/unix/Makefile.dat | 14 +++++++-------
+ sys/unix/Makefile.src |  2 +-
+ sys/unix/Makefile.top |  2 +-
+ sys/unix/Makefile.utl |  4 ++--
+ 4 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/sys/unix/Makefile.dat b/sys/unix/Makefile.dat
+index 85d40ef53a8e1b0672a3889f111317d420d99622..2d7041be2c437c1537bf7b10e0656b88b900e645 100644
+--- a/sys/unix/Makefile.dat
++++ b/sys/unix/Makefile.dat
+@@ -95,25 +95,25 @@ GEM_RSC.RSC:
+ 
+ 
+ data:	data.base ../util/makedefs
+-	../util/makedefs -d
++	../util/makedefs.host -d
+ 
+ rumors:	rumors.tru rumors.fal ../util/makedefs
+-	../util/makedefs -r
++	../util/makedefs.host -r
+ 
+ oracles:	oracles.txt ../util/makedefs
+-	../util/makedefs -h
++	../util/makedefs.host -h
+ 
+ engrave:	engrave.txt ../util/makedefs
+-	../util/makedefs -2
++	../util/makedefs.host -2
+ 
+ epitaph:	epitaph.txt ../util/makedefs
+-	../util/makedefs -1
++	../util/makedefs.host -1
+ 
+ bogusmon:	bogusmon.txt ../util/makedefs
+-	../util/makedefs -3
++	../util/makedefs.host -3
+ 
+ options:	../util/makedefs
+-	../util/makedefs -v
++	../util/makedefs.host -v
+ 
+ # these don't actually do anything useful now that levcomp and dngcomp are gone
+ spec_levs:
+diff --git a/sys/unix/Makefile.src b/sys/unix/Makefile.src
+index 863fa096c107950ee4e52a86e65b0292e799e736..ce0f00623432ae7a3b26d74fbd477e65ad7379b8 100644
+--- a/sys/unix/Makefile.src
++++ b/sys/unix/Makefile.src
+@@ -793,7 +793,7 @@ $(TARGETPFX)date.o: date.c $(HACK_H) $(HACKCSRC)  $(HOBJ) $(TARGET_HACKLIB)
+ #
+ ../include/date.h: ../util/makedefs $(VERSOURCES) $(HACK_H)
+ 	-$(SHELL) ../sys/unix/gitinfo.sh $(GITINFO) #before 'makedefs -v'
+-	../util/makedefs -v
++	../util/makedefs.host -v
+ 
+ lint:
+ # lint cannot have -p here because (i) capitals are meaningful:
+diff --git a/sys/unix/Makefile.top b/sys/unix/Makefile.top
+index 5ecca32327ab12f44c6321e056e71b6b4782cf5e..a2967bbf5a22188ef32cedb25fed5b476565dd82 100644
+--- a/sys/unix/Makefile.top
++++ b/sys/unix/Makefile.top
+@@ -275,7 +275,7 @@ check-dlb: options
+ 
+ dlb:
+ 	( cd util ; $(MAKE) dlb )
+-	( cd dat ; LC_ALL=C ; ../util/dlb cf nhdat $(DATDLB) )
++	( cd dat ; LC_ALL=C ; ../util/dlb.host cf nhdat $(DATDLB) )
+ 
+ wasm:
+ 	( cd src ; $(MAKE) CROSS_TO_WASM=1 ../targets/wasm/nethack.js )
+diff --git a/sys/unix/Makefile.utl b/sys/unix/Makefile.utl
+index ff064a5d7496ce079db041a9a2435cc21fbf7fa1..9af26abefcf2313fedbeae168d4ceafba017ce46 100644
+--- a/sys/unix/Makefile.utl
++++ b/sys/unix/Makefile.utl
+@@ -258,9 +258,9 @@ mdgreph: mdgrep.pl
+ 
+ # These are for reference purposes only. They aren't required in the build.
+ ../include/onames.h: makedefs ../include/objects.h
+-	./makedefs -o
++	./makedefs.host -o
+ ../include/pm.h: makedefs ../include/monsters.h
+-	./makedefs -p
++	./makedefs.host -p
+ 
+ lintdefs:
+ 	@lint -axbh -I../include -DLINT $(MAKESRC) $(CMONOBJ) | sed '/_flsbuf/d'
