@@ -1,13 +1,21 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='lowdown'
-version='1.0.2'
+version='3.2.1'
 workdir="lowdown-VERSION_${version//./_}"
 files=(
-    "https://github.com/kristapsdz/lowdown/archive/refs/tags/VERSION_${version//./_}.tar.gz#049b7883874f8a8e528dc7c4ed7b27cf7ceeb9ecf8fe71c3a8d51d574fddf84b"
+    "https://github.com/kristapsdz/lowdown/archive/refs/tags/VERSION_${version//./_}.tar.gz#8501a5efb35b61dc73eabb54a099e21ac1dfaec347bb9c8090660233bcf36dea"
 )
 useconfigure='true'
 
 configure() {
     run ./configure
+}
+
+build() {
+    run bmake -j"${MAKEJOBS}"
+}
+
+install() {
+    run bmake DESTDIR="${SERENITY_INSTALL_ROOT}" install
 }

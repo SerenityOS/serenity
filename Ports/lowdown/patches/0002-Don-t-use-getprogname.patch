@@ -1,17 +1,17 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Emily Trau <emily@downunderctf.com>
 Date: Tue, 6 Jun 2023 14:21:50 -0700
-Subject: [PATCH 2/2] Don't use `getprogname()`
+Subject: [PATCH] Don't use `getprogname()`
 
 ---
- main.c | 4 +++-
+ src/main.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/main.c b/main.c
-index 1d192be..6867fe4 100644
---- a/main.c
-+++ b/main.c
-@@ -384,7 +384,9 @@ main(int argc, char *argv[])
+diff --git a/src/main.c b/src/main.c
+index 40202888d5cbee136c0690c1d2324cc8b2eedcda..f772c2d05cb41e6b6cf862cd8c0357982bac3089 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -499,7 +499,9 @@ main(int argc, char *argv[])
  		LOWDOWN_LATEX_NUMBERED |
  		LOWDOWN_SMARTY;
  
@@ -22,6 +22,3 @@ index 1d192be..6867fe4 100644
  		diff = 1;
  
  	while ((c = getopt_long(argc, argv, 
--- 
-2.37.2
-

@@ -1,17 +1,17 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Emily Trau <emily@downunderctf.com>
 Date: Tue, 6 Jun 2023 14:20:15 -0700
-Subject: [PATCH 1/2] Exclude arpa/nameser.h as it does not exist on Serenity
+Subject: [PATCH] Exclude arpa/nameser.h as it does not exist on Serenity
 
 ---
  compats.c | 1 -
  1 file changed, 1 deletion(-)
 
 diff --git a/compats.c b/compats.c
-index 92d3b71..5d6f31a 100644
+index 2e7f4adbdc5689cdaffdfd37e46855067a6aa867..72910aafb6e3419123d34f69998ba91bc7c0fe4d 100644
 --- a/compats.c
 +++ b/compats.c
-@@ -215,7 +215,6 @@ warnx(const char *fmt, ...)
+@@ -1852,7 +1852,6 @@ warnx(const char *fmt, ...)
  #include <sys/socket.h>
  #include <netinet/in.h>
  #include <arpa/inet.h>
@@ -19,6 +19,3 @@ index 92d3b71..5d6f31a 100644
  
  #include <ctype.h>
  #include <resolv.h>
--- 
-2.37.2
-
