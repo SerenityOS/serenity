@@ -10,8 +10,6 @@ depends=(
     'zlib'
 )
 
-export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"
-
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
     '-DCRYPTO_BACKEND=OpenSSL'

@@ -7,5 +7,3 @@ files=(
 useconfigure='true'
 configopts=("--disable-utf8")
 depends=("ncurses")
-
-export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"

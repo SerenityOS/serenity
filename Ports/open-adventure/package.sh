@@ -9,7 +9,6 @@ depends=(
 )
 
 build() {
-    export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig/"
     run make
 }
 

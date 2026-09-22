@@ -11,8 +11,6 @@ launcher_name='Half-Life'
 launcher_category='&Games'
 launcher_command='sh /home/anon/Games/halflife/hl.sh'
 
-export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"
-
 configure() {
     run ./waf configure -T release
 }

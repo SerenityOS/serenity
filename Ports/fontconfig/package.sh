@@ -18,5 +18,3 @@ configopts=(
     '--enable-libxml2'
     'LDFLAGS=-ldl -lxml2'
 )
-
-export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"
