@@ -79,6 +79,7 @@ host_env() {
     export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
     export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
     export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
+    export PKG_CONFIG_PATH="${HOST_PKG_CONFIG_PATH}"
     enable_ccache
 }
 

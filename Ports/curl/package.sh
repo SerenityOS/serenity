@@ -12,8 +12,6 @@ depends=(
     'zstd'
 )
 
-export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"
-
 configure() {
     mkdir -p curl-build
     cmake \

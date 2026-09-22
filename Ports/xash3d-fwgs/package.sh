@@ -21,8 +21,6 @@ files=(
     "https://github.com/FWGS/xash-extras/archive/${_extras_commit}.tar.gz#020b4c35f97fabbd70a7444a98451f0f5be4dcbf149e42e5e49598a5651805ab"
 )
 
-export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"
-
 pre_patch() {
     pushd "${workdir}"
 
