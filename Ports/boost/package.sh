@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='boost'
-version='1.83.0'
+version='1.92.0'
 useconfigure='true'
 depends=(
     'zlib'
@@ -10,26 +10,21 @@ depends=(
     'libicu'
 )
 files=(
-    "https://github.com/boostorg/boost/releases/download/boost-${version}/boost-${version}.tar.gz#0c6049764e80aa32754acd7d4f179fd5551d8172a83b71532ae093e7384e98da"
+    "https://github.com/boostorg/boost/releases/download/boost-${version}/boost-${version}-cmake.tar.gz#f51707c27359a0df0cac1beada86de31bb5eed5e8285592dadec384df99c2984"
 )
-bjamopts=(
-    '--user-config=user-config.jam'
-    'toolset=gcc'
-    'target-os=serenity'
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    '-DBOOST_ENABLE_MPI=OFF'
+    '-DBOOST_ENABLE_PYTHON=OFF'
+    # boost_stacktrace_from_exception uses dlsym(RTLD_NEXT, ...), which we don't have.
+    '-DBOOST_STACKTRACE_ENABLE_FROM_EXCEPTION=OFF'
+    '-DBUILD_TESTING=OFF'
 )
 
 configure() {
-    run ./bootstrap.sh \
-        --with-icu="${DESTDIR}/usr/local" \
-        --prefix="${DESTDIR}/usr/local" \
-        --without-libraries='python'
-    echo "using gcc : : ${CXX} ;" > "${workdir}/user-config.jam"
-}
-
-build() {
-    run ./b2 "${bjamopts[@]}"
+    run cmake "${configopts[@]}"
 }
 
 install() {
-    run ./b2 "${bjamopts[@]}" install
+    run make "${installopts[@]}" install
 }
