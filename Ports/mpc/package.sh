@@ -1,16 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='mpc'
-version='1.3.1'
+version='1.4.1'
 useconfigure='true'
-use_fresh_config_sub='true'
-config_sub_paths=(
-    'build-aux/config.sub'
-)
 configopts=(
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
 )
 files=(
-    "mirror://gnu/mpc/mpc-${version}.tar.gz#ab642492f5cf882b74aa0cb730cd410a81edcdbec895183ce930e706c1c759b8"
+    "mirror://gnu/mpc/mpc-${version}.tar.xz#91204cd32f164bd3b7c992d4a6a8ce6519511aadab30f78b6982d0bf8d73e931"
 )
 depends=(
     'gmp'
