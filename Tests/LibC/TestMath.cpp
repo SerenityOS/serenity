@@ -271,6 +271,14 @@ TEST_CASE(nextafter)
     EXPECT_EQ(nextafter_translator(Extractor(0x1, 0x419, 0x7d78400000000), Extractor(0x0, 0x0, 0x0)), Extractor(0x1, 0x419, 0x7d783ffffffff));
     EXPECT_EQ(nextafter_translator(Extractor(0x1, 0x419, 0x7d78404000000), Extractor(0x1, 0x3ff, 0x0)), Extractor(0x1, 0x419, 0x7d78403ffffff));
     EXPECT_EQ(nextafter_translator(Extractor(0x1, 0x419, 0x7d78400000000), Extractor(0x0, 0x0, 0x1)), Extractor(0x1, 0x419, 0x7d783ffffffff));
+
+#define TEST_NEXTAFTER_FOR(suffix)                  \
+    EXPECT_EQ(nextafter##suffix(0.0f, 0.0f), 0.0f); \
+    EXPECT_EQ(nextafter##suffix(0.0f, -0.0f), 0.0f);
+
+    TEST_NEXTAFTER_FOR();
+    TEST_NEXTAFTER_FOR(f);
+    TEST_NEXTAFTER_FOR(l);
 }
 
 TEST_CASE(scalbn)
