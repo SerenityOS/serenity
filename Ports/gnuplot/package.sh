@@ -1,10 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gnuplot'
-version='5.4.9'
+version='6.0.5'
 useconfigure='true'
-# Note: gnuplot's source code is hosted on SourceForge, but using the GitHub mirror makes downloading a versioned .tar.gz easier.
 files=(
-    "https://github.com/gnuplot/gnuplot/archive/${version}.tar.gz#0806ab023193e0b303db443167783ae9f51622a044a8a08af781088bbb4aea53"
+    "https://downloads.sourceforge.net/project/gnuplot/gnuplot/${version}/gnuplot-${version}.tar.gz#73237f37f03306d68bfae133a9a50d5e9341384e198d5ab37eeca9ab534deed8"
 )
 depends=(
     'libgd'
@@ -18,10 +17,6 @@ configopts=(
     '--without-latex'
     'libgd_LIBS=-liconv -lfreetype -lfontconfig -lpng'
 )
-
-pre_configure() {
-    run ./prepare
-}
 
 install() {
     run make install-strip
