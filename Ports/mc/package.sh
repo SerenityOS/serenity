@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='mc'
-version='4.8.31'
+version='4.8.33'
 useconfigure='true'
 files=(
-    "http://ftp.midnight-commander.org/mc-${version}.tar.xz#24191cf8667675b8e31fc4a9d18a0a65bdc0598c2c5c4ea092494cd13ab4ab1a"
+    "http://ftp.midnight-commander.org/mc-${version}.tar.xz#cae149d42f844e5185d8c81d7db3913a8fa214c65f852200a9d896b468af164c"
 )
 depends=(
     'gettext'
