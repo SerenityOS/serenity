@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='php'
 useconfigure='true'
-version='8.5.10'
+version='8.5.11'
 files=(
-    "https://www.php.net/distributions/php-${version}.tar.xz#6a8bebaa4d5a979a38db29a9373e9851f60c6b11f72172c585947e78f3081957"
+    "https://www.php.net/distributions/php-${version}.tar.xz#d9be75c08e8c316f4c8f4194d8fbe1750a15f6a6d9d4e3fe72082abeeb800360"
 )
 depends=(
     'curl'
