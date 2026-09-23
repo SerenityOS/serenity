@@ -8,6 +8,7 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/Concepts.h>
 #include <AK/FloatingPoint.h>
 #if ARCH(X86_64)
 #    include <AK/FPControl.h>
@@ -112,10 +113,17 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
     return result;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/nextafter.html
 // This is much branchier than it really needs to be
-template<typename FloatType>
-static FloatType internal_nextafter(FloatType x, bool up)
+template<FloatingPoint F1, FloatingPoint F2>
+static F1 internal_nextafter(F1 x, F2 target)
 {
+    // "If x==y, y (of the type x) shall be returned."
+    if (x == target)
+        return target;
+
+    bool up = target > x;
+
     if (!isfinite(x))
         return x;
     using Extractor = FloatExtractor<decltype(x)>;
@@ -1042,42 +1050,32 @@ float erfcf(float x) NOEXCEPT
 
 double nextafter(double x, double target) NOEXCEPT
 {
-    if (x == target)
-        return target;
-    return internal_nextafter(x, target >= x);
+    return internal_nextafter(x, target);
 }
 
 float nextafterf(float x, float target) NOEXCEPT
 {
-    if (x == target)
-        return target;
-    return internal_nextafter(x, target >= x);
+    return internal_nextafter(x, target);
 }
 
 long double nextafterl(long double x, long double target) NOEXCEPT
 {
-    return internal_nextafter(x, target >= x);
+    return internal_nextafter(x, target);
 }
 
 double nexttoward(double x, long double target) NOEXCEPT
 {
-    if (x == target)
-        return target;
-    return internal_nextafter(x, target >= x);
+    return internal_nextafter(x, target);
 }
 
 float nexttowardf(float x, long double target) NOEXCEPT
 {
-    if (x == target)
-        return target;
-    return internal_nextafter(x, target >= x);
+    return internal_nextafter(x, target);
 }
 
 long double nexttowardl(long double x, long double target) NOEXCEPT
 {
-    if (x == target)
-        return target;
-    return internal_nextafter(x, target >= x);
+    return internal_nextafter(x, target);
 }
 
 float copysignf(float x, float y) NOEXCEPT
