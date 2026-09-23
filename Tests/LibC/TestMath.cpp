@@ -439,6 +439,7 @@ TEST_CASE(round)
     EXPECT_EQ(round##suffix(-0.125##suffix), 0.##suffix); \
     EXPECT_EQ(round##suffix(0.5##suffix), 1.0##suffix);   \
     EXPECT_EQ(round##suffix(-0.5##suffix), -1.0##suffix); \
+    EXPECT_EQ(round##suffix(1.0##suffix), 1.0##suffix);   \
     EXPECT_EQ(round##suffix(0.25##suffix), 0.##suffix);   \
     EXPECT_EQ(round##suffix(-0.25##suffix), 0.##suffix);  \
     EXPECT_EQ(round##suffix(-3.0##suffix / 2.0##suffix), -2.0##suffix);
