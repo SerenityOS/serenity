@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libmt32emu'
-version='2.8.2'
+version='2.8.3'
 workdir="munt-${port}_${version//./_}/mt32emu"
 useconfigure='true'
 configopts=(
@@ -10,7 +10,7 @@ configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/munt/munt/archive/refs/tags/libmt32emu_${version//./_}.tar.gz#d4778cf89b054ba7ab410ffcb02ecf1629fa32b5b60838addec99eb93804fdcb"
+    "https://github.com/munt/munt/archive/refs/tags/libmt32emu_${version//./_}.tar.gz#81f8c462f46bc8901618762ae34cf9de93894ff81f41db73c79472fa3baef875"
 )
 
 configure() {
