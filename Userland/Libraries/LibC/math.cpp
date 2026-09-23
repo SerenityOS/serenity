@@ -342,6 +342,18 @@ static T internal_remquo(T x, T y, int* quo)
 template<FloatingPoint T>
 static T internal_erf(T x)
 {
+    // If x is NaN, a NaN shall be returned.
+    if (isnan(x))
+        return AK::NaN<T>;
+
+    // If x is ±0, ±0 shall be returned.
+    if (x == 0)
+        return x;
+
+    // If x is ±Inf, ±1 shall be returned.
+    if (isinf(x))
+        return AK::copysign<T>(1., x);
+
     // algorithm taken from Abramowitz and Stegun (no. 26.2.17)
     T t = 1 / (1 + 0.47047l * AK::fabs(x));
     T poly = t * (0.3480242l + t * (-0.958798l + t * 0.7478556l));

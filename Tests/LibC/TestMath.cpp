@@ -508,3 +508,14 @@ TEST_CASE(exp)
 
     EXPECT_EQ(exp(AK::Infinity<double>), AK::Infinity<double>);
 }
+
+TEST_CASE(erf)
+{
+    EXPECT(isnan(erf(AK::NaN<double>)));
+
+    EXPECT_EQ(erf(0.0), 0.0);
+    EXPECT(signbit(erf(-0.0)));
+
+    EXPECT_EQ(erf(-AK::Infinity<double>), -1.);
+    EXPECT_EQ(erf(+AK::Infinity<double>), +1.);
+}
