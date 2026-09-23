@@ -313,6 +313,32 @@ Float internal_lgamma(Float value, int* sign)
     return result;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/fdim.html
+template<FloatingPoint T>
+static T internal_fdim(T x, T y)
+{
+    if (isnan(x) || isnan(y))
+        return AK::NaN<T>;
+    return max(x - y, 0);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/remquo.html
+template<FloatingPoint T>
+static T internal_remquo(T x, T y, int* quo)
+{
+    if (isnan(x) || isnan(y))
+        return AK::NaN<T>;
+
+    // "In the object pointed to by quo, they store a value whose sign is the sign of x/y and
+    // whose magnitude is congruent modulo 2n to the magnitude of the integral quotient of x/y,
+    // where n is an implementation-defined integer greater than or equal to 3.
+    *quo = AK::rint(x / y);
+
+    // "The remquo(), remquof(), and remquol() functions shall compute the same remainder as
+    // the remainder(), remainderf(), and remainderl() functions, respectively."
+    return AK::remainder(x, y);
+}
+
 extern "C" {
 
 float nanf(char const* s) NOEXCEPT
@@ -1141,6 +1167,21 @@ float fminf(float x, float y) NOEXCEPT
     return x < y ? x : y;
 }
 
+double fdim(double x, double y) NOEXCEPT
+{
+    return internal_fdim(x, y);
+}
+
+float fdimf(float x, float y) NOEXCEPT
+{
+    return internal_fdim(x, y);
+}
+
+long double fdiml(long double x, long double y) NOEXCEPT
+{
+    return internal_fdim(x, y);
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fma.html
 long double fmal(long double x, long double y, long double z) NOEXCEPT
 {
@@ -1155,6 +1196,21 @@ double fma(double x, double y, double z) NOEXCEPT
 float fmaf(float x, float y, float z) NOEXCEPT
 {
     return (x * y) + z;
+}
+
+double remquo(double x, double y, int* quo) NOEXCEPT
+{
+    return internal_remquo(x, y, quo);
+}
+
+float remquof(float x, float y, int* quo) NOEXCEPT
+{
+    return internal_remquo(x, y, quo);
+}
+
+long double remquol(long double x, long double y, int* quo) NOEXCEPT
+{
+    return internal_remquo(x, y, quo);
 }
 
 long double nearbyintl(long double value) NOEXCEPT

@@ -54,6 +54,44 @@ TEST_CASE(fmod)
     EXPECT_EQ(fmod(-3000.0, -3.0), -0.0);
 }
 
+TEST_CASE(fdim)
+{
+#define TEST_FDIM_FOR(suffix)                     \
+    EXPECT_EQ(fdim##suffix(2.0f, 1.0f), 1.0f);    \
+    EXPECT_EQ(fdim##suffix(1.0f, 2.0f), 0.0f);    \
+    EXPECT_EQ(fdim##suffix(-1.0f, -2.0f), 1.0f);  \
+    EXPECT_EQ(fdim##suffix(-2.0f, -1.0f), 0.0f);  \
+    EXPECT(!signbit(fdim##suffix(-0.0f, -0.0f))); \
+    EXPECT(isnan(fdim##suffix(NAN, 1.0)));        \
+    EXPECT(isnan(fdim##suffix(1.0, NAN)));        \
+    EXPECT(isnan(fdim##suffix(NAN, NAN)));
+
+    TEST_FDIM_FOR();
+    TEST_FDIM_FOR(f);
+    TEST_FDIM_FOR(l);
+}
+
+TEST_CASE(remquo)
+{
+    int quo;
+
+#define TEST_REMQUO_FOR(suffix)                          \
+    EXPECT_EQ(remquo##suffix(5.0f, 3.0f, &quo), -1.0f);  \
+    EXPECT_EQ(quo, 2);                                   \
+    EXPECT_EQ(remquo##suffix(5.0f, -3.0f, &quo), -1.0f); \
+    EXPECT_EQ(quo, -2);                                  \
+    EXPECT_EQ(remquo##suffix(8.0f, 3.0f, &quo), -1.0f);  \
+    EXPECT_EQ(quo, 3);                                   \
+    EXPECT_EQ(remquo##suffix(9.0f, 3.0f, &quo), 0.0f);   \
+    EXPECT_EQ(quo, 3);                                   \
+    EXPECT(isnan(remquo##suffix(NAN, 2.0, &quo)));       \
+    EXPECT(isnan(remquo##suffix(2.0, NAN, &quo)));
+
+    TEST_REMQUO_FOR();
+    TEST_REMQUO_FOR(f);
+    TEST_REMQUO_FOR(l);
+}
+
 TEST_CASE(atan2)
 {
     EXPECT_APPROXIMATE(atan2(-1, -0.0e0), -M_PI_2);
