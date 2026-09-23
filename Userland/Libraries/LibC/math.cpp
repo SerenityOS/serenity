@@ -339,6 +339,19 @@ static T internal_remquo(T x, T y, int* quo)
     return AK::remainder(x, y);
 }
 
+template<FloatingPoint T>
+static T internal_erf(T x)
+{
+    // algorithm taken from Abramowitz and Stegun (no. 26.2.17)
+    T t = 1 / (1 + 0.47047l * AK::fabs(x));
+    T poly = t * (0.3480242l + t * (-0.958798l + t * 0.7478556l));
+    T answer = 1 - poly * AK::exp(-x * x);
+    if (x < 0)
+        return -answer;
+
+    return answer;
+}
+
 extern "C" {
 
 float nanf(char const* s) NOEXCEPT
@@ -987,24 +1000,17 @@ float log1pf(float x) NOEXCEPT
 
 long double erfl(long double x) NOEXCEPT
 {
-    // algorithm taken from Abramowitz and Stegun (no. 26.2.17)
-    long double t = 1 / (1 + 0.47047l * fabsl(x));
-    long double poly = t * (0.3480242l + t * (-0.958798l + t * 0.7478556l));
-    long double answer = 1 - poly * expl(-x * x);
-    if (x < 0)
-        return -answer;
-
-    return answer;
+    return internal_erf(x);
 }
 
 double erf(double x) NOEXCEPT
 {
-    return (double)erfl(x);
+    return internal_erf(x);
 }
 
 float erff(float x) NOEXCEPT
 {
-    return (float)erf(x);
+    return internal_erf(x);
 }
 
 long double erfcl(long double x) NOEXCEPT
