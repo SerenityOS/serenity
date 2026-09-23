@@ -7,10 +7,11 @@ Subject: [PATCH] Don't build the docs and the demo
 - demo - x86_64-serenity-gcc: error: unrecognized command line option '-rdynamic'
 ---
  Makefile.am | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ Makefile.in | 2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
-index 7e2c4008cda62e8b8e2959e4d2953722f6d350db..a8df6c0617210c7d7344052e3a34c56993232b33 100644
+index 08cbf1ccc30eaaaa1d57eccdef4b8d3d7b355118..8ca4cac24374ea4ea42646c9ed14b8e33fd1f7bb 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -1,7 +1,10 @@
@@ -25,3 +26,16 @@ index 7e2c4008cda62e8b8e2959e4d2953722f6d350db..a8df6c0617210c7d7344052e3a34c569
  
  EXTRA_DIST = BUGS Copyright FAQ.pdf INSTALL INSTALL.gnu \
  PATCHLEVEL PGPKEYS README RELEASE_NOTES \
+diff --git a/Makefile.in b/Makefile.in
+index d7a20e5a23ebf57192512b677613932fb633c51e..7fc8a3dff1b15eba351e05a6e153ff235130b004 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -359,7 +359,7 @@ top_build_prefix = @top_build_prefix@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+ AUTOMAKE_OPTIONS = foreign
+-SUBDIRS = config m4 term src docs man demo share
++SUBDIRS = config m4 term src man share
+ EXTRA_DIST = BUGS Copyright FAQ.pdf INSTALL INSTALL.gnu \
+ PATCHLEVEL PGPKEYS README RELEASE_NOTES \
+ win
