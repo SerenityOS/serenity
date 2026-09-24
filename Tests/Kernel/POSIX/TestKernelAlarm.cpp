@@ -9,7 +9,14 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibTest/TestCase.h>
 #include <signal.h>
+#include <sys/resource.h>
 #include <unistd.h>
+
+TEST_SETUP
+{
+    // Run this test with a high priority to get more stable timing results.
+    setpriority(PRIO_PROCESS, getpid(), -20);
+}
 
 class SuccessContext {
 public:
