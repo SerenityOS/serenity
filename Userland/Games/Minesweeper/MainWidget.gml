@@ -23,7 +23,6 @@
 
         @GUI::Label {
             name: "flag_label"
-            autosize: true
         }
 
         @GUI::Layout::Spacer {}

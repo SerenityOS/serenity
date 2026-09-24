@@ -208,6 +208,18 @@ void Square::for_each_neighbor(Callback callback)
         callback(field->square(r + 1, c + 1));
 }
 
+void Field::update_flag_label_width()
+{
+    // Measure whole strings so glyph spacing/kerning is included, and the widest digit is found per font.
+    auto const digit_count = String::number(m_mine_count).bytes().size();
+    int widest_text_width = 0;
+    for (u32 digit = '0'; digit <= '9'; ++digit) {
+        auto digits = MUST(String::repeated(digit, digit_count));
+        widest_text_width = max(widest_text_width, m_flag_label.font().width_rounded_up(digits.bytes_as_string_view()));
+    }
+    m_flag_label.set_fixed_width(widest_text_width);
+}
+
 void Field::reset()
 {
     m_first_click = true;
@@ -216,6 +228,7 @@ void Field::reset()
     m_time_label.set_text("00:00"_string);
     m_flags_left = m_mine_count;
     m_flag_label.set_text(String::number(m_flags_left));
+    update_flag_label_width();
     m_timer->stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
