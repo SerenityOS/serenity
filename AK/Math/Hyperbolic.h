@@ -26,10 +26,7 @@ constexpr T sinh(T x)
     if (x == 0 || isinf(x))
         return x;
 
-    T exponentiated = exp<T>(x);
-    if (x > 0)
-        return (exponentiated * exponentiated - 1) / 2 / exponentiated;
-    return (exponentiated - 1 / exponentiated) / 2;
+    return (exp<T>(x) - exp<T>(-x)) / T { 2. };
 }
 
 template<FloatingPoint T>
@@ -47,10 +44,7 @@ constexpr T cosh(T x)
     if (isinf(x))
         return Infinity<T>;
 
-    T exponentiated = exp(-x);
-    if (x < 0)
-        return (1 + exponentiated * exponentiated) / 2 / exponentiated;
-    return (1 / exponentiated + exponentiated) / 2;
+    return (exp<T>(x) + exp<T>(-x)) / T { 2. };
 }
 
 template<FloatingPoint T>
