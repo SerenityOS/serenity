@@ -42,4 +42,39 @@ double log(double x)
     return ret;
 }
 
+double cosh(double x)
+{
+    mpfr_t y;
+    mpfr_init2(y, 53);
+    mpfr_set_d(y, x, MPFR_RNDN);
+    mpfr_cosh(y, y, MPFR_RNDN);
+    /* no need to call mpfr_subnormalize(), since cosh(x) >= 1 */
+    double ret = mpfr_get_d(y, MPFR_RNDN);
+    mpfr_clear(y);
+    return ret;
+}
+
+double sinh(double x)
+{
+    mpfr_t y;
+    mpfr_init2(y, 53);
+    mpfr_set_d(y, x, MPFR_RNDN);
+    int inex = mpfr_sinh(y, y, MPFR_RNDN);
+    mpfr_subnormalize(y, inex, MPFR_RNDN);
+    double ret = mpfr_get_d(y, MPFR_RNDN);
+    mpfr_clear(y);
+    return ret;
+}
+
+double tanh(double x)
+{
+    mpfr_t y;
+    mpfr_init2(y, 53);
+    mpfr_set_d(y, x, MPFR_RNDN);
+    int inex = mpfr_tanh(y, y, MPFR_RNDN);
+    mpfr_subnormalize(y, inex, MPFR_RNDN);
+    double ret = mpfr_get_d(y, MPFR_RNDN);
+    mpfr_clear(y);
+    return ret;
+}
 }

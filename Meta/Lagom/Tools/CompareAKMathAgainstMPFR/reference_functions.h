@@ -13,4 +13,8 @@ void set_exponent_limits();
 double exp(double x);
 double log(double x);
 
+double cosh(double x);
+double sinh(double x);
+double tanh(double x);
+
 }

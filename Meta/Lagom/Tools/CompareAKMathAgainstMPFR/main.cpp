@@ -60,6 +60,11 @@ struct Range {
 Array g_exp_perf_ranges = to_array<Range>({ { 0, 1 }, { -10, 10 }, { -745, 709 } });
 Array g_log_perf_ranges = to_array<Range>({ { 0.01, 1 }, { 1, 100 }, { 1, 1e5 } });
 
+Array g_hyperbolic_perf_ranges = to_array<Range>({ { -1, 1 }, { -10, 10 }, { 100, 1e5 } });
+Array g_sinh_perf_ranges = g_hyperbolic_perf_ranges;
+Array g_cosh_perf_ranges = g_hyperbolic_perf_ranges;
+Array g_tanh_perf_ranges = g_hyperbolic_perf_ranges;
+
 struct RangeWithCount {
     double min {};
     double max {};
@@ -68,6 +73,11 @@ struct RangeWithCount {
 
 Array g_exp_test_ranges = to_array<RangeWithCount>({ { -10, 10, 150 }, { -745, 709, 50 }, { -1e-10, 1e-10, 50 } });
 Array g_log_test_ranges = to_array<RangeWithCount>({ { 1e-300, 1, 100 }, { 1, 10, 100 }, { 10, 1e300, 50 } });
+
+Array g_hyperbolic_test_ranges = to_array<RangeWithCount>({ { -10, 10, 150 }, { -700, 700, 50 }, { -1e-10, 1e-10, 50 } });
+Array g_cosh_test_ranges = g_hyperbolic_test_ranges;
+Array g_sinh_test_ranges = g_hyperbolic_test_ranges;
+Array g_tanh_test_ranges = g_hyperbolic_test_ranges;
 
 struct MathFunction {
     StringView name;
@@ -94,6 +104,10 @@ struct MathFunction {
 Array g_functions = to_array({
     DEFINE_MATH_FUNC(exp),
     DEFINE_MATH_FUNC(log),
+
+    DEFINE_MATH_FUNC(cosh),
+    DEFINE_MATH_FUNC(sinh),
+    DEFINE_MATH_FUNC(tanh),
 });
 
 double ulp_of(double x)
