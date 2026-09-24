@@ -12,6 +12,7 @@
 #include <AK/Math/Division.h>
 #include <AK/Math/Exponentials.h>
 #include <AK/Math/Fabs.h>
+#include <AK/Math/Gamma.h>
 #include <AK/Math/Hyperbolic.h>
 #include <AK/Math/Radians.h>
 #include <AK/Math/Rounding.h>
