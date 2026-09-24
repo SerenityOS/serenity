@@ -50,12 +50,10 @@ set(LIBTEST_BASED_SOURCES
     TestPosixSpawn.cpp
     TestPrivateInodeVMObject.cpp
     TestPtrace.cpp
-    TestKernelAlarm.cpp
     TestKernelFilePermissions.cpp
     TestKernelPledge.cpp
     TestKernelUnveil.cpp
     TestLoopDevice.cpp
-    TestMunMap.cpp
     TestProcFS.cpp
     TestProcFSWrite.cpp
     TestSigAltStack.cpp

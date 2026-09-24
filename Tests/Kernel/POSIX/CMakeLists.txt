@@ -1,4 +1,12 @@
 add_subdirectory(Wait)
 
-serenity_test(TestFIFO.cpp Kernel)
-serenity_test(TestPthreadCond.cpp Kernel)
+set(TEST_SOURCES
+    TestFIFO.cpp
+    TestKernelAlarm.cpp
+    TestMunMap.cpp
+    TestPthreadCond.cpp
+)
+
+foreach(libtest_source IN LISTS TEST_SOURCES)
+    serenity_test("${libtest_source}" Kernel)
+endforeach()
