@@ -427,9 +427,11 @@ ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
 {
+    bool flag_physical_path = false;
     StringView arg_path;
 
     Core::ArgsParser parser;
+    parser.add_option(flag_physical_path, "Physically resolve the path, following symbolic links", nullptr, 'P');
     parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
 
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
@@ -450,50 +452,27 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
         }
     }
 
-    auto const requested_path_is_absolute = !new_path.is_empty() && new_path.starts_with('/');
-    auto real_path_or_error = FileSystem::real_path(new_path);
-    if (real_path_or_error.is_error()) {
-        warnln("Invalid path '{}'", new_path);
-        return 1;
-    }
-    auto real_path = real_path_or_error.release_value();
-
-    if (cd_history.is_empty() || cd_history.last() != real_path)
-        cd_history.enqueue(real_path);
-
-    ByteString path_to_chdir;
-    if (!requested_path_is_absolute)
-        path_to_chdir = LexicalPath::relative_path(real_path, cwd);
-    else
-        path_to_chdir = real_path;
-    char const* path = path_to_chdir.characters();
-
-    Function<int(bool)> do_chdir = [&](bool tried_lexical_resolution) -> int {
-        int rc = chdir(path);
-        if (rc < 0) {
-            if (errno == ENOTDIR) {
-                warnln("Not a directory: {}", path);
-            } else {
-                if (!tried_lexical_resolution && !path_to_chdir.starts_with('/')) {
-                    // Resolve lexically then try again.
-                    auto new_path = LexicalPath::join(cwd, path_to_chdir).string();
-                    if (new_path != path_to_chdir) {
-                        real_path = move(new_path);
-                        path = real_path.characters();
-                        return do_chdir(true);
-                    }
-                }
-                warnln("chdir({}) failed: {}", path, strerror(errno));
-            }
+    ByteString cd_path = LexicalPath::absolute_path(cwd, new_path);
+    if (flag_physical_path) {
+        auto real_path_or_error = FileSystem::real_path(new_path);
+        if (real_path_or_error.is_error()) {
+            warnln("cd '{}': Invalid path", new_path);
             return 1;
         }
-        return 0;
-    };
-    if (do_chdir(false) != 0)
+        cd_path = real_path_or_error.release_value();
+    }
+
+    if (cd_history.is_empty() || cd_history.last() != cd_path)
+        cd_history.enqueue(cd_path);
+
+    int rc = chdir(cd_path.characters());
+    if (rc < 0) {
+        warnln("cd '{}': {}", arg_path, strerror(errno));
         return 1;
+    }
 
     setenv("OLDPWD", cwd.characters(), 1);
-    cwd = move(real_path);
+    cwd = move(cd_path);
     setenv("PWD", cwd.characters(), 1);
     return 0;
 }
