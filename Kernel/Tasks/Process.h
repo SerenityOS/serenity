@@ -437,7 +437,7 @@ public:
     ErrorOr<FlatPtr> sys$alarm(unsigned seconds);
     ErrorOr<FlatPtr> sys$faccessat(Userspace<Syscall::SC_faccessat_params const*>);
     ErrorOr<FlatPtr> sys$fcntl(int fd, int cmd, uintptr_t extra_arg);
-    ErrorOr<FlatPtr> sys$ioctl(int fd, unsigned request, FlatPtr arg);
+    ErrorOr<FlatPtr> sys$ioctl(int fd, unsigned request, Userspace<void*> arg);
     ErrorOr<FlatPtr> sys$mkdir(int dirfd, Userspace<char const*> pathname, size_t path_length, mode_t mode);
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
     ErrorOr<FlatPtr> sys$utime(Userspace<char const*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
@@ -469,7 +469,7 @@ public:
     ErrorOr<FlatPtr> sys$socketpair(Userspace<Syscall::SC_socketpair_params const*>);
     ErrorOr<FlatPtr> sys$scheduler_set_parameters(Userspace<Syscall::SC_scheduler_parameters_params const*>);
     ErrorOr<FlatPtr> sys$scheduler_get_parameters(Userspace<Syscall::SC_scheduler_parameters_params*>);
-    ErrorOr<FlatPtr> sys$create_thread(void* (*)(void*), Userspace<Syscall::SC_create_thread_params const*>);
+    ErrorOr<FlatPtr> sys$create_thread(Userspace<void* (*)(void*)>, Userspace<Syscall::SC_create_thread_params const*>);
     [[noreturn]] void sys$exit_thread(Userspace<void*>, Userspace<void*>, size_t);
     ErrorOr<FlatPtr> sys$join_thread(pid_t tid, Userspace<void**> exit_value);
     ErrorOr<FlatPtr> sys$detach_thread(pid_t tid);
@@ -500,7 +500,7 @@ public:
     ErrorOr<FlatPtr> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
     ErrorOr<FlatPtr> sys$anon_create(size_t, int options);
     ErrorOr<FlatPtr> sys$statvfs(Userspace<Syscall::SC_statvfs_params const*> user_params);
-    ErrorOr<FlatPtr> sys$fstatvfs(int fd, statvfs* buf);
+    ErrorOr<FlatPtr> sys$fstatvfs(int fd, Userspace<statvfs*> buf);
     ErrorOr<FlatPtr> sys$map_time_page();
     ErrorOr<FlatPtr> sys$get_root_session_id(pid_t force_sid);
     ErrorOr<FlatPtr> sys$remount(Userspace<Syscall::SC_remount_params const*> user_params);
@@ -666,7 +666,7 @@ public:
         // NOTE: If the string is too much big for the FixedStringBuffer,
         // we return E2BIG error here.
         FixedStringBuffer<Size> buffer;
-        TRY(try_copy_string_from_user_into_fixed_string_buffer<Size>(reinterpret_cast<FlatPtr>(argument.characters), buffer, argument.length));
+        TRY(try_copy_string_from_user_into_fixed_string_buffer<Size>(argument.characters, buffer, argument.length));
         return buffer;
     }
 
@@ -686,7 +686,7 @@ public:
         // NOTE: If the string is too much big for the FixedStringBuffer,
         // we return ENAMETOOLONG error here.
         FixedStringBuffer<Size> buffer;
-        TRY(try_copy_name_from_user_into_fixed_string_buffer<Size>(reinterpret_cast<FlatPtr>(argument.characters), buffer, argument.length));
+        TRY(try_copy_name_from_user_into_fixed_string_buffer<Size>(argument.characters, buffer, argument.length));
         return buffer;
     }
 
@@ -729,7 +729,7 @@ private:
         InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header, ProcessEventType, Optional<size_t> minimum_stack_size = {});
     ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t, Optional<off_t> = {});
 
-    ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
+    ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, Userspace<statvfs*> buf);
 
     ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(OpenFileDescription&, StringView path, Elf_Ehdr const& main_executable_header, size_t file_size, Optional<size_t>& minimum_stack_size);
 
@@ -1197,8 +1197,7 @@ inline ProcessID Thread::pid() const
 
 inline ErrorOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(Kernel::Syscall::StringArgument const& string)
 {
-    Userspace<char const*> characters((FlatPtr)string.characters);
-    return try_copy_kstring_from_user(characters, string.length);
+    return try_copy_kstring_from_user(string.characters, string.length);
 }
 
 template<>

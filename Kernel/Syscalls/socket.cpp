@@ -93,13 +93,11 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
     auto params = TRY(copy_typed_from_user(user_params));
 
     int accepting_socket_fd = params.sockfd;
-    Userspace<sockaddr*> user_address((FlatPtr)params.addr);
-    Userspace<socklen_t*> user_address_size((FlatPtr)params.addrlen);
     int flags = params.flags;
 
     socklen_t address_size = 0;
-    if (user_address)
-        TRY(copy_from_user(&address_size, static_ptr_cast<socklen_t const*>(user_address_size)));
+    if (params.addr)
+        TRY(copy_from_user(&address_size, params.addrlen));
 
     ScopedDescriptionAllocation fd_allocation;
     RefPtr<OpenFileDescription> accepting_socket_description;
@@ -125,12 +123,12 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
             return EINTR;
     }
 
-    if (user_address) {
+    if (params.addr) {
         sockaddr_un address_buffer {};
         address_size = min(sizeof(sockaddr_un), static_cast<size_t>(address_size));
         accepted_socket->get_peer_address((sockaddr*)&address_buffer, &address_size);
-        TRY(copy_to_user(user_address, &address_buffer, address_size));
-        TRY(copy_to_user(user_address_size, &address_size));
+        TRY(copy_to_user(params.addr, &address_buffer, address_size));
+        TRY(copy_to_user(params.addrlen, &address_size));
     }
 
     auto accepted_socket_description = TRY(OpenFileDescription::try_create(*accepted_socket));
@@ -337,7 +335,7 @@ template<Process::SockOrPeerName sock_or_peer_name, typename Params>
 ErrorOr<void> Process::get_sock_or_peer_name(Params const& params)
 {
     socklen_t addrlen_value;
-    TRY(copy_from_user(&addrlen_value, params.addrlen, sizeof(socklen_t)));
+    TRY(copy_from_user(&addrlen_value, params.addrlen));
 
     if (addrlen_value <= 0)
         return EINVAL;
@@ -383,18 +381,16 @@ ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params
     int sockfd = params.sockfd;
     int level = params.level;
     int option = params.option;
-    Userspace<void*> user_value((FlatPtr)params.value);
-    Userspace<socklen_t*> user_value_size((FlatPtr)params.value_size);
 
     socklen_t value_size;
-    TRY(copy_from_user(&value_size, params.value_size, sizeof(socklen_t)));
+    TRY(copy_from_user(&value_size, params.value_size));
 
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    TRY(socket.getsockopt(*description, level, option, user_value, user_value_size));
+    TRY(socket.getsockopt(*description, level, option, params.value, params.value_size));
     return 0;
 }
 
@@ -403,13 +399,12 @@ ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<Syscall::SC_setsockopt_params
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    Userspace<void const*> user_value((FlatPtr)params.value);
     auto description = TRY(open_file_description(params.sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    TRY(socket.setsockopt(params.level, params.option, user_value, params.value_size));
+    TRY(socket.setsockopt(params.level, params.option, params.value, params.value_size));
     return 0;
 }
 
