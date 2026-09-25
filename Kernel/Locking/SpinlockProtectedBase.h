@@ -18,36 +18,6 @@ class SpinlockProtectedBase {
     AK_MAKE_NONMOVABLE(SpinlockProtectedBase);
     friend class WaitQueue;
 
-private:
-    template<typename U>
-    class Locked {
-        AK_MAKE_NONCOPYABLE(Locked);
-        AK_MAKE_NONMOVABLE(Locked);
-
-    public:
-        Locked(U& value, Lock& spinlock)
-            : m_value(value)
-            , m_locker(spinlock)
-        {
-        }
-
-        ALWAYS_INLINE U const* operator->() const { return &m_value; }
-        ALWAYS_INLINE U const& operator*() const { return m_value; }
-
-        ALWAYS_INLINE U* operator->() { return &m_value; }
-        ALWAYS_INLINE U& operator*() { return m_value; }
-
-        ALWAYS_INLINE U const& get() const { return m_value; }
-        ALWAYS_INLINE U& get() { return m_value; }
-
-    private:
-        U& m_value;
-        SpinlockLocker<Lock> m_locker;
-    };
-
-    auto lock_const() const { return Locked<T const>(m_value, m_spinlock); }
-    auto lock_mutable() { return Locked<T>(m_value, m_spinlock); }
-
 public:
     template<typename... Args>
     SpinlockProtectedBase(Args&&... args)
@@ -58,15 +28,15 @@ public:
     template<typename Callback>
     decltype(auto) with(Callback callback) const
     {
-        auto lock = lock_const();
-        return callback(*lock);
+        SpinlockLocker<Lock> m_spinlock_locker(m_spinlock); 
+        return callback(m_value);
     }
 
     template<typename Callback>
     decltype(auto) with(Callback callback)
     {
-        auto lock = lock_mutable();
-        return callback(*lock);
+        SpinlockLocker<Lock> m_spinlock_locker(m_spinlock); 
+        return callback(m_value);
     }
 
     template<typename Callback>
