@@ -8,6 +8,7 @@
 #include <Kernel/Arch/aarch64/PlatformInit.h>
 
 #include <Kernel/Arch/aarch64/DebugOutput.h>
+#include <Kernel/Arch/aarch64/RPi/BroadcomSTBGPIOController.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
@@ -95,6 +96,21 @@ void raspberry_pi_5_platform_init(StringView)
 
     MUST(RPi::Mailbox::initialize(PhysicalAddress { 0x10'7c01'3880 }));
     RPi::Framebuffer::initialize();
+
+    // Taken from the devicetree "brcm,gpio-bank-widths" property.
+    Array aon_gpio_bank_pin_counts = { 17zu, 6zu };
+
+    auto aon_gpio = MUST(RPi::BroadcomSTBGPIOController::create(PhysicalAddress { 0x10'7d51'7c00 }, aon_gpio_bank_pin_counts));
+
+    // Pin 3 controls the SD bus voltage (see the devicetree "sd-io-1v8-reg" power regulator node).
+    // Set it to low to use a bus voltage of 3.3V. High would mean 1.8V.
+    MUST(aon_gpio->set_pin_direction(3, RPi::BroadcomSTBGPIOController::PinDirection::Output));
+    MUST(aon_gpio->set_pin_output_level(3, RPi::BroadcomSTBGPIOController::LogicLevel::Low));
+
+    // Pin 4 controls the SD card power (see the devicetree "sd-vcc-reg" power regulator node).
+    // Set it to high to enable SD card power.
+    MUST(aon_gpio->set_pin_direction(4, RPi::BroadcomSTBGPIOController::PinDirection::Output));
+    MUST(aon_gpio->set_pin_output_level(4, RPi::BroadcomSTBGPIOController::LogicLevel::High));
 }
 
 }
