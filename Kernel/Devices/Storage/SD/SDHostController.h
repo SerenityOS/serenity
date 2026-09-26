@@ -31,14 +31,13 @@ public:
     ErrorOr<void> read_block(Badge<SDMemoryCard>, u32 block_address, u32 block_count, UserOrKernelBuffer out);
     ErrorOr<void> write_block(Badge<SDMemoryCard>, u32 block_address, u32 block_count, UserOrKernelBuffer in);
 
-    void try_enable_dma();
-
 protected:
     virtual SD::HostControlRegisterMap volatile* get_register_map_base_address() = 0;
     virtual ErrorOr<u32> retrieve_sd_clock_frequency();
 
 private:
     ErrorOr<NonnullRefPtr<SDMemoryCard>> try_initialize_inserted_card();
+    void try_enable_dma();
 
     bool is_card_inserted() const
     {

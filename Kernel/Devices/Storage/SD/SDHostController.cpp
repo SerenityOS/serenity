@@ -106,6 +106,8 @@ ErrorOr<void> SDHostController::initialize()
         m_card = card_or_error.release_value();
     }
 
+    try_enable_dma();
+
     return {};
 }
 
