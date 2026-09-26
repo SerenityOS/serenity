@@ -33,7 +33,7 @@ install() {
             balloons) name='Balloons' ;;
         esac
         command install -Dm755 "${workdir}/${toy}/${toy}" "${DESTDIR}/usr/local/bin/${toy}"
-        install_launcher "$name" '&Games' "/usr/local/bin/${toy}" ''
+        install_launcher "$name" '&Demos' "/usr/local/bin/${toy}" ''
         install_icon "port-icons/${toy}.png" "/usr/local/bin/${toy}"
     done
 }
