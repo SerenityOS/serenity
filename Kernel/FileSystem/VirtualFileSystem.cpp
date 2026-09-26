@@ -536,14 +536,25 @@ ErrorOr<void> VirtualFileSystem::mkdir(VFSRootContext const& vfs_root_context, C
     }
 
     RefPtr<Custody> parent_custody;
-    // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
-    //        e.g. when the error is EACCESS or similar.
     auto base_custody = TRY(base.resolve());
     auto result = resolve_path_without_veil(vfs_root_context, credentials, path, base_custody, &parent_custody);
-    if (!result.is_error())
+    if (!result.is_error()) {
+        // NOTE: The path already exists, but we must not report that to a process that is
+        // not allowed to see it, or we would leak the existence of paths that were not unveiled.
+        TRY(validate_path_against_process_veil(*result.value(), 0));
         return EEXIST;
-    else if (!parent_custody)
+    }
+    if (!parent_custody) {
+        // NOTE: Resolution failed before reaching the last path component, so there is no
+        // custody to validate against the veil. Report that the path does not exist, instead
+        // of leaking whether any of its components exist and can be traversed.
+        if (Process::current().veil_state() != VeilState::None) {
+            auto error_code = result.error().code();
+            if (error_code == EACCES || error_code == ENOTDIR || error_code == ELOOP)
+                return ENOENT;
+        }
         return result.release_error();
+    }
     // NOTE: If resolve_path fails with a non-null parent custody, the error should be ENOENT.
     VERIFY(result.error().code() == ENOENT);
 

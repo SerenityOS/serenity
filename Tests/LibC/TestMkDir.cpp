@@ -100,6 +100,18 @@ TEST_CASE(unveil)
     EXPECT(res < 0);
     EXPECT_EQ(cached_errno, ENOENT);
 
+    // Don't leak the existence of a path that the process has not unveiled.
+    res = mkdir("/etc", 0755);
+    cached_errno = errno;
+    EXPECT(res < 0);
+    EXPECT_EQ(cached_errno, ENOENT);
+
+    // Don't leak that a path outside the veil cannot be traversed.
+    res = mkdir("/root/not-allowed", 0755);
+    cached_errno = errno;
+    EXPECT(res < 0);
+    EXPECT_EQ(cached_errno, ENOENT);
+
     res = unveil(nullptr, nullptr);
     EXPECT(res == 0);
 }
