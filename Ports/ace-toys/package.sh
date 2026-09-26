@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ace-toys'
-version='d3ce53c44beb3da14d84c710ed0cc074a3e47347'
+version='79e42c1353d0f1bb34322bd7525c7b25644f0f33'
 files=("git+https://github.com/harbin-ctrl/ace-toys.git#${version}")
 workdir="ace-toys-${version}"
 
