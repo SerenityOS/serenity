@@ -106,6 +106,8 @@ ErrorOr<void> SDHostController::initialize()
         m_card = card_or_error.release_value();
     }
 
+    try_enable_dma();
+
     return {};
 }
 
@@ -118,9 +120,7 @@ void SDHostController::try_enable_dma()
         } else {
             m_dma_region = maybe_dma_buffer.release_value();
             dbgln("Allocated SDHC DMA buffer at {}", m_dma_region->physical_page(0)->paddr());
-            // FIXME: This check does not seem to work, qemu supports 64 bit addressing, but we don't seem to detect it
-            // FIXME: Hardcoding to use the 64 bit mode leads to transfer timeouts, without any errors reported from qemu
-            if (host_version() != SD::HostVersion::Version3 && m_registers->capabilities.dma_64_bit_addressing_v3) {
+            if (host_version() == SD::HostVersion::Version3 && m_registers->capabilities.dma_64_bit_addressing_v3) {
                 dbgln("Setting SDHostController to operate using ADMA2 with 64 bit addressing");
                 m_mode = OperatingMode::ADMA2_64;
                 m_registers->host_configuration_0 = m_registers->host_configuration_0 | dma_select_adma2_64;
@@ -325,7 +325,7 @@ ErrorOr<NonnullRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_c
 
 bool SDHostController::retry_with_timeout(Function<bool()> f, i64 delay_between_tries_us)
 {
-    int timeout = 100;
+    int timeout = 5'000;
     bool success = false;
     while (!success && timeout > 0) {
         success = f();
