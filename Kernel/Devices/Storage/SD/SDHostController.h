@@ -70,7 +70,7 @@ private:
 
     bool card_status_contains_errors(SD::Command const&, u32);
 
-    bool retry_with_timeout(Function<bool()>, i64 delay_between_tries_us = 1);
+    bool retry_with_timeout(Function<bool()>, i64 delay_between_tries_us = 100);
 
     enum class DataTransferType {
         Read,
