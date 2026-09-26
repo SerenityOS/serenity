@@ -325,7 +325,7 @@ ErrorOr<NonnullRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_c
 
 bool SDHostController::retry_with_timeout(Function<bool()> f, i64 delay_between_tries_us)
 {
-    int timeout = 100;
+    int timeout = 5'000;
     bool success = false;
     while (!success && timeout > 0) {
         success = f();
