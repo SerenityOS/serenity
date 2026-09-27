@@ -14,6 +14,26 @@ namespace AK {
 
 namespace Gamma {
 
+// The lgamma function has some properties that are exploitable to make a good approximation.
+//  - For x < 0, use Gamma reflection formula [1] to transpose the range to positive x values.
+// The general approximation for the Gamma function (and by extension lgamma) is the Stirling
+// approximation [1]. The error term of this approximation is ~O(1/x), so it's not exploitable
+// for small values of x.
+//  - For small values of x use a direct polynomial approximation.
+//  - For bigger values of x, use the Stirling approximation.
+
+// [1] https://en.wikipedia.org/wiki/Gamma_function#Properties
+// [2] https://en.wikipedia.org/wiki/Stirling%27s_approximation
+
+namespace Detail {
+
+template<FloatingPoint T>
+constexpr T stirling_approximation(T x)
+{
+    return x * AK::log(x) - x;
+}
+
+}
 template<FloatingPoint T>
 constexpr T lgamma(T x)
 {
@@ -22,11 +42,18 @@ constexpr T lgamma(T x)
     if (isinf(x) || x == T { 0.0 })
         return Infinity<T>;
 
-    // Use the Stirling approximation for log(gamma(x)) directly.
-    // This allows us to support bigger values of x, where gamma(x) would have returned inf.
-    // https://en.wikipedia.org/wiki/Stirling%27s_approximation
-    T result = x * AK::log(x) - x;
-    return result;
+    if (x > 0) {
+        // This value is arbitrary but somewhat close to what CORE-MATH is using.
+        if (x < 8) {
+            // FIXME: Use polynomial approximations for small values of x.
+            return stirling_approximation(x);
+        }
+        return stirling_approximation(x);
+    }
+
+    // x < 0
+    // FIXME: Use the reflection formula.
+    return stirling_approximation(x);
 }
 
 template<FloatingPoint T>
