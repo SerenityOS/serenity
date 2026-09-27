@@ -69,7 +69,7 @@ static ErrorOr<size_t> get_field_as_integral(char const (&field)[N])
 template<size_t N>
 static StringView get_field_as_string_view(char const (&field)[N])
 {
-    return { field, min(__builtin_strlen(field), N) };
+    return { field, strnlen(field, N) };
 }
 
 template<size_t N, class TSource>
@@ -100,7 +100,7 @@ public:
     ErrorOr<time_t> timestamp() const { return TRY(get_field_as_integral(m_timestamp)); }
     ErrorOr<unsigned> checksum() const { return TRY(get_field_as_integral(m_checksum)); }
     TarFileType type_flag() const { return TarFileType(m_type_flag); }
-    StringView link_name() const { return { m_link_name, strlen(m_link_name) }; }
+    StringView link_name() const { return get_field_as_string_view(m_link_name); }
     StringView magic() const { return get_field_as_string_view(m_magic); }
     StringView version() const { return get_field_as_string_view(m_version); }
     StringView owner_name() const { return get_field_as_string_view(m_owner_name); }
