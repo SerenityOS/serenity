@@ -29,6 +29,7 @@ struct Options {
     bool wide = false;
     bool verbose = false;
     Optional<StringView> core_math_path {};
+    Optional<StringView> filter {};
 };
 
 Array g_edge_cases = to_array<double>({ // Denormals
@@ -356,6 +357,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Options options;
     parser.add_option(options.test_system_libm, "Test the system's libm instead of AK's math functions.", "test-system-libm");
     parser.add_option(options.core_math_path, "Path to CORE-MATH root folder, used to extract hard-to-round cases", "core-math", 0, "PATH");
+    parser.add_option(options.filter, "Only test math functions whose names include FILTER", "filter", 'f', "FILTER");
     parser.add_option(options.wide, "Use wide formatting", "format-wide");
     parser.add_option(options.verbose, "Verbose output", "verbose", 'v');
     parser.parse(arguments);
@@ -383,6 +385,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int score_count = 0;
 
     for (auto& function : g_functions) {
+        if (options.filter.has_value() && !function.name.contains(*options.filter))
+            continue;
+
         if (options.test_system_libm)
             function.tested_function = function.libc_function;
 
