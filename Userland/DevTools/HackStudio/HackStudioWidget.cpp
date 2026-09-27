@@ -474,7 +474,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     TRY(m_new_file_actions.try_append(TRY(create_new_file_action("JS&ON File", "/res/icons/16x16/filetype-json.png", "json"))));
     TRY(m_new_file_actions.try_append(TRY(create_new_file_action("Mark&down File", "/res/icons/16x16/filetype-markdown.png", "md"))));
 
-    m_new_plain_file_action = TRY(create_new_file_action("Plain &File", "/res/icons/16x16/new.png", ""));
+    m_new_plain_file_action = TRY(create_new_file_action("Plain &File", "/res/icons/16x16/new.png", "", { Mod_Ctrl, Key_N }));
 
     m_open_selected_action = TRY(create_open_selected_action());
     m_show_in_file_manager_action = create_show_in_file_manager_action();
@@ -509,10 +509,10 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     return project_tree_view_context_menu;
 }
 
-ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(ByteString const& label, ByteString const& icon, ByteString const& extension)
+ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(ByteString const& label, ByteString const& icon, ByteString const& extension, GUI::Shortcut shortcut)
 {
     auto icon_no_shadow = TRY(Gfx::Bitmap::load_from_file(icon));
-    return GUI::Action::create(label, icon_no_shadow, [this, extension](GUI::Action const&) {
+    return GUI::Action::create(label, shortcut, icon_no_shadow, [this, extension](GUI::Action const&) {
         String filename;
         if (GUI::InputBox::show(window(), filename, "Enter a name:"sv, "New File"sv) != GUI::InputBox::ExecResult::OK)
             return;
