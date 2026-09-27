@@ -11,6 +11,7 @@
 #include <AK/Math.h>
 #include <AK/NumberFormat.h>
 #include <AK/String.h>
+#include <AK/StringUtils.h>
 #include <AK/Time.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -24,10 +25,26 @@
 
 namespace {
 
+struct Range {
+    double min {};
+    double max {};
+
+    bool contains(double x) const
+    {
+        return x >= min && x <= max;
+    }
+
+    bool overlaps_with(Range other) const
+    {
+        return contains(other.min) || contains(other.max);
+    }
+};
+
 struct Options {
     bool test_system_libm = false;
     bool wide = false;
     bool verbose = false;
+    Optional<Range> accepted_range {};
     Optional<StringView> core_math_path {};
     Optional<StringView> filter {};
 };
@@ -53,11 +70,6 @@ Array g_edge_cases = to_array<double>({ // Denormals
     AK::Infinity<double>, -AK::Infinity<double>,
     AK::NaN<double>, -AK::NaN<double> });
 
-struct Range {
-    double min {};
-    double max {};
-};
-
 Array g_exp_perf_ranges = to_array<Range>({ { 0, 1 }, { -10, 10 }, { -745, 709 } });
 Array g_log_perf_ranges = to_array<Range>({ { 0.01, 1 }, { 1, 100 }, { 1, 1e5 } });
 
@@ -66,16 +78,14 @@ Array g_sinh_perf_ranges = g_hyperbolic_perf_ranges;
 Array g_cosh_perf_ranges = g_hyperbolic_perf_ranges;
 Array g_tanh_perf_ranges = g_hyperbolic_perf_ranges;
 
-struct RangeWithCount {
-    double min {};
-    double max {};
+struct RangeWithCount : Range {
     u32 count {};
 };
 
-Array g_exp_test_ranges = to_array<RangeWithCount>({ { -10, 10, 150 }, { -745, 709, 50 }, { -1e-10, 1e-10, 50 } });
-Array g_log_test_ranges = to_array<RangeWithCount>({ { 1e-300, 1, 100 }, { 1, 10, 100 }, { 10, 1e300, 50 } });
+Array g_exp_test_ranges = to_array<RangeWithCount>({ { { -10, 10 }, 150 }, { { -745, 709 }, 50 }, { { -1e-10, 1e-10 }, 50 } });
+Array g_log_test_ranges = to_array<RangeWithCount>({ { { 1e-300, 1 }, 100 }, { { 1, 10 }, 100 }, { { 10, 1e300 }, 50 } });
 
-Array g_hyperbolic_test_ranges = to_array<RangeWithCount>({ { -10, 10, 150 }, { -700, 700, 50 }, { -1e-10, 1e-10, 50 } });
+Array g_hyperbolic_test_ranges = to_array<RangeWithCount>({ { { -10, 10 }, 150 }, { { -700, 700 }, 50 }, { { -1e-10, 1e-10 }, 50 } });
 Array g_cosh_test_ranges = g_hyperbolic_test_ranges;
 Array g_sinh_test_ranges = g_hyperbolic_test_ranges;
 Array g_tanh_test_ranges = g_hyperbolic_test_ranges;
@@ -178,7 +188,9 @@ Vector<double> load_worst_cases(Options const& options, MathFunction const& func
             VERIFY(line.length() < line_buffer.size());
             line_buffer[line.length()] = '\0';
             auto value = strtod(line.characters_without_null_termination(), nullptr);
-            worst_cases.append(value);
+
+            if (!options.accepted_range.has_value() || options.accepted_range->contains(value))
+                worst_cases.append(value);
         }
 
         return worst_cases;
@@ -209,24 +221,53 @@ Vector<double> sample_worst_cases(Vector<double> worst_cases)
     return out;
 }
 
+Vector<double> filter_edge_cases(Options const& options, Span<double> edge_cases)
+{
+    Vector<double> out;
+    for (auto value : edge_cases) {
+        if (!options.accepted_range.has_value() || options.accepted_range->contains(value))
+            out.append(value);
+    }
+    return out;
+}
+
+template<OneOf<Range, RangeWithCount> R>
+Vector<R> adjust_ranges(Options const& options, ReadonlySpan<R> ranges)
+{
+    Vector<R> out {};
+    for (auto range : ranges) {
+        if (!options.accepted_range.has_value()) {
+            out.append(range);
+        } else if (options.accepted_range->overlaps_with(range)) {
+            range.min = max(range.min, options.accepted_range->min);
+            range.max = min(range.max, options.accepted_range->max);
+            out.append(range);
+        }
+    }
+    return out;
+}
+
 Vector<double> generate_test_cases(Options const& options, MathFunction const& function)
 {
-    u64 count {};
-    for (auto range : function.test_ranges)
-        count += range.count;
-
     auto all_worst_cases = load_worst_cases(options, function);
     auto worst_cases = sample_worst_cases(move(all_worst_cases));
 
-    u64 total_count = g_edge_cases.size() + count + worst_cases.size();
+    auto filtered_edge_cases = filter_edge_cases(options, g_edge_cases);
+    auto adjusted_test_ranges = adjust_ranges(options, function.test_ranges);
+
+    u64 count {};
+    for (auto range : adjusted_test_ranges)
+        count += range.count;
+
+    u64 total_count = filtered_edge_cases.size() + count + worst_cases.size();
 
     Vector<double> test_cases;
     test_cases.ensure_capacity(total_count);
 
     test_cases.extend(worst_cases);
-    test_cases.extend(g_edge_cases);
+    test_cases.extend(filtered_edge_cases);
 
-    for (auto range : function.test_ranges) {
+    for (auto range : adjusted_test_ranges) {
         for (u32 i = 0; i < range.count; i++) {
             double t = range.min + (range.max - range.min) * i / max(count - 1, 1);
             test_cases.append(t);
@@ -283,11 +324,11 @@ constexpr u32 MIN_TIME_MS = 10;
 constexpr u32 PERF_ROUNDS = 3;
 constexpr u32 REFERENCE_RATE = 1000e6;
 
-Vector<double> generate_range(MathFunction const& function)
+Vector<double> generate_range(Options const& options, MathFunction const& function)
 {
     srand(0x12345678u);
 
-    auto ranges = function.perf_ranges;
+    auto ranges = adjust_ranges(options, function.perf_ranges);
 
     u64 total_size = ranges.size() * SAMPLE_PER_RANGE;
     Vector<double> test_range {};
@@ -338,9 +379,9 @@ double measure(MathFunction const& function, Span<double> range)
     return samples[1];
 }
 
-PerfResult run_perf(MathFunction const& function)
+PerfResult run_perf(Options const& options, MathFunction const& function)
 {
-    auto test_range = generate_range(function);
+    auto test_range = generate_range(options, function);
 
     PerfResult r {};
     r.average_ops_per_second = measure(function, test_range);
@@ -355,9 +396,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser parser;
     Options options;
+    Optional<StringView> range {};
     parser.add_option(options.test_system_libm, "Test the system's libm instead of AK's math functions.", "test-system-libm");
     parser.add_option(options.core_math_path, "Path to CORE-MATH root folder, used to extract hard-to-round cases", "core-math", 0, "PATH");
     parser.add_option(options.filter, "Only test math functions whose names include FILTER", "filter", 'f', "FILTER");
+    parser.add_option(range, "Only test math function inside the given range. RANGE should have the following shape \"min:max\"", "range", 'r', "RANGE");
     parser.add_option(options.wide, "Use wide formatting", "format-wide");
     parser.add_option(options.verbose, "Verbose output", "verbose", 'v');
     parser.parse(arguments);
@@ -368,7 +411,30 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("CORE-MATH can be downloaded from https://gitlab.inria.fr/core-math/core-math/");
     }
 
-    outln("Running math benchmark for {}...\n", options.test_system_libm ? "the system libm" : "AK");
+    if (range.has_value()) {
+        auto splits = range->split_view(':');
+        if (splits.size() != 2)
+            return Error::from_string_literal("Invalid argument for RANGE");
+        auto maybe_value = AK::StringUtils::convert_to_floating_point<double>(splits[0]);
+        if (!maybe_value.has_value())
+            return Error::from_string_literal("Invalid argument for min in RANGE");
+        auto range_min = maybe_value.value();
+        maybe_value = AK::StringUtils::convert_to_floating_point<double>(splits[1]);
+        if (!maybe_value.has_value())
+            return Error::from_string_literal("Invalid argument for max in RANGE");
+        options.accepted_range = { range_min, maybe_value.value() };
+
+        if (options.accepted_range->min > options.accepted_range->max)
+            return Error::from_string_literal("Invalid argument for RANGE, min > max");
+    }
+
+    out("Running math benchmark for {}", options.test_system_libm ? "the system libm" : "AK");
+    if (options.accepted_range.has_value()) {
+        // FIXME: Print values using the scientific notation.
+        out(", with values limited to [{}, {}]", options.accepted_range->min, options.accepted_range->max);
+    }
+    outln("...\n");
+
     u32 w = options.wide ? 22 : 10;  // width for Max ULP column
     u32 w2 = options.wide ? 24 : 12; // width for Mean ULP column
     outln("{:-14}{:>{}}{:>{}}{:>8}{:>8}{:>10}{:>14}{:>8}{:>8}",
@@ -392,7 +458,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             function.tested_function = function.libc_function;
 
         AccuracyResult accuracy = run_accuracy(options, function);
-        PerfResult perf = run_perf(function);
+        PerfResult perf = run_perf(options, function);
 
         double accuracy_score = 100.0 / (1.0 + accuracy.mean_ulp);
         double total = accuracy_score + perf.bonus_points;
