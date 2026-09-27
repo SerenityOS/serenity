@@ -8,13 +8,19 @@
 
 #include <Kernel/Devices/Storage/SD/Registers.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
+#include <Kernel/Firmware/DeviceTree/Device.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::RPi {
 
 class SDHostController : public ::SDHostController {
 public:
-    SDHostController(Memory::TypedMapping<SD::HostControlRegisterMap volatile>);
+    enum class Model {
+        BCM2712_SDHCI,
+        BCM2835_SDHCI,
+    };
+
+    SDHostController(Model, DeviceTree::Device const&, Memory::TypedMapping<SD::HostControlRegisterMap volatile>);
     virtual ~SDHostController() override = default;
 
 protected:
@@ -23,6 +29,8 @@ protected:
     virtual ErrorOr<u32> retrieve_sd_clock_frequency() override;
 
 private:
+    Model m_model { Model::BCM2835_SDHCI };
+    DeviceTree::Device const& m_device;
     Memory::TypedMapping<SD::HostControlRegisterMap volatile> m_registers;
 };
 
