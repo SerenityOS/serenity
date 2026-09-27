@@ -101,7 +101,7 @@ private:
     void set_edit_mode(EditMode);
 
     ErrorOr<NonnullRefPtr<GUI::Menu>> create_project_tree_view_context_menu();
-    ErrorOr<NonnullRefPtr<GUI::Action>> create_new_file_action(ByteString const& label, ByteString const& icon, ByteString const& extension);
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_new_file_action(ByteString const& label, ByteString const& icon, ByteString const& extension, GUI::Shortcut shortcut = {});
     ErrorOr<NonnullRefPtr<GUI::Action>> create_new_directory_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
