@@ -362,6 +362,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     u32 ruler_width = 72 + w + w2;
     outln("{}", MUST(String::repeated('-', ruler_width)));
 
+    // FIXME: Don't forget to update this when adding support for testing float functions.
+    CORE_MATH::set_exponent_limits();
+
     double log_sum = 0.0;
     int score_count = 0;
 

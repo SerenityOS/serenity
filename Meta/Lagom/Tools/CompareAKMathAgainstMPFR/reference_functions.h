@@ -8,6 +8,8 @@
 
 namespace CORE_MATH {
 
+void set_exponent_limits();
+
 double exp(double x);
 double log(double x);
 
