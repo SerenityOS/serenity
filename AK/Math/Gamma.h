@@ -40,7 +40,44 @@ constexpr T stirling_approximation(T x)
     return (x - T(.5)) * (AK::log(x - T(1)) - 1) + (AK::log(2 * AK::Pi<T>) + 1) / T(2);
 }
 
+// FIXME: For the moment we only have an approximation for double, keeping the
+//        warning will just make the code uglier with no benefits. Don't forget
+//        to re-enable it once we add a float version!
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+
+template<FloatingPoint T>
+constexpr T lgamma_for_large_positive_values(T x)
+{
+    auto base = stirling_approximation(x);
+    if (x >= 1e7) {
+        // Stirling approximation's error term is bound to be lower than the first term of the
+        // Stirling series[1], in other words:
+        //  For E(x) = lgamma(x) - stirling_approximation(x), we have E(x) < 1/(12 * x).
+        // [1] https://en.wikipedia.org/wiki/Stirling%27s_approximation#Speed_of_convergence_and_error_estimates
+        //
+        // Given that E is monotonically decreasing and that ULP and lgamma are monotonically
+        // increasing on ℝ₊ there exists a threshold t after which we have:
+        // ∀ x ∈ [t, +∞], E(x) < ULP(lgamma(x))
+
+        // FIXME: Exploiting this property is required to give an upper-bound to the polynomial approximation bellow,
+        //        however it's not as simple as the small demonstration above.
+        //        - We need to consider the error of floating point inaccuracies that we introduce when computing
+        //          Stirling approximation with our imperfect float types. I suppose this is one of the reason
+        //          CORE-MATH uses a double-double representation when computing log(x).
+        //        - We need to properly find the actual values for each float types. For double, on [1e7, +inf], the max
+        //          error of stirling_approximation is 2 ULP which is objectively incorrect but good enough for now.
+        return base;
+    }
+
+    // FIXME: Implement the polynomial approximation mentioned above :^)
+    return base;
 }
+
+#pragma GCC diagnostic pop
+
+}
+
 template<FloatingPoint T>
 constexpr T lgamma(T x)
 {
@@ -55,7 +92,7 @@ constexpr T lgamma(T x)
             // FIXME: Use polynomial approximations for small values of x.
             return Detail::stirling_approximation(x);
         }
-        return Detail::stirling_approximation(x);
+        return Detail::lgamma_for_large_positive_values(x);
     }
 
     // x < 0
