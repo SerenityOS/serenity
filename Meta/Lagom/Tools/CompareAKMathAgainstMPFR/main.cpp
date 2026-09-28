@@ -408,8 +408,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("");
 
         if (options.verbose && accuracy.max_ulp > 0) {
-            outln("{:-14}  ^ input: {}  expected: {}  got: {}",
-                ""sv, accuracy.worse_input, accuracy.worst_expected, accuracy.worst_computed);
+            outln("{:-14}  ^ input: {}  expected: {}  got: {} - ULP at expected {}",
+                ""sv, accuracy.worse_input, accuracy.worst_expected, accuracy.worst_computed, ulp_of(accuracy.worst_expected));
         }
 
         if (total > 0) {
