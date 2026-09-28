@@ -30,7 +30,14 @@ namespace Detail {
 template<FloatingPoint T>
 constexpr T stirling_approximation(T x)
 {
-    return x * AK::log(x) - x;
+    // https://en.wikipedia.org/wiki/Stirling%27s_approximation
+    // In the formula of the first section, the O(ln(n)) error term is way too big for our requirements.
+    // But it's not complicated to do a lot better, instead start with the n! approximation,
+    // use n! = Γ(n + 1), apply ln, and you get:
+    // ln(Γ(n)) = (n - .5) · (ln(n - 1) - 1) + (ln(2π) + 1) / 2
+    // The error term for this formula is O(1/n), much better!
+    // Note that this approximation should only be used for x > 0, so that ln(Γ(n)) = ln(|Γ(n)|) = lgamma(x).
+    return (x - T(.5)) * (AK::log(x - T(1)) - 1) + (AK::log(2 * AK::Pi<T>) + 1) / T(2);
 }
 
 }
@@ -46,14 +53,14 @@ constexpr T lgamma(T x)
         // This value is arbitrary but somewhat close to what CORE-MATH is using.
         if (x < 8) {
             // FIXME: Use polynomial approximations for small values of x.
-            return stirling_approximation(x);
+            return Detail::stirling_approximation(x);
         }
-        return stirling_approximation(x);
+        return Detail::stirling_approximation(x);
     }
 
     // x < 0
     // FIXME: Use the reflection formula.
-    return stirling_approximation(x);
+    return Detail::stirling_approximation(x);
 }
 
 // The lgamma_r variant uses an out parameter to return a sign value.
