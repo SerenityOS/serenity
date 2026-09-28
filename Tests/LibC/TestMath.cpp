@@ -332,12 +332,9 @@ TEST_CASE(gamma)
     EXPECT_EQ(tgammaf(11.0f), 3628800.0f);
     EXPECT_EQ(tgamma(4.0), 6);
 
-    // The stirling approximation for log(gamma(x)) is O(log(x)), so the error
-    // of 10 is well inside the range. That being said, we're off the expected
-    // results because our log(x) is not precise.
     // Expected results are from WolframAlpha.
-    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738941), 2275241556.917756, 10);
-    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738943), 2275241594.264350, 10);
+    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738941), 2275241556.917756, 1e-6);
+    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738943), 2275241594.264350, 1e-6);
 
     EXPECT_EQ(lgamma(1.0), 0.0);
     EXPECT_EQ(lgamma(2.0), 0.0);
