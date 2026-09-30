@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='utf8proc'
-version='2.11.3'
+version='2.12.0'
 files=(
-    "https://github.com/JuliaStrings/utf8proc/releases/download/v${version}/utf8proc-${version}.tar.gz#415189fd2c85cd6ee5ff26af500fa387de9ada1e3e316e93f7338551481d557d"
+    "https://github.com/JuliaStrings/utf8proc/releases/download/v${version}/utf8proc-${version}.tar.gz#a393fbef160835fb315bc3e91ba8d86f7a73a7cec9e6198b6c60b848b498bfeb"
 )
 useconfigure='true'
 
