@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='imagemagick'
-version='7.1.2-31'
+version='7.1.2-32'
 workdir="ImageMagick-${version}"
 useconfigure='true'
 files=(
-    "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${version}.tar.gz#34d9cc3acddc3e3c429d23af60eda5ceaac477a8b296ddb9469f773f44a80a5f"
+    "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${version}.tar.gz#940e349f0ef394e658fd57400b83d1d7a81b954f6e7bdbfbfad31b2718c10add"
 )
 configopts=(
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
