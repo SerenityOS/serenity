@@ -74,8 +74,36 @@ constexpr T lgamma_for_large_positive_values(T x)
         return base;
     }
 
-    // FIXME: Implement the polynomial approximation mentioned above :^)
-    return base;
+    // Let's have A be the same approximation as the one we use in the stirling_approximation function
+    // (so the base stirling, with none of the terms of the series). So we have the general error term like:
+    //   lgamma(x) - A(x) = E(x)
+    // For the current range, (8, 1e7) we're going to reduce the error by approximating E.
+
+    // We also know that the E is a polynomial in x⁻¹, so by applying a change of variable with y = 1 / x, we have:
+    //   lgamma(1 / y) - A(1 / y) = Eₚ(y), on the range (1e-7, 1/8)
+    // With Eₚ being a polynomial, finding a good approximation will be easier.
+
+    // Finally, the funremez invocation looks like this:
+    // funremez --double --degree 10 --range "1e-7:0.125" --relative-error "lgamma(1/x)-((1/x -0.5)*log(1/x - 1) - 1/x + 1 + log(2*pi)/2)"
+
+    // FIXME: On the (8, 1e7) range, this gives us an ULP of 2.0. Again, this is objectively incorrect but good enough
+    //        for now. Also, CORE-MATH is using a degree four polynomial in this step, find why we need a lot more!
+    // FIXME: This polynomial is optimized for f64, add a specialized path for other floating point types.
+
+    auto x_1 = 1 / x;
+    T u = 0.07417342784580741;
+    u = u * x_1 + 0.03536709695072373;
+    u = u * x_1 + 0.050154352952855051;
+    u = u * x_1 + 0.052834436386305993;
+    u = u * x_1 + 0.059531774134891954;
+    u = u * x_1 + 0.067460046884613073;
+    u = u * x_1 + 0.075000005257110938;
+    u = u * x_1 + 0.080555555503817405;
+    u = u * x_1 + 0.083333333333530824;
+    u = u * x_1 + 0.083333333333333204;
+    auto error_correction = u * x_1 + 2.4840492255009263e-23;
+
+    return base + error_correction;
 }
 
 #pragma GCC diagnostic pop
