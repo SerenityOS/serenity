@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Wed, 30 Sep 2026 07:40:02 +0100
+Subject: [PATCH] Remove unsupported RLIM_SAVED_* usage
+
+---
+ src/xz/hardware.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/src/xz/hardware.c b/src/xz/hardware.c
+index 3a1a709f1181838e0e053821a7a065aa426fe346..83614221a18c2ed0e1f2700489d30b28fc1a7ec4 100644
+--- a/src/xz/hardware.c
++++ b/src/xz/hardware.c
+@@ -367,9 +367,7 @@ hardware_init(void)
+ 		// as no limit at all.
+ 		struct rlimit rl;
+ 		if (getrlimit(resources[i], &rl) == 0
+-				&& rl.rlim_cur != RLIM_INFINITY
+-				&& rl.rlim_cur != RLIM_SAVED_CUR
+-				&& rl.rlim_cur != RLIM_SAVED_MAX) {
++				&& rl.rlim_cur != RLIM_INFINITY) {
+ #ifdef __clang__
+ #	pragma GCC diagnostic pop
+ #endif
