@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='julius'
-version='1.7.0'
+version='1.8.0'
 useconfigure='true'
 files=(
-    "https://github.com/bvschaik/julius/archive/refs/tags/v${version}.tar.gz#3ee62699bcbf6c74fe5a9c940c62187141422a9bd98e01747a554fd77483431f"
+    "https://github.com/bvschaik/julius/archive/refs/tags/v${version}.tar.gz#e479e0b60074497b3e81b30749e040c423f493d469d630a774c06b3d61d91159"
 )
 depends=(
     'libpng'
@@ -12,6 +12,8 @@ depends=(
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    # Upstream declares 3.1 which is no longer supported
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.25"
 )
 data_dir='/home/anon/Games/julius'
 launcher_name='Julius'

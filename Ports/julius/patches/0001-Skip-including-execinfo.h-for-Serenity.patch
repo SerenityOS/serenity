@@ -8,15 +8,15 @@ Subject: [PATCH] Skip including execinfo.h for Serenity
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/backtrace.c b/src/core/backtrace.c
-index 025bac7c7cc5058a8372ecfc3862ac31a6cb1310..693bb5c1ff0c1b43d58803d51c95a3ae9e5165f0 100644
+index 19f9b134c8ff41a1939ed04db0b2c8a94ec4be0b..28f1ff15d68a49514e6c9827833802897f22b8b8 100644
 --- a/src/core/backtrace.c
 +++ b/src/core/backtrace.c
 @@ -4,7 +4,7 @@
  
  #if defined(__GNUC__) && !defined(__MINGW32__) && !defined(__OpenBSD__) && \
      !defined(__vita__) && !defined(__SWITCH__) && !defined(__ANDROID__) && \
--    !defined(__HAIKU__) && !defined(__EMSCRIPTEN__)
-+    !defined(__HAIKU__) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
+-    !defined(__HAIKU__) && !defined(__EMSCRIPTEN__) && \
++    !defined(__HAIKU__) && !defined(__EMSCRIPTEN__) && !defined(__serenity__) && \
+     (!defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050)
  
  #include <execinfo.h>
- 
