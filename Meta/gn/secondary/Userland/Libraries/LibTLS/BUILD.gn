@@ -9,7 +9,7 @@ declare_args() {
 
 cacert_cache = cache_path + "CACERT/"
 
-cacert_version = "2026-08-13"
+cacert_version = "2026-09-25"
 
 if (enable_cacert_download) {
   download_file("ca_certificates_download") {
@@ -17,7 +17,7 @@ if (enable_cacert_download) {
     url = "https://curl.se/ca/cacert-$version.pem"
     output = "$root_build_dir/cacert.pem"
     version_file = cacert_cache + "version.txt"
-    sha256 = "f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9"
+    sha256 = "a41b5d356aea97a529fe27e0f7316d2f9d946d75927476cf9cf1b90637d00505"
   }
   # FIXME: Copy file to /etc/cacert.pem on serenity
 }
