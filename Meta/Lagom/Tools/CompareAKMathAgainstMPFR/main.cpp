@@ -46,6 +46,7 @@ struct Options {
     bool verbose = false;
     Optional<Range> accepted_range {};
     Optional<StringView> core_math_path {};
+    Optional<u32> sample_core_math {};
     Optional<StringView> filter {};
 };
 
@@ -204,17 +205,17 @@ Vector<double> load_worst_cases(Options const& options, MathFunction const& func
     return result.release_value();
 }
 
-Vector<double> sample_worst_cases(Vector<double> worst_cases)
+Vector<double> sample_worst_cases(Options const& options, Vector<double> worst_cases)
 {
-    // FIXME: This should be a runtime option.
-    static constexpr u32 TEST_SAMPLES = 1000;
+    if (!options.sample_core_math.has_value())
+        return worst_cases;
 
-    auto number_of_sampled_cases = min(worst_cases.size(), TEST_SAMPLES);
+    auto number_of_sampled_cases = min(worst_cases.size(), *options.sample_core_math);
 
     Vector<double> out;
     out.ensure_capacity(number_of_sampled_cases);
 
-    auto step = max(1, static_cast<double>(worst_cases.size()) / TEST_SAMPLES);
+    auto step = max(1, static_cast<double>(worst_cases.size()) / *options.sample_core_math);
     for (u32 i = 0; i < number_of_sampled_cases; ++i)
         out.unchecked_append(worst_cases[static_cast<u64>(i * step)]);
 
@@ -250,7 +251,7 @@ Vector<R> adjust_ranges(Options const& options, ReadonlySpan<R> ranges)
 Vector<double> generate_test_cases(Options const& options, MathFunction const& function)
 {
     auto all_worst_cases = load_worst_cases(options, function);
-    auto worst_cases = sample_worst_cases(move(all_worst_cases));
+    auto worst_cases = sample_worst_cases(options, move(all_worst_cases));
 
     auto filtered_edge_cases = filter_edge_cases(options, g_edge_cases);
     auto adjusted_test_ranges = adjust_ranges(options, function.test_ranges);
@@ -399,6 +400,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Optional<StringView> range {};
     parser.add_option(options.test_system_libm, "Test the system's libm instead of AK's math functions.", "test-system-libm");
     parser.add_option(options.core_math_path, "Path to CORE-MATH root folder, used to extract hard-to-round cases", "core-math", 0, "PATH");
+    parser.add_option(options.sample_core_math, "Only use N samples from CORE-MATH", "sample-core-math", 0, "N");
     parser.add_option(options.filter, "Only test math functions whose names include FILTER", "filter", 'f', "FILTER");
     parser.add_option(range, "Only test math function inside the given range. RANGE should have the following shape \"min:max\"", "range", 'r', "RANGE");
     parser.add_option(options.wide, "Use wide formatting", "format-wide");
@@ -409,6 +411,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("Warning: CORE-MATH is not provided.");
         warnln("Please use the --core-math option to provide more test cases.");
         warnln("CORE-MATH can be downloaded from https://gitlab.inria.fr/core-math/core-math/");
+
+        if (options.sample_core_math.has_value())
+            return Error::from_string_literal("Invalid argument: --sample-core-math used without --core-math");
     }
 
     if (range.has_value()) {
@@ -433,7 +438,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // FIXME: Print values using the scientific notation.
         out(", with values limited to [{}, {}]", options.accepted_range->min, options.accepted_range->max);
     }
-    outln("...\n");
+    outln("...");
+
+    if (options.sample_core_math.has_value())
+        outln("Only using {} cases from CORE-MATH worst cases.", *options.sample_core_math);
+
+    outln();
 
     u32 w = options.wide ? 22 : 10;  // width for Max ULP column
     u32 w2 = options.wide ? 24 : 12; // width for Mean ULP column
