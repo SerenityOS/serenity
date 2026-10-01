@@ -127,6 +127,9 @@ enable_gic=1
 
 kernel=Kernel.bin
 
+# Enable the V3D device node.
+dtoverlay=vc4-kms-v3d
+
 [pi4]
 # We use UART0 as the console.
 dtoverlay=disable-bt
