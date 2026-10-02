@@ -309,8 +309,13 @@ constexpr T tgamma(T x)
         return static_cast<T>(result);
     }
 
-    // Stirling approximation
-    return sqrt(2.0 * Pi<T> / x) * pow(x / E<T>, x);
+    // FIXME: We need to implement something custom to get a correctly rounded
+    //        gamma function.
+    // In the meantime, relying on lgamma provides acceptable results. For double,
+    // on [0, inf] this has a max ULP of 1449. Forwarding to the same-type functions
+    // isn't enough to get a good precision, CORE-MATH uses double-double approximations
+    // for both exp and lgamma to pull that trick for f64 and x > 4.
+    return exp(lgamma(x));
 }
 
 }
