@@ -54,6 +54,18 @@ double lgamma(double x)
     return ret;
 }
 
+double tgamma(double x)
+{
+    mpfr_t y;
+    mpfr_init2(y, 53);
+    mpfr_set_d(y, x, MPFR_RNDN);
+    int inex = mpfr_gamma(y, y, MPFR_RNDN);
+    mpfr_subnormalize(y, inex, MPFR_RNDN);
+    double ret = mpfr_get_d(y, MPFR_RNDN);
+    mpfr_clear(y);
+    return ret;
+}
+
 double cosh(double x)
 {
     mpfr_t y;
