@@ -14,6 +14,7 @@ double exp(double x);
 double log(double x);
 
 double lgamma(double x);
+double tgamma(double x);
 
 double cosh(double x);
 double sinh(double x);
