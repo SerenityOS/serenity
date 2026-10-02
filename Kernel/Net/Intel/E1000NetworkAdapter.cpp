@@ -212,6 +212,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000NetworkAdapter::cre
 UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
     dmesgln_pci(*this, "Found @ {}", device_identifier().address());
+    m_hardware_features = determine_hardware_features();
 
     PCI::enable_memory_space(device_identifier());
     PCI::enable_bus_mastering(device_identifier());

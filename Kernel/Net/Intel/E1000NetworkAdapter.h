@@ -131,7 +131,7 @@ private:
     static constexpr size_t number_of_rx_descriptors = 256;
     static constexpr size_t number_of_tx_descriptors = 256;
 
-    HardwareFeatures m_hardware_features;
+    HardwareFeatures m_hardware_features { HardwareFeatures::None };
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
