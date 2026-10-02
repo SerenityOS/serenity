@@ -100,6 +100,37 @@ TEST_CASE(unveil)
     EXPECT(res < 0);
     EXPECT_EQ(cached_errno, ENOENT);
 
+    // Don't leak the existence of a path that the process has not unveiled.
+    res = mkdir("/etc", 0755);
+    cached_errno = errno;
+    EXPECT(res < 0);
+    EXPECT_EQ(cached_errno, ENOENT);
+
+    // Ancestors of an unveiled path are visible. /tmp has no permissions of its own here,
+    // but it must exist for a path below it to have been unveiled.
+    res = unveil("/tmp/child", "rwc");
+    EXPECT(res == 0);
+
+    res = mkdir("/tmp", 0755);
+    cached_errno = errno;
+    EXPECT(res < 0);
+    EXPECT_EQ(cached_errno, EEXIST);
+
+    // Don't leak that a path outside the veil cannot be traversed.
+    res = mkdir("/root/not-allowed", 0755);
+    cached_errno = errno;
+    EXPECT(res < 0);
+    EXPECT_EQ(cached_errno, ENOENT);
+
+    // Once the same path is unveiled, report the real error again.
+    res = unveil("/root", "rwc");
+    EXPECT(res == 0);
+
+    res = mkdir("/root/not-allowed", 0755);
+    cached_errno = errno;
+    EXPECT(res < 0);
+    EXPECT_EQ(cached_errno, EACCES);
+
     res = unveil(nullptr, nullptr);
     EXPECT(res == 0);
 }
