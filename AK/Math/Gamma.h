@@ -8,8 +8,11 @@
 
 #include <AK/Array.h>
 #include <AK/Concepts.h>
+#include <AK/FloatingPoint.h>
 #include <AK/Math/Constants.h>
 #include <AK/Math/Exponentials.h>
+#include <AK/Math/Rounding.h>
+#include <AK/Math/Sqrt.h>
 #include <AK/Optional.h>
 
 namespace AK {
@@ -275,9 +278,44 @@ constexpr T lgamma(T x)
     return lgamma_r(x, &dummy);
 }
 
+// If we start to use "tgamma" directly in the codebase, consider using
+// an alias named "gamma" instead. The "tgamma" name only exists for
+// historical reason, and is provided here because it makes things
+// easier in LibC/math.cpp and CompareAKMathAgainstMPFR.
+template<FloatingPoint T>
+constexpr T tgamma(T x)
+{
+    if (isnan(x))
+        return NaN<T>;
+
+    if (x == 0)
+        return copysign(Infinity<T>, x);
+
+    if (x < 0 && (rint(x) == x || isinf(x)))
+        return NaN<T>;
+
+    if (isinf(x))
+        return Infinity<T>;
+
+    using Extractor = FloatExtractor<T>;
+    // These constants were obtained through use of WolframAlpha
+    constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
+    static_assert(max_integer_whose_factorial_fits != 0, "tgamma needs to be aware of the integer factorial that fits in this floating point type.");
+    if ((int)x == x && x <= max_integer_whose_factorial_fits + 1) {
+        long long result = 1;
+        for (long long cursor = 2; cursor < (long long)x; cursor++)
+            result *= cursor;
+        return static_cast<T>(result);
+    }
+
+    // Stirling approximation
+    return sqrt(2.0 * Pi<T> / x) * pow(x / E<T>, x);
+}
+
 }
 
 using Gamma::lgamma;
 using Gamma::lgamma_r;
+using Gamma::tgamma;
 
 }

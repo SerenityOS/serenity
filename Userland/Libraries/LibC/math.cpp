@@ -275,36 +275,6 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
     return extractor.to_float();
 }
 
-template<typename FloatT>
-static FloatT internal_gamma(FloatT x) NOEXCEPT
-{
-    if (isnan(x))
-        return (FloatT)NAN;
-
-    if (x == (FloatT)0.0)
-        return signbit(x) ? (FloatT)-INFINITY : (FloatT)INFINITY;
-
-    if (x < (FloatT)0 && (rintl(x) == x || isinf(x)))
-        return (FloatT)NAN;
-
-    if (isinf(x))
-        return (FloatT)INFINITY;
-
-    using Extractor = FloatExtractor<FloatT>;
-    // These constants were obtained through use of WolframAlpha
-    constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
-    static_assert(max_integer_whose_factorial_fits != 0, "internal_gamma needs to be aware of the integer factorial that fits in this floating point type.");
-    if ((int)x == x && x <= max_integer_whose_factorial_fits + 1) {
-        long long result = 1;
-        for (long long cursor = 2; cursor < (long long)x; cursor++)
-            result *= cursor;
-        return (FloatT)result;
-    }
-
-    // Stirling approximation
-    return sqrtl(2.0 * M_PIl / static_cast<long double>(x)) * powl(static_cast<long double>(x) / M_El, static_cast<long double>(x));
-}
-
 // https://pubs.opengroup.org/onlinepubs/9799919799/functions/fdim.html
 template<FloatingPoint T>
 static T internal_fdim(T x, T y)
@@ -421,6 +391,7 @@ MAKE_AK_BACKED1(exp);
 MAKE_AK_BACKED1(exp2);
 MAKE_AK_BACKED1(fabs);
 MAKE_AK_BACKED1(rint);
+MAKE_AK_BACKED1(tgamma);
 
 MAKE_AK_BACKED2(atan2);
 MAKE_AK_BACKED2(hypot);
@@ -923,21 +894,6 @@ double gamma(double x) NOEXCEPT
 {
     // Stirling approximation
     return sqrt(2.0 * M_PI / x) * pow(x / M_E, x);
-}
-
-long double tgammal(long double value) NOEXCEPT
-{
-    return internal_gamma(value);
-}
-
-double tgamma(double value) NOEXCEPT
-{
-    return internal_gamma(value);
-}
-
-float tgammaf(float value) NOEXCEPT
-{
-    return internal_gamma(value);
 }
 
 int signgam = 0;
