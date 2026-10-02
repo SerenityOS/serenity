@@ -5,6 +5,7 @@
  */
 
 #include <AK/MACAddress.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
@@ -44,6 +45,8 @@ namespace Kernel {
 #define REG_RAL0 0x5400             // Receive Address 0 Low
 #define REG_RAH0 0x5404             // Receive Address 0 High
 #define ECTRL_SLU 0x40              // set link up
+#define CTRL_GIO_MASTER_DISABLE (1 << 2)
+#define CTRL_RST (1 << 26)
 #define RCTL_EN (1 << 1)            // Receiver Enable
 #define RCTL_SBP (1 << 2)           // Store Bad Packets
 #define RCTL_UPE (1 << 3)           // Unicast Promiscuous Enabled
@@ -104,6 +107,7 @@ namespace Kernel {
 #define STATUS_FD 0x01
 #define STATUS_LU 0x02
 #define STATUS_TXOFF 0x08
+#define STATUS_GIO_MASTER_ENABLE (1 << 19)
 #define STATUS_SPEED 0xC0
 #define STATUS_SPEED_10MB 0x00
 #define STATUS_SPEED_100MB 0x40
@@ -176,6 +180,7 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
     case 0x1015: // 82540EM-A
     case 0x10D3: // 82574L
     case 0x1539: // I211
+    case 0x153A: // I217-LM
         return true;
     default:
         return false;
@@ -221,6 +226,9 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     out32(REG_INTERRUPT_MASK_CLEAR, 0xffff'ffff);
 
     dmesgln_pci(*this, "IO base: {}", m_registers_io_window);
+    if (has_flag(m_hardware_features, HardwareFeatures::QuirkNeedsMACReset))
+        TRY(reset_mac());
+
     read_mac_address();
     auto const& mac = mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac.to_string());
@@ -244,6 +252,28 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     return {};
 }
 
+UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::reset_mac()
+{
+    // Stop the device from starting new DMA transactions and wait for the outstanding ones to complete.
+    out32(REG_CTRL, in32(REG_CTRL) | CTRL_GIO_MASTER_DISABLE);
+    for (size_t i = 0; i < 800 && (in32(REG_STATUS) & STATUS_GIO_MASTER_ENABLE); ++i)
+        microseconds_delay(100);
+    if (in32(REG_STATUS) & STATUS_GIO_MASTER_ENABLE)
+        dmesgln_pci(*this, "Timed out waiting for DMA to stop, resetting anyway");
+
+    out32(REG_CTRL, in32(REG_CTRL) | CTRL_RST);
+    // The device must not be accessed for about 1 microsecond after setting CTRL.RST.
+    microseconds_delay(1);
+    for (size_t i = 0; i < 200 && (in32(REG_CTRL) & CTRL_RST); ++i)
+        microseconds_delay(100);
+    if (in32(REG_CTRL) & CTRL_RST) {
+        dmesgln_pci(*this, "Timed out waiting for MAC reset to complete");
+        return Error::from_errno(ETIMEDOUT);
+    }
+
+    return {};
+}
+
 UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
 {
     u32 flags = in32(REG_CTRL);
@@ -259,6 +289,9 @@ E1000NetworkAdapter::HardwareFeatures E1000NetworkAdapter::determine_hardware_fe
         return MDIOAccess;
     case 0x1539: // I211
         return MDIOAccess | HasQueueEnableBit | HasPreconfiguredPHYAddress;
+    case 0x153A: // I217-LM
+        // FIXME: The I217-LM supports MDIO, but our generic MDIO PHY initialization does not work on it yet.
+        return QuirkNeedsMACReset;
     default:
         return None;
     }
