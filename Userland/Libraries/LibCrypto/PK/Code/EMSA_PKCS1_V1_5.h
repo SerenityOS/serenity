@@ -56,6 +56,12 @@ public:
     virtual VerificationConsistency verify(ReadonlyBytes msg, ReadonlyBytes emsg, size_t em_bits) override
     {
         auto em_bytes = (em_bits + 7) / 8;
+
+        // RFC8017 section 9.2: 3. If emLen < tLen + 11, output "intended encoded message length too short" and stop.
+        // encode() leaves the buffer untouched in that case, so there is nothing to compare against.
+        if (em_bytes < hash_function_digest_info().size() + this->hasher().digest_size() + 11)
+            return VerificationConsistency::Inconsistent;
+
         auto buffer_result = ByteBuffer::create_uninitialized(em_bytes);
         if (buffer_result.is_error()) {
             dbgln("EMSA-PKCS1-V1_5-VERIFY: out of memory");
