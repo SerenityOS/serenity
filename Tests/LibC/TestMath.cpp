@@ -323,10 +323,7 @@ TEST_CASE(gamma)
     EXPECT(isnan(tgamma(-INFINITY)));
     EXPECT(isnan(tgamma(-5)));
 
-    // TODO: Stirling approximation is not precise for small values.
-    //       Eyeballed from the graph on https://en.wikipedia.org/wiki/Stirling%27s_approximation,
-    //       we should use another approximation for x < 2.
-    // EXPECT_APPROXIMATE(tgamma(0.5), sqrt(M_PI));
+    EXPECT_APPROXIMATE_WITH_ERROR(tgamma(0.5), sqrt(M_PI), 1e-10);
     EXPECT_EQ(tgammal(21.0l), 2'432'902'008'176'640'000.0l);
     EXPECT_EQ(tgamma(19.0), 6'402'373'705'728'000.0);
     EXPECT_EQ(tgammaf(11.0f), 3628800.0f);
