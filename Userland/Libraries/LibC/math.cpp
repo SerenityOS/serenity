@@ -275,52 +275,6 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
     return extractor.to_float();
 }
 
-template<typename FloatT>
-static FloatT internal_gamma(FloatT x) NOEXCEPT
-{
-    if (isnan(x))
-        return (FloatT)NAN;
-
-    if (x == (FloatT)0.0)
-        return signbit(x) ? (FloatT)-INFINITY : (FloatT)INFINITY;
-
-    if (x < (FloatT)0 && (rintl(x) == x || isinf(x)))
-        return (FloatT)NAN;
-
-    if (isinf(x))
-        return (FloatT)INFINITY;
-
-    using Extractor = FloatExtractor<FloatT>;
-    // These constants were obtained through use of WolframAlpha
-    constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
-    static_assert(max_integer_whose_factorial_fits != 0, "internal_gamma needs to be aware of the integer factorial that fits in this floating point type.");
-    if ((int)x == x && x <= max_integer_whose_factorial_fits + 1) {
-        long long result = 1;
-        for (long long cursor = 2; cursor < (long long)x; cursor++)
-            result *= cursor;
-        return (FloatT)result;
-    }
-
-    // Stirling approximation
-    return sqrtl(2.0 * M_PIl / static_cast<long double>(x)) * powl(static_cast<long double>(x) / M_El, static_cast<long double>(x));
-}
-
-template<typename Float>
-Float internal_lgamma(Float value, int* sign)
-{
-    if (value == static_cast<Float>(1.0) || value == static_cast<Float>(2.0))
-        return 0.0;
-    if (isinf(value) || value == static_cast<Float>(0.0))
-        return INFINITY;
-
-    // Use the Stirling approximation for log(gamma(x)) directly.
-    // This allows us to support bigger values of x, where gamma(x) would have returned inf.
-    // https://en.wikipedia.org/wiki/Stirling%27s_approximation
-    Float result = value * AK::log(value) - value;
-    *sign = signbit(result) ? -1 : 1;
-    return result;
-}
-
 // https://pubs.opengroup.org/onlinepubs/9799919799/functions/fdim.html
 template<FloatingPoint T>
 static T internal_fdim(T x, T y)
@@ -437,6 +391,7 @@ MAKE_AK_BACKED1(exp);
 MAKE_AK_BACKED1(exp2);
 MAKE_AK_BACKED1(fabs);
 MAKE_AK_BACKED1(rint);
+MAKE_AK_BACKED1(tgamma);
 
 MAKE_AK_BACKED2(atan2);
 MAKE_AK_BACKED2(hypot);
@@ -941,21 +896,6 @@ double gamma(double x) NOEXCEPT
     return sqrt(2.0 * M_PI / x) * pow(x / M_E, x);
 }
 
-long double tgammal(long double value) NOEXCEPT
-{
-    return internal_gamma(value);
-}
-
-double tgamma(double value) NOEXCEPT
-{
-    return internal_gamma(value);
-}
-
-float tgammaf(float value) NOEXCEPT
-{
-    return internal_gamma(value);
-}
-
 int signgam = 0;
 
 long double lgammal(long double value) NOEXCEPT
@@ -975,17 +915,17 @@ float lgammaf(float value) NOEXCEPT
 
 long double lgammal_r(long double value, int* sign) NOEXCEPT
 {
-    return internal_lgamma(value, sign);
+    return AK::lgamma_r(value, sign);
 }
 
 double lgamma_r(double value, int* sign) NOEXCEPT
 {
-    return internal_lgamma(value, sign);
+    return AK::lgamma_r(value, sign);
 }
 
 float lgammaf_r(float value, int* sign) NOEXCEPT
 {
-    return internal_lgamma(value, sign);
+    return AK::lgamma_r(value, sign);
 }
 
 long double expm1l(long double x) NOEXCEPT
