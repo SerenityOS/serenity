@@ -92,6 +92,7 @@ jobs:
           cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
             -DENABLE_LAGOM_LADYBIRD=ON \
+            -DENABLE_COMPARE_AK_MATH_AGAINST_MPFR=ON \
             -DINCLUDE_WASM_SPEC_TESTS=ON \
             -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
             -DENABLE_UNDEFINED_SANITIZER=ON \

@@ -16,3 +16,4 @@ serenity_option(ENABLE_LAGOM_LIBWEB ON CACHE BOOL "Enable compiling LibWeb for L
 serenity_option(ENABLE_LAGOM_LADYBIRD OFF CACHE BOOL "Enable compiling Ladybird from Lagom")
 serenity_option(LAGOM_USE_LINKER "" CACHE STRING "The linker to use (e.g. lld, mold) instead of the system default")
 serenity_option(ENABLE_LAGOM_COVERAGE_COLLECTION OFF CACHE STRING "Enable code coverage instrumentation for lagom binaries in clang")
+serenity_option(ENABLE_COMPARE_AK_MATH_AGAINST_MPFR OFF CACHE STRING "Enable the CompareAKMathAgainstMPFR target, used to test AK/Math. Requires MPFR to be installed.")
