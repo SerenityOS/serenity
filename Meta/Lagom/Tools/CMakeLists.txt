@@ -12,10 +12,13 @@ function(lagom_tool tool)
 endfunction()
 
 add_subdirectory(CodeGenerators)
-add_subdirectory(CompareAKMathAgainstMPFR)
 add_subdirectory(ConfigureComponents)
 add_subdirectory(PrekernelPEImageGenerator)
 add_subdirectory(IPCMagicLinter)
+
+if (!ENABLE_FUZZERS)
+    add_subdirectory(CompareAKMathAgainstMPFR)
+endif()
 
 if (APPLE)
     # FIXME: Remove this once https://openradar.appspot.com/21478051 is fixed.
