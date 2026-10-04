@@ -240,21 +240,21 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         m_cursor_blink_timer->start();
     }
 
-    if (event.key_code() == KeyCode::Key_PageUp && event.modifiers() == Mod_Shift) {
+    if (event.key() == GUI::Key_PageUp && event.modifiers() == Mod_Shift) {
         m_scrollbar->decrease_slider_by(m_terminal.rows());
         return;
     }
-    if (event.key_code() == KeyCode::Key_PageDown && event.modifiers() == Mod_Shift) {
+    if (event.key() == GUI::Key_PageDown && event.modifiers() == Mod_Shift) {
         m_scrollbar->increase_slider_by(m_terminal.rows());
         return;
     }
-    if (event.key_code() == KeyCode::Key_LeftAlt) {
+    if (event.key() == GUI::Key_Alt) {
         m_alt_key_held = true;
         return;
     }
 
     // Clear the selection if we type in/behind it.
-    auto future_cursor_column = (event.key_code() == KeyCode::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
+    auto future_cursor_column = (event.key() == GUI::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
     auto min_selection_row = min(m_selection.start().row(), m_selection.end().row());
     auto max_selection_row = max(m_selection.start().row(), m_selection.end().row());
 
@@ -266,14 +266,14 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     m_terminal.handle_key_press(event.key_code(), event.code_point(), event.modifiers());
 
-    if (event.key_code() != Key_LeftControl && event.key_code() != Key_LeftAlt && event.key_code() != Key_LeftShift && event.key_code() != Key_RightShift && event.key_code() != Key_LeftSuper)
+    if (event.key() != GUI::Key_Control && event.key() != GUI::Key_Alt && event.key() != GUI::Key_Shift && event.key() != GUI::Key_Super)
         scroll_to_bottom();
 }
 
 void TerminalWidget::keyup_event(GUI::KeyEvent& event)
 {
-    switch (event.key_code()) {
-    case KeyCode::Key_LeftAlt:
+    switch (event.key()) {
+    case GUI::Key_Alt:
         m_alt_key_held = false;
         return;
     default:

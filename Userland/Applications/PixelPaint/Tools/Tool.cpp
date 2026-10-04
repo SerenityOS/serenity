@@ -25,26 +25,26 @@ void Tool::set_action(GUI::Action* action)
 
 bool Tool::on_keydown(GUI::KeyEvent& event)
 {
-    switch (event.key_code()) {
-    case KeyCode::Key_LeftBracket:
+    switch (event.key()) {
+    case GUI::Key_LeftBracket:
         if (m_primary_slider) {
             m_primary_slider->decrease_slider_by(1);
             return true;
         }
         break;
-    case KeyCode::Key_RightBracket:
+    case GUI::Key_RightBracket:
         if (m_primary_slider) {
             m_primary_slider->increase_slider_by(1);
             return true;
         }
         break;
-    case KeyCode::Key_LeftBrace:
+    case GUI::Key_LeftBrace:
         if (m_secondary_slider) {
             m_secondary_slider->decrease_slider_by(1);
             return true;
         }
         break;
-    case KeyCode::Key_RightBrace:
+    case GUI::Key_RightBrace:
         if (m_secondary_slider) {
             m_secondary_slider->increase_slider_by(1);
             return true;

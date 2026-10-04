@@ -302,17 +302,17 @@ void Mandelbrot::paint_event(GUI::PaintEvent& event)
 
 void Mandelbrot::keydown_event(GUI::KeyEvent& event)
 {
-    switch (event.key_code()) {
-    case KeyCode::Key_Left:
+    switch (event.key()) {
+    case GUI::Key_Left:
         m_set.pan_by(Gfx::IntPoint { 10, 0 });
         break;
-    case KeyCode::Key_Right:
+    case GUI::Key_Right:
         m_set.pan_by(Gfx::IntPoint { -10, 0 });
         break;
-    case KeyCode::Key_Up:
+    case GUI::Key_Up:
         m_set.pan_by(Gfx::IntPoint { 0, 10 });
         break;
-    case KeyCode::Key_Down:
+    case GUI::Key_Down:
         m_set.pan_by(Gfx::IntPoint { 0, -10 });
         break;
     default:
@@ -326,11 +326,11 @@ void Mandelbrot::keydown_event(GUI::KeyEvent& event)
 
 void Mandelbrot::keyup_event(GUI::KeyEvent& event)
 {
-    switch (event.key_code()) {
-    case KeyCode::Key_Left:
-    case KeyCode::Key_Right:
-    case KeyCode::Key_Up:
-    case KeyCode::Key_Down:
+    switch (event.key()) {
+    case GUI::Key_Left:
+    case GUI::Key_Right:
+    case GUI::Key_Up:
+    case GUI::Key_Down:
         m_panning = false;
         break;
     default:

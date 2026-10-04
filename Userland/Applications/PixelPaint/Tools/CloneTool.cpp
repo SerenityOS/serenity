@@ -118,7 +118,7 @@ bool CloneTool::on_keydown(GUI::KeyEvent& event)
 
 void CloneTool::on_keyup(GUI::KeyEvent& event)
 {
-    if (m_is_selecting_location && event.key_code() == KeyCode::Key_LeftAlt) {
+    if (m_is_selecting_location && event.key() == GUI::Key_Alt) {
         m_is_selecting_location = false;
         m_editor->update_tool_cursor();
         return;
