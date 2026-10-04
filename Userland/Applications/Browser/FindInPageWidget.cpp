@@ -123,7 +123,7 @@ void FindInPageWidget::show(String const& global_term)
 
 void FindInPageWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Escape) {
+    if (event.key_code() == KeyCode::Key_Escape) {
         set_visible(false);
         event.accept();
         return;

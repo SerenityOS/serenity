@@ -167,10 +167,10 @@ void SoundPlayerWidget::drop_event(GUI::DropEvent& event)
 
 void SoundPlayerWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Up)
+    if (event.key_code() == Key_Up)
         m_volume_slider->increase_slider_by_page_steps(1);
 
-    if (event.key() == Key_Down)
+    if (event.key_code() == Key_Down)
         m_volume_slider->decrease_slider_by_page_steps(1);
 
     GUI::Widget::keydown_event(event);

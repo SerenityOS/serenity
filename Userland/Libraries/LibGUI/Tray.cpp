@@ -185,7 +185,7 @@ void Tray::keydown_event(GUI::KeyEvent& event)
     if (m_items.is_empty() || event.modifiers())
         return Frame::keydown_event(event);
 
-    if (event.key() == KeyCode::Key_Down) {
+    if (event.key_code() == KeyCode::Key_Down) {
         if (!m_hovered_item_index.has_value())
             m_hovered_item_index = 0;
         else
@@ -194,7 +194,7 @@ void Tray::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Up) {
+    if (event.key_code() == KeyCode::Key_Up) {
         if (!m_hovered_item_index.has_value() || m_hovered_item_index == 0u)
             m_hovered_item_index = m_items.size() - 1;
         else
@@ -203,7 +203,7 @@ void Tray::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Return) {
+    if (event.key_code() == KeyCode::Key_Return) {
         if (m_hovered_item_index.has_value())
             on_item_activation(m_items[*m_hovered_item_index].custom_data);
         return;

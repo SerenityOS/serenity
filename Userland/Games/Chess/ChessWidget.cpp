@@ -352,7 +352,7 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
 void ChessWidget::keydown_event(GUI::KeyEvent& event)
 {
     set_override_cursor(Gfx::StandardCursor::None);
-    switch (event.key()) {
+    switch (event.key_code()) {
     case KeyCode::Key_Left:
         playback_move(PlaybackDirection::Backward);
         break;

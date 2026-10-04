@@ -183,7 +183,7 @@ void ListView::keydown_event(KeyEvent& event)
     if (!model())
         return AbstractView::keydown_event(event);
 
-    if (event.key() == KeyCode::Key_Escape) {
+    if (event.key_code() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
             on_escape_pressed();
         return;

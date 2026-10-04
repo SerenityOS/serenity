@@ -85,7 +85,7 @@ void LinkLabel::mousedown_event(MouseEvent& event)
 void LinkLabel::keydown_event(KeyEvent& event)
 {
     Label::keydown_event(event);
-    if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space) {
+    if (event.key_code() == KeyCode::Key_Return || event.key_code() == KeyCode::Key_Space) {
         if (on_click)
             on_click();
     }

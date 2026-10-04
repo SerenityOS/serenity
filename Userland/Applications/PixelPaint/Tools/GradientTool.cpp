@@ -141,19 +141,19 @@ void GradientTool::on_mouseup(Layer*, MouseEvent& event)
 
 bool GradientTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_LeftShift || event.key() == Key_RightShift) {
+    if (event.key_code() == Key_LeftShift || event.key_code() == Key_RightShift) {
         m_shift_pressed = true;
         if (m_button_pressed)
             m_editor->update();
         return true;
     }
 
-    if (event.key() == Key_Return) {
+    if (event.key_code() == Key_Return) {
         rasterize_gradient();
         return true;
     }
 
-    if (event.key() == Key_Escape) {
+    if (event.key_code() == Key_Escape) {
         reset();
         return true;
     }
@@ -164,7 +164,7 @@ bool GradientTool::on_keydown(GUI::KeyEvent& event)
 void GradientTool::on_keyup(GUI::KeyEvent& event)
 {
     Tool::on_keydown(event);
-    if (event.key() == Key_Shift) {
+    if (event.key_code() == Key_Shift) {
         m_shift_pressed = false;
         event.accept();
     }

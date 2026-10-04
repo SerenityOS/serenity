@@ -25,7 +25,7 @@ void Tool::set_action(GUI::Action* action)
 
 bool Tool::on_keydown(GUI::KeyEvent& event)
 {
-    switch (event.key()) {
+    switch (event.key_code()) {
     case KeyCode::Key_LeftBracket:
         if (m_primary_slider) {
             m_primary_slider->decrease_slider_by(1);

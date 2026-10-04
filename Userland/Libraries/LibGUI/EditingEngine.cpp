@@ -25,7 +25,7 @@ void EditingEngine::detach()
 
 bool EditingEngine::on_key(KeyEvent const& event)
 {
-    if (event.key() == KeyCode::Key_Left) {
+    if (event.key_code() == KeyCode::Key_Left) {
         if (!event.shift() && m_editor->selection().is_valid()) {
             m_editor->set_cursor(m_editor->selection().normalized().start());
             m_editor->selection().clear();
@@ -53,7 +53,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
         return true;
     }
 
-    if (event.key() == KeyCode::Key_Right) {
+    if (event.key_code() == KeyCode::Key_Right) {
         if (!event.shift() && m_editor->selection().is_valid()) {
             m_editor->set_cursor(m_editor->selection().normalized().end());
             m_editor->selection().clear();
@@ -81,8 +81,8 @@ bool EditingEngine::on_key(KeyEvent const& event)
         return true;
     }
 
-    if (event.key() == KeyCode::Key_Up || event.key() == KeyCode::Key_Down) {
-        auto const direction = key_code_to_vertical_direction(event.key());
+    if (event.key_code() == KeyCode::Key_Up || event.key_code() == KeyCode::Key_Down) {
+        auto const direction = key_code_to_vertical_direction(event.key_code());
 
         bool const condition_for_up = direction == VerticalDirection::Up && m_editor->cursor().line() > 0;
         bool const condition_for_down = direction == VerticalDirection::Down && m_editor->cursor().line() < (m_editor->line_count() - 1);
@@ -109,7 +109,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
         return true;
     }
 
-    if (event.key() == KeyCode::Key_Home) {
+    if (event.key_code() == KeyCode::Key_Home) {
         m_editor->update_selection(event.shift());
         if (event.ctrl()) {
             move_to_first_line();
@@ -123,7 +123,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
         return true;
     }
 
-    if (event.key() == KeyCode::Key_End) {
+    if (event.key_code() == KeyCode::Key_End) {
         m_editor->update_selection(event.shift());
         if (event.ctrl()) {
             move_to_last_line();
@@ -137,7 +137,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
         return true;
     }
 
-    if (event.key() == KeyCode::Key_PageUp) {
+    if (event.key_code() == KeyCode::Key_PageUp) {
         if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
             m_editor->update_selection(event.shift());
         }
@@ -149,7 +149,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
         return true;
     }
 
-    if (event.key() == KeyCode::Key_PageDown) {
+    if (event.key_code() == KeyCode::Key_PageDown) {
         if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
             m_editor->update_selection(event.shift());
         }
@@ -401,7 +401,7 @@ void EditingEngine::delete_line()
 MoveLineUpOrDownCommand::MoveLineUpOrDownCommand(TextDocument& document, KeyEvent event, EditingEngine& engine)
     : TextDocumentUndoCommand(document)
     , m_event(move(event))
-    , m_direction(key_code_to_vertical_direction(m_event.key()))
+    , m_direction(key_code_to_vertical_direction(m_event.key_code()))
     , m_engine(engine)
     , m_selection(m_engine.editor().selection())
     , m_cursor(m_engine.editor().cursor())

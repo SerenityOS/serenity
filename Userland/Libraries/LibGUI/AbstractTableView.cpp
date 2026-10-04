@@ -474,19 +474,19 @@ void AbstractTableView::layout_headers()
 void AbstractTableView::keydown_event(KeyEvent& event)
 {
     if (is_tab_key_navigation_enabled()) {
-        if (!event.modifiers() && event.key() == KeyCode::Key_Tab) {
+        if (!event.modifiers() && event.key_code() == KeyCode::Key_Tab) {
             move_cursor(CursorMovement::Right, SelectionUpdate::Set);
             event.accept();
             ++m_tab_moves;
             return;
         } else if (is_navigation(event)) {
-            if (event.key() == KeyCode::Key_Return) {
+            if (event.key_code() == KeyCode::Key_Return) {
                 move_cursor_relative(0, -m_tab_moves, SelectionUpdate::Set);
             }
             m_tab_moves = 0;
         }
 
-        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Tab) {
+        if (event.modifiers() == KeyModifier::Mod_Shift && event.key_code() == KeyCode::Key_Tab) {
             move_cursor(CursorMovement::Left, SelectionUpdate::Set);
             event.accept();
             return;
@@ -498,7 +498,7 @@ void AbstractTableView::keydown_event(KeyEvent& event)
 
 bool AbstractTableView::is_navigation(GUI::KeyEvent& event)
 {
-    switch (event.key()) {
+    switch (event.key_code()) {
     case KeyCode::Key_Tab:
     case KeyCode::Key_Left:
     case KeyCode::Key_Right:

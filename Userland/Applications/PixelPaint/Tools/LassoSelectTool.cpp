@@ -143,7 +143,7 @@ void LassoSelectTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
 bool LassoSelectTool::on_keydown(GUI::KeyEvent& key_event)
 {
     Tool::on_keydown(key_event);
-    if (key_event.key() == KeyCode::Key_Escape) {
+    if (key_event.key_code() == KeyCode::Key_Escape) {
         if (m_selecting) {
             m_selecting = false;
             m_path_points.clear();

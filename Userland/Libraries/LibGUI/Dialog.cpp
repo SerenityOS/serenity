@@ -64,7 +64,7 @@ void Dialog::event(Core::Event& event)
 {
     if (event.type() == Event::KeyDown) {
         auto& key_event = static_cast<KeyEvent&>(event);
-        if (key_event.key() == KeyCode::Key_Escape) {
+        if (key_event.key_code() == KeyCode::Key_Escape) {
             done(ExecResult::Cancel);
             event.accept();
             return;

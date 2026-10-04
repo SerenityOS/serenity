@@ -44,7 +44,7 @@ public:
     // Release focus when escape is pressed
     virtual void keydown_event(GUI::KeyEvent& event) override
     {
-        if (event.key() == Key_Escape) {
+        if (event.key_code() == Key_Escape) {
             if (is_focused())
                 set_focus(false);
             event.accept();

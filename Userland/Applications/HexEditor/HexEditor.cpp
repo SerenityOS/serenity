@@ -508,7 +508,7 @@ int HexEditor::text_area_width() const
 
 void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
-    dbgln_if(HEX_DEBUG, "Editor::keydown_event key={}", static_cast<u8>(event.key()));
+    dbgln_if(HEX_DEBUG, "Editor::keydown_event key={}", static_cast<u8>(event.key_code()));
 
     auto move_and_update_cursor_by = [&](i64 cursor_location_change) {
         size_t new_position = m_position + cursor_location_change;
@@ -528,44 +528,44 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
         update_status();
     };
 
-    if (event.key() == KeyCode::Key_Up) {
+    if (event.key_code() == KeyCode::Key_Up) {
         if (m_position >= bytes_per_row())
             move_and_update_cursor_by(-bytes_per_row());
         return;
     }
 
-    if (event.key() == KeyCode::Key_Down) {
+    if (event.key_code() == KeyCode::Key_Down) {
         if (m_position + bytes_per_row() < m_document->size())
             move_and_update_cursor_by(bytes_per_row());
         return;
     }
 
-    if (event.key() == KeyCode::Key_Left) {
+    if (event.key_code() == KeyCode::Key_Left) {
         if (m_position >= 1)
             move_and_update_cursor_by(-1);
         return;
     }
 
-    if (event.key() == KeyCode::Key_Right) {
+    if (event.key_code() == KeyCode::Key_Right) {
         if (m_position + 1 < m_document->size())
             move_and_update_cursor_by(1);
         return;
     }
 
-    if (event.key() == KeyCode::Key_Backspace) {
+    if (event.key_code() == KeyCode::Key_Backspace) {
         if (m_position > 0)
             move_and_update_cursor_by(-1);
         return;
     }
 
-    if (event.key() == KeyCode::Key_PageUp) {
+    if (event.key_code() == KeyCode::Key_PageUp) {
         auto cursor_location_change = min(bytes_per_row() * floor(visible_content_rect().height() / line_height()), m_position);
         if (cursor_location_change > 0)
             move_and_update_cursor_by(-cursor_location_change);
         return;
     }
 
-    if (event.key() == KeyCode::Key_PageDown) {
+    if (event.key_code() == KeyCode::Key_PageDown) {
         auto cursor_location_change = min(bytes_per_row() * floor(visible_content_rect().height() / line_height()), m_document->size() - m_position);
         if (cursor_location_change > 0)
             move_and_update_cursor_by(cursor_location_change);
@@ -588,7 +588,7 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
 
 ErrorOr<void> HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
 {
-    if ((event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) || (event.key() >= KeyCode::Key_A && event.key() <= KeyCode::Key_F)) {
+    if ((event.key_code() >= KeyCode::Key_0 && event.key_code() <= KeyCode::Key_9) || (event.key_code() >= KeyCode::Key_A && event.key_code() <= KeyCode::Key_F)) {
         if (m_document->size() == 0)
             return {};
 
@@ -597,9 +597,9 @@ ErrorOr<void> HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
         auto old_value = m_document->get(m_position).value;
 
         // yes, this is terrible... but it works.
-        auto value = (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9)
-            ? event.key() - KeyCode::Key_0
-            : (event.key() - KeyCode::Key_A) + 0xA;
+        auto value = (event.key_code() >= KeyCode::Key_0 && event.key_code() <= KeyCode::Key_9)
+            ? event.key_code() - KeyCode::Key_0
+            : (event.key_code() - KeyCode::Key_A) + 0xA;
 
         if (!m_cursor_at_low_nibble) {
             u8 existing_change = m_document->get(m_position).value;

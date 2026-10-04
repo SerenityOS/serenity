@@ -32,13 +32,13 @@ private:
 
     static bool is_navigation(const GUI::KeyEvent& event)
     {
-        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Tab)
+        if (event.modifiers() == KeyModifier::Mod_Shift && event.key_code() == KeyCode::Key_Tab)
             return true;
 
         if (event.modifiers())
             return false;
 
-        switch (event.key()) {
+        switch (event.key_code()) {
         case KeyCode::Key_Tab:
         case KeyCode::Key_Return:
             return true;

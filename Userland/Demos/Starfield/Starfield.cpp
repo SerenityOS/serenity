@@ -77,7 +77,7 @@ ErrorOr<void> Starfield::create_stars(int width, int height, int stars)
 
 void Starfield::keydown_event(GUI::KeyEvent& event)
 {
-    switch (event.key()) {
+    switch (event.key_code()) {
     case Key_Plus:
         m_speed++;
         break;

@@ -796,7 +796,7 @@ bool VimEditingEngine::on_key_in_insert_mode(KeyEvent const& event)
         return true;
 
     if (event.ctrl()) {
-        switch (event.key()) {
+        switch (event.key_code()) {
         case KeyCode::Key_W:
             m_editor->delete_previous_word();
             return true;
@@ -811,7 +811,7 @@ bool VimEditingEngine::on_key_in_insert_mode(KeyEvent const& event)
         }
     }
 
-    if (event.key() == KeyCode::Key_Escape || (event.ctrl() && event.key() == KeyCode::Key_LeftBracket) || (event.ctrl() && event.key() == KeyCode::Key_C)) {
+    if (event.key_code() == KeyCode::Key_Escape || (event.ctrl() && event.key_code() == KeyCode::Key_LeftBracket) || (event.ctrl() && event.key_code() == KeyCode::Key_C)) {
         if (m_editor->cursor().column() > 0)
             move_one_left();
         switch_to_normal_mode();
@@ -823,15 +823,15 @@ bool VimEditingEngine::on_key_in_insert_mode(KeyEvent const& event)
 bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
 {
     // Ignore auxiliary keypress events.
-    if (event.key() == KeyCode::Key_LeftShift
-        || event.key() == KeyCode::Key_RightShift
-        || event.key() == KeyCode::Key_LeftControl
-        || event.key() == KeyCode::Key_LeftAlt) {
+    if (event.key_code() == KeyCode::Key_LeftShift
+        || event.key_code() == KeyCode::Key_RightShift
+        || event.key_code() == KeyCode::Key_LeftControl
+        || event.key_code() == KeyCode::Key_LeftAlt) {
         return false;
     }
 
     if (m_previous_key == KeyCode::Key_D) {
-        if (event.key() == KeyCode::Key_D && !m_motion.should_consume_next_character()) {
+        if (event.key_code() == KeyCode::Key_D && !m_motion.should_consume_next_character()) {
             if (m_motion.amount()) {
                 auto range = m_motion.get_repeat_range(*this, VimMotion::Unit::Line);
                 VERIFY(range.has_value());
@@ -844,7 +844,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
             m_motion.reset();
             m_previous_key = {};
         } else {
-            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
             if (m_motion.is_complete()) {
                 if (!m_motion.is_cancelled()) {
                     auto range = m_motion.get_range(*this);
@@ -860,7 +860,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
             }
         }
     } else if (m_previous_key == KeyCode::Key_Y) {
-        if (event.key() == KeyCode::Key_Y && !m_motion.should_consume_next_character()) {
+        if (event.key_code() == KeyCode::Key_Y && !m_motion.should_consume_next_character()) {
             if (m_motion.amount()) {
                 auto range = m_motion.get_repeat_range(*this, VimMotion::Unit::Line);
                 VERIFY(range.has_value());
@@ -871,7 +871,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
             m_motion.reset();
             m_previous_key = {};
         } else {
-            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
             if (m_motion.is_complete()) {
                 if (!m_motion.is_cancelled()) {
                     auto range = m_motion.get_range(*this);
@@ -889,7 +889,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
             }
         }
     } else if (m_previous_key == KeyCode::Key_C) {
-        if (event.key() == KeyCode::Key_C && !m_motion.should_consume_next_character()) {
+        if (event.key_code() == KeyCode::Key_C && !m_motion.should_consume_next_character()) {
             // Needed because the code to replace the deleted line is called after delete_line() so
             // what was the second last line before the delete, is now the last line.
             bool was_second_last_line = m_editor->cursor().line() == m_editor->line_count() - 2;
@@ -908,7 +908,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
             }
             switch_to_insert_mode();
         } else {
-            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
             if (m_motion.is_complete()) {
                 if (!m_motion.is_cancelled()) {
                     auto range = m_motion.get_range(*this);
@@ -930,7 +930,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
         if (m_motion.should_consume_next_character()) {
             // We must consume the next character.
             // FIXME: deduplicate with code below.
-            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
             if (m_motion.is_complete()) {
                 if (!m_motion.is_cancelled()) {
                     auto maybe_new_position = m_motion.get_position(*this);
@@ -946,7 +946,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
         }
 
         // Handle first any key codes that are to be applied regardless of modifiers.
-        switch (event.key()) {
+        switch (event.key_code()) {
         case (KeyCode::Key_Escape):
             return false;
         default:
@@ -955,7 +955,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
 
         // SHIFT is pressed.
         if (event.shift() && !event.ctrl() && !event.alt()) {
-            switch (event.key()) {
+            switch (event.key_code()) {
             case (KeyCode::Key_A):
                 move_to_logical_line_end();
                 switch_to_insert_mode();
@@ -1017,7 +1017,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
 
         // CTRL is pressed.
         if (event.ctrl() && !event.shift() && !event.alt()) {
-            switch (event.key()) {
+            switch (event.key_code()) {
             case (KeyCode::Key_D):
                 move_half_page_down();
                 return true;
@@ -1037,16 +1037,16 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
 
         // No modifier is pressed.
         if (!event.ctrl() && !event.shift() && !event.alt()) {
-            switch (event.key()) {
+            switch (event.key_code()) {
             case (KeyCode::Key_A):
                 move_one_right();
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_C):
-                m_previous_key = event.key();
+                m_previous_key = event.key_code();
                 return true;
             case (KeyCode::Key_D):
-                m_previous_key = event.key();
+                m_previous_key = event.key_code();
                 return true;
             case (KeyCode::Key_I):
                 switch_to_insert_mode();
@@ -1075,7 +1075,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
                 switch_to_visual_mode();
                 return true;
             case (KeyCode::Key_Y):
-                m_previous_key = event.key();
+                m_previous_key = event.key_code();
                 return true;
             case (KeyCode::Key_P):
                 put_after();
@@ -1093,7 +1093,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
 
         // If nothing else handled the key, we'll be feeding the motion state
         // machine instead.
-        m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+        m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
         if (m_motion.is_complete()) {
             if (!m_motion.is_cancelled()) {
                 auto maybe_new_position = m_motion.get_position(*this);
@@ -1113,7 +1113,7 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
 {
     // If the motion state machine requires the next character, feed it.
     if (m_motion.should_consume_next_character()) {
-        m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+        m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
         if (m_motion.is_complete()) {
             if (!m_motion.is_cancelled()) {
                 auto maybe_new_position = m_motion.get_position(*this, true);
@@ -1131,7 +1131,7 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
     }
 
     // Handle first any key codes that are to be applied regardless of modifiers.
-    switch (event.key()) {
+    switch (event.key_code()) {
     case (KeyCode::Key_Escape):
         switch_to_normal_mode();
         return false;
@@ -1141,7 +1141,7 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
 
     // SHIFT is pressed.
     if (event.shift() && !event.ctrl() && !event.alt()) {
-        switch (event.key()) {
+        switch (event.key_code()) {
         case (KeyCode::Key_A):
             move_to_logical_line_end();
             switch_to_insert_mode();
@@ -1165,7 +1165,7 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
 
     // CTRL is pressed.
     if (event.ctrl() && !event.shift() && !event.alt()) {
-        switch (event.key()) {
+        switch (event.key_code()) {
         case (KeyCode::Key_D):
             move_half_page_down();
             update_selection_on_cursor_move();
@@ -1181,7 +1181,7 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
 
     // No modifier is pressed.
     if (!event.ctrl() && !event.shift() && !event.alt()) {
-        switch (event.key()) {
+        switch (event.key_code()) {
         case (KeyCode::Key_D):
             yank(Selection);
             m_editor->do_delete();
@@ -1222,7 +1222,7 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
     }
 
     // By default, we feed the motion state machine.
-    m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+    m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
     if (m_motion.is_complete()) {
         if (!m_motion.is_cancelled()) {
             auto maybe_new_position = m_motion.get_position(*this, true);
@@ -1243,7 +1243,7 @@ bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
 {
     // If the motion state machine requires the next character, feed it.
     if (m_motion.should_consume_next_character()) {
-        m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+        m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
         if (m_motion.is_complete()) {
             if (!m_motion.is_cancelled()) {
                 auto maybe_new_position = m_motion.get_position(*this, true);
@@ -1261,7 +1261,7 @@ bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
     }
 
     // Handle first any key codes that are to be applied regardless of modifiers.
-    switch (event.key()) {
+    switch (event.key_code()) {
     case (KeyCode::Key_Escape):
         switch_to_normal_mode();
         return false;
@@ -1271,7 +1271,7 @@ bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
 
     // SHIFT is pressed.
     if (event.shift() && !event.ctrl() && !event.alt()) {
-        switch (event.key()) {
+        switch (event.key_code()) {
         case (KeyCode::Key_U):
             casefold_selection(Casing::Uppercase);
             switch_to_normal_mode();
@@ -1287,7 +1287,7 @@ bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
 
     // CTRL is pressed.
     if (event.ctrl() && !event.shift() && !event.alt()) {
-        switch (event.key()) {
+        switch (event.key_code()) {
         case (KeyCode::Key_D):
             move_half_page_down();
             update_selection_on_cursor_move();
@@ -1303,7 +1303,7 @@ bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
 
     // No modifier is pressed.
     if (!event.ctrl() && !event.shift() && !event.alt()) {
-        switch (event.key()) {
+        switch (event.key_code()) {
         case (KeyCode::Key_D):
             yank(m_editor->selection(), Line);
             m_editor->do_delete();
@@ -1341,7 +1341,7 @@ bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
     }
 
     // By default, we feed the motion state machine.
-    m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+    m_motion.add_key_code(event.key_code(), event.ctrl(), event.shift(), event.alt());
     if (m_motion.is_complete()) {
         if (!m_motion.is_cancelled()) {
             auto maybe_new_position = m_motion.get_position(*this, true);

@@ -20,7 +20,7 @@ bool RegularEditingEngine::on_key(KeyEvent const& event)
     if (EditingEngine::on_key(event))
         return true;
 
-    if (event.alt() && event.shift() && event.key() == KeyCode::Key_S) {
+    if (event.alt() && event.shift() && event.key_code() == KeyCode::Key_S) {
         sort_selected_lines();
         return true;
     }

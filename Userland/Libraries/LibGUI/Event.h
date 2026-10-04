@@ -399,7 +399,7 @@ public:
     {
     }
 
-    KeyCode key() const { return m_key; }
+    KeyCode key_code() const { return m_key; }
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool altgr() const { return m_modifiers & Mod_AltGr; }

@@ -466,7 +466,7 @@ void TreeView::keydown_event(KeyEvent& event)
     if (!model())
         return AbstractTableView::keydown_event(event);
 
-    if (event.key() == KeyCode::Key_Space) {
+    if (event.key_code() == KeyCode::Key_Space) {
         if (model()->row_count(cursor_index()))
             toggle_index(cursor_index());
         return;
@@ -481,7 +481,7 @@ void TreeView::keydown_event(KeyEvent& event)
         update();
     };
 
-    if (event.key() == KeyCode::Key_Left) {
+    if (event.key_code() == KeyCode::Key_Left) {
         if (cursor_index().is_valid() && model()->row_count(cursor_index())) {
             if (event.ctrl()) {
                 collapse_tree(cursor_index());
@@ -500,7 +500,7 @@ void TreeView::keydown_event(KeyEvent& event)
         }
     }
 
-    if (event.key() == KeyCode::Key_Right) {
+    if (event.key_code() == KeyCode::Key_Right) {
         if (cursor_index().is_valid() && model()->row_count(cursor_index())) {
             if (event.ctrl()) {
                 expand_tree(cursor_index());
@@ -519,7 +519,7 @@ void TreeView::keydown_event(KeyEvent& event)
         }
     }
 
-    if (event.key() == KeyCode::Key_Return) {
+    if (event.key_code() == KeyCode::Key_Return) {
         if (cursor_index().is_valid() && model()->row_count(cursor_index())) {
             toggle_index(cursor_index());
             return;

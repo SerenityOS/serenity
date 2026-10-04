@@ -291,12 +291,12 @@ void GlyphMapWidget::doubleclick_event(MouseEvent& event)
 
 void GlyphMapWidget::keydown_event(KeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Tab) {
+    if (event.key_code() == KeyCode::Key_Tab) {
         AbstractScrollableWidget::keydown_event(event);
         return;
     }
 
-    if (event.key() == KeyCode::Key_Escape) {
+    if (event.key_code() == KeyCode::Key_Escape) {
         m_selection.set_size(1);
         m_selection.set_start(m_active_glyph);
         if (on_escape_pressed)
@@ -319,7 +319,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
     int last_glyph = m_active_range.last;
     auto selection = m_selection.normalized();
 
-    if (event.key() == KeyCode::Key_Up) {
+    if (event.key_code() == KeyCode::Key_Up) {
         if (m_active_glyph - m_columns < first_glyph)
             return;
         if (event.ctrl() && selection.start() - m_columns < first_glyph)
@@ -333,7 +333,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Down) {
+    if (event.key_code() == KeyCode::Key_Down) {
         if (m_active_glyph + m_columns > last_glyph)
             return;
         if (event.ctrl() && selection.start() + selection.size() - 1 + m_columns > last_glyph)
@@ -347,7 +347,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Left) {
+    if (event.key_code() == KeyCode::Key_Left) {
         if (event.alt())
             return event.ignore();
         if (m_active_glyph - 1 < first_glyph)
@@ -363,7 +363,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Right) {
+    if (event.key_code() == KeyCode::Key_Right) {
         if (event.alt())
             return event.ignore();
         if (m_active_glyph + 1 > last_glyph)
@@ -379,7 +379,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Home) {
+    if (event.key_code() == KeyCode::Key_Home) {
         if (event.alt()) {
             set_active_glyph(first_glyph);
             scroll_to_glyph(m_active_glyph);
@@ -398,7 +398,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_End) {
+    if (event.key_code() == KeyCode::Key_End) {
         if (event.alt()) {
             set_active_glyph(last_glyph);
             scroll_to_glyph(m_active_glyph);
@@ -424,7 +424,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         auto current_row = (m_active_glyph - first_glyph) / columns();
         auto page = m_active_glyph;
 
-        if (event.key() == KeyCode::Key_PageDown) {
+        if (event.key_code() == KeyCode::Key_PageDown) {
             auto current_page = m_active_glyph + m_columns * (last_visible_row - current_row);
             auto next_page = m_active_glyph + m_columns * m_visible_rows;
             auto remainder = m_active_glyph + m_columns * ((last_glyph - first_glyph) / columns() - current_row);
@@ -443,7 +443,7 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
             return;
         }
 
-        if (event.key() == KeyCode::Key_PageUp) {
+        if (event.key_code() == KeyCode::Key_PageUp) {
             auto current_page = m_active_glyph - m_columns * (current_row - first_visible_row);
             auto previous_page = m_active_glyph - m_columns * m_visible_rows;
             auto remainder = m_active_glyph - m_columns * current_row;

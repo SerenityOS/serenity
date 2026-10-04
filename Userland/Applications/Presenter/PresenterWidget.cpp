@@ -158,11 +158,11 @@ void PresenterWidget::set_file(StringView file_name)
 
 void PresenterWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape && window()->is_fullscreen())
+    if (event.key_code() == Key_Escape && window()->is_fullscreen())
         window()->set_fullscreen(false);
 
     // Alternate shortcuts for forward and backward
-    switch (event.key()) {
+    switch (event.key_code()) {
     case Key_Down:
     case Key_PageDown:
     case Key_Space:

@@ -995,10 +995,10 @@ void TextEditor::set_or_clear_emoji_input_callback()
 
 void TextEditor::keydown_event(KeyEvent& event)
 {
-    if (!is_editable() && event.key() == KeyCode::Key_Tab)
+    if (!is_editable() && event.key_code() == KeyCode::Key_Tab)
         return AbstractScrollableWidget::keydown_event(event);
 
-    if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key_code() == KeyCode::Key_Return || event.key_code() == KeyCode::Key_Tab)) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
         if (m_autocomplete_box->apply_suggestion() == CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::Yes)
             hide_autocomplete();
@@ -1007,62 +1007,62 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key() == KeyCode::Key_Escape) {
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key_code() == KeyCode::Key_Escape) {
         hide_autocomplete();
         return;
     }
 
-    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key() == KeyCode::Key_Up) {
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key_code() == KeyCode::Key_Up) {
         m_autocomplete_box->previous_suggestion();
         return;
     }
 
-    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key() == KeyCode::Key_Down) {
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key_code() == KeyCode::Key_Down) {
         m_autocomplete_box->next_suggestion();
         return;
     }
 
     if (is_single_line()) {
-        if (event.key() == KeyCode::Key_Tab)
+        if (event.key_code() == KeyCode::Key_Tab)
             return AbstractScrollableWidget::keydown_event(event);
 
-        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Return) {
+        if (event.modifiers() == KeyModifier::Mod_Shift && event.key_code() == KeyCode::Key_Return) {
             if (on_shift_return_pressed)
                 on_shift_return_pressed();
             return;
         }
 
-        if (event.modifiers() == KeyModifier::Mod_Ctrl && event.key() == KeyCode::Key_Return) {
+        if (event.modifiers() == KeyModifier::Mod_Ctrl && event.key_code() == KeyCode::Key_Return) {
             if (on_ctrl_return_pressed)
                 on_ctrl_return_pressed();
             return;
         }
 
-        if (event.key() == KeyCode::Key_Return) {
+        if (event.key_code() == KeyCode::Key_Return) {
             if (on_return_pressed)
                 on_return_pressed();
             return;
         }
 
-        if (event.key() == KeyCode::Key_Up) {
+        if (event.key_code() == KeyCode::Key_Up) {
             if (on_up_pressed)
                 on_up_pressed();
             return;
         }
 
-        if (event.key() == KeyCode::Key_Down) {
+        if (event.key_code() == KeyCode::Key_Down) {
             if (on_down_pressed)
                 on_down_pressed();
             return;
         }
 
-        if (event.key() == KeyCode::Key_PageUp) {
+        if (event.key_code() == KeyCode::Key_PageUp) {
             if (on_pageup_pressed)
                 on_pageup_pressed();
             return;
         }
 
-        if (event.key() == KeyCode::Key_PageDown) {
+        if (event.key_code() == KeyCode::Key_PageDown) {
             if (on_pagedown_pressed)
                 on_pagedown_pressed();
             return;
@@ -1076,7 +1076,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         try_update_autocomplete();
     } };
 
-    if (is_multi_line() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Return) {
+    if (is_multi_line() && !event.alt() && event.ctrl() && event.key_code() == KeyCode::Key_Return) {
         if (!is_editable())
             return;
 
@@ -1087,7 +1087,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
+    if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key_code() == KeyCode::Key_Space) {
         if (m_autocomplete_provider) {
             try_show_autocomplete(UserRequestedAutocomplete::Yes);
             update_autocomplete.disarm();
@@ -1095,7 +1095,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
     }
 
-    if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_F) {
+    if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key_code() == KeyCode::Key_F) {
         m_search_banner->show();
         return;
     }
@@ -1103,7 +1103,7 @@ void TextEditor::keydown_event(KeyEvent& event)
     if (m_editing_engine->on_key(event))
         return;
 
-    if (event.key() == KeyCode::Key_Escape) {
+    if (event.key_code() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
             on_escape_pressed();
         else
@@ -1111,13 +1111,13 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
+    if (event.modifiers() == Mod_Shift && event.key_code() == KeyCode::Key_Delete) {
         if (m_autocomplete_box)
             hide_autocomplete();
         return;
     }
 
-    if (event.key() == KeyCode::Key_Tab) {
+    if (event.key_code() == KeyCode::Key_Tab) {
         if (has_selection()) {
             if (event.modifiers() == Mod_Shift) {
                 unindent_selection();
@@ -1135,7 +1135,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
     }
 
-    if (event.key() == KeyCode::Key_Delete) {
+    if (event.key_code() == KeyCode::Key_Delete) {
         if (!is_editable())
             return;
         if (m_autocomplete_box)
@@ -1173,7 +1173,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Backspace) {
+    if (event.key_code() == KeyCode::Key_Backspace) {
         if (!is_editable())
             return;
         if (m_autocomplete_box)
@@ -1223,7 +1223,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.ctrl() && event.key() == KeyCode::Key_Slash) {
+    if (event.ctrl() && event.key_code() == KeyCode::Key_Slash) {
         if (m_highlighter != nullptr) {
             auto prefix = m_highlighter->comment_prefix().value_or(""sv);
             auto suffix = m_highlighter->comment_suffix().value_or(""sv);

@@ -81,7 +81,7 @@ private:
 
     virtual void keydown_event(GUI::KeyEvent& event) override
     {
-        if (event.key() == Key_Escape) {
+        if (event.key_code() == Key_Escape) {
             m_region = Gfx::IntRect();
             m_window->close();
         }

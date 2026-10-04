@@ -106,16 +106,16 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
 
 bool RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
 {
-    if (key_event.key() == KeyCode::Key_Space) {
+    if (key_event.key_code() == KeyCode::Key_Space) {
         m_moving_mode = MovingMode::MovingOrigin;
         return true;
     }
-    if (key_event.key() == KeyCode::Key_LeftControl) {
+    if (key_event.key_code() == KeyCode::Key_LeftControl) {
         m_moving_mode = MovingMode::AroundCenter;
         return true;
     }
 
-    if (key_event.key() == KeyCode::Key_Escape) {
+    if (key_event.key_code() == KeyCode::Key_Escape) {
         if (m_selecting)
             m_selecting = false;
         else
@@ -128,9 +128,9 @@ bool RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
 
 void RectangleSelectTool::on_keyup(GUI::KeyEvent& key_event)
 {
-    if (key_event.key() == KeyCode::Key_Space && m_moving_mode == MovingMode::MovingOrigin)
+    if (key_event.key_code() == KeyCode::Key_Space && m_moving_mode == MovingMode::MovingOrigin)
         m_moving_mode = MovingMode::None;
-    else if (key_event.key() == KeyCode::Key_LeftControl && m_moving_mode == MovingMode::AroundCenter)
+    else if (key_event.key_code() == KeyCode::Key_LeftControl && m_moving_mode == MovingMode::AroundCenter)
         m_moving_mode = MovingMode::None;
 }
 

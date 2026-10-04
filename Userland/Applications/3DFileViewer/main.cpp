@@ -196,7 +196,7 @@ void GLContextWidget::mousewheel_event(GUI::MouseEvent& event)
 
 void GLContextWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape && window()->is_fullscreen()) {
+    if (event.key_code() == Key_Escape && window()->is_fullscreen()) {
         window()->set_fullscreen(false);
         return;
     }

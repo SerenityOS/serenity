@@ -159,23 +159,23 @@ void CalculatorWidget::update_display()
 
 void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Equal)
+    if (event.key_code() == KeyCode::Key_Return || event.key_code() == KeyCode::Key_Equal)
         m_equals_button->click();
     else if (event.code_point() >= '0' && event.code_point() <= '9')
         m_digit_button[event.code_point() - '0']->click();
     else if (event.code_point() == '.')
         m_decimal_point_button->click();
-    else if (event.key() == KeyCode::Key_Escape || event.key() == KeyCode::Key_Delete)
+    else if (event.key_code() == KeyCode::Key_Escape || event.key_code() == KeyCode::Key_Delete)
         m_clear_button->click();
-    else if (event.key() == KeyCode::Key_Backspace)
+    else if (event.key_code() == KeyCode::Key_Backspace)
         m_backspace_button->click();
-    else if (event.key() == KeyCode::Key_Backslash)
+    else if (event.key_code() == KeyCode::Key_Backslash)
         m_sign_button->click();
-    else if (event.key() == KeyCode::Key_S)
+    else if (event.key_code() == KeyCode::Key_S)
         m_sqrt_button->click();
-    else if (event.key() == KeyCode::Key_Percent)
+    else if (event.key_code() == KeyCode::Key_Percent)
         m_percent_button->click();
-    else if (event.key() == KeyCode::Key_I)
+    else if (event.key_code() == KeyCode::Key_I)
         m_inverse_button->click();
     else if (event.code_point() == '+')
         m_add_button->click();

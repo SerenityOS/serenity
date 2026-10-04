@@ -187,12 +187,12 @@ void AbstractButton::focusout_event(GUI::FocusEvent& event)
 
 void AbstractButton::keydown_event(KeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space) {
+    if (event.key_code() == KeyCode::Key_Return || event.key_code() == KeyCode::Key_Space) {
         m_being_pressed = m_being_keyboard_pressed = true;
         update();
         event.accept();
         return;
-    } else if (m_being_pressed && event.key() == KeyCode::Key_Escape) {
+    } else if (m_being_pressed && event.key_code() == KeyCode::Key_Escape) {
         m_being_pressed = m_being_keyboard_pressed = false;
         update();
         event.accept();
@@ -216,7 +216,7 @@ void AbstractButton::keydown_event(KeyEvent& event)
         if (exclusive_siblings.size() <= 1)
             return;
         size_t new_checked_index;
-        if (event.key() == KeyCode::Key_Left || event.key() == KeyCode::Key_Up)
+        if (event.key_code() == KeyCode::Key_Left || event.key_code() == KeyCode::Key_Up)
             new_checked_index = this_index == 0 ? exclusive_siblings.size() - 1 : this_index - 1;
         else
             new_checked_index = this_index == exclusive_siblings.size() - 1 ? 0 : this_index + 1;
@@ -229,7 +229,7 @@ void AbstractButton::keydown_event(KeyEvent& event)
 void AbstractButton::keyup_event(KeyEvent& event)
 {
     bool was_being_pressed = m_being_pressed;
-    if (was_being_pressed && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space)) {
+    if (was_being_pressed && (event.key_code() == KeyCode::Key_Return || event.key_code() == KeyCode::Key_Space)) {
         m_being_pressed = m_being_keyboard_pressed = false;
         click(event.modifiers());
         update();

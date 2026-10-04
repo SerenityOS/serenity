@@ -132,7 +132,7 @@ void RectangleTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 
 bool RectangleTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
+    if (event.key_code() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
         return true;

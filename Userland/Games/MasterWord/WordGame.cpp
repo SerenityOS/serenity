@@ -84,12 +84,12 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
         m_last_word_invalid = false;
     }
     // If backspace pressed and already have some letters entered
-    else if (event.key() == KeyCode::Key_Backspace && m_current_guess.length() > 0) {
+    else if (event.key_code() == KeyCode::Key_Backspace && m_current_guess.length() > 0) {
         m_current_guess = m_current_guess.substring(0, m_current_guess.length() - 1);
         m_last_word_invalid = false;
     }
     // If return pressed
-    else if (event.key() == KeyCode::Key_Return) {
+    else if (event.key_code() == KeyCode::Key_Return) {
         if (m_current_guess.length() < m_num_letters) {
             show_message("Not enough letters"sv);
             m_last_word_invalid = true;

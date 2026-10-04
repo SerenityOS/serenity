@@ -555,7 +555,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
 void Window::propagate_shortcuts(KeyEvent& event, Widget* widget, ShortcutPropagationBoundary boundary)
 {
     VERIFY(event.type() == Event::KeyDown);
-    auto shortcut = Shortcut(event.modifiers(), event.key());
+    auto shortcut = Shortcut(event.modifiers(), event.key_code());
     Action* action = nullptr;
 
     if (widget) {
@@ -623,11 +623,11 @@ void Window::save_size_and_position_on_close(StringView domain, StringView group
 
 void Window::handle_key_event(KeyEvent& event)
 {
-    if (!m_focused_widget && event.type() == Event::KeyDown && event.key() == Key_Tab && !event.ctrl() && !event.alt() && !event.super()) {
+    if (!m_focused_widget && event.type() == Event::KeyDown && event.key_code() == Key_Tab && !event.ctrl() && !event.alt() && !event.super()) {
         focus_a_widget_if_possible(FocusSource::Keyboard);
     }
 
-    if (m_default_return_key_widget && event.key() == Key_Return)
+    if (m_default_return_key_widget && event.key_code() == Key_Return)
         if (!m_focused_widget || !is<Button>(m_focused_widget.ptr()))
             return default_return_key_widget()->dispatch_event(event, this);
 

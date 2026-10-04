@@ -44,7 +44,7 @@ private:
 
     virtual void keydown_event(KeyEvent& event) override
     {
-        if (event.key() == Key_Escape) {
+        if (event.key_code() == Key_Escape) {
             if (is_focused())
                 set_focus(false);
             event.accept();
@@ -94,7 +94,7 @@ ComboBox::ComboBox()
     m_editor->on_keypress = [this](KeyEvent& event) {
         if (!m_only_allow_values_from_model)
             return;
-        if (!m_list_window->is_visible() && event.key() <= Key_Z && event.key() >= Key_A && event.modifiers() == Mod_None) {
+        if (!m_list_window->is_visible() && event.key_code() <= Key_Z && event.key_code() >= Key_A && event.modifiers() == Mod_None) {
             open();
             m_list_window->event(event);
         }

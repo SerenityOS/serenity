@@ -172,7 +172,7 @@ private:
 
     virtual void keydown_event(GUI::KeyEvent& event) override
     {
-        if (event.key() == KeyCode::Key_Escape) {
+        if (event.key_code() == KeyCode::Key_Escape) {
             event.accept();
             m_event_loop->quit(0);
             return;

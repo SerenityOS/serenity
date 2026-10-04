@@ -565,18 +565,18 @@ void Game::advance_game()
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.shift() && event.key() == KeyCode::Key_F10) {
+    if (event.shift() && event.key_code() == KeyCode::Key_F10) {
         m_players[0].is_human = !m_players[0].is_human;
         advance_game();
-    } else if (event.key() == KeyCode::Key_F10) {
+    } else if (event.key_code() == KeyCode::Key_F10) {
         if (m_human_can_play && m_state == State::Play)
             play_card(m_players[0], pick_card(m_players[0]));
         else if (m_state == State::PassingSelect)
             select_cards_for_passing();
-    } else if (event.key() == KeyCode::Key_Space) {
+    } else if (event.key_code() == KeyCode::Key_Space) {
         if (m_human_can_play && m_state == State::Play)
             play_card(m_players[0], pick_first_card_ltr(m_players[0]));
-    } else if (event.shift() && event.key() == KeyCode::Key_F11) {
+    } else if (event.shift() && event.key_code() == KeyCode::Key_F11) {
         dump_state();
     } else {
         event.ignore();

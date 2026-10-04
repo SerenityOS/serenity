@@ -532,7 +532,7 @@ void AbstractView::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_F2) {
+    if (event.key_code() == KeyCode::Key_F2) {
         if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed) {
             begin_editing(cursor_index());
             event.accept();
@@ -540,7 +540,7 @@ void AbstractView::keydown_event(KeyEvent& event)
         }
     }
 
-    if (event.key() == KeyCode::Key_Return) {
+    if (event.key_code() == KeyCode::Key_Return) {
         activate_selected();
         event.accept();
         return;
@@ -551,49 +551,49 @@ void AbstractView::keydown_event(KeyEvent& event)
         selection_update = SelectionUpdate::Shift;
     }
 
-    if (event.key() == KeyCode::Key_Left) {
+    if (event.key_code() == KeyCode::Key_Left) {
         move_cursor(CursorMovement::Left, selection_update);
         event.accept();
         return;
     }
-    if (event.key() == KeyCode::Key_Right) {
+    if (event.key_code() == KeyCode::Key_Right) {
         move_cursor(CursorMovement::Right, selection_update);
         event.accept();
         return;
     }
-    if (event.key() == KeyCode::Key_Up) {
+    if (event.key_code() == KeyCode::Key_Up) {
         move_cursor(CursorMovement::Up, selection_update);
         event.accept();
         return;
     }
-    if (event.key() == KeyCode::Key_Down) {
+    if (event.key_code() == KeyCode::Key_Down) {
         move_cursor(CursorMovement::Down, selection_update);
         event.accept();
         return;
     }
-    if (event.key() == KeyCode::Key_Home) {
+    if (event.key_code() == KeyCode::Key_Home) {
         move_cursor(CursorMovement::Home, selection_update);
         event.accept();
         return;
     }
-    if (event.key() == KeyCode::Key_End) {
+    if (event.key_code() == KeyCode::Key_End) {
         move_cursor(CursorMovement::End, selection_update);
         event.accept();
         return;
     }
-    if (event.key() == KeyCode::Key_PageUp) {
+    if (event.key_code() == KeyCode::Key_PageUp) {
         move_cursor(CursorMovement::PageUp, selection_update);
         event.accept();
         return;
     }
-    if (event.key() == KeyCode::Key_PageDown) {
+    if (event.key_code() == KeyCode::Key_PageDown) {
         move_cursor(CursorMovement::PageDown, selection_update);
         event.accept();
         return;
     }
 
     if (is_searchable()) {
-        if (event.key() == KeyCode::Key_Backspace) {
+        if (event.key_code() == KeyCode::Key_Backspace) {
             if (m_highlighted_search.has_value()) {
                 // if (event.modifiers() == Mod_Ctrl) {
                 //  TODO: delete last word
@@ -622,14 +622,14 @@ void AbstractView::keydown_event(KeyEvent& event)
                 event.accept();
                 return;
             }
-        } else if (event.key() == KeyCode::Key_Escape) {
+        } else if (event.key_code() == KeyCode::Key_Escape) {
             if (m_highlighted_search.has_value()) {
                 stop_highlighted_search_timer();
 
                 event.accept();
                 return;
             }
-        } else if (event.key() != KeyCode::Key_Tab && !event.ctrl() && !event.alt() && event.code_point() != 0) {
+        } else if (event.key_code() != KeyCode::Key_Tab && !event.ctrl() && !event.alt() && event.code_point() != 0) {
             StringBuilder sb;
             if (m_highlighted_search.has_value())
                 sb.append(*m_highlighted_search);

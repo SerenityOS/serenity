@@ -236,13 +236,13 @@ void Game::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
-    if (event.shift() && event.key() == KeyCode::Key_F12) {
+    if (event.shift() && event.key_code() == KeyCode::Key_F12) {
         start_game_over_animation();
-    } else if (event.key() == KeyCode::Key_Tab) {
+    } else if (event.key_code() == KeyCode::Key_Tab) {
         auto_move_eligible_cards_to_foundations();
-    } else if (event.key() == KeyCode::Key_Space) {
+    } else if (event.key_code() == KeyCode::Key_Space) {
         draw_cards();
-    } else if (event.shift() && event.key() == KeyCode::Key_F11) {
+    } else if (event.shift() && event.key_code() == KeyCode::Key_F11) {
         if constexpr (SOLITAIRE_DEBUG) {
             dump_layout();
         }

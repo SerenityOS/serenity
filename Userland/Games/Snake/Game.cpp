@@ -196,7 +196,7 @@ void Game::timer_event(Core::TimerEvent&)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    switch (event.key()) {
+    switch (event.key_code()) {
     case KeyCode::Key_A:
     case KeyCode::Key_Left:
         if (last_velocity().horizontal == 1)

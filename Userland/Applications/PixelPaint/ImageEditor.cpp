@@ -476,7 +476,7 @@ void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
 
 void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Delete && !m_image->selection().is_empty() && active_layer()) {
+    if (event.key_code() == Key_Delete && !m_image->selection().is_empty() && active_layer()) {
         active_layer()->erase_selection(m_image->selection());
         did_complete_action("Erase Selection"sv);
         return;
@@ -485,19 +485,19 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
     if (!m_active_tool)
         return;
 
-    if (!m_active_tool->is_overriding_alt() && event.key() == Key_LeftAlt)
+    if (!m_active_tool->is_overriding_alt() && event.key_code() == Key_LeftAlt)
         set_override_cursor(Gfx::StandardCursor::Eyedropper);
 
     if (m_active_tool->on_keydown(event))
         return;
 
-    if (event.key() == Key_Escape && !m_image->selection().is_empty()) {
+    if (event.key_code() == Key_Escape && !m_image->selection().is_empty()) {
         m_image->selection().clear();
         did_complete_action("Clear Selection"sv);
         return;
     }
 
-    if (event.key() == Key_Space) {
+    if (event.key_code() == Key_Space) {
         start_panning(m_mouse_position);
         return;
     }
@@ -510,10 +510,10 @@ void ImageEditor::keyup_event(GUI::KeyEvent& event)
     if (!m_active_tool)
         return;
 
-    if (!m_active_tool->is_overriding_alt() && event.key() == Key_LeftAlt)
+    if (!m_active_tool->is_overriding_alt() && event.key_code() == Key_LeftAlt)
         update_tool_cursor();
 
-    if (event.key() == Key_Space)
+    if (event.key_code() == Key_Space)
         stop_panning();
 
     m_active_tool->on_keyup(event);

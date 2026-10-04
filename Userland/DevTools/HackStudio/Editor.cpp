@@ -682,7 +682,7 @@ void Editor::keydown_event(GUI::KeyEvent& event)
         m_tooltip_role.clear();
     }
 
-    if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_P) {
+    if (!event.shift() && !event.alt() && event.ctrl() && event.key_code() == KeyCode::Key_P) {
         handle_function_parameters_hint_request();
     }
 
