@@ -104,15 +104,15 @@ ErrorOr<void> MainWidget::initialize()
     };
     m_wrap_around_checkbox->set_checked(true);
 
-    m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find-next.png"sv)), [this](auto&) {
+    m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, GUI::Key_G }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find-next.png"sv)), [this](auto&) {
         find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResults::Yes);
     });
 
-    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find-previous.png"sv)), [this](auto&) {
+    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, GUI::Key_G }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find-previous.png"sv)), [this](auto&) {
         find_text(GUI::TextEditor::SearchDirection::Backward, ShowMessageIfNoResults::Yes);
     });
 
-    m_replace_action = GUI::Action::create("Rep&lace", { Mod_Ctrl, Key_F1 }, [&](auto&) {
+    m_replace_action = GUI::Action::create("Rep&lace", { Mod_Ctrl, GUI::Key_F1 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
@@ -132,7 +132,7 @@ ErrorOr<void> MainWidget::initialize()
         }
     });
 
-    m_replace_all_action = GUI::Action::create("Replace &All", { Mod_Ctrl, Key_F2 }, [&](auto&) {
+    m_replace_all_action = GUI::Action::create("Replace &All", { Mod_Ctrl, GUI::Key_F2 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         auto length_delta = substitute.length() - needle.length();
@@ -195,7 +195,7 @@ ErrorOr<void> MainWidget::initialize()
         m_editor->set_focus(true);
     };
 
-    m_vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
+    m_vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, GUI::Key_V }, [&](auto& action) {
         if (action.is_checked())
             m_editor->set_editing_engine(make<GUI::VimEditingEngine>());
         else
@@ -203,7 +203,7 @@ ErrorOr<void> MainWidget::initialize()
     });
     m_vim_emulation_setting_action->set_checked(false);
 
-    m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find.png"sv)), [this](auto&) {
+    m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl | Mod_Shift, GUI::Key_F }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find.png"sv)), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
@@ -245,7 +245,7 @@ ErrorOr<void> MainWidget::initialize()
     m_editor->on_selection_change = [this] { update_statusbar(); };
     m_editor->on_highlighter_change = [this] { update_statusbar(); };
 
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/new.png"sv)), [this](GUI::Action const&) {
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, GUI::Key_N }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/new.png"sv)), [this](GUI::Action const&) {
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
             if (save_document_first_result == GUI::Dialog::ExecResult::Yes)
@@ -311,7 +311,7 @@ ErrorOr<void> MainWidget::initialize()
     });
 
     auto file_manager_icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/app-file-manager.png"sv));
-    m_open_folder_action = GUI::Action::create("Reveal in File Manager", { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
+    m_open_folder_action = GUI::Action::create("Reveal in File Manager", { Mod_Ctrl | Mod_Shift, GUI::Key_O }, file_manager_icon, [&](auto&) {
         auto lexical_path = LexicalPath(m_path);
         Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
     });

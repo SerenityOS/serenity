@@ -108,7 +108,7 @@ void CloneTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
 
 bool CloneTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.key_code() == KeyCode::Key_LeftAlt && !m_is_selecting_location) {
+    if (event.key() == GUI::Key_Alt && !m_is_selecting_location) {
         m_is_selecting_location = true;
         m_editor->update_tool_cursor();
         return true;

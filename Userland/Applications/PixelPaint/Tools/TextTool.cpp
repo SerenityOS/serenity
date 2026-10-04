@@ -291,7 +291,7 @@ bool TextTool::on_keydown(GUI::KeyEvent& event)
     // Pass key events that would normally be handled by menu shortcuts to our TextEditor subclass.
     for (auto& action : m_text_editor->actions()) {
         auto const& shortcut = action->shortcut();
-        if (event.key_code() == shortcut.key() && event.modifiers() == shortcut.modifiers()) {
+        if (event.key() == shortcut.key() && event.modifiers() == shortcut.modifiers()) {
             action->activate(m_text_editor);
             return true;
         }

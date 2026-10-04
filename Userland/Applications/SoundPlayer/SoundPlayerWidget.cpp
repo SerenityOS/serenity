@@ -81,13 +81,13 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ConnectionToSer
     auto& toolbar_container = m_player_view->add<GUI::ToolbarContainer>();
     auto& menubar = toolbar_container.add<GUI::Toolbar>();
 
-    m_play_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
+    m_play_action = GUI::Action::create("Play", { GUI::Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
     });
     m_play_action->set_enabled(false);
     menubar.add_action(*m_play_action);
 
-    m_stop_action = GUI::Action::create("Stop", { Key_S }, m_stop_icon, [&](auto&) {
+    m_stop_action = GUI::Action::create("Stop", { GUI::Key_S }, m_stop_icon, [&](auto&) {
         stop();
     });
     m_stop_action->set_enabled(false);
@@ -115,7 +115,7 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ConnectionToSer
 
     menubar.add_separator();
 
-    m_mute_action = GUI::Action::create("Mute", { Key_M }, m_volume_icon, [&](auto&) {
+    m_mute_action = GUI::Action::create("Mute", { GUI::Key_M }, m_volume_icon, [&](auto&) {
         toggle_mute();
     });
     m_mute_action->set_enabled(true);

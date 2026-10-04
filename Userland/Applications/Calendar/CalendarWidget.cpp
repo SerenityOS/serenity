@@ -278,7 +278,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_jump_to_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_view_month_action()
 {
-    return GUI::Action::create_checkable("&Month View", { Mod_Ctrl, KeyCode::Key_1 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/calendar-month-view.png"sv)), [&](GUI::Action const&) {
+    return GUI::Action::create_checkable("&Month View", { Mod_Ctrl, GUI::Key_1 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/calendar-month-view.png"sv)), [&](GUI::Action const&) {
         if (m_event_calendar->mode() == GUI::Calendar::Year)
             m_event_calendar->toggle_mode();
     });
@@ -286,7 +286,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_view_month_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_view_year_action()
 {
-    return GUI::Action::create_checkable("&Year View", { Mod_Ctrl, KeyCode::Key_2 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/icon-view.png"sv)), [&](GUI::Action const&) {
+    return GUI::Action::create_checkable("&Year View", { Mod_Ctrl, GUI::Key_2 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/icon-view.png"sv)), [&](GUI::Action const&) {
         if (m_event_calendar->mode() == GUI::Calendar::Month)
             m_event_calendar->toggle_mode();
     });

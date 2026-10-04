@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = window->add_menu("&Game"_string);
 
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, GUI::Key_F2 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/reload.png"sv)), [&](auto&) {
         field->reset();
     }));
 
@@ -89,28 +89,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup difficulty_actions;
     difficulty_actions.set_exclusive(true);
 
-    auto action = GUI::Action::create_checkable("&Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
+    auto action = GUI::Action::create_checkable("&Beginner", { Mod_Ctrl, GUI::Key_B }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Beginner);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Beginner);
     difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Intermediate", { Mod_Ctrl, GUI::Key_I }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Intermediate);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Intermediate);
     difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Expert", { Mod_Ctrl, GUI::Key_E }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Expert);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Expert);
     difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Madwoman", { Mod_Ctrl, GUI::Key_M }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Madwoman);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Madwoman);
@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     difficulty_actions.add_action(action);
 
     difficulty_menu->add_separator();
-    action = GUI::Action::create_checkable("&Custom Game...", { Mod_Ctrl, Key_C }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Custom Game...", { Mod_Ctrl, GUI::Key_C }, [&](auto&) {
         Minesweeper::CustomGameDialog::show(window, field);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Custom);

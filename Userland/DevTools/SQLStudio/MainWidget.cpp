@@ -61,7 +61,7 @@ static Vector<ByteString> lookup_database_names()
 
 ErrorOr<void> MainWidget::initialize()
 {
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/new.png"sv)), [this](auto&) {
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, GUI::Key_N }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/new.png"sv)), [this](auto&) {
         open_new_script();
     });
 
@@ -86,7 +86,7 @@ ErrorOr<void> MainWidget::initialize()
             GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save {}\n{}", editor->path(), result.error()));
     });
 
-    m_save_all_action = GUI::Action::create("Save All", { Mod_Ctrl | Mod_Alt, Key_S }, [this](auto&) {
+    m_save_all_action = GUI::Action::create("Save All", { Mod_Ctrl | Mod_Alt, GUI::Key_S }, [this](auto&) {
         auto* editor = active_editor();
         VERIFY(editor);
 
@@ -147,7 +147,7 @@ ErrorOr<void> MainWidget::initialize()
         update_editor_actions(editor);
     });
 
-    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [this](auto&) {
+    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, GUI::Key_C }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [this](auto&) {
         auto database_name = m_databases_combo_box->text().trim_whitespace();
         if (database_name.is_empty())
             return;
@@ -169,7 +169,7 @@ ErrorOr<void> MainWidget::initialize()
         }
     });
 
-    m_run_script_action = GUI::Action::create("Run Script", { Mod_Alt, Key_F9 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/play.png"sv)), [&](auto&) {
+    m_run_script_action = GUI::Action::create("Run Script", { Mod_Alt, GUI::Key_F9 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/play.png"sv)), [&](auto&) {
         m_results.clear();
         m_current_line_for_parsing = 0;
         read_next_sql_statement_of_editor();

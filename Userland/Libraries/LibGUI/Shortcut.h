@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Geordie Hall <me@geordiehall.com>
+ * Copyright (c) 2026, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,21 +9,21 @@
 #pragma once
 
 #include <AK/Traits.h>
-#include <Kernel/API/KeyCode.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/Key.h>
 
 namespace GUI {
 
 class Shortcut {
 public:
     Shortcut() = default;
-    Shortcut(u8 modifiers, KeyCode key)
+    Shortcut(u8 modifiers, Key key)
         : m_type(Type::Keyboard)
         , m_modifiers(modifiers)
         , m_keyboard_key(key)
     {
     }
-    Shortcut(KeyCode key)
+    Shortcut(Key key)
         : m_type(Type::Keyboard)
         , m_modifiers(0)
         , m_keyboard_key(key)
@@ -48,10 +49,10 @@ public:
 
     ByteString to_byte_string() const;
     Type type() const { return m_type; }
-    bool is_valid() const { return m_type == Type::Keyboard ? (m_keyboard_key != KeyCode::Key_Invalid) : (m_mouse_button != MouseButton::None); }
+    bool is_valid() const { return m_type == Type::Keyboard ? (m_keyboard_key != Key::Key_Invalid) : (m_mouse_button != MouseButton::None); }
     u8 modifiers() const { return m_modifiers; }
 
-    KeyCode key() const
+    Key key() const
     {
         VERIFY(m_type == Type::Keyboard);
         return m_keyboard_key;
@@ -71,7 +72,7 @@ public:
 private:
     Type m_type { Type::Keyboard };
     u8 m_modifiers { 0 };
-    KeyCode m_keyboard_key { KeyCode::Key_Invalid };
+    Key m_keyboard_key { Key::Key_Invalid };
     MouseButton m_mouse_button { MouseButton::None };
 };
 

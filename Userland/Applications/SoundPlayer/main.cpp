@@ -74,19 +74,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto playback_menu = window->add_menu("&Playback"_string);
     GUI::ActionGroup loop_actions;
     loop_actions.set_exclusive(true);
-    auto loop_none = GUI::Action::create_checkable("&No Loop", { Mod_Ctrl, Key_N }, [&](auto&) {
+    auto loop_none = GUI::Action::create_checkable("&No Loop", { Mod_Ctrl, GUI::Key_N }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::None);
     });
     loop_actions.add_action(loop_none);
     playback_menu->add_action(loop_none);
 
-    auto loop_file = GUI::Action::create_checkable("Loop &File", { Mod_Ctrl, Key_F }, [&](auto&) {
+    auto loop_file = GUI::Action::create_checkable("Loop &File", { Mod_Ctrl, GUI::Key_F }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::File);
     });
     loop_actions.add_action(loop_file);
     playback_menu->add_action(loop_file);
 
-    auto loop_playlist = GUI::Action::create_checkable("Loop &Playlist", { Mod_Ctrl, Key_P }, [&](auto&) {
+    auto loop_playlist = GUI::Action::create_checkable("Loop &Playlist", { Mod_Ctrl, GUI::Key_P }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::Playlist);
     });
     loop_actions.add_action(loop_playlist);

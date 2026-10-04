@@ -555,7 +555,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
 void Window::propagate_shortcuts(KeyEvent& event, Widget* widget, ShortcutPropagationBoundary boundary)
 {
     VERIFY(event.type() == Event::KeyDown);
-    auto shortcut = Shortcut(event.modifiers(), event.key_code());
+    auto shortcut = Shortcut(event.modifiers(), event.key());
     Action* action = nullptr;
 
     if (widget) {

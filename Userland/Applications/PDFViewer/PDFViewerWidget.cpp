@@ -335,7 +335,7 @@ NonnullRefPtr<Gfx::Bitmap const> PDFViewerWidget::update_thumbnail_for_page(u32 
 void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 {
     auto open_outline_action = GUI::Action::create(
-        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/sidebar.png"sv)), [&](auto&) {
+        "Toggle &Sidebar", { Mod_Ctrl, GUI::Key_S }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/sidebar.png"sv)), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
             m_sidebar->set_visible(m_sidebar_open);
         },

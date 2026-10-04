@@ -469,7 +469,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         [&](GUI::Action&) {
             save_image(ImageType::BMP, "bmp"sv);
         }));
-    export_submenu->add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, Key_S },
+    export_submenu->add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, GUI::Key_S },
         [&](GUI::Action&) {
             save_image(ImageType::PNG, "png"sv);
         }));

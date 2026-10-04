@@ -291,7 +291,7 @@ void Widget::handle_keydown_event(KeyEvent& event)
     if (event.is_accepted())
         return;
 
-    if (auto action = Action::find_action_for_shortcut(*this, Shortcut(event.modifiers(), event.key_code()))) {
+    if (auto action = Action::find_action_for_shortcut(*this, Shortcut(event.modifiers(), event.key()))) {
         action->process_event(*window(), event);
         if (event.is_accepted())
             return;
