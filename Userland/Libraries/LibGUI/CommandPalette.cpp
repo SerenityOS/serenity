@@ -241,7 +241,7 @@ void CommandPalette::collect_actions(GUI::Window& parent_window)
     };
 
     Function<bool(GUI::Action*)> should_show_action = [&](GUI::Action* action) {
-        return action && action->is_enabled() && action->is_visible() && action->shortcut() != Shortcut(Mod_Ctrl | Mod_Shift, Key_A);
+        return action && action->is_enabled() && action->is_visible() && action->shortcut() != Shortcut(Mod_Ctrl | Mod_Shift, KeyCode::Key_A);
     };
 
     Function<void(Menu&)> collect_actions_from_menu = [&](Menu& menu) {

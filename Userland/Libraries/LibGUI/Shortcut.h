@@ -48,7 +48,7 @@ public:
 
     ByteString to_byte_string() const;
     Type type() const { return m_type; }
-    bool is_valid() const { return m_type == Type::Keyboard ? (m_keyboard_key != Key_Invalid) : (m_mouse_button != MouseButton::None); }
+    bool is_valid() const { return m_type == Type::Keyboard ? (m_keyboard_key != KeyCode::Key_Invalid) : (m_mouse_button != MouseButton::None); }
     u8 modifiers() const { return m_modifiers; }
 
     KeyCode key() const
@@ -81,7 +81,7 @@ namespace AK {
 
 template<>
 struct Traits<GUI::Shortcut> : public DefaultTraits<GUI::Shortcut> {
-    static unsigned hash(const GUI::Shortcut& shortcut)
+    static unsigned hash(GUI::Shortcut const& shortcut)
     {
         auto base_hash = pair_int_hash(shortcut.modifiers(), (u32)shortcut.type());
         if (shortcut.type() == GUI::Shortcut::Type::Keyboard) {

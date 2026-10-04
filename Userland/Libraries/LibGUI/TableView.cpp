@@ -191,8 +191,8 @@ void TableView::keydown_event(KeyEvent& event)
     if (event.is_accepted())
         return;
 
-    auto is_delete = event.key_code() == Key_Delete;
-    auto is_backspace = event.key_code() == Key_Backspace;
+    auto is_delete = event.key_code() == KeyCode::Key_Delete;
+    auto is_backspace = event.key_code() == KeyCode::Key_Backspace;
     auto is_clear = is_delete || is_backspace;
     auto is_control_character = is_ascii_c0_control(event.code_point());
     if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && !event.ctrl() && (!is_control_character || is_clear)) {

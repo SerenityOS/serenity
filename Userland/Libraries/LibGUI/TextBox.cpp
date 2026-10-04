@@ -27,7 +27,7 @@ void TextBox::keydown_event(GUI::KeyEvent& event)
 {
     TextEditor::keydown_event(event);
 
-    if (event.key_code() == Key_Up) {
+    if (event.key_code() == KeyCode::Key_Up) {
         if (on_up_pressed)
             on_up_pressed();
 
@@ -39,7 +39,7 @@ void TextBox::keydown_event(GUI::KeyEvent& event)
 
         m_history_index--;
         set_text(m_history[m_history_index]);
-    } else if (event.key_code() == Key_Down) {
+    } else if (event.key_code() == KeyCode::Key_Down) {
         if (on_down_pressed)
             on_down_pressed();
 
