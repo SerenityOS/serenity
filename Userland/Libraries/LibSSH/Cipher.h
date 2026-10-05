@@ -27,7 +27,7 @@ public:
     virtual u8 aad_size() const { return 0; }
 
 private:
-    virtual void decrypt_impl(u32 packet_sequence_number, Bytes) = 0;
+    virtual ErrorOr<void> decrypt_impl(u32 packet_sequence_number, Bytes) = 0;
     virtual void encrypt_impl(u32 packet_sequence_number, Bytes) = 0;
 
     u8 m_block_size {};
@@ -44,7 +44,7 @@ public:
 
 private:
     u32 decrypt_packet_length(u32, Bytes bytes) override;
-    void decrypt_impl(u32, Bytes) override { }
+    ErrorOr<void> decrypt_impl(u32, Bytes) override { return {}; }
     void encrypt_impl(u32, Bytes) override { }
 };
 
@@ -67,7 +67,7 @@ private:
     }
 
     u32 decrypt_packet_length(u32, Bytes) override;
-    void decrypt_impl(u32, Bytes) override;
+    ErrorOr<void> decrypt_impl(u32, Bytes) override;
     void encrypt_impl(u32, Bytes) override;
 
     virtual u8 aad_size() const override

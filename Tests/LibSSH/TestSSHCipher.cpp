@@ -56,6 +56,31 @@ TEST_CASE(ChaCha20Poly1305_decrypt)
     EXPECT_EQ(packet.bytes().slice_from_end(additional_data.length()), additional_data.bytes());
 }
 
+TEST_CASE(ChaCha20Poly1305_decrypt_tampered_packet)
+{
+    // The data comes from ChaCha20Poly1305_decrypt.
+
+    auto shared_secret_raw = "\x53\x22\xc2\x28\x50\xfe\x85\xbd\xb3\x35\xcf\xb4\x67\x4a\x82\x0b\xd0\x54\xa3\xd9\x4a\xc8\x3c\x55\x91\xb4\xd5\xf7\x52\x28\xd2\x6c"sv;
+    auto hash_raw = "\xc0\x73\x95\x08\xd8\xc0\xbf\x2a\x6d\x13\x1b\xfd\x67\x88\x32\xdf\x15\xeb\x5a\x2e\x5a\xf3\xdf\x98\xa1\x1c\x41\x2b\x2a\x26\x4d\x62"sv;
+
+    auto shared_secret = TRY_OR_FAIL(ByteBuffer::copy(shared_secret_raw.bytes()));
+    SSH::ChaCha20Poly1305Cipher::Digest hash;
+    hash_raw.bytes().copy_to({ &hash.data, decltype(hash)::Size });
+
+    auto encrypted_raw = "\x0c\x3b\x6d\x66\xb1\x72\xf3\x85\xa4\x88\x35\xf2\x0a\x6d\xa5\x9b\x29\xcf\xe6\xe8\x5f\xad\x05\x6b\x94\x89\xae\xab\x10\x37\x88\x7a\x6b\x58\x30\xb1\x9b\x6f\xc1\x8f\x6c\x89\x68\x24"sv;
+
+    auto cipher = SSH::ChaCha20Poly1305Cipher::create(shared_secret, hash, hash);
+
+    // Flipping a bit of the message ID turns SERVICE_REQUEST into DEBUG.
+    auto tampered_payload = TRY_OR_FAIL(ByteBuffer::copy(encrypted_raw.bytes()));
+    tampered_payload[5] ^= 1;
+    EXPECT(cipher->decrypt(3, tampered_payload).is_error());
+
+    auto tampered_mac = TRY_OR_FAIL(ByteBuffer::copy(encrypted_raw.bytes()));
+    tampered_mac[tampered_mac.size() - 1] ^= 1;
+    EXPECT(cipher->decrypt(3, tampered_mac).is_error());
+}
+
 TEST_CASE(ChaCha20Poly1305_encrypt)
 {
     // This test case is an SSH_MSG_SERVICE_ACCEPT message send by SSHServer that was accepted by an openssh client.
