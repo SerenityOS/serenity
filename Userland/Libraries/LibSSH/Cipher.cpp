@@ -8,6 +8,7 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
+#include <AK/Memory.h>
 #include <AK/OwnPtr.h>
 #include <LibCrypto/Authentication/Poly1305.h>
 #include <LibCrypto/Cipher/ChaCha20.h>
@@ -27,8 +28,7 @@ ErrorOr<void> Cipher::decrypt(u32 packet_sequence_number, Bytes bytes)
     if (bytes.size() % m_block_size != 0)
         return Error::from_string_literal("Can't decipher message of invalid block size");
 
-    decrypt_impl(packet_sequence_number, bytes);
-    return {};
+    return decrypt_impl(packet_sequence_number, bytes);
 }
 
 ErrorOr<void> Cipher::encrypt(u32 packet_sequence_number, Bytes bytes)
@@ -134,21 +134,43 @@ u32 ChaCha20Poly1305Cipher::decrypt_packet_length(u32 packet_sequence_number, By
 
 // 7. Packet Handling
 // https://datatracker.ietf.org/doc/html/draft-ietf-sshm-chacha20-poly1305-02#section-7
-void ChaCha20Poly1305Cipher::decrypt_impl(u32 packet_sequence_number, Bytes bytes)
+ErrorOr<void> ChaCha20Poly1305Cipher::decrypt_impl(u32 packet_sequence_number, Bytes bytes)
 {
+    // The MAC covers the encrypted packet length, which gets decrypted in place below.
+    Array<u8, 4> encrypted_packet_length {};
+    bytes.trim(4).copy_to(encrypted_packet_length);
+
     u32 packet_length = decrypt_packet_length(packet_sequence_number, bytes);
 
-    // FIXME: "Once the entire packet has been received, the MAC MUST be checked before decryption."
-
-    // "the packet decrypted using ChaCha20 as described above (with K_1, the packet
-    // sequence number as nonce and a starting block counter of 1)."
-
     auto packet = bytes.slice(4, packet_length);
+    auto mac = bytes.slice(4 + packet.size(), mac_size());
 
     NetworkOrdered<u64> nonce_data(packet_sequence_number);
     ReadonlyBytes nonce { &nonce_data, sizeof(nonce_data) };
+
+    // "Once the entire packet has been received, the MAC MUST be checked before decryption.
+    // A per-packet Poly1305 key is generated as described above and the MAC tag calculated
+    // using Poly1305 with this key over the ciphertext of the packet length and the payload
+    // together. The calculated MAC is then compared in constant time with the one appended
+    // to the packet [...]"
+    Array<u8, 32> poly_key {};
+
+    Crypto::Cipher::ChaCha20 mac_generator(m_k_1_client_to_server.bytes(), nonce, 0);
+    mac_generator.encrypt(poly_key, poly_key);
+
+    Crypto::Authentication::Poly1305 poly1305(poly_key);
+    poly1305.update(encrypted_packet_length);
+    poly1305.update(packet);
+    auto computed_mac = TRY(poly1305.digest());
+    if (!timing_safe_compare(computed_mac.data(), mac.data(), mac.size()))
+        return Error::from_string_literal("Packet has an invalid MAC");
+
+    // "the packet decrypted using ChaCha20 as described above (with K_1, the packet
+    // sequence number as nonce and a starting block counter of 1)."
     Crypto::Cipher::ChaCha20 packet_decryptor(m_k_1_client_to_server.bytes(), nonce, 1);
     packet_decryptor.decrypt(packet, packet);
+
+    return {};
 }
 
 // 7. Packet Handling
