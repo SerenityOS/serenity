@@ -16,6 +16,7 @@ namespace GPU {
 static HashMap<StringView, char const*> const s_driver_path_map {
 #if defined(AK_OS_SERENITY)
     { "softgpu"sv, "libsoftgpu.so.serenity" },
+    { "v3dgpu"sv, "libv3dgpu.so.serenity" },
     { "virtgpu"sv, "libvirtgpu.so.serenity" },
 #elif defined(AK_OS_MACOS)
     { "softgpu"sv, "liblagom-softgpu.dylib" },
