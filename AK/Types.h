@@ -30,6 +30,8 @@ using f80 = long double;
 #    elif __LDBL_MANT_DIG__ == 113 && __LDBL_MAX_EXP__ == 16384
 #        define AK_HAS_FLOAT_128 1
 using f128 = long double;
+#    elif __LDBL_MANT_DIG__ == __DBL_MANT_DIG__ && __LDBL_MAX_EXP__ == __DBL_MAX_EXP__
+#        define AK_LONG_DOUBLE_IS_DOUBLE
 #    endif
 #endif
 
