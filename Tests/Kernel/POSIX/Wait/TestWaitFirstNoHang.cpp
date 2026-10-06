@@ -23,11 +23,11 @@ static void sigchld_handler(int, siginfo_t* siginfo, void*)
 
 static void run_test(auto callback)
 {
-    struct sigaction s;
+    struct sigaction s, old_sigaction;
     s.sa_sigaction = sigchld_handler;
     sigemptyset(&s.sa_mask);
     s.sa_flags = SA_SIGINFO;
-    TRY_OR_FAIL(Core::System::sigaction(SIGCHLD, &s, nullptr));
+    TRY_OR_FAIL(Core::System::sigaction(SIGCHLD, &s, &old_sigaction));
 
     g_wait_caller = move(callback);
 
@@ -46,6 +46,8 @@ static void run_test(auto callback)
 
     sigsuspend(&prev);
     EXPECT_EQ(sigprocmask(SIG_SETMASK, &prev, nullptr), 0);
+
+    TRY_OR_FAIL(Core::System::sigaction(SIGCHLD, &old_sigaction, nullptr));
 }
 
 TEST_CASE(waitid)
