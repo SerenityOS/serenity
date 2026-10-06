@@ -87,6 +87,13 @@ struct FloatExtractor<f64> {
 };
 static_assert(AssertSize<FloatExtractor<f64>, sizeof(f64)>());
 
+#ifdef AK_LONG_DOUBLE_IS_DOUBLE
+template<>
+struct FloatExtractor<long double> : FloatExtractor<double> {
+};
+static_assert(AssertSize<FloatExtractor<long double>, sizeof(FloatExtractor<double>)>());
+#endif
+
 template<>
 struct FloatExtractor<f32> {
     static constexpr FloatExtractor<f32> from_float(f32 f) { return bit_cast<FloatExtractor<f32>>(f); }
