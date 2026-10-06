@@ -299,7 +299,8 @@ constexpr T tgamma(T x)
 
     using Extractor = FloatExtractor<T>;
     // These constants were obtained through use of WolframAlpha
-    constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
+    // FIXME: This assumes that large long double are always f80. Add support for f128.
+    constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits > FloatExtractor<double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
     static_assert(max_integer_whose_factorial_fits != 0, "tgamma needs to be aware of the integer factorial that fits in this floating point type.");
     if ((int)x == x && x <= max_integer_whose_factorial_fits + 1) {
         long long result = 1;
