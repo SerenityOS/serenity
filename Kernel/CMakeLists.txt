@@ -721,10 +721,7 @@ add_compile_options(-nostdlib)
 add_compile_options(-ftrivial-auto-var-init=pattern)
 
 # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
-# This is not implemented for RISC-V on Clang.
-if (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND "${SERENITY_ARCH}" STREQUAL "riscv64"))
-    add_compile_options(-fzero-call-used-regs=used-gpr)
-endif()
+add_compile_options(-fzero-call-used-regs=used-gpr)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(TARGET_STRING "")
