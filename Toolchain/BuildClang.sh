@@ -63,8 +63,8 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-LLVM_COMMIT='fcf4bb1af7450f618504201610ef8c3ef52844d7' # LLVM 24.0.0git 30/07/2026
-LLVM_MD5SUM="f8b02735e40c8d0e53f7f45f7dcdf807"
+LLVM_COMMIT='da1619509ae0aa985846ef8a52dd45db1118b2bc' # LLVM 24.0.0git 06/10/2026
+LLVM_MD5SUM='875d9d5c3e35752381b6593fda74b63c'
 LLVM_NAME="llvm-project-$LLVM_COMMIT"
 LLVM_PKG="$LLVM_COMMIT.tar.gz"
 LLVM_URL="https://github.com/llvm/llvm-project/archive/$LLVM_PKG"
