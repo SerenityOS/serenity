@@ -56,12 +56,21 @@ constexpr T lgamma(T x)
     return stirling_approximation(x);
 }
 
+// The lgamma_r variant uses an out parameter to return a sign value.
+// lgamma can be written as lgamma(x) = log(|Γ(x)|), the out parameter
+// corresponds to the sign of Γ(x).
 template<FloatingPoint T>
 constexpr T lgamma_r(T x, int* sign)
 {
-    auto result = lgamma(x);
-    *sign = signbit(result) ? -1 : 1;
-    return result;
+    if (x > 0) {
+        // ∀ x ∈ ℝ, x > 0 ⇒ Γ(x) > 0
+        *sign = 1;
+    } else {
+        // FIXME: Correctly compute sign's value.
+        *sign = -1;
+    }
+
+    return lgamma(x);
 }
 
 }
