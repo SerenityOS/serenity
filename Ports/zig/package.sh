@@ -44,11 +44,11 @@ build() {
     fi
 
     host_env
-    run ./build "${SERENITY_ARCH}-serenity-none" "native"
+    run ./build "${SERENITY_ARCH}-serenity-none" "baseline"
 }
 
 install() {
-    local zig_install_dir="out/zig-${SERENITY_ARCH}-serenity-none-native"
+    local zig_install_dir="out/zig-${SERENITY_ARCH}-serenity-none-baseline"
 
     run mkdir -p "${DESTDIR}/usr/local/bin/."
     run mkdir -p "${DESTDIR}/usr/local/lib/."
