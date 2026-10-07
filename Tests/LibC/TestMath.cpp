@@ -346,7 +346,7 @@ TEST_CASE(gamma)
     EXPECT(isnan(lgamma(NAN)));
     EXPECT(isinf(lgamma(INFINITY)));
     EXPECT(isinf(lgamma(-INFINITY)));
-    EXPECT_EQ(signgam, 1);
+    EXPECT_EQ(signgam, -1); // This is not specified by POSIX.
     lgamma(-2.5);
     EXPECT_EQ(signgam, -1);
 }
