@@ -46,8 +46,7 @@ Add support for SerenityOS
 
 This commit teaches libc++ about what features are available in our
 LibC, namely:
-* We do not have locale support, so no-op shims should be used in place
-  of the C locale API.
+* locale support, by providing __locale_dir/support/serenity.h
 * The number of errno constants defined by us is given by the value of
   the `ELAST` macro.
 * Multithreading is implemented though the pthread library.

@@ -10,7 +10,7 @@ them to look for the host libraries in the target libc locations.
  1 file changed, 5 insertions(+)
 
 diff --git a/zig/tools/doctest.zig b/zig/tools/doctest.zig
-index 2b0d7431b7e2bcf541f1ddd8dbe4ef3b17e70fae..fef83582c8b226ade705c5a6f7b1911c7c875ae1 100644
+index f39c56d4d12c65cca732f4c9dd9aea620b5f6ba9..7293ddbddc622cc08fdd6cbf624a457647b12c1a 100644
 --- a/zig/tools/doctest.zig
 +++ b/zig/tools/doctest.zig
 @@ -37,6 +37,11 @@ pub fn main(init: std.process.Init) !void {
