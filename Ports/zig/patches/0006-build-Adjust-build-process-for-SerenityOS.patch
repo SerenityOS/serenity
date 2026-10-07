@@ -4,11 +4,11 @@ Date: Sun, 11 Dec 2022 17:22:27 +0000
 Subject: [PATCH] build: Adjust build process for SerenityOS
 
 ---
- build | 38 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
+ build | 26 +++++++++++++++++++++++++-
+ 1 file changed, 25 insertions(+), 1 deletion(-)
 
 diff --git a/build b/build
-index 4759ef7a5f464439b64732d8fd22f6ddf1bea46c..50889c5b00f80a1f74f5e26b3dcbdfda2da30810 100755
+index 4759ef7a5f464439b64732d8fd22f6ddf1bea46c..0ee72e2dd6027757aaa81088f7829540e6c75b1f 100755
 --- a/build
 +++ b/build
 @@ -20,6 +20,7 @@ case $TARGET_OS_CMAKE in
@@ -19,26 +19,14 @@ index 4759ef7a5f464439b64732d8fd22f6ddf1bea46c..50889c5b00f80a1f74f5e26b3dcbdfda
    native) TARGET_OS_CMAKE="";;
  esac
  
-@@ -68,6 +69,39 @@ cmake "$ROOTDIR/zig" \
-   -DCMAKE_BUILD_TYPE=Release \
+@@ -69,6 +70,27 @@ cmake "$ROOTDIR/zig" \
    -DZIG_VERSION="$ZIG_VERSION"
  cmake --build . --target install
-+ 
-+# Create a libc installation file so Zig knows where to look for headers and
-+# libraries while compiling for the Serenity target.
-+cat <<EOF > "$ROOTDIR/out/libc_installation.txt"
-+include_dir=$SERENITY_INSTALL_ROOT/usr/include
-+sys_include_dir=$SERENITY_INSTALL_ROOT/usr/include
-+cc_dir=$SERENITY_INSTALL_ROOT/usr/local/lib/gcc/$SERENITY_ARCH-serenity/$SERENITY_GCC_VERSION
-+crt_dir=$SERENITY_INSTALL_ROOT/usr/lib
-+msvc_lib_dir=
-+kernel32_lib_dir=
-+# FIXME: Building on macOS validates this field when setting ZIG_LIBC,
-+#        regardless of the actual target (upstream bug?)
-+darwin_sdk_dir=$(xcrun --show-sdk-path 2>/dev/null || true)
-+EOF
-+
-+export ZIG_LIBC="$ROOTDIR/out/libc_installation.txt"
+ 
++# Point Zig at the libc file generated via the port's configure step
++# so it knows where to look for headers and libraries while compiling
++# for the Serenity target.
++export ZIG_LIBC="$ROOTDIR/out/libc.txt"
 +
 +# Create a CMakeToolchain.txt file to tell CMake about the SerenityOS platform.
 +# Adapted from Toolchain/CMake/GNUToolchain.txt.in, with the tool settings
@@ -56,10 +44,10 @@ index 4759ef7a5f464439b64732d8fd22f6ddf1bea46c..50889c5b00f80a1f74f5e26b3dcbdfda
 +set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 +EOF
 +
- 
  # Now we have Zig as a cross compiler.
  ZIG="$ROOTDIR/out/host/bin/zig"
-@@ -88,7 +122,8 @@ cmake "$ROOTDIR/zlib" \
+ 
+@@ -88,7 +110,8 @@ cmake "$ROOTDIR/zlib" \
    -DCMAKE_LINK_DEPENDS_USE_LINKER=OFF \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
@@ -69,7 +57,7 @@ index 4759ef7a5f464439b64732d8fd22f6ddf1bea46c..50889c5b00f80a1f74f5e26b3dcbdfda
  cmake --build . --target install
  
  # Same deal for zstd.
-@@ -152,6 +187,7 @@ cmake "$ROOTDIR/llvm" \
+@@ -152,6 +175,7 @@ cmake "$ROOTDIR/llvm" \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
    -DCMAKE_RANLIB="$ROOTDIR/out/host/bin/llvm-ranlib" \
