@@ -15,7 +15,7 @@ namespace AK {
 namespace Gamma {
 
 template<FloatingPoint T>
-constexpr T lgamma_r(T x, int* sign)
+constexpr T lgamma(T x)
 {
     if (x == T { 1.0 } || x == T { 2.0 })
         return 0.0;
@@ -26,12 +26,20 @@ constexpr T lgamma_r(T x, int* sign)
     // This allows us to support bigger values of x, where gamma(x) would have returned inf.
     // https://en.wikipedia.org/wiki/Stirling%27s_approximation
     T result = x * AK::log(x) - x;
+    return result;
+}
+
+template<FloatingPoint T>
+constexpr T lgamma_r(T x, int* sign)
+{
+    auto result = lgamma(x);
     *sign = signbit(result) ? -1 : 1;
     return result;
 }
 
 }
 
+using Gamma::lgamma;
 using Gamma::lgamma_r;
 
 }
