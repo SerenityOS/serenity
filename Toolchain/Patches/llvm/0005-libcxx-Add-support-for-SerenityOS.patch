@@ -14,30 +14,30 @@ LibC, namely:
 Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
 ---
  libcxx/include/CMakeLists.txt                 |   1 +
- libcxx/include/__config                       |   5 +-
+ libcxx/include/__config                       |   3 +-
  libcxx/include/__locale_dir/locale_base_api.h |   2 +
  libcxx/include/__locale_dir/messages.h        |   2 +-
- .../include/__locale_dir/support/serenity.h   | 273 ++++++++++++++++++
- 5 files changed, 280 insertions(+), 3 deletions(-)
+ .../include/__locale_dir/support/serenity.h   | 291 ++++++++++++++++++
+ 5 files changed, 297 insertions(+), 2 deletions(-)
  create mode 100644 libcxx/include/__locale_dir/support/serenity.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index 5034d5f6fe95b22545b3088a880f1a99eb96754c..8ec5e33466d7f487767db08523d2943f06060621 100644
+index 1ee2081561fd97a7d56482e093273124b23d94a8..31252e3bf5326b7c7117c8c60d24a03ae154e432 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -559,6 +559,7 @@ set(files
+@@ -570,6 +570,7 @@ set(files
    __locale_dir/support/no_locale/formatting.h
    __locale_dir/support/no_locale/strtonum.h
    __locale_dir/support/openbsd.h
 +  __locale_dir/support/serenity.h
    __locale_dir/support/windows.h
    __locale_dir/time.h
-   __locale_dir/wbuffer_convert.h
+   __locale_dir/utf8_conversions.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 2faca50f969bafc65c773130057d9166293cd99a..75110e2ac1f2a8ae19ceb44e33b51f30ffeae7ad 100644
+index ade43d42dc283de660f3a0e0d36bdb5bfccdade4..1f4dbbc924211281c4e49410f7d999f487140317 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -219,7 +219,8 @@ typedef __char32_t char32_t;
+@@ -194,7 +194,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -47,20 +47,11 @@ index 2faca50f969bafc65c773130057d9166293cd99a..75110e2ac1f2a8ae19ceb44e33b51f30
  // clang-format on
  #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
-@@ -298,7 +299,7 @@ typedef __char32_t char32_t;
- #  endif
- 
- #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
--      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || _LIBCPP_LIBC_LLVM_LIBC
-+      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || _LIBCPP_LIBC_LLVM_LIBC || defined(__serenity__)
- #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
- #  endif
- 
 diff --git a/libcxx/include/__locale_dir/locale_base_api.h b/libcxx/include/__locale_dir/locale_base_api.h
-index f973d95ef244d58dafc774d6ceb9a68ceeb08300..1ee2e5eba0ab0b5b9cfdd99e5e47807adb0647d9 100644
+index 91bd9cfd6d0b75508705221d3090b1166ac701c8..0490b4fdefa3c38b8a76bc3062be06e0b478d82f 100644
 --- a/libcxx/include/__locale_dir/locale_base_api.h
 +++ b/libcxx/include/__locale_dir/locale_base_api.h
-@@ -128,6 +128,8 @@
+@@ -130,6 +130,8 @@
  #    include <__locale_dir/support/newlib.h>
  #  elif defined(_AIX)
  #    include <__locale_dir/support/aix.h>
@@ -70,10 +61,10 @@ index f973d95ef244d58dafc774d6ceb9a68ceeb08300..1ee2e5eba0ab0b5b9cfdd99e5e47807a
  
  // TODO: This is a temporary definition to bridge between the old way we defined the locale base API
 diff --git a/libcxx/include/__locale_dir/messages.h b/libcxx/include/__locale_dir/messages.h
-index 986a57d8b17b23bf4867ac7908623bb867c0667c..76a839093b11c611d7a35c3370417b217efea8c1 100644
+index 5408eb9936952c1870a94fc0c72569a139eb007d..b618f89770f7cc0995e9ded3e0d708741eb98da1 100644
 --- a/libcxx/include/__locale_dir/messages.h
 +++ b/libcxx/include/__locale_dir/messages.h
-@@ -22,7 +22,7 @@
+@@ -23,7 +23,7 @@
  
  #  if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
@@ -84,10 +75,10 @@ index 986a57d8b17b23bf4867ac7908623bb867c0667c..76a839093b11c611d7a35c3370417b21
  #    else
 diff --git a/libcxx/include/__locale_dir/support/serenity.h b/libcxx/include/__locale_dir/support/serenity.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..5067257e2816d9aa3787bfe80c5933031e79b180
+index 0000000000000000000000000000000000000000..704826eea5585752a855dbf22fd85323453cf792
 --- /dev/null
 +++ b/libcxx/include/__locale_dir/support/serenity.h
-@@ -0,0 +1,273 @@
+@@ -0,0 +1,291 @@
 +// -*- C++ -*-
 +//===-----------------------------------------------------------------------===//
 +//
@@ -124,7 +115,7 @@ index 0000000000000000000000000000000000000000..5067257e2816d9aa3787bfe80c593303
 +namespace __locale {
 +
 +struct __locale_guard {
-+  __locale_guard(locale_t& __loc) : __old_loc_(::uselocale(__loc)) {}
++  __locale_guard(locale_t __loc) : __old_loc_(::uselocale(__loc)) {}
 +
 +  ~__locale_guard() {
 +    if (__old_loc_)
@@ -170,11 +161,24 @@ index 0000000000000000000000000000000000000000..5067257e2816d9aa3787bfe80c593303
 +//
 +// Strtonum functions
 +//
-+inline float __strtof(const char* __nptr, char** __endptr, __locale_t) { return ::strtof(__nptr, __endptr); }
 +
-+inline double __strtod(const char* __nptr, char** __endptr, __locale_t) { return ::strtod(__nptr, __endptr); }
++template <class _FloatT>
++_LIBCPP_HIDE_FROM_ABI _FloatT __str_to_float_c_locale(const char* __nptr, char** __endptr);
 +
-+inline long double __strtold(const char* __nptr, char** __endptr, __locale_t) { return ::strtold(__nptr, __endptr); }
++template <>
++inline _LIBCPP_HIDE_FROM_ABI float __str_to_float_c_locale<float>(const char* __nptr, char** __endptr) {
++  return ::strtof(__nptr, __endptr);
++}
++
++template <>
++inline _LIBCPP_HIDE_FROM_ABI double __str_to_float_c_locale<double>(const char* __nptr, char** __endptr) {
++  return ::strtod(__nptr, __endptr);
++}
++
++template <>
++inline _LIBCPP_HIDE_FROM_ABI long double __str_to_float_c_locale<long double>(const char* __nptr, char** __endptr) {
++  return ::strtold(__nptr, __endptr);
++}
 +
 +//
 +// Character manipulation functions
@@ -359,5 +363,10 @@ index 0000000000000000000000000000000000000000..5067257e2816d9aa3787bfe80c593303
 +
 +} // namespace __locale
 +_LIBCPP_END_NAMESPACE_STD
++
++
++#define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE 1
++
++#include <__locale_dir/support/default/get_c_locale.h>
 +
 +#endif // _LIBCPP___LOCALE_DIR_LOCALE_BASE_API_SERENITY_H

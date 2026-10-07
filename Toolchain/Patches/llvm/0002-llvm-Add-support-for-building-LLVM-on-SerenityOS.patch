@@ -18,17 +18,17 @@ Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 ---
  llvm/cmake/modules/HandleLLVMOptions.cmake               | 3 +++
  llvm/include/llvm/ADT/bit.h                              | 3 ++-
- llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp            | 3 ++-
+ llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp            | 2 +-
  .../TargetProcess/ExecutorSharedMemoryMapperService.cpp  | 3 ++-
  llvm/lib/Support/Unix/Path.inc                           | 5 ++++-
  llvm/lib/Support/Unix/Program.inc                        | 9 ++++++++-
- 6 files changed, 21 insertions(+), 5 deletions(-)
+ 6 files changed, 20 insertions(+), 5 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index e046ddf4d1a71785d8ed9130c512cff43b94a2da..7e239dca4104ec8a401a8d6e2028e66bfc1292b8 100644
+index 943418f7ec0da6117eb5788eb74b8e4e4f1ad78f..dd9445fc2c8a841f35915137408f33d5b529080b 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -584,6 +584,9 @@ elseif(MINGW OR CYGWIN)
+@@ -591,6 +591,9 @@ elseif(MINGW OR CYGWIN)
    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
      append("-Wa,-mbig-obj" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
    endif()
@@ -53,24 +53,23 @@ index 3ac23d6d48cc4bb25396fb226125134c566a3166..e25ec802ad42cc86f2bdedf657dddc4f
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-index 77768886f72a8cc865dc3405bcb2997504504669..1dc09c29fc730c849b7e2c11609e49e356d219d6 100644
+index 8fd0de8054c1f7cf9db1b927a30fa419c8cd026a..b334892b4b571ac3a746e427239e548c1317c769 100644
 --- a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-@@ -220,7 +220,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
+@@ -220,7 +220,7 @@ SharedMemoryMapper::Create(ExecutionSession &ES, SharedMemoryMapBindings B) {
  
  void SharedMemoryMapper::reserve(size_t NumBytes,
                                   OnReservedFunction OnReserved) {
 -#if (defined(LLVM_ON_UNIX) && !defined(__ANDROID__)) || defined(_WIN32)
-+#if (defined(LLVM_ON_UNIX) && !(defined(__ANDROID__) || defined(__serenity__))) \
-+    || defined(_WIN32)
++#if (defined(LLVM_ON_UNIX) && !(defined(__ANDROID__) || defined(__serenity__))) || defined(_WIN32)
  
    int SharedMemoryId = -1;
-   EPC.callSPSWrapperAsync<
+   B.Reserve(
 diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-index 423a1bd496c96b89d517187ab794f70eb8091bbc..7a2b7bba0fc7c25f41d6413f1ab09610a59b9a7b 100644
+index 4aff84d23cc978ca75ecd9a926cf709dfdd4ea33..f15b5aea16f0b19cf61ab3b1b4b47367776c5521 100644
 --- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-@@ -50,7 +50,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
+@@ -54,7 +54,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
  
  Expected<std::pair<ExecutorAddr, std::string>>
  ExecutorSharedMemoryMapperService::reserve(uint64_t Size) {
@@ -81,10 +80,10 @@ index 423a1bd496c96b89d517187ab794f70eb8091bbc..7a2b7bba0fc7c25f41d6413f1ab09610
  #if defined(LLVM_ON_UNIX)
  
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index f5b01357565dfc76307bf9dd6fdd4968546f8a4c..72b1afa40dbd3010ac61dd944faca8d568cb2c63 100644
+index 04bd21e6aa2902ae1ef0b59d4fef1939412b85bb..bac7f370d39a3df861559f169eaac040cfb364e8 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
-@@ -111,7 +111,7 @@ typedef uint_t uint;
+@@ -101,7 +101,7 @@ typedef uint_t uint;
  #endif
  
  #if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__) ||       \
@@ -93,7 +92,7 @@ index f5b01357565dfc76307bf9dd6fdd4968546f8a4c..72b1afa40dbd3010ac61dd944faca8d5
  #define STATVFS_F_FLAG(vfs) (vfs).f_flag
  #else
  #define STATVFS_F_FLAG(vfs) (vfs).f_flags
-@@ -525,6 +525,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
+@@ -523,6 +523,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
  #elif defined(__HAIKU__)
    // Haiku doesn't expose this information.
    return false;

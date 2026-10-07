@@ -13,10 +13,10 @@ and __riscv_cpu_model.
  3 files changed, 48 insertions(+), 3 deletions(-)
 
 diff --git a/clang/include/clang/Basic/DiagnosticFrontendKinds.td b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-index a688b298f2bbd88f1af3db877a12e8a0f1716cc0..fb520dc8c8756def52779ae89e69e428ecf90a73 100644
+index 5a9b79f0659bd1e2500abfda3e47ef3eadb8522c..44328f312a399ff1779f15ee83e14b06e38c3d8b 100644
 --- a/clang/include/clang/Basic/DiagnosticFrontendKinds.td
 +++ b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-@@ -478,7 +478,7 @@ def err_ast_action_on_llvm_ir : Error<
+@@ -494,7 +494,7 @@ def err_ast_action_on_cir : Error<
  def err_invalid_llvm_ir : Error<"invalid LLVM IR input: %0">;
  
  def err_os_unsupport_riscv_fmv : Error<
@@ -26,10 +26,10 @@ index a688b298f2bbd88f1af3db877a12e8a0f1716cc0..fb520dc8c8756def52779ae89e69e428
  def warn_unreachable_version
      : Warning<"function version '%0' is unreachable; ignoring version">,
 diff --git a/clang/lib/CodeGen/CodeGenFunction.cpp b/clang/lib/CodeGen/CodeGenFunction.cpp
-index 119aebb673789fec3dcda0c1d8f82340d7ae274f..b199c440125430e70a55cebe4b12ef8147aa1a7b 100644
+index 62dade6cf6f49c62178e303470214e3b2385ec4a..322fe024f7575d8d09038d8446f5b74da7ce222f 100644
 --- a/clang/lib/CodeGen/CodeGenFunction.cpp
 +++ b/clang/lib/CodeGen/CodeGenFunction.cpp
-@@ -3176,8 +3176,9 @@ void CodeGenFunction::EmitPPCAIXMultiVersionResolver(
+@@ -3124,8 +3124,9 @@ void CodeGenFunction::EmitPPCAIXMultiVersionResolver(
  void CodeGenFunction::EmitRISCVMultiVersionResolver(
      llvm::Function *Resolver, ArrayRef<FMVResolverOption> Options) {
  

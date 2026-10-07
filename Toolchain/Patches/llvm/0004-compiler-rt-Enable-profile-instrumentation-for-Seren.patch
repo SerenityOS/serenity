@@ -66,10 +66,10 @@ index 25b185bcd209de175f6a0ff2ec6506fdb4e6de3b..65818a4845f4e8747b37b706636af8d8
  // RUN:     --target=x86_64-apple-darwin14 -fprofile-instr-generate -fuse-ld=ld \
  // RUN:     -resource-dir=%S/Inputs/resource_dir \
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index 083f1c98d0f169da99d28fafbe808b4c4e5a7fdc..0690fbae0e2ba29ba36b3a500c428af094c7bd49 100644
+index d411cf014dd34b11008358f7ae96aef51d79c8fc..062882c2f80ebd90537ce63af83d82b09bf27184 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
-@@ -847,7 +847,7 @@ else()
+@@ -850,7 +850,7 @@ else()
  endif()
  
  if (PROFILE_SUPPORTED_ARCH AND NOT LLVM_USE_SANITIZER AND
