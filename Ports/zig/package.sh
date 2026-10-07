@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='zig'
-version='0.16.0'
+version='0.17.0'
 files=(
-    "https://ziglang.org/download/${version}/zig-bootstrap-${version}.tar.xz#2a8266a4205772ef40838c8cbdf14875855a515ff3adf89b49c2d2ae93613d10"
-    "https://ziglang.org/download/${version}/zig-${version}.tar.xz#43186959edc87d5c7a1be7b7d2a25efffd22ce5807c7af99067f86f99641bfdf"
+    "https://ziglang.org/download/${version}/zig-bootstrap-${version}.tar.xz#1e9e9b8e3c753b35dfb1d9ea48f097579fadbd3e5c1e724ab3fc5bce05477b71"
+    "https://ziglang.org/download/${version}/zig-${version}.tar.xz#b6c7f1728f043700d6529bac980800792f824256a9d2f1839b3d62beed0b8abd"
 )
 
 # The actual directory to build in.

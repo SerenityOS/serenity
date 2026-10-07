@@ -4,11 +4,11 @@ Date: Sun, 11 Dec 2022 17:22:27 +0000
 Subject: [PATCH] build: Adjust build process for SerenityOS
 
 ---
- build | 35 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
+ build | 38 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 37 insertions(+), 1 deletion(-)
 
 diff --git a/build b/build
-index 8c06f3b0e5c9315e87490ee4a961834c48d28c82..4a0312c0717e6874acceb92f526367d745462390 100755
+index 4759ef7a5f464439b64732d8fd22f6ddf1bea46c..50889c5b00f80a1f74f5e26b3dcbdfda2da30810 100755
 --- a/build
 +++ b/build
 @@ -20,6 +20,7 @@ case $TARGET_OS_CMAKE in
@@ -19,7 +19,7 @@ index 8c06f3b0e5c9315e87490ee4a961834c48d28c82..4a0312c0717e6874acceb92f526367d7
    native) TARGET_OS_CMAKE="";;
  esac
  
-@@ -68,6 +69,36 @@ cmake "$ROOTDIR/zig" \
+@@ -68,6 +69,39 @@ cmake "$ROOTDIR/zig" \
    -DCMAKE_BUILD_TYPE=Release \
    -DZIG_VERSION="$ZIG_VERSION"
  cmake --build . --target install
@@ -29,10 +29,13 @@ index 8c06f3b0e5c9315e87490ee4a961834c48d28c82..4a0312c0717e6874acceb92f526367d7
 +cat <<EOF > "$ROOTDIR/out/libc_installation.txt"
 +include_dir=$SERENITY_INSTALL_ROOT/usr/include
 +sys_include_dir=$SERENITY_INSTALL_ROOT/usr/include
++cc_dir=$SERENITY_INSTALL_ROOT/usr/local/lib/gcc/$SERENITY_ARCH-serenity/$SERENITY_GCC_VERSION
 +crt_dir=$SERENITY_INSTALL_ROOT/usr/lib
 +msvc_lib_dir=
 +kernel32_lib_dir=
-+gcc_dir=$SERENITY_INSTALL_ROOT/usr/local/lib/gcc/$SERENITY_ARCH-serenity/$SERENITY_GCC_VERSION
++# FIXME: Building on macOS validates this field when setting ZIG_LIBC,
++#        regardless of the actual target (upstream bug?)
++darwin_sdk_dir=$(xcrun --show-sdk-path 2>/dev/null || true)
 +EOF
 +
 +export ZIG_LIBC="$ROOTDIR/out/libc_installation.txt"
@@ -56,7 +59,7 @@ index 8c06f3b0e5c9315e87490ee4a961834c48d28c82..4a0312c0717e6874acceb92f526367d7
  
  # Now we have Zig as a cross compiler.
  ZIG="$ROOTDIR/out/host/bin/zig"
-@@ -88,7 +119,8 @@ cmake "$ROOTDIR/zlib" \
+@@ -88,7 +122,8 @@ cmake "$ROOTDIR/zlib" \
    -DCMAKE_LINK_DEPENDS_USE_LINKER=OFF \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
@@ -66,7 +69,7 @@ index 8c06f3b0e5c9315e87490ee4a961834c48d28c82..4a0312c0717e6874acceb92f526367d7
  cmake --build . --target install
  
  # Same deal for zstd.
-@@ -152,6 +184,7 @@ cmake "$ROOTDIR/llvm" \
+@@ -152,6 +187,7 @@ cmake "$ROOTDIR/llvm" \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
    -DCMAKE_RANLIB="$ROOTDIR/out/host/bin/llvm-ranlib" \

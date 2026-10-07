@@ -16,6 +16,19 @@ launcher_category='D&evelopment'
 launcher_command='/usr/local/bin/kiesel'
 launcher_run_in_terminal='true'
 
+pre_patch() {
+    local zig_dir="${PORT_BUILD_DIR}/zig-${zig_version}"
+    local zig_patch="0001-Extend-support-for-SerenityOS-target.patch"
+
+    # Most of our patches are upstreamed and will be in Zig 0.17,
+    # until then we apply them manually and build with a custom lib dir.
+    if [ ! -f "${zig_dir}/.${zig_patch}_applied" ]; then
+        run_nocd patch -d "${zig_dir}" -p2 < "${PORT_META_DIR}/zig-patches/${zig_patch}"
+        # Skip when applying patches to $workdir
+        run_nocd touch "${zig_dir}/.${zig_patch}_applied"
+    fi
+}
+
 configure() {
     if [ ! -x "$(command -v zig)" ]; then
         echo "Error: zig is not installed but is required to build kiesel" >&2
@@ -44,14 +57,6 @@ EOF
 
 build() {
     local zig_dir="${PORT_BUILD_DIR}/zig-${zig_version}"
-    local zig_patch="0005-Extend-support-for-SerenityOS-target.patch"
-
-    # Most of our patches are upstreamed and will be in Zig 0.17,
-    # until then we apply them manually and build with a custom lib dir.
-    if [ ! -f "${zig_dir}/.${zig_patch}_applied" ]; then
-        run_nocd patch -d "${zig_dir}" -p2 < "${PORT_META_DIR}/../zig/patches/${zig_patch}"
-        run_nocd touch "${zig_dir}/.${zig_patch}_applied"
-    fi
 
     # Rust does not know about serenity so we don't even attempt
     # building with Intl/Temporal.
