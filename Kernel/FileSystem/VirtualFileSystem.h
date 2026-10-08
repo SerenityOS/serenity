@@ -90,7 +90,8 @@ ErrorOr<NonnullRefPtr<Custody>> open_directory(VFSRootContext const&, Credential
 
 ErrorOr<NonnullRefPtr<Custody>> resolve_path(VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
 ErrorOr<NonnullRefPtr<Custody>> resolve_path(Process const&, VFSRootContext const&, Credentials const&, StringView path, CustodyBase const& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
-ErrorOr<NonnullRefPtr<Custody>> resolve_path_without_veil(VFSRootContext const&, Credentials const&, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+// Note: out_deepest_reached is always set, even when resolution fails.
+ErrorOr<NonnullRefPtr<Custody>> resolve_path_without_veil(VFSRootContext const&, Credentials const&, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0, RefPtr<Custody>* out_deepest_reached = nullptr);
 
 void sync_filesystems();
 
