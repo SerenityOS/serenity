@@ -80,25 +80,25 @@ void ToolboxWidget::setup_tools()
         }
     };
 
-    add_tool("move"sv, { 0, Key_M }, make<MoveTool>());
-    add_tool("pen"sv, { 0, Key_N }, make<PenTool>(), true);
-    add_tool("brush"sv, { 0, Key_P }, make<BrushTool>());
-    add_tool("bucket"sv, { Mod_Shift, Key_B }, make<BucketTool>());
-    add_tool("spray"sv, { Mod_Shift, Key_S }, make<SprayTool>());
-    add_tool("picker"sv, { 0, Key_O }, make<PickerTool>());
-    add_tool("eraser"sv, { Mod_Shift, Key_E }, make<EraseTool>());
-    add_tool("line"sv, { Mod_Ctrl | Mod_Shift, Key_L }, make<LineTool>());
-    add_tool("rectangle"sv, { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
-    add_tool("circle"sv, { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
-    add_tool("text"sv, { Mod_Ctrl | Mod_Shift, Key_T }, make<TextTool>());
-    add_tool("zoom"sv, { 0, Key_Z }, make<ZoomTool>());
-    add_tool("rectangle-select"sv, { 0, Key_R }, make<RectangleSelectTool>());
-    add_tool("wand-select"sv, { 0, Key_W }, make<WandSelectTool>());
-    add_tool("polygonal-select"sv, { Mod_Shift, Key_P }, make<PolygonalSelectTool>());
-    add_tool("lasso-select"sv, { 0, Key_L }, make<LassoSelectTool>());
-    add_tool("guides"sv, { 0, Key_G }, make<GuideTool>());
-    add_tool("clone"sv, { 0, Key_C }, make<CloneTool>());
-    add_tool("gradients"sv, { Mod_Ctrl, Key_G }, make<GradientTool>());
+    add_tool("move"sv, { 0, GUI::Key_M }, make<MoveTool>());
+    add_tool("pen"sv, { 0, GUI::Key_N }, make<PenTool>(), true);
+    add_tool("brush"sv, { 0, GUI::Key_P }, make<BrushTool>());
+    add_tool("bucket"sv, { Mod_Shift, GUI::Key_B }, make<BucketTool>());
+    add_tool("spray"sv, { Mod_Shift, GUI::Key_S }, make<SprayTool>());
+    add_tool("picker"sv, { 0, GUI::Key_O }, make<PickerTool>());
+    add_tool("eraser"sv, { Mod_Shift, GUI::Key_E }, make<EraseTool>());
+    add_tool("line"sv, { Mod_Ctrl | Mod_Shift, GUI::Key_L }, make<LineTool>());
+    add_tool("rectangle"sv, { Mod_Ctrl | Mod_Shift, GUI::Key_R }, make<RectangleTool>());
+    add_tool("circle"sv, { Mod_Ctrl | Mod_Shift, GUI::Key_E }, make<EllipseTool>());
+    add_tool("text"sv, { Mod_Ctrl | Mod_Shift, GUI::Key_T }, make<TextTool>());
+    add_tool("zoom"sv, { 0, GUI::Key_Z }, make<ZoomTool>());
+    add_tool("rectangle-select"sv, { 0, GUI::Key_R }, make<RectangleSelectTool>());
+    add_tool("wand-select"sv, { 0, GUI::Key_W }, make<WandSelectTool>());
+    add_tool("polygonal-select"sv, { Mod_Shift, GUI::Key_P }, make<PolygonalSelectTool>());
+    add_tool("lasso-select"sv, { 0, GUI::Key_L }, make<LassoSelectTool>());
+    add_tool("guides"sv, { 0, GUI::Key_G }, make<GuideTool>());
+    add_tool("clone"sv, { 0, GUI::Key_C }, make<CloneTool>());
+    add_tool("gradients"sv, { Mod_Ctrl, GUI::Key_G }, make<GradientTool>());
 }
 
 void ToolboxWidget::ensure_tool_selection()

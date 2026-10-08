@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = window->add_menu("&Game"_string);
 
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, GUI::Key_F2 }, [&](auto&) {
         game.reset();
     }));
 

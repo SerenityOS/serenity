@@ -58,7 +58,7 @@ ErrorOr<void> VideoPlayerWidget::initialize()
     m_play_icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/play.png"sv));
     m_pause_icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/pause.png"sv));
 
-    m_play_pause_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
+    m_play_pause_action = GUI::Action::create("Play", { GUI::Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
     });
 

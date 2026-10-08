@@ -140,10 +140,10 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
 
 bool MoveTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_LeftShift)
+    if (event.key() == GUI::Key_Shift)
         m_keep_aspect_ratio = true;
 
-    if (event.key() == Key_LeftAlt)
+    if (event.key() == GUI::Key_Alt)
         toggle_selection_mode();
 
     if (m_scaling)
@@ -159,16 +159,16 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
     auto new_location = layer->location();
     auto speed = event.shift() ? 10 : 1;
     switch (event.key()) {
-    case Key_Up:
+    case GUI::Key_Up:
         new_location.translate_by(0, -speed);
         break;
-    case Key_Down:
+    case GUI::Key_Down:
         new_location.translate_by(0, speed);
         break;
-    case Key_Left:
+    case GUI::Key_Left:
         new_location.translate_by(-speed, 0);
         break;
-    case Key_Right:
+    case GUI::Key_Right:
         new_location.translate_by(speed, 0);
         break;
     default:
@@ -182,10 +182,10 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
 
 void MoveTool::on_keyup(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_LeftShift)
+    if (event.key() == GUI::Key_Shift)
         m_keep_aspect_ratio = false;
 
-    if (event.key() == Key_LeftAlt)
+    if (event.key() == GUI::Key_Alt)
         toggle_selection_mode();
 }
 

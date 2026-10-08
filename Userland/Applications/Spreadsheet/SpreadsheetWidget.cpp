@@ -264,13 +264,13 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     m_redo_action->set_enabled(false);
 
     m_change_background_color_action = GUI::Action::create(
-        "&Change Background Color", { Mod_Ctrl, Key_B }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/pixelpaint/bucket.png"sv)), [&](auto&) {
+        "&Change Background Color", { Mod_Ctrl, GUI::Key_B }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/pixelpaint/bucket.png"sv)), [&](auto&) {
             change_cell_static_color_format(Spreadsheet::FormatType::Background);
         },
         window());
 
     m_change_foreground_color_action = GUI::Action::create(
-        "&Change Foreground Color", { Mod_Ctrl, Key_T }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/text-color.png"sv)), [&](auto&) {
+        "&Change Foreground Color", { Mod_Ctrl, GUI::Key_T }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/text-color.png"sv)), [&](auto&) {
             change_cell_static_color_format(Spreadsheet::FormatType::Foreground);
         },
         window());

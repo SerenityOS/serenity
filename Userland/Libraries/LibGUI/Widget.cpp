@@ -297,7 +297,7 @@ void Widget::handle_keydown_event(KeyEvent& event)
             return;
     }
 
-    if (event.key() == KeyCode::Key_Menu) {
+    if (event.key() == Key::Key_Menu) {
         ContextMenuEvent c_event(window_relative_rect().bottom_right().translated(-1), screen_relative_rect().bottom_right().translated(-1));
         dispatch_event(c_event);
         return;
@@ -458,7 +458,7 @@ void Widget::hide_event(HideEvent&)
 void Widget::keydown_event(KeyEvent& event)
 {
     if (!event.alt() && !event.ctrl() && !event.super()) {
-        if (event.key() == KeyCode::Key_Tab) {
+        if (event.key() == Key::Key_Tab) {
             if (event.shift())
                 focus_previous_widget(FocusSource::Keyboard, false);
             else
@@ -466,12 +466,12 @@ void Widget::keydown_event(KeyEvent& event)
             event.accept();
             return;
         }
-        if (!event.shift() && (event.key() == KeyCode::Key_Left || event.key() == KeyCode::Key_Up)) {
+        if (!event.shift() && (event.key() == Key::Key_Left || event.key() == Key::Key_Up)) {
             focus_previous_widget(FocusSource::Keyboard, true);
             event.accept();
             return;
         }
-        if (!event.shift() && (event.key() == KeyCode::Key_Right || event.key() == KeyCode::Key_Down)) {
+        if (!event.shift() && (event.key() == Key::Key_Right || event.key() == Key::Key_Down)) {
             focus_next_widget(FocusSource::Keyboard, true);
             event.accept();
             return;

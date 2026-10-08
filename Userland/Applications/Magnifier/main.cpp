@@ -91,32 +91,32 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto size_action_group = make<GUI::ActionGroup>();
 
     auto two_x_action = GUI::Action::create_checkable(
-        "&2x", { Key_2 }, [&](auto&) {
+        "&2x", { GUI::Key_2 }, [&](auto&) {
             magnifier->set_scale_factor(2);
         });
 
     auto four_x_action = GUI::Action::create_checkable(
-        "&4x", { Key_4 }, [&](auto&) {
+        "&4x", { GUI::Key_4 }, [&](auto&) {
             magnifier->set_scale_factor(4);
         });
 
     auto eight_x_action = GUI::Action::create_checkable(
-        "&8x", { Key_8 }, [&](auto&) {
+        "&8x", { GUI::Key_8 }, [&](auto&) {
             magnifier->set_scale_factor(8);
         });
 
     auto pause_action = GUI::Action::create_checkable(
-        "&Pause Capture", { Key_Space }, [&](auto& action) {
+        "&Pause Capture", { GUI::Key_Space }, [&](auto& action) {
             magnifier->pause_capture(action.is_checked());
         });
 
     auto lock_location_action = GUI::Action::create_checkable(
-        "&Lock Location", { Key_L }, [&](auto& action) {
+        "&Lock Location", { GUI::Key_L }, [&](auto& action) {
             magnifier->lock_location(action.is_checked());
         });
 
     auto show_grid_action = GUI::Action::create_checkable(
-        "Show &Grid", { Key_G }, [&](auto& action) {
+        "Show &Grid", { GUI::Key_G }, [&](auto& action) {
             magnifier->show_grid(action.is_checked());
         });
 
@@ -156,13 +156,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto timeline_menu = window->add_menu("&Timeline"_string);
     auto previous_frame_action = GUI::Action::create(
-        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv)), [&](auto&) {
+        "&Previous frame", { GUI::Key_Left }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_previous_frame();
         });
     auto next_frame_action = GUI::Action::create(
-        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [&](auto&) {
+        "&Next frame", { GUI::Key_Right }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_next_frame();

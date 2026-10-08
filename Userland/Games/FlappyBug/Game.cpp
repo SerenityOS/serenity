@@ -82,12 +82,12 @@ void Game::paint_event(GUI::PaintEvent& event)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.modifiers() || event.key() == Key_F1 || event.key() == Key_F11) {
+    if (event.modifiers() || event.key() == GUI::Key_F1 || event.key() == GUI::Key_F11) {
         event.ignore();
         return;
     }
     switch (event.key()) {
-    case Key_Escape:
+    case GUI::Key_Escape:
         GUI::Application::the()->quit();
         break;
     default:

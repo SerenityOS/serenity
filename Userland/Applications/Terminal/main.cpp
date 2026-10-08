@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     terminal->context_menu().add_action(open_settings_action);
 
     auto file_menu = window->add_menu("&File"_string);
-    file_menu->add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/app-terminal.png"sv)), [&](auto&) {
+    file_menu->add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, GUI::Key_N }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/app-terminal.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(window, "/bin/Terminal"sv);
     }));
 
@@ -385,7 +385,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     edit_menu->add_action(terminal->copy_action());
     edit_menu->add_action(terminal->paste_action());
     edit_menu->add_separator();
-    edit_menu->add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find.png"sv)),
+    edit_menu->add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, GUI::Key_F }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find.png"sv)),
         [&](auto&) {
             find_window->show();
             find_window->move_to_front();

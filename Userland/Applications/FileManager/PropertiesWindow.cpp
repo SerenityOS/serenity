@@ -113,7 +113,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
         m_directory_statistics_calculator->start();
     }
 
-    m_on_escape = GUI::Action::create("Close properties", { Key_Escape }, [this](GUI::Action&) {
+    m_on_escape = GUI::Action::create("Close properties", { GUI::Key_Escape }, [this](GUI::Action&) {
         if (!m_apply_button->is_enabled())
             close();
     });

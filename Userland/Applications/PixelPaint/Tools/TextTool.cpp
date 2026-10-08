@@ -275,14 +275,14 @@ bool TextTool::on_keydown(GUI::KeyEvent& event)
         return false;
 
     // Cancels current text entry
-    if (event.key() == Key_Escape) {
+    if (event.key() == GUI::Key_Escape) {
         reset_tool();
         return true;
     }
 
     // A plain Return is treated as accepting the current state and rasterizing to the layer.
     // For multi-line text Shift + Enter will add new lines.
-    if (event.modifiers() == Mod_None && event.key() == Key_Return) {
+    if (event.modifiers() == Mod_None && event.key() == GUI::Key_Return) {
         apply_text_to_layer();
         reset_tool();
         return true;

@@ -137,21 +137,21 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
 
     m_terminal.set_size(Config::read_i32("Terminal"sv, "Window"sv, "Width"sv, 80), Config::read_i32("Terminal"sv, "Window"sv, "Height"sv, 25));
 
-    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-copy.png"sv)), [this](auto&) {
+    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, GUI::Key_C }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-copy.png"sv)), [this](auto&) {
         copy();
     });
     m_copy_action->set_swallow_key_event_when_disabled(true);
 
-    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/paste.png"sv)), [this](auto&) {
+    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, GUI::Key_V }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/paste.png"sv)), [this](auto&) {
         paste();
     });
     m_paste_action->set_swallow_key_event_when_disabled(true);
 
-    m_clear_including_history_action = GUI::Action::create("Clear Including &History", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
+    m_clear_including_history_action = GUI::Action::create("Clear Including &History", { Mod_Ctrl | Mod_Shift, GUI::Key_K }, [this](auto&) {
         clear_including_history();
     });
 
-    m_clear_to_previous_mark_action = GUI::Action::create("Clear &Previous Command", { Mod_Ctrl | Mod_Shift, Key_U }, [this](auto&) {
+    m_clear_to_previous_mark_action = GUI::Action::create("Clear &Previous Command", { Mod_Ctrl | Mod_Shift, GUI::Key_U }, [this](auto&) {
         clear_to_previous_mark();
     });
 
@@ -240,21 +240,21 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         m_cursor_blink_timer->start();
     }
 
-    if (event.key() == KeyCode::Key_PageUp && event.modifiers() == Mod_Shift) {
+    if (event.key() == GUI::Key_PageUp && event.modifiers() == Mod_Shift) {
         m_scrollbar->decrease_slider_by(m_terminal.rows());
         return;
     }
-    if (event.key() == KeyCode::Key_PageDown && event.modifiers() == Mod_Shift) {
+    if (event.key() == GUI::Key_PageDown && event.modifiers() == Mod_Shift) {
         m_scrollbar->increase_slider_by(m_terminal.rows());
         return;
     }
-    if (event.key() == KeyCode::Key_LeftAlt) {
+    if (event.key() == GUI::Key_Alt) {
         m_alt_key_held = true;
         return;
     }
 
     // Clear the selection if we type in/behind it.
-    auto future_cursor_column = (event.key() == KeyCode::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
+    auto future_cursor_column = (event.key() == GUI::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
     auto min_selection_row = min(m_selection.start().row(), m_selection.end().row());
     auto max_selection_row = max(m_selection.start().row(), m_selection.end().row());
 
@@ -264,16 +264,16 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         update();
     }
 
-    m_terminal.handle_key_press(event.key(), event.code_point(), event.modifiers());
+    m_terminal.handle_key_press(event.key_code(), event.code_point(), event.modifiers());
 
-    if (event.key() != Key_LeftControl && event.key() != Key_LeftAlt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_LeftSuper)
+    if (event.key() != GUI::Key_Control && event.key() != GUI::Key_Alt && event.key() != GUI::Key_Shift && event.key() != GUI::Key_Super)
         scroll_to_bottom();
 }
 
 void TerminalWidget::keyup_event(GUI::KeyEvent& event)
 {
     switch (event.key()) {
-    case KeyCode::Key_LeftAlt:
+    case GUI::Key_Alt:
         m_alt_key_held = false;
         return;
     default:

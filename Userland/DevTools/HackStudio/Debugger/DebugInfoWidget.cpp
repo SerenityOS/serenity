@@ -28,15 +28,15 @@ ErrorOr<void> DebugInfoWidget::init_toolbar()
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Continue);
     });
 
-    m_singlestep_action = GUI::Action::create("Step Over", { Mod_None, Key_F10 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/debug-step-over.png"sv)), [](auto&) {
+    m_singlestep_action = GUI::Action::create("Step Over", { Mod_None, GUI::Key_F10 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/debug-step-over.png"sv)), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOver);
     });
 
-    m_step_in_action = GUI::Action::create("Step In", { Mod_None, Key_F11 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/debug-step-in.png"sv)), [](auto&) {
+    m_step_in_action = GUI::Action::create("Step In", { Mod_None, GUI::Key_F11 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/debug-step-in.png"sv)), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceSingleStep);
     });
 
-    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/debug-step-out.png"sv)), [](auto&) {
+    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, GUI::Key_F11 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/debug-step-out.png"sv)), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOut);
     });
 

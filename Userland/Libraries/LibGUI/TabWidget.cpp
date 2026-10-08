@@ -706,7 +706,7 @@ void TabWidget::activate_last_tab()
 
 void TabWidget::keydown_event(KeyEvent& event)
 {
-    if (event.ctrl() && event.key() == Key_Tab) {
+    if (event.ctrl() && event.key() == Key::Key_Tab) {
         if (event.shift())
             activate_previous_tab();
         else
@@ -715,12 +715,12 @@ void TabWidget::keydown_event(KeyEvent& event)
         return;
     }
     if (is_focused()) {
-        if (!event.modifiers() && event.key() == Key_Left) {
+        if (!event.modifiers() && event.key() == Key::Key_Left) {
             activate_previous_tab();
             event.accept();
             return;
         }
-        if (!event.modifiers() && event.key() == Key_Right) {
+        if (!event.modifiers() && event.key() == Key::Key_Right) {
             activate_next_tab();
             event.accept();
             return;

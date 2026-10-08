@@ -172,12 +172,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget.rotate(Gfx::RotationDirection::Clockwise);
     });
 
-    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-flip-vertical.png"sv)),
+    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, GUI::Key_V }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-flip-vertical.png"sv)),
         [&](auto&) {
             widget.flip(Gfx::Orientation::Vertical);
         });
 
-    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-flip-horizontal.png"sv)),
+    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, GUI::Key_H }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-flip-horizontal.png"sv)),
         [&](auto&) {
             widget.flip(Gfx::Orientation::Horizontal);
         });
@@ -192,22 +192,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         });
 
-    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-first.png"sv)),
+    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, GUI::Key_Home }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-first.png"sv)),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Go to &Previous", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv)),
+    auto go_back_action = GUI::Action::create("Go to &Previous", { Mod_None, GUI::Key_Left }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv)),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Go to &Next", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)),
+    auto go_forward_action = GUI::Action::create("Go to &Next", { Mod_None, GUI::Key_Right }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::Forward);
         });
 
-    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-last.png"sv)),
+    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, GUI::Key_End }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-last.png"sv)),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::Last);
         });
@@ -240,7 +240,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         window);
 
-    auto hide_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", { Mod_Ctrl, Key_T },
+    auto hide_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", { Mod_Ctrl, GUI::Key_T },
         [&](auto& action) {
             toolbar_container.set_visible(action.is_checked());
         });

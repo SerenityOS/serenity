@@ -325,9 +325,9 @@ void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
 
 void TreeMapWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Left)
+    if (event.key() == GUI::Key_Left)
         set_viewpoint(m_viewpoint == 0 ? m_path_segments.size() : m_viewpoint - 1);
-    else if (event.key() == KeyCode::Key_Right)
+    else if (event.key() == GUI::Key_Right)
         set_viewpoint(m_viewpoint == m_path_segments.size() ? 0 : m_viewpoint + 1);
     else
         event.ignore();

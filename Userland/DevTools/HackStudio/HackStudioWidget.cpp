@@ -474,7 +474,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     TRY(m_new_file_actions.try_append(TRY(create_new_file_action("JS&ON File", "/res/icons/16x16/filetype-json.png", "json"))));
     TRY(m_new_file_actions.try_append(TRY(create_new_file_action("Mark&down File", "/res/icons/16x16/filetype-markdown.png", "md"))));
 
-    m_new_plain_file_action = TRY(create_new_file_action("Plain &File", "/res/icons/16x16/new.png", "", { Mod_Ctrl, Key_N }));
+    m_new_plain_file_action = TRY(create_new_file_action("Plain &File", "/res/icons/16x16/new.png", "", { Mod_Ctrl, GUI::Key_N }));
 
     m_open_selected_action = TRY(create_open_selected_action());
     m_show_in_file_manager_action = create_show_in_file_manager_action();
@@ -554,7 +554,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Byt
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/mkdir.png"sv));
-    return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, icon, [this](GUI::Action const&) {
+    return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, GUI::Key_N }, icon, [this](GUI::Action const&) {
         String directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter a name:"sv, "New Directory"sv) != GUI::InputBox::ExecResult::OK)
             return;
@@ -718,7 +718,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_project_action(
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_tab_widget_action()
 {
-    return GUI::Action::create("Switch to Next Editor Group", { Mod_Alt | Mod_Shift, Key_Backslash }, [this](auto&) {
+    return GUI::Action::create("Switch to Next Editor Group", { Mod_Alt | Mod_Shift, GUI::Key_Backslash }, [this](auto&) {
         if (m_all_editor_tab_widgets.size() <= 1)
             return;
         auto tab_widget = m_current_editor_tab_widget;
@@ -811,7 +811,7 @@ void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_tab_widget_action()
 {
-    return GUI::Action::create("Switch to Next Editor Group", { Mod_Ctrl | Mod_Shift, Key_T }, [this](auto&) {
+    return GUI::Action::create("Switch to Next Editor Group", { Mod_Ctrl | Mod_Shift, GUI::Key_T }, [this](auto&) {
         if (m_all_editor_tab_widgets.size() <= 1)
             return;
         Vector<GUI::TabWidget&> tab_widgets;
@@ -836,14 +836,14 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_tab_wi
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action()
 {
-    return GUI::Action::create("Switch to &Next Editor", { Mod_Ctrl, Key_E }, [this](auto&) {
+    return GUI::Action::create("Switch to &Next Editor", { Mod_Ctrl, GUI::Key_E }, [this](auto&) {
         m_current_editor_tab_widget->activate_next_tab();
     });
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_previous_editor_action()
 {
-    return GUI::Action::create("Switch to &Previous Editor", { Mod_Ctrl | Mod_Shift, Key_E }, [this](auto&) {
+    return GUI::Action::create("Switch to &Previous Editor", { Mod_Ctrl | Mod_Shift, GUI::Key_E }, [this](auto&) {
         m_current_editor_tab_widget->activate_previous_tab();
     });
 }
@@ -851,7 +851,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_previous_editor_ac
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_editor_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/hackstudio/remove-editor.png"sv));
-    return GUI::Action::create("&Remove Current Editor", { Mod_Alt | Mod_Shift, Key_E }, icon, [this](auto&) {
+    return GUI::Action::create("&Remove Current Editor", { Mod_Alt | Mod_Shift, GUI::Key_E }, icon, [this](auto&) {
         if (m_all_editor_wrappers.size() <= 1)
             return;
         auto tab_widget = m_current_editor_tab_widget;
@@ -872,7 +872,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_toggle_open_file_in
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/open.png"sv));
-    return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, Key_O }, icon, [this](auto&) {
+    return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, GUI::Key_O }, icon, [this](auto&) {
         auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open Project", m_project->root_path(), true);
         if (!open_path.has_value())
             return;
@@ -940,7 +940,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_terminal_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/hackstudio/remove-terminal.png"sv));
-    return GUI::Action::create("Remove &Current Terminal", { Mod_Alt | Mod_Shift, Key_T }, icon, [this](auto&) {
+    return GUI::Action::create("Remove &Current Terminal", { Mod_Alt | Mod_Shift, GUI::Key_T }, icon, [this](auto&) {
         auto widget = m_action_tab_widget->active_widget();
         if (!widget)
             return;
@@ -956,7 +956,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_term
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_tab_widget_action()
 {
-    return GUI::Action::create("Add New Editor Group", { Mod_Ctrl | Mod_Alt, Key_Backslash },
+    return GUI::Action::create("Add New Editor Group", { Mod_Ctrl | Mod_Alt, GUI::Key_Backslash },
         [this](auto&) {
             add_new_editor_tab_widget(*m_editors_splitter);
             update_actions();
@@ -966,7 +966,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_tab_widget_action
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_editor_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/hackstudio/add-editor.png"sv));
-    return GUI::Action::create("Add New &Editor", { Mod_Ctrl | Mod_Alt, Key_E },
+    return GUI::Action::create("Add New &Editor", { Mod_Ctrl | Mod_Alt, GUI::Key_E },
         icon,
         [this](auto&) {
             add_new_editor(*m_current_editor_tab_widget);
@@ -977,7 +977,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_editor_action()
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_terminal_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/hackstudio/add-terminal.png"sv));
-    return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
+    return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, GUI::Key_T },
         icon,
         [this](auto&) {
             auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal"_string);
@@ -1305,7 +1305,7 @@ void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_build_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/build.png"sv));
-    return GUI::Action::create("&Build", { Mod_Ctrl, Key_B }, icon, [this](auto&) {
+    return GUI::Action::create("&Build", { Mod_Ctrl, GUI::Key_B }, icon, [this](auto&) {
         if (m_auto_save_before_build_or_run) {
             if (!save_file_changes())
                 return;
@@ -1322,7 +1322,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_build_action()
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_run_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/program-run.png"sv));
-    return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, icon, [this](auto&) {
+    return GUI::Action::create("&Run", { Mod_Ctrl, GUI::Key_R }, icon, [this](auto&) {
         if (m_auto_save_before_build_or_run) {
             if (!save_file_changes())
                 return;
@@ -1442,14 +1442,14 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 {
     auto edit_menu = window.add_menu("&Edit"_string);
     auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find.png"sv));
-    edit_menu->add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, icon, [this](auto&) {
+    edit_menu->add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, GUI::Key_F }, icon, [this](auto&) {
         reveal_action_tab(*m_find_in_files_widget);
         m_find_in_files_widget->focus_textbox_and_select_all();
     }));
 
     edit_menu->add_separator();
 
-    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [this](auto& action) {
+    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, GUI::Key_V }, [this](auto& action) {
         if (action.is_checked()) {
             for (auto& editor_wrapper : m_all_editor_wrappers)
                 editor_wrapper->editor().set_editing_engine(make<GUI::VimEditingEngine>());
@@ -1487,13 +1487,13 @@ void HackStudioWidget::create_build_menu(GUI::Window& window)
 
 ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
 {
-    auto hide_action_tabs_action = GUI::Action::create("&Hide Action Tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [this](auto&) {
+    auto hide_action_tabs_action = GUI::Action::create("&Hide Action Tabs", { Mod_Ctrl | Mod_Shift, GUI::Key_X }, [this](auto&) {
         hide_action_tabs();
     });
-    auto open_locator_action = GUI::Action::create("Open &Locator", { Mod_Ctrl, Key_K }, [this](auto&) {
+    auto open_locator_action = GUI::Action::create("Open &Locator", { Mod_Ctrl, GUI::Key_K }, [this](auto&) {
         m_locator->open();
     });
-    auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& checked) {
+    auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles", { Mod_Ctrl, GUI::Key_H }, [&](auto& checked) {
         project().model().set_should_show_dotfiles(checked.is_checked());
         Config::write_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, checked.is_checked());
     });
@@ -1767,7 +1767,7 @@ ErrorOr<void> HackStudioWidget::create_location_history_actions()
 {
     {
         auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv));
-        m_locations_history_back_action = GUI::Action::create("Go Back", { Mod_Alt | Mod_Shift, Key_Left }, icon, [this](auto&) {
+        m_locations_history_back_action = GUI::Action::create("Go Back", { Mod_Alt | Mod_Shift, GUI::Key_Left }, icon, [this](auto&) {
             if (m_locations_history_end_index <= 1)
                 return;
 
@@ -1784,7 +1784,7 @@ ErrorOr<void> HackStudioWidget::create_location_history_actions()
 
     {
         auto icon = TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv));
-        m_locations_history_forward_action = GUI::Action::create("Go Forward", { Mod_Alt | Mod_Shift, Key_Right }, icon, [this](auto&) {
+        m_locations_history_forward_action = GUI::Action::create("Go Forward", { Mod_Alt | Mod_Shift, GUI::Key_Right }, icon, [this](auto&) {
             if (m_locations_history_end_index == m_locations_history.size())
                 return;
 

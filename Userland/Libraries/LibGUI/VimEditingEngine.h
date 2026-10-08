@@ -99,7 +99,7 @@ public:
         Find
     };
 
-    void add_key_code(KeyCode key, bool ctrl, bool shift, bool alt);
+    void add_key(Key key, bool ctrl, bool shift, bool alt);
     Optional<TextRange> get_range(class VimEditingEngine& engine, bool normalize_for_position = false);
     Optional<TextRange> get_repeat_range(class VimEditingEngine& engine, Unit, bool normalize_for_position = false);
     Optional<TextPosition> get_position(VimEditingEngine& engine, bool in_visual_mode = false);
@@ -181,7 +181,7 @@ private:
     void clamp_cursor_position();
     void clear_visual_mode_data();
 
-    KeyCode m_previous_key {};
+    Key m_previous_key {};
     void switch_to_normal_mode();
     void switch_to_insert_mode();
     void switch_to_visual_mode();
