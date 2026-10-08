@@ -323,21 +323,15 @@ TEST_CASE(gamma)
     EXPECT(isnan(tgamma(-INFINITY)));
     EXPECT(isnan(tgamma(-5)));
 
-    // TODO: Stirling approximation is not precise for small values.
-    //       Eyeballed from the graph on https://en.wikipedia.org/wiki/Stirling%27s_approximation,
-    //       we should use another approximation for x < 2.
-    // EXPECT_APPROXIMATE(tgamma(0.5), sqrt(M_PI));
+    EXPECT_APPROXIMATE_WITH_ERROR(tgamma(0.5), sqrt(M_PI), 1e-10);
     EXPECT_EQ(tgammal(21.0l), 2'432'902'008'176'640'000.0l);
     EXPECT_EQ(tgamma(19.0), 6'402'373'705'728'000.0);
     EXPECT_EQ(tgammaf(11.0f), 3628800.0f);
     EXPECT_EQ(tgamma(4.0), 6);
 
-    // The stirling approximation for log(gamma(x)) is O(log(x)), so the error
-    // of 10 is well inside the range. That being said, we're off the expected
-    // results because our log(x) is not precise.
     // Expected results are from WolframAlpha.
-    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738941), 2275241556.917756, 10);
-    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738943), 2275241594.264350, 10);
+    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738941), 2275241556.917756, 1e-6);
+    EXPECT_APPROXIMATE_WITH_ERROR(lgamma(128738943), 2275241594.264350, 1e-6);
 
     EXPECT_EQ(lgamma(1.0), 0.0);
     EXPECT_EQ(lgamma(2.0), 0.0);
@@ -346,7 +340,7 @@ TEST_CASE(gamma)
     EXPECT(isnan(lgamma(NAN)));
     EXPECT(isinf(lgamma(INFINITY)));
     EXPECT(isinf(lgamma(-INFINITY)));
-    EXPECT_EQ(signgam, 1);
+    EXPECT_EQ(signgam, -1); // This is not specified by POSIX.
     lgamma(-2.5);
     EXPECT_EQ(signgam, -1);
 }
