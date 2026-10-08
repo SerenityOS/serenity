@@ -495,6 +495,14 @@ Optional<EBLC::IndexSubHeader const&> CBLC::index_subtable_for_glyph_id(u32 glyp
     }
 
     auto index_subtables_slice = m_slice.slice(bitmap_size.index_subtable_array_offset, bitmap_size.index_tables_size);
+
+    Checked<size_t> size_used_by_index_subtables = sizeof(EBLC::IndexSubTableArray);
+    size_used_by_index_subtables *= static_cast<u32>(bitmap_size.number_of_index_subtables);
+    if (size_used_by_index_subtables.has_overflow() || index_subtables_slice.size() < size_used_by_index_subtables) {
+        dbgln("CBLC number of index subtables goes out of bounds");
+        return {};
+    }
+
     ReadonlySpan<EBLC::IndexSubTableArray> index_subtable_arrays {
         bit_cast<EBLC::IndexSubTableArray const*>(index_subtables_slice.data()), bitmap_size.number_of_index_subtables
     };
@@ -509,6 +517,10 @@ Optional<EBLC::IndexSubHeader const&> CBLC::index_subtable_for_glyph_id(u32 glyp
     }
 
     auto index_subtable_slice = m_slice.slice(bitmap_size.index_subtable_array_offset + index_subtable_array->additional_offset_to_index_subtable);
+    if (index_subtable_slice.size() < sizeof(EBLC::IndexSubHeader)) {
+        dbgln("CBLC index subtable goes out of bounds");
+        return {};
+    }
     first_glyph_index = index_subtable_array->first_glyph_index;
     last_glyph_index = index_subtable_array->last_glyph_index;
     return *bit_cast<EBLC::IndexSubHeader const*>(index_subtable_slice.data());
