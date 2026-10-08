@@ -6,6 +6,7 @@
 
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/Hash/SHA2.h>
+#include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/PK.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibTest/TestCase.h>
@@ -166,4 +167,18 @@ TEST_CASE(test_RSA_encrypt_decrypt)
     rsa.decrypt(dec, enc);
 
     EXPECT(memcmp(enc.data(), "WellHelloFriendsWellHelloFriendsWellHelloFriendsWellHelloFriends", 64) == 0);
+}
+
+TEST_CASE(test_EMSA_PKCS1_V1_5_verify_rejects_short_encoded_message)
+{
+    auto message = "hellohellohellohellohellohellohellohellohello123-"sv.bytes();
+    Crypto::PK::EMSA_PKCS1_V1_5<Crypto::Hash::SHA256> emsa;
+
+    auto encoded = MUST(ByteBuffer::create_uninitialized(128));
+    emsa.encode(message, encoded, 1024);
+    EXPECT_EQ(emsa.verify(message, encoded, 1024), Crypto::VerificationConsistency::Consistent);
+
+    // A SHA-256 encoding needs at least 51 + 11 bytes, anything shorter can't have been produced by encode().
+    EXPECT_EQ(emsa.verify(message, ReadonlyBytes {}, 0), Crypto::VerificationConsistency::Inconsistent);
+    EXPECT_EQ(emsa.verify(message, encoded.bytes().trim(61), 61 * 8), Crypto::VerificationConsistency::Inconsistent);
 }
