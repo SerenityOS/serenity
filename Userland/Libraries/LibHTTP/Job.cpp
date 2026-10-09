@@ -58,6 +58,10 @@ struct SyncStreamAsyncWrapper final : public AsyncInputStream {
     virtual Coroutine<ErrorOr<bool>> enqueue_some(Badge<AsyncInputStream>) override
     {
         CO_TRY(co_await m_awaiter);
+
+        if (m_stream->is_eof())
+            co_return false;
+
         auto buffer = AK::Detail::ByteBuffer<16 * KiB> {};
         auto bytes = CO_TRY(m_stream->read_some(buffer.must_get_bytes_for_writing(16 * KiB)));
         if (bytes.is_empty())
