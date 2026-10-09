@@ -15,8 +15,8 @@
 static ErrorOr<void> set_mount_flag(ByteString key, u64 value, int mount_fd)
 {
     MountSpecificFlag flag;
-    flag.key_string_length = key.bytes().size();
-    flag.key_string_addr = key.bytes().data();
+    flag.key_string_length = key.length();
+    flag.key_string_addr = key.characters();
     flag.value_type = MountSpecificFlag::ValueType::UnsignedInteger;
     flag.value_length = 8;
     flag.value_addr = &value;

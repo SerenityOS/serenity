@@ -167,19 +167,19 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         return (int)woke_count;
     };
 
-    auto user_address = FlatPtr(params.userspace_address);
-    auto user_address2 = FlatPtr(params.userspace_address2);
+    auto user_address = params.userspace_address.ptr();
+    auto user_address2 = params.userspace_address2.ptr();
 
     auto do_wait = [&](u32 bitset) -> ErrorOr<FlatPtr> {
         bool did_create;
         LockRefPtr<FutexQueue> futex_queue;
         auto futex_key = TRY(get_futex_key(user_address, shared));
         do {
-            auto user_value = user_atomic_load_relaxed(params.userspace_address);
+            auto user_value = user_atomic_load_relaxed(params.userspace_address.unsafe_userspace_ptr());
             if (!user_value.has_value())
                 return EFAULT;
             if (user_value.value() != params.val) {
-                dbgln_if(FUTEX_DEBUG, "futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
+                dbgln_if(FUTEX_DEBUG, "futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address.ptr(), params.val);
                 return EAGAIN;
             }
             atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
@@ -207,7 +207,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
     };
 
     auto do_requeue = [&](Optional<u32> val3) -> ErrorOr<FlatPtr> {
-        auto user_value = user_atomic_load_relaxed(params.userspace_address);
+        auto user_value = user_atomic_load_relaxed(params.userspace_address.unsafe_userspace_ptr());
         if (!user_value.has_value())
             return EFAULT;
         if (val3.has_value() && val3.value() != user_value.value())
@@ -257,19 +257,19 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         atomic_thread_fence(AK::MemoryOrder::memory_order_release);
         switch (op) {
         case FUTEX_OP_SET:
-            oldval = user_atomic_exchange_relaxed(params.userspace_address2, op_arg);
+            oldval = user_atomic_exchange_relaxed(params.userspace_address2.unsafe_userspace_ptr(), op_arg);
             break;
         case FUTEX_OP_ADD:
-            oldval = user_atomic_fetch_add_relaxed(params.userspace_address2, op_arg);
+            oldval = user_atomic_fetch_add_relaxed(params.userspace_address2.unsafe_userspace_ptr(), op_arg);
             break;
         case FUTEX_OP_OR:
-            oldval = user_atomic_fetch_or_relaxed(params.userspace_address2, op_arg);
+            oldval = user_atomic_fetch_or_relaxed(params.userspace_address2.unsafe_userspace_ptr(), op_arg);
             break;
         case FUTEX_OP_ANDN:
-            oldval = user_atomic_fetch_and_not_relaxed(params.userspace_address2, op_arg);
+            oldval = user_atomic_fetch_and_not_relaxed(params.userspace_address2.unsafe_userspace_ptr(), op_arg);
             break;
         case FUTEX_OP_XOR:
-            oldval = user_atomic_fetch_xor_relaxed(params.userspace_address2, op_arg);
+            oldval = user_atomic_fetch_xor_relaxed(params.userspace_address2.unsafe_userspace_ptr(), op_arg);
             break;
         default:
             return EINVAL;

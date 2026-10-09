@@ -42,13 +42,9 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     auto copy_user_strings = [](auto const& list, auto& output) -> ErrorOr<void> {
         if (!list.length)
             return {};
-        Checked<size_t> size = sizeof(*list.strings);
-        size *= list.length;
-        if (size.has_overflow())
-            return EOVERFLOW;
         Vector<Syscall::StringArgument, 32> strings;
         TRY(strings.try_resize(list.length));
-        TRY(copy_from_user(strings.data(), list.strings, size.value()));
+        TRY(copy_n_from_user(strings.data(), list.strings, list.length));
         for (size_t i = 0; i < list.length; ++i) {
             auto string = TRY(try_copy_kstring_from_user(strings[i]));
             TRY(output.try_append(move(string)));
