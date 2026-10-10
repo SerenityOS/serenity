@@ -1039,6 +1039,15 @@ void Process::die()
         kill_all_threads();
     }
 
+    (void)for_each_child_in_same_process_list([&](Process& child) -> ErrorOr<void> {
+        if (child.ppid() != pid())
+            return {};
+        auto pdeath_signal = child.pdeath_signal();
+        if (pdeath_signal != 0)
+            (void)child.send_signal(static_cast<u8>(pdeath_signal), this);
+        return {};
+    });
+
     all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;

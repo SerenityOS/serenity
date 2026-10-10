@@ -24,6 +24,15 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
             protected_data.dumpable = arg1;
         });
         return 0;
+    case PR_SET_PDEATHSIG:
+        set_pdeath_signal(static_cast<int>(arg1));
+        return 0;
+    case PR_GET_PDEATHSIG: {
+        int pdeath_signal = this->pdeath_signal();
+        Userspace<int*> user_pdeath_signal = arg1;
+        TRY(copy_to_user(user_pdeath_signal, &pdeath_signal));
+        return 0;
+    }
     case PR_GET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
         return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
             return space->enforces_syscall_regions();
