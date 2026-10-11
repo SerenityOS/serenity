@@ -69,19 +69,31 @@ Painter::Painter(Gfx::Bitmap& bitmap)
 
 void Painter::fill_rect_with_draw_op(IntRect const& a_rect, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
 
-    ARGB32* dst = target().scanline(rect.top()) + rect.left();
+    int const s = scale();
+    ARGB32* dst = target().scanline(rect.top() * s) + rect.left() * s;
     size_t const dst_skip = target().pitch() / sizeof(ARGB32);
 
+    if (s == 1) {
+        for (int i = rect.height() - 1; i >= 0; --i) {
+            for (int j = 0; j < rect.width(); ++j)
+                set_physical_pixel_with_draw_op(dst[j], color);
+            dst += dst_skip;
+        }
+        return;
+    }
+
     for (int i = rect.height() - 1; i >= 0; --i) {
-        for (int j = 0; j < rect.width(); ++j)
-            set_physical_pixel_with_draw_op(dst[j], color);
-        dst += dst_skip;
+        for (int dy = 0; dy < s; ++dy) {
+            for (int j = 0; j < rect.width(); ++j) {
+                for (int dx = 0; dx < s; ++dx)
+                    set_physical_pixel_with_draw_op(dst[dy * dst_skip + j * s + dx], color);
+            }
+        }
+        dst += dst_skip * s;
     }
 }
 
@@ -169,14 +181,28 @@ void Painter::fill_rect(IntRect const& rect, PaintStyle const& paint_style)
 
 void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a, Color color_b)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
 
-    ARGB32* dst = target().scanline(rect.top()) + rect.left();
+    int const s = scale();
+    ARGB32* dst = target().scanline(rect.top() * s) + rect.left() * s;
     size_t const dst_skip = target().pitch() / sizeof(ARGB32);
+
+    if (s == 1) {
+        for (int i = 0; i < rect.height(); ++i) {
+            for (int j = 0; j < rect.width(); ++j) {
+                bool checkboard_use_a = ((rect.left() + i) & 1) ^ ((rect.top() + j) & 1);
+                if (checkboard_use_a && !color_a.alpha())
+                    continue;
+                if (!checkboard_use_a && !color_b.alpha())
+                    continue;
+                dst[j] = checkboard_use_a ? color_a.value() : color_b.value();
+            }
+            dst += dst_skip;
+        }
+        return;
+    }
 
     for (int i = 0; i < rect.height(); ++i) {
         for (int j = 0; j < rect.width(); ++j) {
@@ -185,20 +211,26 @@ void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a
                 continue;
             if (!checkboard_use_a && !color_b.alpha())
                 continue;
-            dst[j] = checkboard_use_a ? color_a.value() : color_b.value();
+            ARGB32 const value = checkboard_use_a ? color_a.value() : color_b.value();
+            for (int dy = 0; dy < s; ++dy)
+                fast_u32_fill(dst + dy * dst_skip + j * s, value, s);
         }
-        dst += dst_skip;
+        dst += dst_skip * s;
     }
 }
 
 void Painter::fill_rect_with_checkerboard(IntRect const& a_rect, IntSize cell_size, Color color_dark, Color color_light)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     auto translated_rect = a_rect.translated(translation());
     auto rect = translated_rect.intersected(clip_rect());
     if (rect.is_empty())
         return;
+
+    // Work in physical pixels: scaling the rects and the cell size makes the run-based
+    // algorithm below paint each logical cell as an s by s block.
+    translated_rect *= scale();
+    rect *= scale();
+    cell_size *= scale();
 
     ARGB32* dst = target().scanline(rect.top()) + rect.left();
     size_t const dst_skip = target().pitch() / sizeof(ARGB32);
@@ -502,8 +534,6 @@ static void on_each_ellipse_point(IntRect const& rect, Function<void(IntPoint)>&
 
 void Painter::fill_ellipse(IntRect const& a_rect, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
@@ -522,8 +552,6 @@ void Painter::fill_ellipse(IntRect const& a_rect, Color color)
 
 void Painter::draw_ellipse_intersecting(IntRect const& rect, Color color, int thickness)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     if (thickness <= 0)
         return;
 
@@ -555,14 +583,21 @@ static void for_each_pixel_around_rect_clockwise(RectType const& rect, Callback 
 
 void Painter::draw_focus_rect(IntRect const& rect, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     if (rect.is_empty())
         return;
+    if (scale() == 1) {
+        bool state = false;
+        for_each_pixel_around_rect_clockwise(rect, [&](auto x, auto y) {
+            if (state)
+                set_pixel(x, y, color);
+            state = !state;
+        });
+        return;
+    }
     bool state = false;
     for_each_pixel_around_rect_clockwise(rect, [&](auto x, auto y) {
         if (state)
-            set_pixel(x, y, color);
+            fill_rect(IntRect { x, y, 1, 1 }, color);
         state = !state;
     });
 }
@@ -640,8 +675,6 @@ void Painter::draw_rect_with_thickness(IntRect const& rect, Color color, int thi
 
 void Painter::draw_bitmap(IntPoint p, CharacterBitmap const& bitmap, Color color)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     auto rect = IntRect(p, bitmap.size()).translated(translation());
     auto clipped_rect = rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
@@ -650,19 +683,34 @@ void Painter::draw_bitmap(IntPoint p, CharacterBitmap const& bitmap, Color color
     int const last_row = clipped_rect.bottom() - rect.top();
     int const first_column = clipped_rect.left() - rect.left();
     int const last_column = clipped_rect.right() - rect.left();
-    ARGB32* dst = target().scanline(clipped_rect.y()) + clipped_rect.x();
+    int const s = scale();
+    ARGB32* dst = target().scanline(clipped_rect.y() * s) + clipped_rect.x() * s;
     size_t const dst_skip = target().pitch() / sizeof(ARGB32);
     char const* bitmap_row = &bitmap.bits()[first_row * bitmap.width() + first_column];
     size_t const bitmap_skip = bitmap.width();
 
+    if (s == 1) {
+        for (int row = first_row; row < last_row; ++row) {
+            for (int j = 0; j < (last_column - first_column); ++j) {
+                if (bitmap_row[j] == '#')
+                    dst[j] = color.value();
+            }
+            bitmap_row += bitmap_skip;
+            dst += dst_skip;
+        }
+        return;
+    }
+
     for (int row = first_row; row < last_row; ++row) {
         for (int j = 0; j < (last_column - first_column); ++j) {
             char fc = bitmap_row[j];
-            if (fc == '#')
-                dst[j] = color.value();
+            if (fc != '#')
+                continue;
+            for (int dy = 0; dy < s; ++dy)
+                fast_u32_fill(dst + dy * dst_skip + j * s, color.value(), s);
         }
         bitmap_row += bitmap_skip;
-        dst += dst_skip;
+        dst += dst_skip * s;
     }
 }
 
@@ -1768,8 +1816,6 @@ void Painter::draw_text(FloatRect const& rect, Utf32View const& raw_text, Font c
 
 void Painter::draw_text(Function<void(FloatRect const&, Utf8CodePointIterator&)> draw_one_glyph, FloatRect const& rect, Utf8View const& text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     do_draw_text(rect, text, font, alignment, elision, wrapping, [&](FloatRect const& r, Utf8CodePointIterator& it) {
         draw_one_glyph(r, it);
     });
@@ -1777,8 +1823,6 @@ void Painter::draw_text(Function<void(FloatRect const&, Utf8CodePointIterator&)>
 
 void Painter::draw_text(Function<void(FloatRect const&, Utf8CodePointIterator&)> draw_one_glyph, FloatRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     Utf8View text { raw_text };
     do_draw_text(rect, text, font, alignment, elision, wrapping, [&](FloatRect const& r, Utf8CodePointIterator& it) {
         draw_one_glyph(r, it);
@@ -1787,8 +1831,6 @@ void Painter::draw_text(Function<void(FloatRect const&, Utf8CodePointIterator&)>
 
 void Painter::draw_text(Function<void(FloatRect const&, Utf8CodePointIterator&)> draw_one_glyph, FloatRect const& rect, Utf32View const& raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     // FIXME: UTF-32 should eventually be completely removed, but for the time
     // being some places might depend on it, so we do some internal conversion.
     StringBuilder builder;
@@ -1867,11 +1909,26 @@ Optional<Color> Painter::get_pixel(IntPoint p)
 
 ErrorOr<NonnullRefPtr<Bitmap>> Painter::get_region_bitmap(IntRect const& region, BitmapFormat format, Optional<IntRect&> actual_region)
 {
-    VERIFY(scale() == 1);
-    auto bitmap_region = region.translated(state().translation).intersected(target().rect());
+    int const s = scale();
+    auto translated = region.translated(state().translation);
+    if (s == 1) {
+        auto bitmap_region = translated.intersected(target().rect());
+        if (actual_region.has_value())
+            actual_region.value() = bitmap_region.translated(-state().translation);
+        return target().cropped(bitmap_region, format);
+    }
+    auto physical_region = Gfx::IntRect { translated.x() * s, translated.y() * s, translated.width() * s, translated.height() * s }
+                               .intersected(Gfx::IntRect { {}, target().physical_size() });
+    auto logical_actual = Gfx::IntRect { physical_region.x() / s, physical_region.y() / s, physical_region.width() / s, physical_region.height() / s };
     if (actual_region.has_value())
-        actual_region.value() = bitmap_region.translated(-state().translation);
-    return target().cropped(bitmap_region, format);
+        actual_region.value() = logical_actual.translated(-state().translation);
+    // Return the region at the painter's scale so a later blit() restores it 1:1.
+    auto result = TRY(Bitmap::create(format, logical_actual.size(), s));
+    for (int y = 0; y < physical_region.height(); ++y) {
+        auto const* src = target().scanline(physical_region.top() + y) + physical_region.left();
+        memcpy(result->scanline(y), src, static_cast<size_t>(physical_region.width()) * sizeof(ARGB32));
+    }
+    return result;
 }
 
 ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color color)
@@ -2186,8 +2243,6 @@ void Painter::for_each_line_segment_on_bezier_curve(FloatPoint control_point, Fl
 
 void Painter::draw_quadratic_bezier_curve(IntPoint control_point, IntPoint p1, IntPoint p2, Color color, int thickness, LineStyle style)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     if (thickness <= 0)
         return;
 
@@ -2349,8 +2404,6 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
 
 void Painter::draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     if (thickness <= 0)
         return;
 

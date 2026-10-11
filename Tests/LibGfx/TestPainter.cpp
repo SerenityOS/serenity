@@ -6,6 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/EdgeFlagPathRasterizer.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Painter.h>
@@ -119,4 +121,71 @@ TEST_CASE(aliased_fill)
     }
 
     EXPECT_EQ(failed_test_count, 0);
+}
+
+// A painter on a bitmap with scale s should produce exactly the same image as a
+// painter on an unscaled bitmap, with every logical pixel expanded to an s x s block.
+static void expect_scaled_painter_matches_pixel_doubled_unscaled(Gfx::Bitmap const& scaled, Gfx::Bitmap const& unscaled)
+{
+    EXPECT_EQ(scaled.scale(), 2);
+    EXPECT_EQ(unscaled.scale(), 1);
+    EXPECT_EQ(scaled.size(), unscaled.size());
+
+    for (int y = 0; y < unscaled.height(); ++y) {
+        for (int x = 0; x < unscaled.width(); ++x) {
+            auto expected = unscaled.get_pixel(x, y);
+            for (int dy = 0; dy < scaled.scale(); ++dy)
+                for (int dx = 0; dx < scaled.scale(); ++dx)
+                    EXPECT_EQ(scaled.get_pixel(x * scaled.scale() + dx, y * scaled.scale() + dy), expected);
+        }
+    }
+}
+
+TEST_CASE(painter_scale_matches_pixel_doubled_unscaled)
+{
+    int const width = 16;
+    int const height = 12;
+
+    auto unscaled = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }));
+    auto scaled = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }, 2));
+    unscaled->fill(Gfx::Color::White);
+    scaled->fill(Gfx::Color::White);
+
+    Gfx::Painter unscaled_painter(*unscaled);
+    Gfx::Painter scaled_painter(*scaled);
+
+    static Gfx::CharacterBitmap const glyph { AK::StringView { "##.#....", 8 }, 4, 2 };
+
+    auto paint = [&](Gfx::Painter& painter) {
+        painter.fill_rect({ 0, 0, 8, 8 }, Gfx::Color::Green);
+        painter.fill_rect({ 9, 1, 4, 4 }, Gfx::Color { 0, 0, 0, 128 });
+        painter.fill_rect_with_checkerboard({ 2, 2, 10, 8 }, { 2, 3 }, Gfx::Color::Black, Gfx::Color::White);
+        painter.fill_rect_with_dither_pattern({ 4, 3, 8, 6 }, Gfx::Color::Black, Gfx::Color::White);
+        painter.draw_rect({ 1, 1, 12, 9 }, Gfx::Color::Red);
+        painter.draw_focus_rect({ 3, 2, 9, 7 }, Gfx::Color::Blue);
+        painter.draw_line({ 0, 5 }, { width - 1, 5 }, Gfx::Color::Magenta, 2);
+        painter.draw_line({ 5, 0 }, { 5, height - 1 }, Gfx::Color::Magenta, 2);
+        painter.draw_bitmap({ 6, 6 }, glyph, Gfx::Color::Black);
+    };
+
+    paint(unscaled_painter);
+    paint(scaled_painter);
+
+    expect_scaled_painter_matches_pixel_doubled_unscaled(*scaled, *unscaled);
+}
+
+TEST_CASE(painter_scale_get_region_bitmap)
+{
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 8, 8 }, 2));
+    bitmap->fill(Gfx::Color::White);
+    Gfx::Painter painter(*bitmap);
+    painter.fill_rect({ 2, 2, 4, 4 }, Gfx::Color::Black);
+
+    auto region = MUST(painter.get_region_bitmap({ 2, 2, 4, 4 }, Gfx::BitmapFormat::BGRx8888));
+    EXPECT_EQ(region->scale(), 2);
+    auto expected_size = Gfx::IntSize { 4, 4 };
+    EXPECT_EQ(region->size(), expected_size);
+    for (int y = 0; y < region->physical_height(); ++y)
+        for (int x = 0; x < region->physical_width(); ++x)
+            EXPECT_EQ(region->get_pixel(x, y), Gfx::Color::Black);
 }
