@@ -25,6 +25,8 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
         });
         return 0;
     case PR_SET_PDEATHSIG:
+        if (arg1 >= NSIG)
+            return EINVAL;
         set_pdeath_signal(static_cast<int>(arg1));
         return 0;
     case PR_GET_PDEATHSIG: {
