@@ -189,3 +189,33 @@ TEST_CASE(painter_scale_get_region_bitmap)
         for (int x = 0; x < region->physical_width(); ++x)
             EXPECT_EQ(region->get_pixel(x, y), Gfx::Color::Black);
 }
+
+TEST_CASE(painter_fill_path_scale_matches_pixel_doubled_unscaled)
+{
+    int const width = 16;
+    int const height = 16;
+
+    auto unscaled = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }));
+    auto scaled = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }, 2));
+    unscaled->fill(Gfx::Color::White);
+    scaled->fill(Gfx::Color::White);
+
+    Gfx::Painter unscaled_painter(*unscaled);
+    Gfx::Painter scaled_painter(*scaled);
+
+    auto paint = [&](Gfx::Painter& painter) {
+        Gfx::Path path;
+        path.move_to({ 2, 3 });
+        path.line_to({ 12, 3 });
+        path.line_to({ 12, 11 });
+        path.line_to({ 2, 11 });
+        path.close();
+        // NoAA keeps coverage binary, so a scale-2 render is the exact pixel-double.
+        painter.fill_path<Gfx::SampleNoAA>(path, Gfx::Color::Black);
+    };
+
+    paint(unscaled_painter);
+    paint(scaled_painter);
+
+    expect_scaled_painter_matches_pixel_doubled_unscaled(*scaled, *unscaled);
+}

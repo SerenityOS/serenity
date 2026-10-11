@@ -37,7 +37,7 @@ static u8 compute_coverage(SampleType sample)
 }
 
 static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigned samples_per_pixel, FloatPoint origin,
-    int top_clip_scanline, int bottom_clip_scanline, int& min_edge_y, int& max_edge_y)
+    int top_clip_scanline, int bottom_clip_scanline, int& min_edge_y, int& max_edge_y, float scale)
 {
     Vector<Detail::Edge> edges;
     edges.ensure_capacity(lines.size());
@@ -52,8 +52,9 @@ static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigne
         auto p0 = line.a() - origin;
         auto p1 = line.b() - origin;
 
-        p0.scale_by(1, samples_per_pixel);
-        p1.scale_by(1, samples_per_pixel);
+        // Convert from logical to device space (x and the subpixel-scaled y).
+        p0.scale_by(scale, samples_per_pixel * scale);
+        p1.scale_by(scale, samples_per_pixel * scale);
 
         i8 winding = -1;
         if (p0.y() > p1.y()) {
@@ -122,7 +123,7 @@ void EdgeFlagPathRasterizer<SubpixelSample>::fill(Painter& painter, Path const& 
 template<typename SubpixelSample>
 void EdgeFlagPathRasterizer<SubpixelSample>::fill(Painter& painter, Path const& path, PaintStyle const& style, float opacity, WindingRule winding_rule, FloatPoint offset)
 {
-    style.paint(enclosing_int_rect(path.bounding_box()), [&](PaintStyle::SamplerFunction sampler) {
+    style.paint(enclosing_int_rect(path.bounding_box()).scaled(painter.scale(), painter.scale()), [&](PaintStyle::SamplerFunction sampler) {
         if (opacity == 0.0f)
             return;
         if (opacity != 1.0f) {
@@ -139,14 +140,22 @@ void EdgeFlagPathRasterizer<SubpixelSample>::fill(Painter& painter, Path const& 
 template<typename SubpixelSample>
 void EdgeFlagPathRasterizer<SubpixelSample>::fill_internal(Painter& painter, Path const& path, auto color_or_function, WindingRule winding_rule, FloatPoint offset)
 {
-    // FIXME: Figure out how painter scaling works here...
-    VERIFY(painter.scale() == 1);
+    // The painter maps logical -> device coordinates as
+    //   device = (logical + translation) * scale
+    // so rasterise in device space. (scale 1, the common case, is unchanged.)
+    int const scale = painter.scale();
 
-    auto bounding_box = enclosing_int_rect(path.bounding_box().translated(offset));
-    auto dest_rect = bounding_box.translated(painter.translation());
-    auto origin = bounding_box.top_left().to_type<float>() - offset;
+    auto logical_box = enclosing_int_rect(path.bounding_box().translated(offset));
+    auto dest_rect = logical_box.translated(painter.translation()).scaled(scale, scale);
+    auto origin = logical_box.top_left().to_type<float>() - offset;
     m_blit_origin = dest_rect.top_left();
-    m_clip = dest_rect.intersected(painter.clip_rect());
+    // painter.clip_rect() is in logical coordinates; bring it to device space.
+    m_clip = dest_rect.intersected(painter.clip_rect().scaled(scale, scale));
+
+    // The scanline buffer was sized from the logical path bounds; grow it to
+    // cover the device-space extent.
+    if (scale != 1)
+        m_size = { m_size.width() * scale, m_size.height() * scale };
 
     // Only allocate enough to plot the parts of the scanline that could be visible.
     // Note: This can't clip the LHS.
@@ -167,7 +176,7 @@ void EdgeFlagPathRasterizer<SubpixelSample>::fill_internal(Painter& painter, Pat
     int max_edge_y = 0;
     auto top_clip_scanline = m_clip.top() - m_blit_origin.y();
     auto bottom_clip_scanline = m_clip.bottom() - m_blit_origin.y() - 1;
-    auto edges = prepare_edges(lines, SamplesPerPixel, origin, top_clip_scanline, bottom_clip_scanline, min_edge_y, max_edge_y);
+    auto edges = prepare_edges(lines, SamplesPerPixel, origin, top_clip_scanline, bottom_clip_scanline, min_edge_y, max_edge_y, scale);
     if (edges.is_empty())
         return;
 
