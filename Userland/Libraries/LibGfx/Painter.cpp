@@ -602,7 +602,7 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
 
     if (draw_left_side && draw_right_side) {
         // Specialized loop when drawing both sides.
-        for (int y = min_y * scale; y <= max_y * scale; ++y) {
+        for (int y = min_y * scale; y < (max_y + 1) * scale; ++y) {
             auto* bits = target().scanline(y);
             for (int i = 0; i < scale; ++i)
                 set_physical_pixel_with_draw_op(bits[rect.left() * scale + i], color);
@@ -610,7 +610,7 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
                 set_physical_pixel_with_draw_op(bits[(rect.right() - 1) * scale + i], color);
         }
     } else {
-        for (int y = min_y * scale; y <= max_y * scale; ++y) {
+        for (int y = min_y * scale; y < (max_y + 1) * scale; ++y) {
             auto* bits = target().scanline(y);
             if (draw_left_side)
                 for (int i = 0; i < scale; ++i)
