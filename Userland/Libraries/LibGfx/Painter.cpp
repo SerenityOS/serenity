@@ -105,13 +105,21 @@ void Painter::clear_rect(IntRect const& a_rect, Color color)
 
 void Painter::fill_physical_rect(IntRect const& physical_rect, Color color)
 {
-    // Callers must do clipping.
-    ARGB32* dst = target().scanline(physical_rect.top()) + physical_rect.left();
+    // Callers must do clipping. Be defensive anyway: draw_line() can pass a rect
+    // that sticks out past the bottom or right edge (e.g. a thick line ending on
+    // the clip boundary), which would otherwise write out of bounds.
+    // physical_rect is in physical (scaled) coordinates, so clip against the
+    // physical size; target().rect() is the logical size and would be wrong at
+    // scale > 1.
+    auto rect = physical_rect.intersected(Gfx::IntRect { {}, target().physical_size() });
+    if (rect.is_empty())
+        return;
+    ARGB32* dst = target().scanline(rect.top()) + rect.left();
     size_t const dst_skip = target().pitch() / sizeof(ARGB32);
 
     auto dst_format = target().format();
-    for (int i = physical_rect.height() - 1; i >= 0; --i) {
-        for (int j = 0; j < physical_rect.width(); ++j)
+    for (int i = rect.height() - 1; i >= 0; --i) {
+        for (int j = 0; j < rect.width(); ++j)
             dst[j] = color_for_format(dst_format, dst[j]).blend(color).value();
         dst += dst_skip;
     }
