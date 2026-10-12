@@ -112,7 +112,7 @@ TEST_CASE(parent_death_signal_is_delivered)
         return;
     }
 
-    EXPECT_EQ(state->received_signal, SIGUSR1);
+    EXPECT_EQ(state->received_signal, static_cast<sig_atomic_t>(SIGUSR1));
     if (!wait_for_flag(state->child_finished)) {
         if (state->child_pid > 0)
             (void)kill(state->child_pid, SIGKILL);
