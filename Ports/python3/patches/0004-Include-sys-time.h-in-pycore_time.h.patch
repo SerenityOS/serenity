@@ -11,7 +11,7 @@ unknown.
  1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/Include/internal/pycore_time.h b/Include/internal/pycore_time.h
-index 23312471c6584efee837e0b5c51cf6401391afa5..ac0a58bf5e47510569d9a72b93eb495b965adea9 100644
+index b671225ca6ea44d642a48030846dca4240be12fd..d09c9376eff56288d921eb0646b1acbd2b597a10 100644
 --- a/Include/internal/pycore_time.h
 +++ b/Include/internal/pycore_time.h
 @@ -58,10 +58,7 @@ extern "C" {
