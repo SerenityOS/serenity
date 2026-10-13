@@ -498,16 +498,11 @@ struct SignalHandlersInfo {
     int next_signal_id { 0 };
 };
 
-static Singleton<SignalHandlersInfo> s_signals;
-template<bool create_if_null = true>
-inline SignalHandlersInfo* signals_info()
-{
-    return s_signals.ptr();
-}
+static SignalHandlersInfo s_signals_handlers_info;
 
 void EventLoopManagerUnix::dispatch_signal(int signal_number)
 {
-    auto& info = *signals_info();
+    auto& info = s_signals_handlers_info;
     auto handlers = info.signal_handlers.find(signal_number);
     if (handlers != info.signal_handlers.end()) {
         // Make sure we bump the ref count while dispatching the handlers!
@@ -526,10 +521,7 @@ void EventLoopImplementationUnix::notify_forked_and_in_child()
     thread_data.notifier_by_ptr.clear();
     thread_data.notifier_by_index.clear();
     thread_data.initialize_wake_pipe();
-    if (auto* info = signals_info<false>()) {
-        info->signal_handlers.clear();
-        info->next_signal_id = 0;
-    }
+    s_signals_handlers_info = {};
     thread_data.pid = getpid();
 }
 
@@ -565,7 +557,7 @@ void SignalHandlers::dispatch()
 
 int SignalHandlers::add(Function<void(int)>&& handler)
 {
-    int id = ++signals_info()->next_signal_id; // TODO: worry about wrapping and duplicates?
+    int id = ++s_signals_handlers_info.next_signal_id; // TODO: worry about wrapping and duplicates?
     if (m_calling_handlers)
         m_handlers_pending.set(id, move(handler));
     else
@@ -617,7 +609,7 @@ void EventLoopManagerUnix::handle_signal(int signal_number)
 int EventLoopManagerUnix::register_signal(int signal_number, Function<void(int)> handler)
 {
     VERIFY(signal_number != 0);
-    auto& info = *signals_info();
+    auto& info = s_signals_handlers_info;
     auto handlers = info.signal_handlers.find(signal_number);
     if (handlers == info.signal_handlers.end()) {
         auto signal_handlers = adopt_ref(*new SignalHandlers(signal_number, EventLoopManagerUnix::handle_signal));
@@ -633,7 +625,7 @@ void EventLoopManagerUnix::unregister_signal(int handler_id)
 {
     VERIFY(handler_id != 0);
     int remove_signal_number = 0;
-    auto& info = *signals_info();
+    auto& info = s_signals_handlers_info;
     for (auto& h : info.signal_handlers) {
         auto& handlers = *h.value;
         if (handlers.remove(handler_id)) {
