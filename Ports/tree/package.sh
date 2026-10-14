@@ -1,12 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='tree'
-version='2.1.3'
+version='2.3.2'
 files=(
-    "https://github.com/Old-Man-Programmer/tree/archive/refs/tags/${version}.tar.gz#3ffe2c8bb21194b088ad1e723f0cf340dd434453c5ff9af6a38e0d47e0c2723b"
+    "https://github.com/Old-Man-Programmer/tree/archive/refs/tags/${version}.tar.gz#22cf32e84e3eb508d97a9e991c2c3cc006b9dcf4afed201d96311c5c57d08fcf"
 )
 
 build() {
-    run make CC="${CC}" all
+    run make all
 }
 
 install() {
