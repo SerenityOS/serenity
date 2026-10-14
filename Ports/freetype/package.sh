@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='freetype'
-version='2.14.3'
+version='2.15.0'
 files=(
-    "https://download.savannah.gnu.org/releases/freetype/freetype-${version}.tar.gz#e61b31ab26358b946e767ed7eb7f4bb2e507da1cfefeb7a8861ace7fd5c899a1"
+    "https://download.savannah.gnu.org/releases/freetype/freetype-${version}.tar.gz#9186627467a616d9a9e3e574748ac0c45fa77398e6364edef3041a8ba8d92f64"
 )
 useconfigure='true'
 configopts=(
