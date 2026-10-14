@@ -1,17 +1,26 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libzip'
-version='1.11.4'
+version='1.12'
 files=(
-    "https://libzip.org/download/libzip-${version}.tar.gz#82e9f2f2421f9d7c2466bbc3173cd09595a88ea37db0d559a9d0a2dc60dc722e"
+    "https://libzip.org/download/libzip-${version}.tar.gz#03db61e150b136b1692a9953f9fdab148808c4e504c1b7c5acad8ec7a50321cb"
 )
 useconfigure='true'
 depends=(
+    'bzip2'
+    'openssl'
+    'xz'
     'zlib'
+    'zstd'
+)
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    '-DBUILD_EXAMPLES=OFF'
+    '-DBUILD_OSSFUZZ=OFF'
+    '-DBUILD_DOC=OFF'
 )
 
 configure() {
-    run cmake \
-        -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    run cmake "${configopts[@]}"
 }
 
 install() {
