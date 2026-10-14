@@ -474,18 +474,6 @@ public:
         return m_handlers.is_empty();
     }
 
-    bool have(int handler_id) const
-    {
-        if (m_calling_handlers) {
-            auto it = m_handlers_pending.find(handler_id);
-            if (it != m_handlers_pending.end()) {
-                if (!it->value)
-                    return false; // a deletion is pending
-            }
-        }
-        return m_handlers.contains(handler_id);
-    }
-
     int m_signal_number;
     void (*m_original_handler)(int); // TODO: can't use sighandler_t?
     HashMap<int, Function<void(int)>> m_handlers;
