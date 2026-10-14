@@ -1,0 +1,76 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Wed, 14 Oct 2026 17:31:54 +0200
+Subject: [PATCH] Disable documentation generation
+
+It attempts to run the cross-compiled binary on the host.
+---
+ Makefile.in | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 9a9e767f4d3d9b0a4d88bcfa6120947d74139e58..676e5cb74597d3b0fba886a143fda67595ddc8ad 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -5804,10 +5804,7 @@ HDTBLPROCESSEDEXAMPLEFILES = \
+ 
+ hdtblexampledir = $(exampledir)/hdtbl
+ dist_hdtblexample_DATA = $(HDTBLEXAMPLEFILES)
+-nodist_hdtblexample_DATA = \
+-  $(HDTBLGENFILES) \
+-  $(HDTBLPROCESSEDEXAMPLEFILES) \
+-  $(DOC_GNU_EPS)
++nodist_hdtblexample_DATA =
+ 
+ hdtbl_TESTS = contrib/hdtbl/examples/test-hdtbl.sh
+ installfontexamplesdir = $(exampledir)
+@@ -5954,14 +5951,14 @@ MOMPROCESSEDEXAMPLEFILES = \
+   contrib/mom/examples/typesetting.pdf
+ 
+ momprocessedexampledir = $(exampledir)/mom
+-nodist_momprocessedexample_DATA = $(MOMPROCESSEDEXAMPLEFILES)
++nodist_momprocessedexample_DATA =
+ mom_test_template = contrib/mom/examples/test-mom.sh.in
+ 
+ # Small test suite on mom examples
+ mom_TESTS = contrib/mom/examples/test-mom.sh
+ 
+ # For this list of files we add a symlink from $(exampledir)/mom to $(pdfdocdir)
+-PDFDOCFILE = mom-pdf.pdf
++PDFDOCFILE =
+ 
+ # Define convenience macro for in-tree documents to depend on.  Don't
+ # use this above.
+@@ -5982,9 +5979,9 @@ sboxestmacdir = $(tmacdir)
+ dist_sboxestmac_DATA = contrib/sboxes/sboxes.tmac
+ SBOXES_EXAMPLEFILES = $(sboxes_srcdir)/msboxes.ms.in
+ sboxesotherdocdir = $(docdir)
+-nodist_sboxesotherdoc_DATA = $(sboxes_builddir)/msboxes.ms
++nodist_sboxesotherdoc_DATA =
+ sboxespdfdocdir = $(pdfdocdir)
+-nodist_sboxespdfdoc_DATA = $(sboxes_builddir)/msboxes.pdf
++nodist_sboxespdfdoc_DATA =
+ doc_srcdir = $(abs_top_srcdir)/doc
+ doc_builddir = doc
+ 
+@@ -6094,9 +6091,9 @@ PROCESSEDFILES_DEPS_TXT = groff troff grotty tmac/tty.tmac \
+ 
+ otherdocdir = $(docdir)
+ dist_otherdoc_DATA = $(DOCFILES_INST)
+-nodist_otherdoc_DATA = $(PROCESSEDDOCFILES) $(GENERATEDDOCFILES)
++nodist_otherdoc_DATA =
+ docpdfdocdir = $(pdfdocdir)
+-nodist_docpdfdoc_DATA = $(PROCESSEDDOCFILES_PDF)
++nodist_docpdfdoc_DATA =
+ 
+ # GNU PIC html documentation, installed in $(htmldocdir)
+ # Other pic*.html files are installed by the local rule
+@@ -6128,7 +6125,7 @@ PROCESSEDEXAMPLEFILES = \
+ 
+ docexamplesdir = $(exampledir)
+ dist_docexamples_DATA = $(EXAMPLEFILES)
+-nodist_docexamples_DATA = $(PROCESSEDEXAMPLEFILES)
++nodist_docexamples_DATA =
+ 
+ # webpage.html is generated; webpage*.html files are installed by the
+ # local rule.
