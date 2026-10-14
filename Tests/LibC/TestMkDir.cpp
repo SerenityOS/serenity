@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/System.h>
+#include <LibFileSystem/TempFile.h>
 #include <LibTest/TestCase.h>
 
 #include <errno.h>
@@ -59,6 +61,22 @@ TEST_CASE(parent_is_file)
     int cached_errno = errno;
     EXPECT(res < 0);
     EXPECT_EQ(cached_errno, ENOTDIR);
+}
+
+TEST_CASE(create_directory_on_symlink)
+{
+    auto parent = TRY_OR_FAIL(FileSystem::TempFile::create_temp_directory());
+
+    auto link_path = ByteString::formatted("{}/link", parent->path());
+    auto target = ByteString::formatted("{}/../dead_target", parent->path());
+    TRY_OR_FAIL(Core::System::symlink(target, link_path));
+
+    auto error = Core::System::mkdir(link_path, 0755);
+    EXPECT(error.is_error());
+    EXPECT_EQ(error.error().code(), EEXIST);
+
+    auto stat = TRY_OR_FAIL(Core::System::lstat(link_path));
+    EXPECT(S_ISLNK(stat.st_mode));
 }
 
 TEST_CASE(pledge)
