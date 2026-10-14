@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=acpica-tools
-version='20260408'
+port='acpica-tools'
+version='20260930'
 workdir="acpica-${version}"
 files=(
-    "https://github.com/open-acpica/acpica/archive/refs/tags/${version}.tar.gz#ddc5d3e0f54030e2348484fff681861a161efb4e388e20631209574e7884ad39"
+    "https://github.com/open-acpica/acpica/archive/refs/tags/${version}.tar.gz#feddab0f42f1e01afa3b8ec04f3aaef5e61e891225b8dc8776953ca9f3df1449"
 )
 
 
