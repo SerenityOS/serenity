@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='sqlite'
-version='3.53.4'
+version='3.54.0'
 # Download URL uses a different version format
-_version='3530400'
+_version='3540000'
 files=(
-    "https://www.sqlite.org/2026/sqlite-autoconf-${_version}.tar.gz#0e9483900e92cd5de8fd48d16bf9200145a61f7fd5be542a5ac81d8a9516eb9c"
+    "https://www.sqlite.org/2026/sqlite-autoconf-${_version}.tar.gz#134ec0802dda5795816e25d25872d20b312cb3973438c49b30bc40b7705ea9ed"
 )
 workdir="sqlite-autoconf-${_version}"
 useconfigure='true'
