@@ -1,18 +1,28 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libsixel'
-version='1.8.7'
-files=(
-    "https://github.com/saitoha/libsixel/archive/refs/tags/v${version}.tar.gz#ebed621b4820f96ff428127797d94f4671f2393560acd4bcc8b540809d391510"
-)
+version='1.10.5'
 useconfigure='true'
-configopts=("--prefix=${SERENITY_INSTALL_ROOT}/usr/local")
+configopts=(
+    "--cross-file=${SERENITY_BUILD_DIR}/meson-cross-file.txt"
+    "--buildtype=release"
+    "-Dgd=disabled"
+    "-Djpeg=disabled"
+    "-Dpng=disabled"
+    "-Dlibcurl=disabled"
+)
+files=(
+    "https://github.com/libsixel/libsixel/archive/refs/tags/v${version}.tar.gz#b6654928bd423f92e6da39eb1f40f10000ae2cc6247247fc1882dcff6acbdfc8"
+)
 
 configure() {
-    export ac_cv_func_malloc_0_nonnull=yes
-    export ac_cv_func_realloc_0_nonnull=yes
-    run ./configure --host="${SERENITY_ARCH}-serenity" "${configopts[@]}"
+    run meson setup build "${configopts[@]}"
+}
+
+build() {
+    run ninja -C build
 }
 
 install() {
-    run make install
+    export DESTDIR="${SERENITY_INSTALL_ROOT}"
+    run meson install -C build
 }
