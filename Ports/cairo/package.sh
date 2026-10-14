@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='cairo'
-version='1.18.2'
-archive_hash='a62b9bb42425e844cc3d6ddde043ff39dbabedd1542eba57a2eb79f85889d45a'
+version='1.18.6'
 files=(
-    "https://cairographics.org/releases/cairo-${version}.tar.xz#${archive_hash}"
+    "https://cairographics.org/releases/cairo-${version}.tar.xz#1c767308174337a74694da0f3ec069c271452163a1ef4540964c50c301f157d4"
 )
 useconfigure='true'
 configopts=(
