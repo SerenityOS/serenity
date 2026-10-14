@@ -1,11 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='pkgconf'
-version='3.0.7'
+version='3.0.8'
 files=(
-    "https://distfiles.ariadne.space/pkgconf/pkgconf-${version}.tar.xz#c926ff491cbd9a331a589160811bd97ab1749b4d5198a519338f2cdfabe6940a"
+    "https://distfiles.ariadne.space/pkgconf/pkgconf-${version}.tar.xz#943f0bc88bcaeceb630b00262e2a8ad5ea4fac3fba72a4267d8b9ec6b35d1194"
 )
 useconfigure='true'
-use_fresh_config_sub='true'
 # FIXME: This looks suspiciously host-y...
 configopts=(
     '--prefix=/usr/local'
