@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='scummvm'
 useconfigure='true'
-version='2026.3.0'
+version='2026.4.0'
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#b863a81e1598df8bc4aa0c33e3d9b1c8bbede1879d94d91568a4f200057677e7"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#cd660b34104da7f85ed0a11b7c6c2320c629bb87ee297935711ebc1e09731f12"
 )
 depends=(
     'freetype'
