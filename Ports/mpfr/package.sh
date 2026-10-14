@@ -1,13 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='mpfr'
-version='4.2.1'
+version='4.2.2'
 useconfigure='true'
-use_fresh_config_sub='true'
 configopts=(
     '--with-sysroot=/'
 )
 files=(
-    "mirror://gnu/mpfr/mpfr-${version}.tar.xz#277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2"
+    "mirror://gnu/mpfr/mpfr-${version}.tar.xz#b67ba0383ef7e8a8563734e2e889ef5ec3c3b898a01d00fa0a6869ad81c6ce01"
 )
 depends=(
     'gmp'
