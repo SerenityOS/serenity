@@ -14,8 +14,3 @@ Fix that by just adding the appropriate configuration options for
 automatically using libtool, without having to manually link the
 static library into a shared library.
 
-This patch here is a bit more elaborate for other ports, as libintl's
-configure includes the code for detecting dynamic linker characteristics
-twice, and it also queries the C++ compiler for shared library support.
-
-
