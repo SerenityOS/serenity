@@ -12,5 +12,5 @@ build() {
 }
 
 install() {
-    run /usr/bin/install -m755 libtree-sitter-vim.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtree-sitter-vim.so"
+    run command install -m755 libtree-sitter-vim.so "${SERENITY_INSTALL_ROOT}/usr/local/lib/libtree-sitter-vim.so"
 }
