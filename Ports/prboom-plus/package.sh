@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='prboom-plus'
-version='2.6.2'
+version='2.6.66'
 useconfigure='true'
 squashed_version="$(echo ${version} | tr -d '.')"
 files=(
-    "https://github.com/coelckers/prboom-plus/archive/refs/tags/v${version}.tar.gz#5cfeec96fbfe4fc3bd5dbc2b8d581ff5f6617dd74b2799680ba5b1e2e38c4aff"
-    "https://github.com/coelckers/prboom-plus/releases/download/v${version}/prboom-plus-${squashed_version}-w32.zip#20313e00d8841a618e23e7c671d65870194bee634468fecd2f3697ac05f21476"
+    "https://github.com/coelckers/prboom-plus/archive/refs/tags/v${version}.tar.gz#4b647b4b14c3fac00711e6bf19f996bbfe37754a3b9bb5be6791f0c3fd993438"
+    "https://github.com/coelckers/prboom-plus/releases/download/v${version}/prboom-plus-${squashed_version}-ucrt64.zip#9c8c2b021a57739e8428b599d80c25a6b95150084cb04a7e433877123b15b141"
 )
 workdir="prboom-plus-${version}/prboom2"
 depends=(
@@ -19,6 +19,10 @@ depends=(
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    # Upstream declares 3.0 which is no longer supported by our CMake.
+    '-DCMAKE_POLICY_VERSION_MINIMUM=3.25'
+    '-DCMAKE_C_STANDARD=17'
+    '-DCMAKE_C_FLAGS=-Wno-error=incompatible-pointer-types'
     '-DWITH_ALSA=OFF'
     '-DWITH_DUMB=OFF'
     '-DWITH_FLUIDSYNTH=OFF'
@@ -45,5 +49,5 @@ install() {
 
     wad_directory="${SERENITY_INSTALL_ROOT}/usr/local/share/games/doom"
     mkdir -p "${wad_directory}"
-    run cp "../../prboom-plus-${squashed_version}-w32/prboom-plus.wad" "${wad_directory}/"
+    run cp "../../prboom-plus-${squashed_version}-ucrt64/prboom-plus.wad" "${wad_directory}/"
 }
