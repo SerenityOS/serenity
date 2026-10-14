@@ -20,23 +20,17 @@ Fix pledges to conform to serenity's pledge()
 Remove inet_aton() redefinition
 
 
-## `0005-Assume-SSH-2.0-and-sidestep-some-scanf-issues.patch`
-
-Assume SSH 2.0 and sidestep some scanf issues
-
-
-## `0006-Use-sendfd-recvfd-on-serenity.patch`
+## `0005-Use-sendfd-recvfd-on-serenity.patch`
 
 Use sendfd/recvfd on serenity
+
+
+## `0006-pledge-sigaction-in-scp.patch`
+
+pledge sigaction in scp
 
 
 ## `0007-Use-unveil-for-privsep.patch`
 
 Use unveil for privsep
-
-
-## `0008-pledge-sigaction-in-scp.patch`
-
-pledge sigaction in scp
-
 

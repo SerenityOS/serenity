@@ -1,20 +1,25 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=openssh
-workdir=openssh-portable-94eb6858efecc1b4f02d8a6bd35e149f55c814c8
-version=9.0-94eb685
+port='openssh'
+version='10.6p1'
 files=(
-    "https://github.com/openssh/openssh-portable/archive/94eb6858efecc1b4f02d8a6bd35e149f55c814c8.tar.gz#8a6bfb4c21d32f4e82d6d7734cd68585337cdd57428a2799295e1b1e72c332b5"
+    "https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${version}.tar.gz#a9dc9565dffe8640f64d863cd29a32bc4a3dbdec0566a7fc44c5d6ee767d5f39"
 )
-depends=("zlib" "openssl")
-useconfigure=true
-use_fresh_config_sub=true
-configopts=("--prefix=/usr/local" "--disable-utmp" "--disable-strip" "--sysconfdir=/etc/ssh" "--with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local/lib")
-
-export LDFLAGS="-lcrypt -lcore -lcoreminimal"
-
-pre_configure() {
-    run autoreconf
-}
+depends=(
+    'openssl'
+    'zlib'
+)
+useconfigure='true'
+configopts=(
+    '--prefix=/usr/local'
+    '--sysconfdir=/etc/ssh'
+    "--with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local"
+    '--disable-utmp'
+    '--disable-utmpx'
+    '--disable-wtmp'
+    '--disable-wtmpx'
+    '--disable-lastlog'
+    '--disable-strip'
+)
 
 install() {
     # Can't make keys outside of Serenity since ssh-keygen is built for Serenity.

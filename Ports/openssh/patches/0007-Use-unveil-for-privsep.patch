@@ -4,15 +4,16 @@ Date: Sat, 30 Apr 2022 10:58:10 +0000
 Subject: [PATCH] Use unveil for privsep
 
 ---
- sshd.c | 28 +++-------------------------
- 1 file changed, 3 insertions(+), 25 deletions(-)
+ sshd-auth.c |  9 +++------
+ sshd.c      | 16 ----------------
+ 2 files changed, 3 insertions(+), 22 deletions(-)
 
-diff --git a/sshd.c b/sshd.c
-index 0ee65b5..e2f84de 100644
---- a/sshd.c
-+++ b/sshd.c
-@@ -452,12 +452,9 @@ privsep_preauth_child(void)
- 
+diff --git a/sshd-auth.c b/sshd-auth.c
+index 3adf1a4..c91018a 100644
+--- a/sshd-auth.c
++++ b/sshd-auth.c
+@@ -186,12 +186,9 @@ privsep_child_demote(void)
+ #endif
  	/* Demote the child */
  	if (privsep_chroot) {
 -		/* Change our root directory */
@@ -25,31 +26,32 @@ index 0ee65b5..e2f84de 100644
 +		if (unveil(NULL, NULL) < 0)
 +			fatal("unveil(NULL, NULL): %s", strerror(errno));
  
- 		/* Drop our privileges */
- 		debug3("privsep user:group %u:%u", (u_int)privsep_pw->pw_uid,
-@@ -1952,25 +1949,6 @@ main(int ac, char **av)
- 		    sshkey_type(key));
+ 		/*
+ 		 * Drop our privileges
+diff --git a/sshd.c b/sshd.c
+index da2aba9..1350928 100644
+--- a/sshd.c
++++ b/sshd.c
+@@ -1759,22 +1759,6 @@ main(int ac, char **av)
  	}
+ 	endpwent();
  
--	if (privsep_chroot) {
--		struct stat st;
--
--		if ((stat(_PATH_PRIVSEP_CHROOT_DIR, &st) == -1) ||
--		    (S_ISDIR(st.st_mode) == 0))
+-	if (need_chroot) {
+-		if ((stat(_PATH_PRIVSEP_CHROOT_DIR, &sb) == -1) ||
+-		    (S_ISDIR(sb.st_mode) == 0))
 -			fatal("Missing privilege separation directory: %s",
 -			    _PATH_PRIVSEP_CHROOT_DIR);
--
 -#ifdef HAVE_CYGWIN
 -		if (check_ntsec(_PATH_PRIVSEP_CHROOT_DIR) &&
--		    (st.st_uid != getuid () ||
--		    (st.st_mode & (S_IWGRP|S_IWOTH)) != 0))
+-		    (sb.st_uid != getuid () ||
+-		    (sb.st_mode & (S_IWGRP|S_IWOTH)) != 0))
 -#else
--		if (st.st_uid != 0 || (st.st_mode & (S_IWGRP|S_IWOTH)) != 0)
+-		if (sb.st_uid != 0 || (sb.st_mode & (S_IWGRP|S_IWOTH)) != 0)
 -#endif
 -			fatal("%s must be owned by root and not group or "
 -			    "world-writable.", _PATH_PRIVSEP_CHROOT_DIR);
 -	}
 -
- 	if (test_flag > 1) {
- 		/*
- 		 * If no connection info was provided by -C then use
+ 	if (test_flag > 1)
+ 		print_config(&connection_info);
+ 

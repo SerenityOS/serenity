@@ -10,11 +10,11 @@ Co-Authored-By: Patrick Meyer <git@the-space.agency>
  2 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/clientloop.c b/clientloop.c
-index f8350e6..00bf4b6 100644
+index 0df1291..eea4001 100644
 --- a/clientloop.c
 +++ b/clientloop.c
-@@ -1227,31 +1227,31 @@ client_loop(struct ssh *ssh, int have_pty, int escape_char_arg,
- 	if (options.control_master &&
+@@ -1469,31 +1469,31 @@ client_loop(struct ssh *ssh, int have_pty, int escape_char_arg,
+ 	else if (options.control_master &&
  	    !option_clear_or_none(options.control_path)) {
  		debug("pledge: id");
 -		if (pledge("stdio rpath wpath cpath unix inet dns recvfd sendfd proc exec id tty",
@@ -51,18 +51,18 @@ index f8350e6..00bf4b6 100644
  	}
  
 diff --git a/ssh-keysign.c b/ssh-keysign.c
-index c52321e..9ae4dbf 100644
+index fd6cf7c..89275b9 100644
 --- a/ssh-keysign.c
 +++ b/ssh-keysign.c
-@@ -187,7 +187,7 @@ main(int argc, char **argv)
- 	char *host, *fp, *pkalg;
- 	size_t slen, dlen;
+@@ -192,7 +192,7 @@ main(int argc, char **argv)
+ 	if (fd > 2)
+ 		close(fd);
  
 -	if (pledge("stdio rpath getpw dns id", NULL) != 0)
 +	if (pledge("stdio rpath id", NULL) != 0)
  		fatal("%s: pledge: %s", __progname, strerror(errno));
  
- 	/* Ensure that stdin and stdout are connected */
+ 	for (i = 0; i < NUM_KEYTYPES; i++)
 @@ -226,7 +226,7 @@ main(int argc, char **argv)
  		fatal("ssh-keysign not enabled in %s",
  		    _PATH_HOST_CONFIG_FILE);
