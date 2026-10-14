@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='optipng'
-version='0.7.7'
+version='7.9.1'
 files=(
-    "http://downloads.sourceforge.net/optipng/optipng-${version}.tar.gz#4f32f233cef870b3f95d3ad6428bfe4224ef34908f1b42b0badf858216654452"
+    "https://downloads.sourceforge.net/project/optipng/OptiPNG/optipng-${version}/optipng-${version}.tar.gz#c2579be58c2c66dae9d63154edcb3d427fef64cb00ec0aff079c9d156ec46f29"
 )
 useconfigure='true'
 
