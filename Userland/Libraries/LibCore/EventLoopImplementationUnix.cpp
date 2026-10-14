@@ -474,6 +474,12 @@ public:
         return m_handlers.is_empty();
     }
 
+    int signal_number() const
+    {
+        return m_signal_number;
+    }
+
+private:
     int m_signal_number;
     void (*m_original_handler)(int); // TODO: can't use sighandler_t?
     HashMap<int, Function<void(int)>> m_handlers;
@@ -618,7 +624,7 @@ void EventLoopManagerUnix::unregister_signal(int handler_id)
         auto& handlers = *h.value;
         if (handlers.remove(handler_id)) {
             if (handlers.is_empty())
-                remove_signal_number = handlers.m_signal_number;
+                remove_signal_number = handlers.signal_number();
             break;
         }
     }
