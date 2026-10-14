@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Wed, 14 Oct 2026 17:40:14 +0200
+Subject: [PATCH] util: Disable POSIX shared memory on SerenityOS
+
+---
+ util/oslib-posix.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/util/oslib-posix.c b/util/oslib-posix.c
+index dc001da66dd484acdce9de5e69c2b743e3e74a4d..394cee8d1c02a3810d67e8c01470fad71e3b637e 100644
+--- a/util/oslib-posix.c
++++ b/util/oslib-posix.c
+@@ -984,6 +984,10 @@ void qemu_close_all_open_fd(const int *skip, unsigned int nskip)
+ 
+ int qemu_shm_alloc(size_t size, Error **errp)
+ {
++#ifdef __serenity__
++    error_setg(errp, "POSIX shared memory is not supported on SerenityOS");
++    return -1;
++#else
+     g_autoptr(GString) shm_name = g_string_new(NULL);
+     int fd, oflag, cur_sequence;
+     static int sequence;
+@@ -1032,4 +1036,5 @@ int qemu_shm_alloc(size_t size, Error **errp)
+     }
+ 
+     return fd;
++#endif
+ }
