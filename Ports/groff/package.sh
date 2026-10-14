@@ -1,15 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='groff'
-version='1.22.4'
+version='1.24.2'
 useconfigure='true'
-use_fresh_config_sub='true'
-config_sub_paths=('build-aux/config.sub')
 files=(
-    "mirror://gnu/groff/groff-${version}.tar.gz#e78e7b4cb7dec310849004fa88847c44701e8d133b5d4c13057d876c1bad0293"
+    "mirror://gnu/groff/groff-${version}.tar.gz#f9c1efd5bebbe37fc6e1063db7473ce8df1e3e0be4ff0f43ce04fce57e9c5dd9"
 )
 depends=(
     'libiconv'
-)
-configopts=(
-    '--with-doc=no'
 )
