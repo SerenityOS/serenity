@@ -10,10 +10,10 @@ sets, so extend them into a full list manually.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/chardev/char.c b/chardev/char.c
-index 661ad8176a982c641531cdab8e05c3815504cc2f..c9f701ffc59837a0480bb56c63d5f8ef7ee022e6 100644
+index 22e5bae388ad085568f624747cf94285877c0f34..1be8b28fdece9c783a63b7f77a7a45efda84a656 100644
 --- a/chardev/char.c
 +++ b/chardev/char.c
-@@ -383,11 +383,11 @@ QemuOpts *qemu_chr_parse_compat(const char *label, const char *filename,
+@@ -430,11 +430,11 @@ QemuOpts *qemu_chr_parse_compat(const char *label, const char *filename,
      if (strstart(filename, "vc", &p)) {
          qemu_opt_set(opts, "backend", "vc", &error_abort);
          if (*p == ':') {

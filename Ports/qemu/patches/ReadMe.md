@@ -27,3 +27,8 @@ HPET timer read for each tick.
 file-posix: Include the correct file for ioctl on SerenityOS
 
 
+## `0005-util-Disable-POSIX-shared-memory-on-SerenityOS.patch`
+
+util: Disable POSIX shared memory on SerenityOS
+
+

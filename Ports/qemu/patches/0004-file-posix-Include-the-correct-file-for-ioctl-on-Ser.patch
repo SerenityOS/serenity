@@ -8,10 +8,10 @@ Subject: [PATCH] file-posix: Include the correct file for ioctl on SerenityOS
  1 file changed, 4 insertions(+)
 
 diff --git a/block/file-posix.c b/block/file-posix.c
-index 7f540b03ed4f3e3ea87288cda485fee8c809c34c..b034080300923f4a1acfbfc7ac1595ca93c3ece4 100644
+index 3c985da94f563be9463b05c3573ac95e2d726f06..ce0d3343d7e43c8221436be76aa6ae262fda7648 100644
 --- a/block/file-posix.c
 +++ b/block/file-posix.c
-@@ -110,6 +110,10 @@
+@@ -109,6 +109,10 @@
  #include <sys/diskslice.h>
  #endif
  
