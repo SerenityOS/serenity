@@ -22,8 +22,6 @@
         CALL_BUILTIN(function, args);
 
 #define AARCH64_INSTRUCTION(instruction, arg) \
-    if constexpr (IsSame<T, long double>)     \
-        TODO();                               \
     if constexpr (IsSame<T, double>) {        \
         double res;                           \
         asm(#instruction " %d0, %d1"          \

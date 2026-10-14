@@ -7,300 +7,234 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/FloatingPoint.h>
+#include <AK/Math/Copysign.h>
 #include <AK/Math/Division.h>
+#include <AK/Math/Fabs.h>
 #include <AK/NumericLimits.h>
 
 #include <AK/Math/Macros.h>
 
 namespace AK {
 
+/* The compilers will always inline these functions according to the following table
+ * https://serenity.godbolt.org/z/ea5PW5cef
+ *
+ * Clang Inline table v20.1:
+ * | Arch    | rint      | round     | ceil      | floor     | trunc     |
+ * | ------- | --------- | --------- | --------- | --------- | --------- |
+ * | X86     | +sse4.1   | +sse4.1*  | +sse4.1   | +sse4.1   | +sse4.1   |
+ * | aarch64 | yes       | yes       | yes       | yes       | yes       |
+ * | riscv   | roundtrip | roundtrip | roundtrip | roundtrip | roundtrip |
+ *
+ * *: `trunc(x + copysign(0.5-eps, x))`
+ *
+ * GCC Inline table v15.1:
+ * | Arch    | rint      | round     | ceil       | floor       | trunc             |
+ * | ------- | --------- | --------- | ---------- | ----------- | ----------------- |
+ * | X86     | *,+sse4.1 | no        | **,+sse4.1 | ***,+sse4.1 | roundtrip,+sse4.1 |
+ * | aarch64 | yes       | yes       | yes        | yes         | yes               |
+ * | riscv   | no        | roundtrip | roundtrip  | roundtrip   | roundtrip         |
+ *
+ * GCC Actually uses x87 CW manipulation for `long double`
+ * *   : Addition trick
+ * **  : `copysign(x + (x>(long)x), x)` + Range check
+ * *** : `copysign(x - (x>(long)x), x)` + Range check
+ *
+ * To maximize the usefulness we should always call the builtins,
+ * if they are guaranteed to be inlined,
+ * while providing fallbacks for long double (which even on x87 is rarely handled)
+ * and equivalent implementations when the calls are not inlined
+ */
+
 namespace Rounding {
 template<FloatingPoint T>
 constexpr T ceil(T num)
 {
-    // FIXME: SSE4.1 rounds[sd] num, res, 0b110
-    if (is_constant_evaluated()) {
-        if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+    if (is_constant_evaluated() && !IsSame<T, long double>) {
+        if (fabs(num) > FloatExtractor<T>::mantissa_max + 1)
             return num;
-        return (static_cast<T>(static_cast<i64>(num)) == num)
-            ? static_cast<i64>(num)
-            : static_cast<i64>(num) + ((num > 0) ? 1 : 0);
+        auto trunc = static_cast<T>(static_cast<i64>(num));
+        trunc += trunc < num;
+        return copysign(trunc, num);
     }
-#if ARCH(AARCH64)
-    AARCH64_INSTRUCTION(frintp, num);
-#else
-    CALL_BUILTIN(ceil, num);
+
+    if constexpr (!IsSame<T, long double>) {
+
+#if defined(__SSE_4_1__) || ARCH(AARCH64) || ARCH(RISCV64)
+        CALL_BUILTIN(ceil, num);
 #endif
+    } else {
+        // FIXME: The max mantissa for f80 long doubles is the limit of a u64
+        //        And for f128 even higher, so we cant easily round trip
+        //        GCC solves this with a rounding mode change and rint on x86,
+        //        but that is hard to generalize
+        return __builtin_ceil(num);
+    }
+
+    if (fabs(num) > FloatExtractor<T>::mantissa_max + 1)
+        return num;
+    auto trunc = static_cast<T>(static_cast<i64>(num));
+    trunc += (trunc < num);
+    return copysign(trunc, num);
 }
 
 template<FloatingPoint T>
 constexpr T floor(T num)
 {
-    // FIXME: SSE4.1 rounds[sd] num, res, 0b101
-    if (is_constant_evaluated()) {
-        if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+    if (is_constant_evaluated() && !IsSame<T, long double>) {
+        if (fabs(num) > FloatExtractor<T>::mantissa_max + 1)
             return num;
-        return (static_cast<T>(static_cast<i64>(num)) == num)
-            ? static_cast<i64>(num)
-            : static_cast<i64>(num) - ((num > 0) ? 0 : 1);
+        auto trunc = static_cast<T>(static_cast<i64>(num));
+        trunc -= (trunc < num);
+        return copysign(trunc, num);
     }
-#if ARCH(AARCH64)
-    AARCH64_INSTRUCTION(frintm, num);
-#else
-    CALL_BUILTIN(floor, num);
+
+    if constexpr (!IsSame<T, long double>) {
+#if defined(__SSE_4_1__) || ARCH(AARCH64) || ARCH(RISCV64)
+        CALL_BUILTIN(floor, num);
 #endif
+    } else {
+        // FIXME: The max mantissa for f80 long doubles is the limit of a u64
+        //        And for f128 even higher, so we cant easily round trip
+        //        GCC solves this with a rounding mode change and rint on x86,
+        //        but that is hard to generalize
+        return __builtin_floorl(num);
+    }
+
+    if (fabs(num) > FloatExtractor<T>::mantissa_max + 1)
+        return num;
+    auto trunc = static_cast<T>(static_cast<i64>(num));
+    trunc -= (trunc > num);
+    return copysign(trunc, num);
 }
 
 template<FloatingPoint T>
 constexpr T trunc(T num)
 {
-#if ARCH(AARCH64)
-    if (is_constant_evaluated()) {
-        if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+    if (is_constant_evaluated() && !IsSame<T, long double>) {
+        if (fabs(num) > (FloatExtractor<T>::mantissa_max + 1))
             return num;
-        return static_cast<T>(static_cast<i64>(num));
+        auto trunc = static_cast<T>(static_cast<i64>(num));
+        return copysign(trunc, num);
     }
-    AARCH64_INSTRUCTION(frintz, num);
+
+    if constexpr (!IsSame<T, long double>) {
+#if defined(__SSE_4_1__) || ARCH(AARCH64) || ARCH(RISCV64)
+        CALL_BUILTIN(trunc, num);
 #endif
-    // FIXME: Use dedicated instruction in the non constexpr case
-    //        SSE4.1: rounds[sd] %num, %res, 0b111
-    if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+    } else {
+        // FIXME: The max mantissa for f80 long doubles is the limit of a u64
+        //        And for f128 even higher, so we cant easily round trip
+        //        GCC solves this with a rounding mode change and rint on x86,
+        //        but that is hard to generalize
+        return __builtin_truncl(num);
+    }
+
+    if (fabs(num) > (FloatExtractor<T>::mantissa_max + 1))
         return num;
-    return static_cast<T>(static_cast<i64>(num));
+    auto trunc = static_cast<T>(static_cast<i64>(num));
+    return copysign(trunc, num);
 }
 
 template<FloatingPoint T>
 constexpr T rint(T x)
 {
-    CONSTEXPR_STATE(rint, x);
     // Note: This does break tie to even
     //       But the behavior of frndint/rounds[ds]/frintx can be configured
     //       through the floating point control registers.
-    // FIXME: We should decide if we rename this to allow us to get away from
-    //        the configurability "burden" rint has
-    //        this would make us use `rounds[sd] %num, %res, 0b100`
-    //        and `frintn` respectively,
-    //        no such guaranteed round exists for x87 `frndint`
+    if (is_constant_evaluated() && !IsSame<T, long double>) {
+        // Move the value out of the sub integer precision range and back,
+        // This forces a rounding operation according to the current rounding mode
+        if (fabs(x) > FloatExtractor<T>::mantissa_max)
+            return x;
+        auto adjust = copysign((T)FloatExtractor<T>::mantissa_max + 1, x);
+        auto r = x + adjust;
+        r -= adjust;
+        // This last copysign is to preserve the sign of 0s after rounding
+        return copysign(r, x);
+    }
+
 #if ARCH(X86_64)
-#    ifdef __SSE4_1__
-    if constexpr (IsSame<T, double>) {
-        T r;
+    // FIXME: There is no builtin for this
+    // Note: GCC seems to inline it though
+    if constexpr (IsSame<T, long double>) {
         asm(
-            "roundsd %1, %0"
-            : "=x"(r)
-            : "x"(x));
-        return r;
-    }
-    if constexpr (IsSame<T, float>) {
-        T r;
-        asm(
-            "roundss %1, %0"
-            : "=x"(r)
-            : "x"(x));
-        return r;
-    }
-#    else
-    asm(
-        "frndint"
-        : "+t"(x));
-    return x;
-#    endif
-#elif ARCH(AARCH64)
-    AARCH64_INSTRUCTION(frintx, x);
-#elif ARCH(RISCV64)
-    if (__builtin_isnan(x))
+            "frndint"
+            : "+t"(x));
         return x;
-
-    // Floating point values have a gap size of >= 1 for values above 2^mantissa_bits - 1.
-    if (fabs(x) > FloatExtractor<T>::mantissa_max)
-        return x;
-
-    if constexpr (IsSame<T, float>) {
-        i64 r;
-        asm("fcvt.l.s %0, %1, dyn"
-            : "=r"(r)
-            : "f"(x));
-        return copysign(static_cast<float>(r), x);
     }
-    if constexpr (IsSame<T, double>) {
-        i64 r;
-        asm("fcvt.l.d %0, %1, dyn"
-            : "=r"(r)
-            : "f"(x));
-        return copysign(static_cast<double>(r), x);
-    }
-    if constexpr (IsSame<T, long double>)
-        TODO_RISCV64();
 #endif
-    TODO();
+
+    if constexpr (!IsSame<T, long double>) {
+#if defined(__SSE4_1__) || ARCH(AARCH64)
+        CALL_BUILTIN(rint, x);
+#elif defined(AK_COMPILER_CLANG) && ARCH(RISCV64)
+        CALL_BUILTIN(rint, x);
+        // FIXME: We should likely use rounding aware roundtrip-casts, similar to what clang expands this to,
+        //        as the risc-v fallback when on GCC, but there are no builtins for those instructions
+#endif
+    }
+
+    // Move the value out of the sub integer precision range and back,
+    // This forces a rounding operation according to the current rounding mode
+    if (fabs(x) > (T)FloatExtractor<T>::mantissa_max + 1)
+        return x;
+    auto adjust = copysign((T)FloatExtractor<T>::mantissa_max + 1, x);
+    auto r = x + adjust;
+    r -= adjust;
+    return copysign(r, x); // This last copysign is to preserve the sign of 0s after rounding
 }
 
 template<FloatingPoint T>
 constexpr T round(T x)
 {
     CONSTEXPR_STATE(round, x);
-    // Note: This is break-tie-away-from-zero, so not the hw's understanding of
-    //       "nearest", which would be towards even.
-    if (x == 0.)
-        return x;
-    if (x > 0.)
-        return floor(x + .5);
-    return ceil(x - .5);
-}
-
-template<Integral I, FloatingPoint P>
-ALWAYS_INLINE I round_to(P value);
-
-#if ARCH(X86_64)
-template<Integral I>
-ALWAYS_INLINE I round_to(long double value)
-{
-    // Note: fistps outputs into a signed integer location (i16, i32, i64),
-    //       so lets be nice and tell the compiler that.
-    Conditional<sizeof(I) >= sizeof(i16), MakeSigned<I>, i16> ret;
-    if constexpr (sizeof(I) == sizeof(i64)) {
-        asm("fistpll %0"
-            : "=m"(ret)
-            : "t"(value)
-            : "st");
-    } else if constexpr (sizeof(I) == sizeof(i32)) {
-        asm("fistpl %0"
-            : "=m"(ret)
-            : "t"(value)
-            : "st");
-    } else {
-        asm("fistps %0"
-            : "=m"(ret)
-            : "t"(value)
-            : "st");
-    }
-    return static_cast<I>(ret);
-}
-
-template<Integral I>
-ALWAYS_INLINE I round_to(float value)
-{
-    // FIXME: round_to<u64> might will cause issues, aka the indefinite value being set,
-    //        if the value surpasses the i64 limit, even if the result could fit into an u64
-    //        To solve this we would either need to detect that value or do a range check and
-    //        then do a more specialized conversion, which might include a division (which is expensive)
-    if constexpr (sizeof(I) == sizeof(i64) || IsSame<I, u32>) {
-        i64 ret;
-        asm("cvtss2si %1, %0"
-            : "=r"(ret)
-            : "xm"(value));
-        return static_cast<I>(ret);
-    }
-    i32 ret;
-    asm("cvtss2si %1, %0"
-        : "=r"(ret)
-        : "xm"(value));
-    return static_cast<I>(ret);
-}
-
-template<Integral I>
-ALWAYS_INLINE I round_to(double value)
-{
-    // FIXME: round_to<u64> might will cause issues, aka the indefinite value being set,
-    //        if the value surpasses the i64 limit, even if the result could fit into an u64
-    //        To solve this we would either need to detect that value or do a range check and
-    //        then do a more specialized conversion, which might include a division (which is expensive)
-    if constexpr (sizeof(I) == sizeof(i64) || IsSame<I, u32>) {
-        i64 ret;
-        asm("cvtsd2si %1, %0"
-            : "=r"(ret)
-            : "xm"(value));
-        return static_cast<I>(ret);
-    }
-    i32 ret;
-    asm("cvtsd2si %1, %0"
-        : "=r"(ret)
-        : "xm"(value));
-    return static_cast<I>(ret);
-}
-
-#elif ARCH(AARCH64)
-template<SignedIntegral I>
-ALWAYS_INLINE I round_to(float value)
-{
-    if constexpr (sizeof(I) <= sizeof(u32)) {
-        i32 res;
-        asm("fcvtns %w0, %s1"
-            : "=r"(res)
-            : "w"(value));
-        return static_cast<I>(res);
-    }
-    i64 res;
-    asm("fcvtns %0, %s1"
-        : "=r"(res)
-        : "w"(value));
-    return static_cast<I>(res);
-}
-
-template<SignedIntegral I>
-ALWAYS_INLINE I round_to(double value)
-{
-    if constexpr (sizeof(I) <= sizeof(u32)) {
-        i32 res;
-        asm("fcvtns %w0, %d1"
-            : "=r"(res)
-            : "w"(value));
-        return static_cast<I>(res);
-    }
-    i64 res;
-    asm("fcvtns %0, %d1"
-        : "=r"(res)
-        : "w"(value));
-    return static_cast<I>(res);
-}
-
-template<UnsignedIntegral U>
-ALWAYS_INLINE U round_to(float value)
-{
-    if constexpr (sizeof(U) <= sizeof(u32)) {
-        u32 res;
-        asm("fcvtnu %w0, %s1"
-            : "=r"(res)
-            : "w"(value));
-        return static_cast<U>(res);
-    }
-    i64 res;
-    asm("fcvtnu %0, %s1"
-        : "=r"(res)
-        : "w"(value));
-    return static_cast<U>(res);
-}
-
-template<UnsignedIntegral U>
-ALWAYS_INLINE U round_to(double value)
-{
-    if constexpr (sizeof(U) <= sizeof(u32)) {
-        u32 res;
-        asm("fcvtns %w0, %d1"
-            : "=r"(res)
-            : "w"(value));
-        return static_cast<U>(res);
-    }
-    i64 res;
-    asm("fcvtns %0, %d1"
-        : "=r"(res)
-        : "w"(value));
-    return static_cast<U>(res);
-}
-
-#else
-template<Integral I, FloatingPoint P>
-ALWAYS_INLINE I round_to(P value)
-{
-    if constexpr (IsSame<P, long double>)
-        return static_cast<I>(__builtin_llrintl(value));
-    if constexpr (IsSame<P, double>)
-        return static_cast<I>(__builtin_llrint(value));
-    if constexpr (IsSame<P, float>)
-        return static_cast<I>(__builtin_llrintf(value));
-}
+#if (defined(AK_COMPILER_CLANG) && defined(__SSE4_1__)) || ARCH(AARCH64) || ARCH(RISCV64)
+    CALL_BUILTIN(round, x);
 #endif
 
+    // This works by using the roundoff towards even to achieve break-tie away from 0,
+    // as the addition of 0.49... is odd and rounded "up" to the even full number before the truncation
+    // all other cases get truncated to the correct value after the addition
+    // Proof for f16 <https://alive2.llvm.org/ce/z/siYYG9>
+    // This method is nicer than the ceil/floor dance,
+    // as it is ideally branchless, and I could not get that one to verify
+
+    // FIXME: Is there a nicer way of getting these values?
+    //        (1. - EPSILON/2)/2 seems to work,
+    //        but not sure if that is generally the case
+    T not_half;
+    if constexpr (IsSame<T, float>) {
+        not_half = 0x0.ffffffp-1f;
+    } else if constexpr (IsSame<T, double>) {
+        not_half = 0x1.fffffffffffffp-2;
+    } else if constexpr (IsSame<T, long double>) {
+#ifdef AK_HAS_FLOAT_80
+        not_half = 0x0.ffffffffffffffffp-1L;
+#else
+        not_half = 0x1.ffffffffffffffffffffffffffffp-2l;
+#endif
+    }
+    return trunc(x + copysign(not_half, x));
+}
+
+template<Integral I, FloatingPoint P>
+constexpr I round_to(P value)
+{
+    // Note: This implements a generic lrint,
+    //       But we do not use the lrint builtin,
+    //       as that is not well handled by compilers
+    //       Also only Clang (20+) on risc-v and 21+ on x86
+    //       Seem to merge the integer conversion and the rounding step,
+    //       While all architectures have single instruction solutions for this
+    //       So we "waste" one instruction in most cases
+    //       https://serenity.godbolt.org/z/obPbMKs1d
+    // Note: On x86 there are technically equivalent builtins available,
+    //       but those are not handled as constexpr
+    //       ( `__builtin_ia32_cvts[sd]2si64(float vector(4))` )
+    return static_cast<I>(rint<P>(value));
+}
 }
 
 using Rounding::ceil;
@@ -339,7 +273,6 @@ constexpr T wrap_to_range(T a, IdentityType<T> b)
 }
 
 #include <AK/Math/UndefMacros.h>
-
 }
 
 #if USING_AK_GLOBALLY
