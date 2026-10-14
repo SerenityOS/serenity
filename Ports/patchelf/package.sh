@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='patchelf'
-version='0.19.1'
+version='0.19.2'
 useconfigure='true'
 files=(
-    "https://github.com/NixOS/patchelf/releases/download/${version}/patchelf-${version}.tar.gz#491108728f120ce05b539934b41a750235031a6df8abc6b47e57aff7de15094d"
+    "https://github.com/NixOS/patchelf/releases/download/${version}/patchelf-${version}.tar.gz#78cb26bda2b89fababfe189c2f6507240340f1aa45dec2eb49a39473a50ceea1"
 )
