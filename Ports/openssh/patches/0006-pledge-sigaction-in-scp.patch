@@ -8,10 +8,10 @@ Subject: [PATCH] pledge sigaction in scp
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/scp.c b/scp.c
-index c36d66aa59416d72495fdaecf881c902cb281e5b..b13a74a01e0f9bcd5190788a487ca5e586631a62 100644
+index 54ada85..9cdb769 100644
 --- a/scp.c
 +++ b/scp.c
-@@ -606,7 +606,7 @@ main(int argc, char **argv)
+@@ -639,7 +639,7 @@ main(int argc, char **argv)
  	if (pflag) {
  		/* Cannot pledge: -p allows setuid/setgid files... */
  	} else {

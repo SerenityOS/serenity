@@ -205,10 +205,10 @@ index 5efcc5f..14aa47b 100644
  
  #endif /* !defined(HAVE_INET_ATON) */
 diff --git a/openbsd-compat/openbsd-compat.h b/openbsd-compat/openbsd-compat.h
-index 4316ab8..1c5c338 100644
+index 930cf1f..300e912 100644
 --- a/openbsd-compat/openbsd-compat.h
 +++ b/openbsd-compat/openbsd-compat.h
-@@ -166,7 +166,7 @@ char *inet_ntoa(struct in_addr in);
+@@ -182,7 +182,7 @@ char *inet_ntoa(struct in_addr in);
  const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
  #endif
  
