@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='luv'
-version='1.52.1-0'
+version='1.53.0-0'
 files=(
-    "https://github.com/luvit/luv/releases/download/${version}/luv-${version}.tar.gz#3e6eb820a3aee034f85f9cce9bd77b5d42f34d128a1ccec877adf28c913577c7"
+    "https://github.com/luvit/luv/releases/download/${version}/luv-${version}.tar.gz#ce6260efb974647e7687f54a54a6810bc5eb81cdc14b45b69868a5ea048f96e1"
 )
 useconfigure='true'
 
@@ -29,5 +29,6 @@ build() {
 }
 
 install() {
+    export DESTDIR="${SERENITY_INSTALL_ROOT}"
     run cmake --install build
 }
