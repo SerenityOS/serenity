@@ -39,8 +39,7 @@ install() {
     run make DESTDIR="$DESTDIR" "${installopts[@]}" install
     # Install system configuration file that tells Alpine where to find CA certificates
     # installed from the `ca-certificates` package.
-    # (The full `/usr/bin/install` path is used because `install()` is a function within this script.)
-    run /usr/bin/install \
+    run command install \
         --mode=644 \
         --no-target-directory \
         -D \
