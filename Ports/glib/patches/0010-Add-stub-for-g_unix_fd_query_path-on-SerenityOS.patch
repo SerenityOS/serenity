@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sun, 20 Sep 2026 15:34:51 +0100
+Subject: [PATCH] Add stub for g_unix_fd_query_path on SerenityOS
+
+---
+ glib/glib-unix.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/glib/glib-unix.c b/glib/glib-unix.c
+index 24a20dfa3b4cd4980b1d21eb79dd0038a4fda8ed..d5e363e736eaf6043ff77baa539f55d463016c1c 100644
+--- a/glib/glib-unix.c
++++ b/glib/glib-unix.c
+@@ -1006,6 +1006,10 @@ g_unix_fd_query_path (int      fd,
+   g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_NOSYS,
+                "g_unix_fd_query_path() not supported on HURD");
+   return NULL;
++#elif defined (__serenity__)
++  g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_NOSYS,
++               "g_unix_fd_query_path() not supported on SerenityOS");
++  return NULL;
+ #else
+   #error "g_unix_fd_query_path() not supported on this platform"
+ #endif

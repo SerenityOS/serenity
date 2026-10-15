@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sun, 20 Sep 2026 16:52:31 +0100
+Subject: [PATCH] Exclude IPv6 tclass message support on SerenityOS
+
+---
+ gio/gsocketcontrolmessage.c | 2 ++
+ gio/meson.build             | 5 ++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/gio/gsocketcontrolmessage.c b/gio/gsocketcontrolmessage.c
+index 0b38878818dafbd63fa67ebe73348e5f21c56c34..8ed736dd57dbfc2b03cf417df644734b14df4d0b 100644
+--- a/gio/gsocketcontrolmessage.c
++++ b/gio/gsocketcontrolmessage.c
+@@ -201,7 +201,9 @@ g_socket_control_message_deserialize (int      level,
+       builtin_messages[i++] = G_TYPE_UNIX_FD_MESSAGE;
+ #endif
+       builtin_messages[i++] = G_TYPE_IP_TOS_MESSAGE;
++#ifdef HAVE_IPV6
+       builtin_messages[i++] = G_TYPE_IPV6_TCLASS_MESSAGE;
++#endif
+ 
+       n_builtin_messages = i;
+ 
+diff --git a/gio/meson.build b/gio/meson.build
+index 9213bbc2453d057af3815546084871eb9625ff0c..ec9d0a8f0a3d811dc884fede22f463c85c8e80cd 100644
+--- a/gio/meson.build
++++ b/gio/meson.build
+@@ -557,7 +557,6 @@ gio_base_sources = files(
+   'gioscheduler.c',
+   'giostream.c',
+   'giptosmessage.c',
+-  'gipv6tclassmessage.c',
+   'gloadableicon.c',
+   'gmarshal-internal.c',
+   'gmount.c',
+@@ -643,6 +642,10 @@ gio_base_sources = files(
+ 
+ gio_sources = gio_base_sources
+ 
++if have_ipv6
++  gio_sources += files('gipv6tclassmessage.c')
++endif
++
+ if glib_build_shared
+   gio_sources += files ('../glib/gtrace.c')
+ endif
