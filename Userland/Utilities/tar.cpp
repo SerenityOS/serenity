@@ -186,6 +186,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
+            if (!skip && extract) {
+                LexicalPath lexical_path { filename };
+                if (lexical_path.is_absolute() || lexical_path.parts_view().contains_slow(".."sv)) {
+                    warnln("Refusing to extract '{}' outside of the destination directory", filename);
+                    skip = true;
+                }
+            }
+
             if (!skip && (list || verbose))
                 outln("{}", filename);
 
