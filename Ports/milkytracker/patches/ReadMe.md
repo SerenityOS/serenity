@@ -25,3 +25,8 @@ Link against the needed serenity libraries
 Replace tmpnam with mkstemp
 
 
+## `0006-Remove-the-CMP0004-policy-workaround.patch`
+
+Remove the CMP0004 policy workaround
+
+
