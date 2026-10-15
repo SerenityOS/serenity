@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Thu, 15 Oct 2026 09:23:47 +0200
+Subject: [PATCH] Stub out FEAT_RELTIME timeouts
+
+This is only used for redraw and search timeouts anyway.
+---
+ src/os_unix.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/src/os_unix.c b/src/os_unix.c
+index efd32b7aae4a3c36af783212b9420add76afa384..30e3300e97190b812be7c33610d6ada98a334710 100644
+--- a/src/os_unix.c
++++ b/src/os_unix.c
+@@ -8910,6 +8910,22 @@ delete_timer(void)
+     timer_created = FALSE;
+ }
+ 
++# elif defined(__serenity__)
++
++static volatile sig_atomic_t timeout_flag = FALSE;
++
++    void
++stop_timeout(void)
++{
++}
++
++    volatile sig_atomic_t *
++start_timeout(long msec)
++{
++    (void)msec;
++    return &timeout_flag;
++}
++
+ # else // PROF_NSEC
+ 
+ /*
