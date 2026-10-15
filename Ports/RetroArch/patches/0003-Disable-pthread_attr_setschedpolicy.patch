@@ -8,7 +8,7 @@ Subject: [PATCH] Disable pthread_attr_setschedpolicy()
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/libretro-common/rthreads/rthreads.c b/libretro-common/rthreads/rthreads.c
-index 2a748edd53a19304de81faade4bd28e3014df713..2660345dfb76688922c1300630d603f90d9164cd 100644
+index 224d30088cd21cfe6e8e293b8638870c4f4cdc92..ed55233a523dcfd25903f7f8317180519d6b62e4 100644
 --- a/libretro-common/rthreads/rthreads.c
 +++ b/libretro-common/rthreads/rthreads.c
 @@ -158,7 +158,7 @@ sthread_t *sthread_create(void (*thread_func)(void*), void *userdata)
