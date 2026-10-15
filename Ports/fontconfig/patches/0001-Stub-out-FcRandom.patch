@@ -4,60 +4,57 @@ Date: Tue, 26 Oct 2021 11:34:34 +0000
 Subject: [PATCH] Stub out FcRandom()
 
 ---
- src/fccompat.c | 52 --------------------------------------------------
- 1 file changed, 52 deletions(-)
+ src/fccompat.c | 49 -------------------------------------------------
+ 1 file changed, 49 deletions(-)
 
 diff --git a/src/fccompat.c b/src/fccompat.c
-index 798de63be013723c4a2c4112b923ef4bfb129d93..96e4087328af66bfa314bb250d4d0c961638c256 100644
+index ae1d8a51e80033fbcd7b4fb07b91122cafc44b57..faa82d68dda1243d231c0b780311a1d0a1d44b48 100644
 --- a/src/fccompat.c
 +++ b/src/fccompat.c
-@@ -184,55 +184,6 @@ FcRandom(void)
+@@ -176,52 +176,6 @@ FcRandom (void)
  {
      int32_t result;
  
 -#if HAVE_RANDOM_R
 -    static struct random_data fcrandbuf;
--    static char statebuf[256];
--    static FcBool initialized = FcFalse;
--#ifdef _AIX
+-    static char               statebuf[256];
+-    static FcBool             initialized = FcFalse;
+-#  ifdef _AIX
 -    static char *retval;
--    long res;
--#endif
+-    long         res;
+-#  endif
 -
--    if (initialized != FcTrue)
--    {
--#ifdef _AIX
+-    if (initialized != FcTrue) {
+-#  ifdef _AIX
 -	initstate_r (time (NULL), statebuf, 256, &retval, &fcrandbuf);
--#else
+-#  else
 -	initstate_r (time (NULL), statebuf, 256, &fcrandbuf);
--#endif
+-#  endif
 -	initialized = FcTrue;
 -    }
 -
--#ifdef _AIX
+-#  ifdef _AIX
 -    random_r (&res, &fcrandbuf);
 -    result = (int32_t)res;
--#else
+-#  else
 -    random_r (&fcrandbuf, &result);
--#endif
+-#  endif
 -#elif HAVE_RANDOM
--    static char statebuf[256];
--    char *state;
+-    static char   statebuf[256];
+-    char         *state;
 -    static FcBool initialized = FcFalse;
 -
--    if (initialized != FcTrue)
--    {
+-    if (initialized != FcTrue) {
 -	state = initstate (time (NULL), statebuf, 256);
 -	initialized = FcTrue;
--    }
--    else
+-    } else
 -	state = setstate (statebuf);
 -
--    result = random ();
+-    result = random();
 -
 -    setstate (state);
 -#elif HAVE_LRAND48
--    result = lrand48 ();
+-    result = lrand48();
 -#elif HAVE_RAND_R
 -    static unsigned int seed;
 -
@@ -66,13 +63,13 @@ index 798de63be013723c4a2c4112b923ef4bfb129d93..96e4087328af66bfa314bb250d4d0c96
 -#elif HAVE_RAND
      static FcBool initialized = FcFalse;
  
-     if (initialized != FcTrue)
-@@ -241,9 +192,6 @@ FcRandom(void)
+     if (initialized != FcTrue) {
+@@ -229,9 +183,6 @@ FcRandom (void)
  	initialized = FcTrue;
      }
-     result = rand ();
+     result = rand();
 -#else
--# error no random number generator function available.
+-#  error no random number generator function available.
 -#endif
  
      return result;
