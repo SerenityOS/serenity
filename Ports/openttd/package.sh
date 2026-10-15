@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openttd'
-version='13.4'
+version='15.3'
 depends=(
     'freetype'
     'libicu'
@@ -12,11 +12,13 @@ depends=(
     'zlib'
 )
 files=(
-    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz#2a1deba01bfe58e2188879f450c3fa4f3819271ab49bf348dd66545f040d146f"
+    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz#5ea21eea7d59c78a42071924ac18c6bc0116088f2e96b14cfee9369175973be7"
 )
 useconfigure='true'
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    '-DCMAKE_BUILD_TYPE=Release'
+    '-DCMAKE_DISABLE_FIND_PACKAGE_OpenGL=ON'
 )
 launcher_name='OpenTTD'
 launcher_category='&Games'
