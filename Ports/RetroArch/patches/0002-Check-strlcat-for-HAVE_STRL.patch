@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Thu, 15 Oct 2026 00:29:47 +0200
+Subject: [PATCH] Check strlcat() for HAVE_STRL
+
+We have strlcpy() but not strlcat().
+---
+ qb/config.libs.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/qb/config.libs.sh b/qb/config.libs.sh
+index d5315b83acc963b62d7298416e5118ba7c0e4776..27a405c3fccc4979ef2bd955210accb2c97ec1e6 100644
+--- a/qb/config.libs.sh
++++ b/qb/config.libs.sh
+@@ -586,7 +586,7 @@ check_header '' PARPORT linux/parport.h
+ check_header '' PARPORT linux/ppdev.h
+ 
+ if [ "$OS" != 'Win32' ] && [ "$OS" != 'Linux' ]; then
+-   check_lib '' STRL "$CLIB" strlcpy
++   check_lib '' STRL "$CLIB" strlcat
+ fi
+ 
+ check_lib '' STRCASESTR "$CLIB" strcasestr

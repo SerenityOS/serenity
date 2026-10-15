@@ -5,10 +5,11 @@
 Add SerenityOS platform
 
 
-## `0002-Add-strlcat.patch`
+## `0002-Check-strlcat-for-HAVE_STRL.patch`
 
-Add strlcat()
+Check strlcat() for HAVE_STRL
 
+We have strlcpy() but not strlcat().
 
 ## `0003-Disable-pthread_attr_setschedpolicy.patch`
 
@@ -36,4 +37,9 @@ Set some config paths to home directory
 Enable unix platform
 
 This will make arguments from shell (like `--help`) work
+
+## `0007-Add-missing-alloca.h-includes.patch`
+
+Add missing alloca.h includes
+
 

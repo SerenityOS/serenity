@@ -1,10 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=RetroArch
 useconfigure="true"
-version="1.19.1"
-archive_hash="504a3a8a6e5861eb43a61be8339f61183e7ea940c1ff68ac2a2f57d35c67f8ff"
+version="1.22.2"
 files=(
-    "https://github.com/libretro/${port}/archive/refs/tags/v${version}.tar.gz#$archive_hash"
+    "https://github.com/libretro/${port}/archive/refs/tags/v${version}.tar.gz#245ef18c8fa8fbd9fbb5eb25cf43e17c6aace2f95c1ed99873cbd794012bb232"
 )
 depends=("freetype" "SDL2" "zlib")
 
@@ -26,6 +25,8 @@ launcher_command=/usr/local/bin/retroarch
 icon_file=media/retroarch.ico
 
 export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
+# We don't have '<arch>-serenity-pkg-config', so just use the "normal" one.
+export PKG_CONF_PATH='pkg-config'
 
 post_install() {
 echo "==== Post installation instructions ===="
