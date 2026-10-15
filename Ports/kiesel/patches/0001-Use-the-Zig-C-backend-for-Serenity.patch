@@ -1,0 +1,306 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Thu, 15 Oct 2026 12:29:22 +0200
+Subject: [PATCH] Use the Zig C backend for Serenity
+
+---
+ build.zig          |  39 ++------
+ src/bdwgc_stub.zig | 215 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 224 insertions(+), 30 deletions(-)
+ create mode 100644 src/bdwgc_stub.zig
+
+diff --git a/build.zig b/build.zig
+index 137ebdc05a00b7dcb2ffe100a4dff86eaee86a27..0ab2d09ad497ce94c4a17c71a0cd255fd919bb3b 100644
+--- a/build.zig
++++ b/build.zig
+@@ -6,8 +6,10 @@ const manifest = @import("build.zig.zon");
+ const kiesel_version = std.SemanticVersion.parse(manifest.version) catch unreachable;
+ 
+ pub fn build(b: *std.Build) !void {
+-    const target = b.standardTargetOptions(.{});
++    var target = b.standardTargetOptions(.{});
+     const optimize = b.standardOptimizeOption(.{});
++    target.query.ofmt = .c;
++    target = b.resolveTargetQuery(target.query);
+ 
+     // Stop people from trying to build with an outdated Zig compiler
+     if (builtin.zig_version.order(.{ .major = 0, .minor = 17, .patch = 0, .pre = "dev" }) == .lt) {
+@@ -58,8 +60,7 @@ pub fn build(b: *std.Build) !void {
+     ) orelse true;
+ 
+     const strip = b.option(bool, "strip", "Strip debug symbols") orelse (optimize != .debug);
+-    // Defaults to true for now as the self-hosted backend in 0.17 fails with a linker error.
+-    const use_llvm = b.option(bool, "use-llvm", "Use the LLVM backend") orelse true;
++    const use_llvm = b.option(bool, "use-llvm", "Use the LLVM backend") orelse false;
+     const maybe_version_string = b.option([]const u8, "version-string", "Version string, read from git by default");
+ 
+     // https://codeberg.org/ziglang/zig/src/commit/9787df9421ad9d3fcb08cc7b394656542b16cfae/build.zig#L254-L309
+@@ -160,33 +161,11 @@ pub fn build(b: *std.Build) !void {
+     }
+ 
+     if (enable_libgc) {
+-        const cflags_extra: []const u8 = blk: {
+-            var cflags: std.ArrayList([]const u8) = .empty;
+-            defer cflags.deinit(b.allocator);
+-            try cflags.append(b.allocator, "-DNO_MSGBOX_ON_ERROR");
+-            if (optimize != .debug) {
+-                try cflags.append(b.allocator, "-DNO_GETENV");
+-            }
+-            // bdwgc references `__data_start` when targeting OpenBSD, but only their patched
+-            // ld/lld ports provide it. See: https://codeberg.org/ziglang/zig/issues/32004
+-            if (target.result.os.tag == .openbsd) {
+-                try cflags.append(b.allocator, "-DSEARCH_FOR_DATA_START");
+-            }
+-            break :blk try std.mem.join(b.allocator, " ", cflags.items);
+-        };
+-        if (b.lazyDependency("bdwgc_zig", .{
++        kiesel.addImport("bdwgc", b.createModule(.{
++            .root_source_file = b.path("src/bdwgc_stub.zig"),
+             .target = target,
+             .optimize = optimize,
+-            .linkage = .static,
+-            .CFLAGS_EXTRA = cflags_extra,
+-            .enable_gcj_support = false,
+-            .enable_java_finalization = false,
+-            .enable_large_config = true,
+-            .enable_gc_dump = false,
+-            .enable_dynamic_pointer_mask = enable_nan_boxing,
+-        })) |bdwgc| {
+-            kiesel.addImport("bdwgc", bdwgc.module("bdwgc"));
+-        }
++        }));
+     }
+ 
+     if (enable_libregexp) {
+@@ -268,8 +247,8 @@ pub fn build(b: *std.Build) !void {
+         .use_llvm = use_llvm,
+     });
+ 
+-    const install_exe = b.addInstallArtifact(exe, .{});
+-    b.getInstallStep().dependOn(&install_exe.step);
++    const install_c = b.addInstallFile(exe.getEmittedBin(), "kiesel.c");
++    b.getInstallStep().dependOn(&install_c.step);
+ 
+     const run_cmd = b.addRunArtifact(exe);
+     run_cmd.step.dependOn(b.getInstallStep());
+diff --git a/src/bdwgc_stub.zig b/src/bdwgc_stub.zig
+new file mode 100644
+index 0000000000000000000000000000000000000000..26d7d0b392d1983d4c74a0595bc94ee18bbe9006
+--- /dev/null
++++ b/src/bdwgc_stub.zig
+@@ -0,0 +1,215 @@
++const std = @import("std");
++
++extern fn GC_init() void;
++extern fn GC_is_init_called() c_int;
++extern fn GC_disable() void;
++extern fn GC_gcollect() void;
++extern fn GC_size(obj: *const anyopaque) usize;
++extern fn GC_start_mark_threads() void;
++extern fn GC_set_pointer_mask(mask: usize) void;
++extern fn GC_malloc(size: usize) ?*anyopaque;
++extern fn GC_malloc_atomic(size: usize) ?*anyopaque;
++extern fn GC_realloc(old: ?*anyopaque, size: usize) ?*anyopaque;
++extern fn GC_free(obj: ?*anyopaque) void;
++extern fn GC_set_warn_proc(proc: *const fn ([*:0]const u8, usize) callconv(.c) void) void;
++extern fn GC_register_finalizer(
++    object: *anyopaque,
++    finalizer: ?Finalizer,
++    data: ?*anyopaque,
++    old_finalizer: *?Finalizer,
++    old_data: *?*anyopaque,
++) void;
++extern fn GC_general_register_disappearing_link(link: *?*anyopaque, object: *const anyopaque) c_int;
++
++const GC_SUCCESS = 0;
++const GC_DUPLICATE = 1;
++const GC_NO_MEMORY = 2;
++const GC_UNIMPLEMENTED = 3;
++
++pub const Finalizer = *const fn (object: *anyopaque, data: ?*anyopaque) callconv(.c) void;
++
++pub const FinalizerAndData = struct {
++    finalizer: Finalizer,
++    data: ?*anyopaque,
++};
++
++const Options = struct {
++    atomic: bool,
++};
++
++pub const allocator: std.mem.Allocator = .{
++    .ptr = blk: {
++        const options: Options = .{ .atomic = false };
++        break :blk @constCast(&options);
++    },
++    .vtable = &vtable,
++};
++
++pub const allocator_atomic: std.mem.Allocator = .{
++    .ptr = blk: {
++        const options: Options = .{ .atomic = true };
++        break :blk @constCast(&options);
++    },
++    .vtable = &vtable,
++};
++
++fn ignoreWarnProc(_: [*:0]const u8, _: usize) callconv(.c) void {}
++
++pub fn init() void {
++    GC_init();
++}
++
++pub fn isInitCalled() bool {
++    return GC_is_init_called() != 0;
++}
++
++pub fn disableWarnings() void {
++    GC_set_warn_proc(ignoreWarnProc);
++}
++
++pub fn size(ptr: *const anyopaque) usize {
++    return GC_size(ptr);
++}
++
++pub fn gcollect() void {
++    GC_gcollect();
++}
++
++pub fn disable() void {
++    GC_disable();
++}
++
++pub fn startMarkThreads() void {
++    GC_start_mark_threads();
++}
++
++pub fn setPointerMask(value: usize) void {
++    GC_set_pointer_mask(value);
++}
++
++pub fn registerFinalizer(
++    object: *anyopaque,
++    finalizer: Finalizer,
++    data: ?*anyopaque,
++) ?FinalizerAndData {
++    var old_finalizer: ?Finalizer = null;
++    var old_data: ?*anyopaque = null;
++    GC_register_finalizer(object, finalizer, data, &old_finalizer, &old_data);
++    if (old_finalizer) |f| {
++        return .{ .finalizer = f, .data = old_data };
++    }
++    return null;
++}
++
++pub const RegisterDisappearingLinkError = error{ OutOfMemory, DuplicateLink };
++
++pub fn registerDisappearingLink(
++    link: *?*anyopaque,
++    object: *const anyopaque,
++) RegisterDisappearingLinkError!void {
++    switch (GC_general_register_disappearing_link(link, object)) {
++        GC_SUCCESS, GC_UNIMPLEMENTED => {},
++        GC_DUPLICATE => return error.DuplicateLink,
++        GC_NO_MEMORY => return error.OutOfMemory,
++        else => unreachable,
++    }
++}
++
++const vtable: std.mem.Allocator.VTable = .{
++    .alloc = alloc,
++    .resize = resize,
++    .remap = remap,
++    .free = free,
++};
++
++fn allocStrat(need_align: std.mem.Alignment) union(enum) {
++    raw,
++    manual_align,
++} {
++    if (std.mem.Alignment.compare(need_align, .lte, .of(std.c.max_align_t))) {
++        return .raw;
++    }
++    return .manual_align;
++}
++
++fn manualAlignHeader(aligned_ptr: [*]u8) *[*]u8 {
++    return @ptrCast(@alignCast(aligned_ptr - @sizeOf(usize)));
++}
++
++fn alloc(
++    ctx: *anyopaque,
++    len: usize,
++    alignment: std.mem.Alignment,
++    return_address: usize,
++) ?[*]u8 {
++    _ = return_address;
++    std.debug.assert(len > 0);
++    const options: *const Options = @ptrCast(ctx);
++    const malloc = if (options.atomic) &GC_malloc_atomic else &GC_malloc;
++    switch (allocStrat(alignment)) {
++        .raw => {
++            const actual_len = @max(len, @alignOf(std.c.max_align_t));
++            const ptr = malloc(actual_len) orelse return null;
++            std.debug.assert(alignment.check(@intFromPtr(ptr)));
++            return @ptrCast(ptr);
++        },
++        .manual_align => {
++            const padded_len = len + @sizeOf(usize) + alignment.toByteUnits() - 1;
++            const unaligned_ptr: [*]u8 = @ptrCast(malloc(padded_len) orelse return null);
++            const unaligned_addr = @intFromPtr(unaligned_ptr);
++            const aligned_addr = alignment.forward(unaligned_addr + @sizeOf(usize));
++            const aligned_ptr = unaligned_ptr + (aligned_addr - unaligned_addr);
++            manualAlignHeader(aligned_ptr).* = unaligned_ptr;
++            return aligned_ptr;
++        },
++    }
++}
++
++fn resize(
++    _: *anyopaque,
++    memory: []u8,
++    _: std.mem.Alignment,
++    new_len: usize,
++    return_address: usize,
++) bool {
++    _ = return_address;
++    std.debug.assert(new_len > 0);
++    return new_len <= memory.len;
++}
++
++fn remap(
++    ctx: *anyopaque,
++    memory: []u8,
++    alignment: std.mem.Alignment,
++    new_len: usize,
++    return_address: usize,
++) ?[*]u8 {
++    std.debug.assert(new_len > 0);
++    if (resize(ctx, memory, alignment, new_len, return_address)) {
++        return memory.ptr;
++    }
++    switch (allocStrat(alignment)) {
++        .raw => {
++            const actual_len = @max(new_len, @alignOf(std.c.max_align_t));
++            const new_ptr = GC_realloc(memory.ptr, actual_len) orelse return null;
++            std.debug.assert(alignment.check(@intFromPtr(new_ptr)));
++            return @ptrCast(new_ptr);
++        },
++        .manual_align => {
++            return null;
++        },
++    }
++}
++
++fn free(
++    _: *anyopaque,
++    memory: []u8,
++    alignment: std.mem.Alignment,
++    return_address: usize,
++) void {
++    _ = return_address;
++    switch (allocStrat(alignment)) {
++        .raw => GC_free(memory.ptr),
++        .manual_align => GC_free(manualAlignHeader(memory.ptr).*),
++    }
++}
