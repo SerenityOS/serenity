@@ -621,6 +621,17 @@ ErrorOr<void> close(int fd)
     return {};
 }
 
+ErrorOr<void> truncate(StringView path, off_t length)
+{
+    if (!path.characters_without_null_termination())
+        return Error::from_syscall("truncate"sv, -EFAULT);
+
+    ByteString path_string = path;
+    if (::truncate(path_string.characters(), length) < 0)
+        return Error::from_syscall("truncate"sv, -errno);
+    return {};
+}
+
 ErrorOr<void> ftruncate(int fd, off_t length)
 {
     if (::ftruncate(fd, length) < 0)
