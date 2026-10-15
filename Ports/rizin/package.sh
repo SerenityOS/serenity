@@ -1,11 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='rizin'
-commit_hash='20769eaaa73660994b740a4ae0bdfa23a8d02d31'
-version="0.9.0-dev.515+20769ea"
-workdir="rizin-${commit_hash}"
+version='0.9.1'
+workdir="rizin-v${version}"
 useconfigure='true'
 files=(
-    "https://github.com/rizinorg/rizin/archive/${commit_hash}.tar.gz#69335598e215e2f3e8208b96941810076db34a93805b2827aa0dc5fcfe0f6d7d"
+    "https://github.com/rizinorg/rizin/releases/download/v${version}/rizin-src-v${version}.tar.xz#7ac1cd7daca7afdda742e15478b1f747fc1f813e496fee71839d1e109e543dca"
 )
 
 configopts=(
