@@ -1,14 +1,15 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
-zig_version='0.16.0'
+source ../zig/libc.sh
+
+zig_version='0.17.0'
 
 port='kiesel'
-version='0.4.0-dev.26+ae39f076b'
-_commit='ae39f076bfcd39ede51fa092b4df1b452d5bb290'
+version='0.4.1'
 workdir='kiesel'
 files=(
-    "https://codeberg.org/kiesel-js/kiesel/archive/${_commit}.tar.gz#156ae8b9cda791bb29aeb420fa22a2fd87858c8f30000ac52f17ab3d252a95e9"
-    "https://ziglang.org/download/${zig_version}/zig-${zig_version}.tar.xz#43186959edc87d5c7a1be7b7d2a25efffd22ce5807c7af99067f86f99641bfdf"
+    "https://codeberg.org/kiesel-js/kiesel/archive/${version}.tar.gz#a21430c087ff0089dc52de038e5124fbac8e981ddb11d98c1e205e70e5acf4c4"
+    "https://ziglang.org/download/${zig_version}/zig-${zig_version}.tar.xz#b6c7f1728f043700d6529bac980800792f824256a9d2f1839b3d62beed0b8abd"
 )
 useconfigure='true'
 launcher_name='Kiesel'
@@ -20,8 +21,8 @@ pre_patch() {
     local zig_dir="${PORT_BUILD_DIR}/zig-${zig_version}"
     local zig_patch="0001-Extend-support-for-SerenityOS-target.patch"
 
-    # Most of our patches are upstreamed and will be in Zig 0.17,
-    # until then we apply them manually and build with a custom lib dir.
+    # Most of our patches are upstreamed, but we still have a few so for now we
+    # apply them manually and build with a custom lib dir.
     if [ ! -f "${zig_dir}/.${zig_patch}_applied" ]; then
         run_nocd patch -d "${zig_dir}" -p2 < "${PORT_META_DIR}/zig-patches/${zig_patch}"
         # Skip when applying patches to $workdir
@@ -45,14 +46,8 @@ configure() {
     # Eventually Zig might bundle libc ABI lists for serenity,
     # until then we build with a custom libc file.
     # https://codeberg.org/ziglang/libc-abi-tools/src/branch/master/serenity
-    run_nocd cat >"${PORT_BUILD_DIR}/libc.txt" <<EOF
-include_dir=${SERENITY_INSTALL_ROOT}/usr/include
-sys_include_dir=${SERENITY_INSTALL_ROOT}/usr/include
-crt_dir=${SERENITY_INSTALL_ROOT}/usr/lib
-msvc_lib_dir=
-kernel32_lib_dir=
-gcc_dir=
-EOF
+    check_gcc_crt_files
+    create_libc_file "${PORT_BUILD_DIR}/libc.txt"
 }
 
 build() {
@@ -61,10 +56,10 @@ build() {
     # Rust does not know about serenity so we don't even attempt
     # building with Intl/Temporal.
     run zig build \
+        --zig-lib="${zig_dir}/lib" \
         --prefix "${SERENITY_INSTALL_ROOT}/usr/local" \
         --libc "${PORT_BUILD_DIR}/libc.txt" \
-        --zig-lib-dir "${zig_dir}/lib" \
-        -Doptimize=ReleaseFast \
+        -Doptimize=fast \
         -Dtarget="${SERENITY_ARCH}-serenity-none" \
         -Dversion-string="${version}" \
         -Denable-intl=false \
