@@ -8,15 +8,15 @@ Subject: [PATCH] Disable backtrace on serenity
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/tcc.h b/tcc.h
-index ccb3b60..8cd1b19 100644
+index cd679732c40ae05e79ee5b74d2b90eaa7f944b6e..f1a4c0a2ab6f7b7ff1401336efadc53ce536379d 100644
 --- a/tcc.h
 +++ b/tcc.h
-@@ -184,7 +184,7 @@ extern long double strtold (const char *__nptr, char **__endptr);
+@@ -162,7 +162,7 @@ extern long double strtold (const char *__nptr, char **__endptr);
  # endif
  #endif
  
 -#if defined TCC_IS_NATIVE && !defined CONFIG_TCCBOOT
 +#if defined TCC_IS_NATIVE && !defined CONFIG_TCCBOOT && !defined __serenity__
  # define CONFIG_TCC_BACKTRACE
- # if (defined TCC_TARGET_I386 || defined TCC_TARGET_X86_64 || \
-       defined TCC_TARGET_ARM || defined TCC_TARGET_ARM64 || \
+ # if (defined TCC_TARGET_I386 || defined TCC_TARGET_X86_64) \
+   && !defined TCC_UCLIBC && !defined TCC_MUSL

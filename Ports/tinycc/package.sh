@@ -1,10 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=tinycc
-version=dev
+port='tinycc'
+version='0.9.27'
+workdir="tinycc-release_${version//./_}"
 files=(
-    "https://github.com/TinyCC/tinycc/archive/dev.tar.gz#1e16fd9926e8e2662a35c790b7c56e8e7e8769c6a8a86a59a534c26046d0d83e"
+    "https://github.com/TinyCC/tinycc/archive/release_${version//./_}.tar.gz#439760025dcb2df0281566bb2b98fead52cb6bafa697f2147d94d2222ef71363"
 )
-useconfigure=true
+useconfigure='true'
 makeopts=("tcc")
 
 configure() {
