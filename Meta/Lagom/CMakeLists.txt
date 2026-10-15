@@ -804,6 +804,7 @@ if (BUILD_LAGOM)
         set(SHELL_TESTS
             backgrounding.sh
             brace-exp.sh
+            builtin-cd.sh
             builtin-redir.sh
             builtin-test.sh
             control-structure-as-command.sh
