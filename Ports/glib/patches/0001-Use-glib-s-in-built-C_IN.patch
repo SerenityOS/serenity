@@ -10,7 +10,7 @@ let glib provide it.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gio/meson.build b/gio/meson.build
-index 20a22aa0bb6a212335e161372c0b416c2d76f6de..df19dbabf2eeb3c35c1ee1d8fee175544d99aae3 100644
+index 7adfd0ea8a9845bab29c5c64aba288bd7d096d8b..db74f44e19d8f19bfc6846c5cce2f6f278552add 100644
 --- a/gio/meson.build
 +++ b/gio/meson.build
 @@ -18,7 +18,7 @@ gnetworking_h_conf = configuration_data()

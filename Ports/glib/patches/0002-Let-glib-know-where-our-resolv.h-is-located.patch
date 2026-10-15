@@ -8,7 +8,7 @@ Subject: [PATCH] Let glib know where our 'resolv.h' is located
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gio/meson.build b/gio/meson.build
-index df19dbabf2eeb3c35c1ee1d8fee175544d99aae3..37a944bc6f98a19c6880bba52ddb3dbfa75f6209 100644
+index db74f44e19d8f19bfc6846c5cce2f6f278552add..9213bbc2453d057af3815546084871eb9625ff0c 100644
 --- a/gio/meson.build
 +++ b/gio/meson.build
 @@ -39,7 +39,7 @@ endif

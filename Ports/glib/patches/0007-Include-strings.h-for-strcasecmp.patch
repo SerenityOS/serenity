@@ -23,7 +23,7 @@ index 0d0ee80d83fd250994bf38cda9bf7827d90c8689..74a582ad5a23f9553d684020674443b6
  #include <stdlib.h>
  #include <stdio.h>
 diff --git a/glib/gstrfuncs.c b/glib/gstrfuncs.c
-index f0c305d30e039859c44c2d1332982d465ae27b68..1fdf9d87571ee2d14ef61cea56167f53195cd18b 100644
+index 3042c7f6ab7848ae660e928c8af0a4e71cc7c10d..3d977df4aa5cb93676407b6f75ea184eb5fcd325 100644
 --- a/glib/gstrfuncs.c
 +++ b/glib/gstrfuncs.c
 @@ -34,6 +34,9 @@
