@@ -8,14 +8,14 @@ Subject: [PATCH] Remove output path from CMakeLists
  1 file changed, 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 70e74b6b6a032a95720eb956115383dee949677d..c631945566dd2bb84f4f92f8dfad1a6186492489 100644
+index d5c9ccf4e170dae5fbac520fb2ed4d8c4d56c4d9..fba8198c063edf108a9e93ec4a8670e55c13bbd0 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -5,7 +5,6 @@ project(pt2-clone)
- option(EXTERNAL_LIBFLAC "use external(system) flac library" OFF)
+@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.7)
+ project(pt2-clone)
  
  find_package(SDL2 REQUIRED)
 -set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${pt2-clone_SOURCE_DIR}/release/other/")
  
- file(GLOB pt2-clone_SRC
-     "${pt2-clone_SOURCE_DIR}/src/*.c"
+ if((CMAKE_CXX_COMPILER_ID MATCHES "Clang") OR (CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
+     add_compile_options(-O3)

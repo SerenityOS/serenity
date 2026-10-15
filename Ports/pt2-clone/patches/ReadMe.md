@@ -5,9 +5,3 @@
 Remove output path from CMakeLists
 
 
-## `0002-Hacky-Mouse.patch`
-
-Hacky Mouse
-
-Set video.useDesktopMouseCoords to false.
-
