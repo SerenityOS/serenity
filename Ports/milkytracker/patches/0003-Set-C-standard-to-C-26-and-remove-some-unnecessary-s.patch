@@ -9,15 +9,15 @@ Subject: [PATCH] Set C++ standard to C++26 and remove some unnecessary
  1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 4bdecf1b51d6ab14865dd242c98531bbc4d0ebb8..2e7f4339fd056b1bc0f3bd10c1397ce15d77b92b 100644
+index 2764969ddd22088e52aadd66aaa0c2b05d07fd33..aac86dbfb5030c0156e03ca4b954ebabdeb2eb03 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -22,8 +22,8 @@
  cmake_minimum_required(VERSION 3.10)
  project(MilkyTracker)
  
--# Set C++ standard to C++98
--set(CMAKE_CXX_STANDARD 98)
+-# Set C++ standard to C++11
+-set(CMAKE_CXX_STANDARD 11)
 +# Set C++ standard to C++26
 +set(CMAKE_CXX_STANDARD 26)
  set(CMAKE_CXX_EXTENSIONS OFF)
