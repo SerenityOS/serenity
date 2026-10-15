@@ -52,20 +52,66 @@ configure() {
 
 build() {
     local zig_dir="${PORT_BUILD_DIR}/zig-${zig_version}"
+    local emit_dir="${PORT_BUILD_DIR}/emit-c"
+    local libregexp_dir="zig-pkg/N-V-__8AANeKMgAJMmyOafYQo7YrC99SZlSbL6khjXSwI6Nd"
+    local bdwgc_dir="zig-pkg/bdwgc-8.3.0-8obE-M8rMAALvGehRlqR0N4PeYIhmqxzjdj0_5nfCJJ5"
 
-    # Rust does not know about serenity so we don't even attempt
-    # building with Intl/Temporal.
+    run zig build --fetch=all
+
+    # Zig 0.17.0 passes an invalid bare `__serenity__` argument without `-D` to
+    # the C compiler (will be fixed in 0.17.1), so we use the C backend and
+    # build with the toolchain. Rust does not know about serenity so we don't
+    # even attempt building with Intl/Temporal.
     run zig build \
         --zig-lib="${zig_dir}/lib" \
-        --prefix "${SERENITY_INSTALL_ROOT}/usr/local" \
+        --prefix "${emit_dir}" \
         --libc "${PORT_BUILD_DIR}/libc.txt" \
         -Doptimize=fast \
         -Dtarget="${SERENITY_ARCH}-serenity-none" \
         -Dversion-string="${version}" \
         -Denable-intl=false \
         -Denable-temporal=false
+
+
+    run "${CC}" -std=gnu17 -I "${zig_dir}/lib" \
+        -c "${emit_dir}/kiesel.c" \
+        -o kiesel.o
+
+    run "${CC}" -std=gnu17 -I "${libregexp_dir}" -r \
+        "${libregexp_dir}/cutils.c" \
+        "${libregexp_dir}/libregexp.c" \
+        "${libregexp_dir}/libunicode.c" \
+        -o libregexp.o
+
+    run "${CC}" -std=gnu17 -I "${bdwgc_dir}/include" \
+        -DALL_INTERIOR_POINTERS \
+        -DNO_EXECUTE_PERMISSION \
+        -DGC_THREADS \
+        -DPARALLEL_MARK \
+        -DTHREAD_LOCAL_ALLOC \
+        -DGC_BUILTIN_ATOMIC \
+        -D_REENTRANT \
+        -DHANDLE_FORK \
+        -DENABLE_DISCLAIM \
+        -DDYNAMIC_POINTER_MASK \
+        -DGC_ATOMIC_UNCOLLECTABLE \
+        -DNO_DEBUGGING \
+        -DNDEBUG \
+        -DUSE_MMAP \
+        -DUSE_MUNMAP \
+        -DLARGE_CONFIG \
+        -DGC_NOT_DLL \
+        -DHAVE_SYS_TYPES_H \
+        -DHAVE_UNISTD_H \
+        -DNO_MSGBOX_ON_ERROR \
+        -DNO_GETENV \
+        -c "${bdwgc_dir}/extra/gc.c" \
+        -o libgc.o
+
+    run "${CC}" kiesel.o libregexp.o libgc.o -o kiesel
 }
 
 install() {
-    :
+    run mkdir -p "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp kiesel "${SERENITY_INSTALL_ROOT}/usr/local/bin/"
 }
