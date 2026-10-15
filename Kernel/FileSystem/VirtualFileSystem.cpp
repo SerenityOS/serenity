@@ -623,7 +623,7 @@ ErrorOr<void> VirtualFileSystem::rename(VFSRootContext const& vfs_root_context, 
     auto& old_inode = old_custody->inode();
 
     RefPtr<Custody> new_parent_custody;
-    auto new_custody_or_error = resolve_path(vfs_root_context, credentials, new_path, new_base, &new_parent_custody);
+    auto new_custody_or_error = resolve_path(vfs_root_context, credentials, new_path, new_base, &new_parent_custody, O_NOFOLLOW_NOERROR);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error().code() != ENOENT || !new_parent_custody)
             return new_custody_or_error.release_error();
