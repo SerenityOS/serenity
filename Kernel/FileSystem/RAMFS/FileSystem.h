@@ -22,6 +22,8 @@ public:
     static ErrorOr<NonnullRefPtr<FileSystem>> try_create(FileSystemSpecificOptions const&);
     virtual ErrorOr<void> initialize() override;
 
+    static ErrorOr<void> validate_mount_unsigned_integer_flag(StringView key, u64);
+
     virtual StringView class_name() const override { return "RAMFS"sv; }
 
     virtual bool supports_watchers() const override { return true; }
@@ -37,7 +39,7 @@ public:
     virtual unsigned free_block_count() const override;
 
 private:
-    RAMFS();
+    RAMFS(u64 maximum_size);
 
     u32 total_block_count_impl() const;
 
