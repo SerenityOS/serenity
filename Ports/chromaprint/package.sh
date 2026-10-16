@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='chromaprint'
 useconfigure='true'
-version='1.6.1'
+version='1.6.2'
 depends=(
     'ffmpeg'
 )
@@ -13,7 +13,7 @@ configopts=(
     "-DFFMPEG_ROOT=${SERENITY_INSTALL_ROOT}/usr/local"
 )
 files=(
-    "https://github.com/acoustid/chromaprint/releases/download/v${version}/chromaprint-${version}.tar.gz#3368805af0ee47b9df74df10b5001a44569e01df2844dab520031720dde9ad23"
+    "https://github.com/acoustid/chromaprint/releases/download/v${version}/chromaprint-${version}.tar.gz#d54ada62c16b2db396d3251ec54fc7a58909c163131a1cfcf7fa6407dbc14360"
 )
 
 configure() {
