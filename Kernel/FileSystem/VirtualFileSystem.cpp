@@ -40,6 +40,7 @@
 namespace Kernel {
 
 static UnveilNode const& find_matching_unveiled_path(Process const&, StringView path);
+static bool path_is_visible_to_process(Process const&, StringView path);
 static ErrorOr<void> validate_path_against_process_veil(Process const&, StringView path, int options);
 static ErrorOr<void> validate_path_against_process_veil(Process const& process, Custody const& custody, int options);
 static ErrorOr<void> validate_path_against_process_veil(Custody const& path, int options);
@@ -536,15 +537,28 @@ ErrorOr<void> VirtualFileSystem::mkdir(VFSRootContext const& vfs_root_context, C
     }
 
     RefPtr<Custody> parent_custody;
-    // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
-    //        e.g. when the error is EACCESS or similar.
+    RefPtr<Custody> deepest_reached;
     auto base_custody = TRY(base.resolve());
-    auto result = resolve_path_without_veil(vfs_root_context, credentials, path, base_custody, &parent_custody);
-    if (!result.is_error())
+    auto result = resolve_path_without_veil(vfs_root_context, credentials, path, base_custody, &parent_custody, 0, 0, &deepest_reached);
+    if (!result.is_error()) {
+        // A veiled process must not learn that a path it has not unveiled exists.
+        if (Process::current().veil_state() != VeilState::None) {
+            auto absolute_path = TRY(result.value()->try_serialize_absolute_path());
+            if (!path_is_visible_to_process(Process::current(), absolute_path->view()))
+                return ENOENT;
+        }
         return EEXIST;
-    else if (!parent_custody)
+    }
+    if (!parent_custody) {
+        // Resolution failed before reaching the last path component. Only report the
+        // underlying error if the process is allowed to see how far resolution got,
+        // otherwise we would leak information about paths that were not unveiled.
+        VERIFY(deepest_reached);
+        if (validate_path_against_process_veil(*deepest_reached, 0).is_error())
+            return ENOENT;
         return result.release_error();
-    // NOTE: If resolve_path fails with a non-null parent custody, the error should be ENOENT.
+    }
+    // If resolve_path fails with a non-null parent custody, the error should be ENOENT.
     VERIFY(result.error().code() == ENOENT);
 
     TRY(validate_path_against_process_veil(*parent_custody, O_CREAT));
@@ -940,6 +954,23 @@ UnveilNode const& find_matching_unveiled_path(Process const& process, StringView
     });
 }
 
+// A path is visible to a veiled process if the veil grants it any permissions, or if it is
+// an ancestor of an unveiled path. Ancestors are only created as intermediate nodes and
+// carry no permissions of their own, but the process can tell they exist, because unveiling
+// a path requires all of its parents to resolve.
+static bool path_is_visible_to_process(Process const& process, StringView path)
+{
+    VERIFY(process.veil_state() != VeilState::None);
+    return process.unveil_data().with([&](auto const& unveil_data) -> bool {
+        auto path_parts = KLexicalPath::parts(path);
+        auto it = path_parts.begin();
+        auto const& unveiled_path = unveil_data.paths.traverse_until_last_accessible_node(it, path_parts.end());
+        if (unveiled_path.permissions() != UnveilAccess::None)
+            return true;
+        return it == path_parts.end() && !unveiled_path.children().is_empty();
+    });
+}
+
 ErrorOr<void> validate_path_against_process_veil(Custody const& custody, int options)
 {
     return validate_path_against_process_veil(Process::current(), custody, options);
@@ -1059,8 +1090,11 @@ static bool safe_to_follow_symlink(Credentials const& credentials, Inode const& 
     return false;
 }
 
-ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(VFSRootContext const& vfs_root_context, Credentials const& credentials, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(VFSRootContext const& vfs_root_context, Credentials const& credentials, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level, RefPtr<Custody>* out_deepest_reached)
 {
+    if (out_deepest_reached)
+        *out_deepest_reached = base;
+
     if (symlink_recursion_level >= symlink_recursion_limit)
         return ELOOP;
 
@@ -1083,6 +1117,9 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(VFS
         path_lexer.ignore();
 
         Custody& parent = custody;
+        if (out_deepest_reached)
+            *out_deepest_reached = custody;
+
         auto parent_metadata = parent.inode().metadata();
         if (!parent_metadata.is_directory())
             return ENOTDIR;
@@ -1154,7 +1191,7 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(VFS
             TRY(remaining_path.try_append('.'));
             TRY(remaining_path.try_append(path.substring_view_starting_after_substring(part)));
 
-            return resolve_path_without_veil(vfs_root_context, credentials, remaining_path.string_view(), symlink_target, out_parent, options, symlink_recursion_level + 1);
+            return resolve_path_without_veil(vfs_root_context, credentials, remaining_path.string_view(), symlink_target, out_parent, options, symlink_recursion_level + 1, out_deepest_reached);
         }
     }
 
