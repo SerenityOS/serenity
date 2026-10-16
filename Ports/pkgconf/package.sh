@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='pkgconf'
-version='3.0.8'
+version='3.0.9'
 files=(
-    "https://distfiles.ariadne.space/pkgconf/pkgconf-${version}.tar.xz#943f0bc88bcaeceb630b00262e2a8ad5ea4fac3fba72a4267d8b9ec6b35d1194"
+    "https://distfiles.ariadne.space/pkgconf/pkgconf-${version}.tar.xz#6ab2d3b8087dcf500e34003a6a8934dca55d0a3d6066aeafb03c352db3e68bfd"
 )
 useconfigure='true'
 # FIXME: This looks suspiciously host-y...
