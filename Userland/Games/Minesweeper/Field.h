@@ -124,6 +124,7 @@ private:
     void reveal_mines();
     void set_chord_preview(Square&, bool);
     void set_flag(Square&, bool);
+    void update_flag_label_width();
 
     Square& square(size_t row, size_t column) { return *m_squares[row * columns() + column]; }
     Square const& square(size_t row, size_t column) const { return *m_squares[row * columns() + column]; }
