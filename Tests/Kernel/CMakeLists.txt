@@ -46,6 +46,7 @@ set(LIBTEST_BASED_SOURCES
     TestSFNUtilities.cpp
     TestSharedInodeVMObject.cpp
     TestPageFaultRace.cpp
+    TestPDeathSignal.cpp
     TestPosixFallocate.cpp
     TestPosixSpawn.cpp
     TestPrivateInodeVMObject.cpp
