@@ -8,18 +8,17 @@ We need to pass `WNOHANG` to our `waitpid(..)` call on SerenityOS,
 otherwise we will wait forever.
 ---
  gdb/serenity-nat.c | 14 ++++++++++++++
- gdb/serenity-nat.h |  2 ++
- 2 files changed, 16 insertions(+)
+ gdb/serenity-nat.h |  4 ++++
+ 2 files changed, 18 insertions(+)
 
 diff --git a/gdb/serenity-nat.c b/gdb/serenity-nat.c
-index b1d39d4..7789950 100644
+index 104e56938bafe27959e03c274768bd294b3ce0a4..c9bad745d51c68500306adc2996a23ed40d82326 100644
 --- a/gdb/serenity-nat.c
 +++ b/gdb/serenity-nat.c
-@@ -71,3 +71,17 @@ ptid_t serenity_nat_target::wait (ptid_t ptid, struct target_waitstatus* ourstat
- 
+@@ -70,6 +70,20 @@ ptid_t serenity_nat_target::wait (ptid_t ptid, struct target_waitstatus* ourstat
      return ptid_t (pid);
  }
-+
+ 
 +void serenity_nat_target::mourn_inferior ()
 +{
 +    int status;
@@ -33,15 +32,21 @@ index b1d39d4..7789950 100644
 +
 +    inf_child_target::mourn_inferior ();
 +}
++
+ void
+ serenity_nat_target::post_startup_inferior (ptid_t ptid)
+ {
 diff --git a/gdb/serenity-nat.h b/gdb/serenity-nat.h
-index 9ae3b87..35d7ffc 100644
+index 9ae3b87bdb855e980376412f3e21262ab6e2cf2a..df4682088759e8d3678779a38403dc97e7662291 100644
 --- a/gdb/serenity-nat.h
 +++ b/gdb/serenity-nat.h
-@@ -13,6 +13,8 @@ class serenity_nat_target : public inf_ptrace_target
+@@ -13,6 +13,10 @@ class serenity_nat_target : public inf_ptrace_target
  {
    ptid_t wait (ptid_t, struct target_waitstatus *, target_wait_flags) override;
  
 +  void mourn_inferior ();
++
++  void post_startup_inferior (ptid_t) override;
 +
  private:
    bool m_attach_before_continue_called { false };

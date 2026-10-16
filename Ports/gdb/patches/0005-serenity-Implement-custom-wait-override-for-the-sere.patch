@@ -19,22 +19,18 @@ serenity programs I noticed two things:
 Allow gdb to understand these differences, I've overloaded the
 serenity_nat_target::wait(..) method and added the logic there.
 ---
- gdb/serenity-nat.c | 62 +++++++++++++++++++++++++++++++++++++++++++++-
+ gdb/serenity-nat.c | 61 +++++++++++++++++++++++++++++++++++++++++++++-
  gdb/serenity-nat.h |  4 +++
- 2 files changed, 65 insertions(+), 1 deletion(-)
+ 2 files changed, 64 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/serenity-nat.c b/gdb/serenity-nat.c
-index ff740d4..b1d39d4 100644
+index f378dd41c1d64d0786dd854ed2f525659cb877c5..104e56938bafe27959e03c274768bd294b3ce0a4 100644
 --- a/gdb/serenity-nat.c
 +++ b/gdb/serenity-nat.c
-@@ -10,4 +10,64 @@
- #include "gdbsupport/gdb_wait.h"
- 
+@@ -11,7 +11,66 @@
  #include "inf-child.h"
--#include "serenity-nat.h"
-\ No newline at end of file
-+#include "serenity-nat.h"
-+
+ #include "serenity-nat.h"
+ 
 +ptid_t serenity_nat_target::wait (ptid_t ptid, struct target_waitstatus* ourstatus, target_wait_flags)
 +{
 +    int pid;
@@ -60,13 +56,12 @@ index ff740d4..b1d39d4 100644
 +
 +        if (pid == -1)
 +        {
-+            fprintf_unfiltered (gdb_stderr,
++            gdb_printf (gdb_stderr,
 +                    _("Child process unexpectedly missing: %s.\n"),
 +                    safe_strerror (save_errno));
 +
 +            /* Claim it exited with unknown signal.  */
-+            ourstatus->kind = TARGET_WAITKIND_SIGNALLED;
-+            ourstatus->value.sig = GDB_SIGNAL_UNKNOWN;
++            ourstatus->set_signalled (GDB_SIGNAL_UNKNOWN);
 +            return inferior_ptid;
 +        }
 +
@@ -76,7 +71,7 @@ index ff740d4..b1d39d4 100644
 +    }
 +    while (pid == -1);
 +
-+    store_waitstatus (ourstatus, status);
++    *ourstatus = host_status_to_waitstatus (status);
 +
 +    /* Serenity requires us to PT_ATTACH before we PT_CONTINUE, however GDB doesn't
 +     * provide a hook for us to do that before we issue the PT_CONTINUE, so we are
@@ -94,8 +89,15 @@ index ff740d4..b1d39d4 100644
 +
 +    return ptid_t (pid);
 +}
++
+ void
+ serenity_nat_target::post_startup_inferior (ptid_t ptid)
+ {
+-}
+\ No newline at end of file
++}
 diff --git a/gdb/serenity-nat.h b/gdb/serenity-nat.h
-index dcd24ce..9ae3b87 100644
+index dcd24ce3188d58ad31b25e83ca05167e18e9f07d..9ae3b87bdb855e980376412f3e21262ab6e2cf2a 100644
 --- a/gdb/serenity-nat.h
 +++ b/gdb/serenity-nat.h
 @@ -11,6 +11,10 @@

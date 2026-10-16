@@ -5,19 +5,18 @@ Subject: [PATCH] serenity: Add basic ptrace based native target for
  SerenityOS/i386
 
 ---
- gdb/configure.host       |   3 ++
- gdb/configure.nat        |  11 +++++
- gdb/configure.tgt        |   4 ++
- gdb/i386-serenity-nat.c  | 101 +++++++++++++++++++++++++++++++++++++++
- gdb/i386-serenity-tdep.c |  43 +++++++++++++++++
- gdb/i386-serenity-tdep.h |   8 ++++
- gdb/osabi.c              |   1 +
- gdb/osabi.h              |   1 +
- gdb/serenity-nat.c       |  13 +++++
- gdb/serenity-nat.h       |  16 +++++++
- gdb/serenity-tdep.c      |  28 +++++++++++
- gdb/serenity-tdep.h      |  24 ++++++++++
- 12 files changed, 253 insertions(+)
+ gdb/configure.host       |  3 ++
+ gdb/configure.nat        | 11 +++++
+ gdb/configure.tgt        |  4 ++
+ gdb/i386-serenity-nat.c  | 98 ++++++++++++++++++++++++++++++++++++++++
+ gdb/i386-serenity-tdep.c | 40 ++++++++++++++++
+ gdb/i386-serenity-tdep.h |  8 ++++
+ gdb/serenity-nat.c       | 17 +++++++
+ gdb/serenity-nat.h       | 16 +++++++
+ gdb/serenity-tdep.c      | 27 +++++++++++
+ gdb/serenity-tdep.h      | 24 ++++++++++
+ gdbsupport/osabi.def     |  1 +
+ 11 files changed, 249 insertions(+)
  create mode 100644 gdb/i386-serenity-nat.c
  create mode 100644 gdb/i386-serenity-tdep.c
  create mode 100644 gdb/i386-serenity-tdep.h
@@ -27,38 +26,38 @@ Subject: [PATCH] serenity: Add basic ptrace based native target for
  create mode 100644 gdb/serenity-tdep.h
 
 diff --git a/gdb/configure.host b/gdb/configure.host
-index e94a19b..06b87ca 100644
+index c93390b917105e9e9f2c61eba42df48a23ca6a0d..714748e4ecc9b0e64092c18bf99320c49f0272e4 100644
 --- a/gdb/configure.host
 +++ b/gdb/configure.host
-@@ -85,6 +85,7 @@ case "${host}" in
+@@ -81,6 +81,7 @@ case "${host}" in
  *-*-darwin*)		gdb_host=darwin ;;
  
  aarch64*-*-linux*)	gdb_host=linux ;;
 +aarch64*-*-serenity*)	gdb_host=serenity ;;
  aarch64*-*-freebsd*)	gdb_host=fbsd ;;
- 
- alpha*-*-linux*)	gdb_host=alpha-linux ;;
-@@ -117,6 +118,7 @@ i[34567]86-*-linux*)	gdb_host=linux ;;
+ aarch64*-*-mingw*)	gdb_host=mingw64a
+ 			gdb_host_obs=mingw-hdep.o
+@@ -115,6 +116,7 @@ i[34567]86-*-msdosdjgpp*) gdb_host=go32 ;;
+ i[34567]86-*-linux*)	gdb_host=linux ;;
  i[34567]86-*-gnu*)	gdb_host=i386gnu ;;
- i[3456]86-*-nto*) 	gdb_host=nto ;;
  i[34567]86-*-openbsd*)	gdb_host=obsd ;;
 +i[34567]86-*-serenity*)	gdb_host=serenity ;;
  i[34567]86-*-solaris2* | x86_64-*-solaris2*)
  			gdb_host=sol2 ;;
  i[34567]86-*-cygwin*)	gdb_host=cygwin ;;
-@@ -185,6 +187,7 @@ x86_64-*-mingw*)        gdb_host=mingw64
+@@ -189,6 +191,7 @@ x86_64-*-mingw*)        gdb_host=mingw64
  			gdb_host_obs=mingw-hdep.o
  			;;
  x86_64-*-cygwin*)	gdb_host=cygwin64 ;;
 +x86_64-*-serenity*)	gdb_host=serenity ;;
+ x86_64-*-gnu*)		gdb_host=gnu64 ;;
  m32r*-*-linux*)          gdb_host=linux ;;
  
- xtensa*-*-linux*)	gdb_host=linux ;;
 diff --git a/gdb/configure.nat b/gdb/configure.nat
-index f48fbda..6a0115f 100644
+index 4f5c161c854383625de51fc5557e55ec893ab9da..28cf3f2ba26021db4b9e426d15afe2f59387b514 100644
 --- a/gdb/configure.nat
 +++ b/gdb/configure.nat
-@@ -86,6 +86,9 @@ case ${gdb_host} in
+@@ -90,6 +90,9 @@ case ${gdb_host} in
      darwin)
  	NATDEPFILES='fork-child.o nat/fork-inferior.o darwin-nat.o \
  	    darwin-nat-info.o'
@@ -68,7 +67,7 @@ index f48fbda..6a0115f 100644
  	;;
      sol2)
  	NATDEPFILES='fork-child.o nat/fork-inferior.o \
-@@ -477,6 +480,14 @@ case ${gdb_host} in
+@@ -517,6 +520,14 @@ case ${gdb_host} in
  		;;
  	esac
  	;;
@@ -84,12 +83,12 @@ index f48fbda..6a0115f 100644
  	case ${gdb_host_cpu} in
  	    i386)
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 97a5a57..886542f 100644
+index 7313b31e42ae623f27efee1f783d0fcf71fff3db..7373396005d04756224c364c94cb347fba0c6641 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -291,6 +291,10 @@ i[34567]86-*-nto*)
- 	gdb_target_obs="solib-svr4.o \
- 			i386-nto-tdep.o nto-tdep.o"
+@@ -315,6 +315,10 @@ i[34567]86-*-openbsd*)
+ 	# Target: OpenBSD/i386
+ 	gdb_target_obs="i386-bsd-tdep.o i386-obsd-tdep.o bsd-uthread.o"
  	;;
 +i[34567]86-*-serenity*)
 +	# Target: SerenityOS/i386
@@ -100,10 +99,10 @@ index 97a5a57..886542f 100644
  	gdb_target_obs="${i386_tobjs} ${amd64_tobjs} \
 diff --git a/gdb/i386-serenity-nat.c b/gdb/i386-serenity-nat.c
 new file mode 100644
-index 0000000..034252a
+index 0000000000000000000000000000000000000000..8846db7f4603d67001026555888aed71647dc17a
 --- /dev/null
 +++ b/gdb/i386-serenity-nat.c
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,98 @@
 +/* Native-dependent code for SerenityOS/i386.
 +
 +   Copyright (C) 2002-2021 Free Software Foundation, Inc.
@@ -123,7 +122,6 @@ index 0000000..034252a
 +   You should have received a copy of the GNU General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 +
-+#include "defs.h"
 +#include "gdbcore.h"
 +#include "regcache.h"
 +#include "regset.h"
@@ -199,18 +197,16 @@ index 0000000..034252a
 +
 +static i386_serenity_nat_target the_i386_serenity_nat_target;
 +
-+void _initialize_i386_serenity_nat ();
-+void
-+_initialize_i386_serenity_nat ()
++INIT_GDB_FILE (i386_serenity_nat)
 +{
 +  add_inf_child_target (&the_i386_serenity_nat_target);
 +}
 diff --git a/gdb/i386-serenity-tdep.c b/gdb/i386-serenity-tdep.c
 new file mode 100644
-index 0000000..d384061
+index 0000000000000000000000000000000000000000..c1baa5d7ab7bf759e47bd4b13333f7c4a8c0125c
 --- /dev/null
 +++ b/gdb/i386-serenity-tdep.c
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,40 @@
 +/* Target-dependent code for SerenityOS/i386.
 +
 +   Copyright (C) 2003-2021 Free Software Foundation, Inc.
@@ -230,7 +226,6 @@ index 0000000..d384061
 +   You should have received a copy of the GNU General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 +
-+#include "defs.h"
 +#include "arch-utils.h"
 +#include "gdbcore.h"
 +#include "osabi.h"
@@ -247,16 +242,14 @@ index 0000000..d384061
 +  serenity_init_abi (info, gdbarch);
 +}
 +
-+void _initialize_i386_serenity_tdep ();
-+void
-+_initialize_i386_serenity_tdep ()
++INIT_GDB_FILE (i386_serenity_tdep)
 +{
 +  gdbarch_register_osabi (bfd_arch_i386, 0, GDB_OSABI_SERENITYOS,
 +			  i386_serenity_init_abi);
 +}
 diff --git a/gdb/i386-serenity-tdep.h b/gdb/i386-serenity-tdep.h
 new file mode 100644
-index 0000000..4ee3fba
+index 0000000000000000000000000000000000000000..4ee3fba80d2dae35c0af6a1feecf7fdb0694dc67
 --- /dev/null
 +++ b/gdb/i386-serenity-tdep.h
 @@ -0,0 +1,8 @@
@@ -268,39 +261,14 @@ index 0000000..4ee3fba
 +//extern const struct regset i386_serenity_gregset;
 +
 +#endif /* i386-serenity-tdep.h */
-diff --git a/gdb/osabi.c b/gdb/osabi.c
-index 40c86e7..2f4423c 100644
---- a/gdb/osabi.c
-+++ b/gdb/osabi.c
-@@ -82,6 +82,7 @@ static const struct osabi_names gdb_osabi_names[] =
-   { "Newlib", NULL },
-   { "SDE", NULL },
-   { "PikeOS", NULL },
-+  { "SerenityOS", NULL },
- 
-   { "<invalid>", NULL }
- };
-diff --git a/gdb/osabi.h b/gdb/osabi.h
-index be01673..36471d8 100644
---- a/gdb/osabi.h
-+++ b/gdb/osabi.h
-@@ -46,6 +46,7 @@ enum gdb_osabi
-   GDB_OSABI_NEWLIB,
-   GDB_OSABI_SDE,
-   GDB_OSABI_PIKEOS,
-+  GDB_OSABI_SERENITYOS,
- 
-   GDB_OSABI_INVALID		/* keep this last */
- };
 diff --git a/gdb/serenity-nat.c b/gdb/serenity-nat.c
 new file mode 100644
-index 0000000..ff740d4
+index 0000000000000000000000000000000000000000..f378dd41c1d64d0786dd854ed2f525659cb877c5
 --- /dev/null
 +++ b/gdb/serenity-nat.c
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,17 @@
 +/* Native-dependent code for SerenityOS  */
 +
-+#include "defs.h"
 +#include "gdbthread.h"
 +#include "inferior.h"
 +#include "target.h"
@@ -311,10 +279,15 @@ index 0000000..ff740d4
 +
 +#include "inf-child.h"
 +#include "serenity-nat.h"
++
++void
++serenity_nat_target::post_startup_inferior (ptid_t ptid)
++{
++}
 \ No newline at end of file
 diff --git a/gdb/serenity-nat.h b/gdb/serenity-nat.h
 new file mode 100644
-index 0000000..dcd24ce
+index 0000000000000000000000000000000000000000..dcd24ce3188d58ad31b25e83ca05167e18e9f07d
 --- /dev/null
 +++ b/gdb/serenity-nat.h
 @@ -0,0 +1,16 @@
@@ -336,10 +309,10 @@ index 0000000..dcd24ce
 +#endif /* serenity-nat.h */
 diff --git a/gdb/serenity-tdep.c b/gdb/serenity-tdep.c
 new file mode 100644
-index 0000000..45981b2
+index 0000000000000000000000000000000000000000..d57ffb41dc4ac6cc16ec2d4f8bd4e7d6a81cb551
 --- /dev/null
 +++ b/gdb/serenity-tdep.c
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,27 @@
 +/* Target-dependent code for SerenityOS, architecture-independent.
 +
 +   Copyright (C) 2002-2021 Free Software Foundation, Inc.
@@ -358,7 +331,6 @@ index 0000000..45981b2
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 +
 +
-+#include "defs.h"
 +#include "arch-utils.h"
 +#include "gdbcore.h"
 +
@@ -370,7 +342,7 @@ index 0000000..45981b2
 +}
 diff --git a/gdb/serenity-tdep.h b/gdb/serenity-tdep.h
 new file mode 100644
-index 0000000..43048c6
+index 0000000000000000000000000000000000000000..43048c689fc097193f4f99498122472609014864
 --- /dev/null
 +++ b/gdb/serenity-tdep.h
 @@ -0,0 +1,24 @@
@@ -398,3 +370,14 @@ index 0000000..43048c6
 +extern void serenity_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch);
 +
 +#endif /* serenity-tdep.h */
+diff --git a/gdbsupport/osabi.def b/gdbsupport/osabi.def
+index 230c21f0236059ea9ff5e040390766dd8434f26a..e9d870d98359e3f7c5edfe8e39cd6df0b5073469 100644
+--- a/gdbsupport/osabi.def
++++ b/gdbsupport/osabi.def
+@@ -53,5 +53,6 @@ GDB_OSABI_DEF (LYNXOS178, "LynxOS178", nullptr)
+ GDB_OSABI_DEF (NEWLIB, "Newlib", nullptr)
+ GDB_OSABI_DEF (SDE, "SDE", nullptr)
+ GDB_OSABI_DEF (PIKEOS, "PikeOS", nullptr)
++GDB_OSABI_DEF (SERENITYOS, "SerenityOS", nullptr)
+ 
+ GDB_OSABI_DEF_LAST (INVALID, "<invalid>", nullptr)

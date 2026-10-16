@@ -10,38 +10,38 @@ Subject: [PATCH] gdb: Add build support for SerenityOS
  3 files changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 30087e3..11dc114 100644
+index 8eb2131128df07f756e221c6e33f3229107c6c1e..555b7cff8f6edffc02f56517b61918084a329f97 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -634,6 +634,11 @@ case "${targ}" in
-     targ_selvecs=
-     targ64_selvecs=x86_64_elf64_vec
+@@ -601,6 +601,11 @@ case "${targ}" in
+     targ_selvecs="i386_pei_vec"
+     targ64_selvecs="x86_64_elf64_vec x86_64_elf32_vec x86_64_pe_vec x86_64_pei_vec"
      ;;
 +  i[3-7]86-*-serenity*)
 +    targ_defvec=i386_elf32_vec
 +    targ_selvecs=
 +    targ64_selvecs=x86_64_elf64_vec
 +    ;;
- #ifdef BFD64
-   x86_64-*-cloudabi*)
-     targ_defvec=x86_64_elf64_cloudabi_vec
-@@ -694,6 +699,10 @@ case "${targ}" in
-     targ_selvecs=i386_elf32_vec
+   i[3-7]86-*-lynxos*)
+     targ_defvec=i386_elf32_vec
+     targ_selvecs="i386_coff_lynx_vec i386_aout_lynx_vec"
+@@ -1353,6 +1358,10 @@ case "${targ}" in
+     targ_selvecs="i386_elf32_vec x86_64_elf32_vec i386_pei_vec x86_64_pe_vec x86_64_pei_vec"
      want64=true
      ;;
 +  x86_64-*-serenity*)
 +    targ_defvec=x86_64_elf64_vec
 +    want64=true
 +    ;;
- #endif
-   i[3-7]86-*-lynxos*)
-     targ_defvec=i386_elf32_vec
+   x86_64-*-mingw* | x86_64-*-pe | x86_64-*-pep | x86_64-*-cygwin)
+     targ_defvec=x86_64_pe_vec
+     targ_selvecs="x86_64_pe_vec x86_64_pei_vec x86_64_pe_big_vec x86_64_elf64_vec i386_pe_vec i386_pe_big_vec i386_pei_vec i386_elf32_vec pdb_vec"
 diff --git a/gdbsupport/configure b/gdbsupport/configure
-index aad7469..4c45c27 100755
+index 0bc9ff1db9a11be2f42d8afe9c7d55b9cce624bb..a32ec1c8f4162d5520f7846873fe3225b0b545e6 100755
 --- a/gdbsupport/configure
 +++ b/gdbsupport/configure
-@@ -8958,7 +8958,7 @@ $as_echo "$gdb_cv_cxx_std_thread" >&6; }
- 
+@@ -12281,7 +12281,7 @@ $as_echo "$gdb_cv_cxx_std_thread" >&6; }
+   if test "$threads" = "yes"; then
      # This check must be here, while LIBS includes any necessary
      # threading library.
 -    for ac_func in pthread_sigmask pthread_setname_np
@@ -50,10 +50,10 @@ index aad7469..4c45c27 100755
    as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
  ac_fn_cxx_check_func "$LINENO" "$ac_func" "$as_ac_var"
 diff --git a/libiberty/configure b/libiberty/configure
-index fffb91d..defc239 100755
+index 379a3cfa9c3af4971bc4acbec53f082c495126f8..98142a62a10f0313e4f4d6a394959010e11a3cd1 100755
 --- a/libiberty/configure
 +++ b/libiberty/configure
-@@ -6478,7 +6478,9 @@ case "${host}" in
+@@ -6993,7 +6993,9 @@ case "${host}" in
      $as_echo "#define HAVE_SYS_ERRLIST 1" >>confdefs.h
  
      $as_echo "#define HAVE_SYS_NERR 1" >>confdefs.h

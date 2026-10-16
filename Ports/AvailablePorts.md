@@ -95,7 +95,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`fuse-exfat`](fuse-exfat/)                     | fuse-exfat                                                    | 1.4.0                 | https://gitlab.com/relan/exfat                                       |
 | [`gawk`](gawk/)                                 | GNU awk                                                       | 5.3.1                 | https://www.gnu.org/software/gawk/                                   |
 | [`gcc`](gcc/)                                   | GNU Compiler Collection                                       | 16.2.0                | https://gcc.gnu.org/                                                 |
-| [`gdb`](gdb/)                                   | GNU Project Debugger                                          | 11.2                  | https://sourceware.org/gdb                                           |
+| [`gdb`](gdb/)                                   | GNU Project Debugger                                          | 18.1                  | https://sourceware.org/gdb                                           |
 | [`gdk-pixbuf`](gdk-pixbuf/)                     | GdkPixbuf                                                     | 2.42.12               | https://gitlab.gnome.org/GNOME/gdk-pixbuf/                           |
 | [`gemrb`](gemrb/)                               | GemRB                                                         | 0.9.5                 | https://gemrb.org/                                                   |
 | [`genemu`](genemu/)                             | Genesis / MegaDrive Emulator                                  | e39f690               | https://github.com/rasky/genemu                                      |
