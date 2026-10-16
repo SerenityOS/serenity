@@ -29,6 +29,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
@@ -1775,10 +1776,11 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         // Parse error.
         log_parse_error();
 
-        // If the stack of open elements has only one node on it, or if the second element on the stack of open elements is not a body element, then ignore the token. (fragment case)
+        // If the stack of open elements has only one node on it, or if the second element on the stack of open elements is not a body element, then ignore the token.
+        // (fragment case or there is a template element on the stack)
         if (m_stack_of_open_elements.elements().size() == 1
             || m_stack_of_open_elements.elements().at(1)->local_name() != HTML::TagNames::body) {
-            VERIFY(m_parsing_fragment);
+            VERIFY(m_parsing_fragment || m_stack_of_open_elements.contains(HTML::TagNames::template_));
             return;
         }
 
@@ -1786,12 +1788,22 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         if (!m_frameset_ok)
             return;
 
-        // FIXME: Otherwise, run the following steps:
+        // Otherwise, run the following steps:
         // 1. Remove the second element on the stack of open elements from its parent node, if it has one.
+        m_stack_of_open_elements.elements().at(1)->remove(true);
+
         // 2. Pop all the nodes from the bottom of the stack of open elements, from the current node up to, but not including, the root html element.
+        while (m_stack_of_open_elements.elements().size() > 1) {
+            if (is<HTML::HTMLHtmlElement>(*m_stack_of_open_elements.elements().last()))
+                break;
+            (void)m_stack_of_open_elements.pop();
+        }
+
         // 3. Insert an HTML element for the token.
+        (void)insert_html_element(token);
+
         // 4. Switch the insertion mode to "in frameset".
-        TODO();
+        m_insertion_mode = InsertionMode::InFrameset;
     }
 
     // -> An end-of-file token
@@ -1910,7 +1922,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         auto next_token = m_tokenizer.next_token();
         if (next_token.has_value() && next_token.value().is_character() && next_token.value().code_point() == '\n') {
             // Ignore it.
-        } else {
+        } else if (next_token.has_value()) {
             process_using_the_rules_for(m_insertion_mode, next_token.value());
         }
 
@@ -2473,7 +2485,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         // FIXME: This step is not in the spec.
         if (next_token.has_value() && next_token.value().is_character() && next_token.value().code_point() == '\n') {
             // Ignore it.
-        } else {
+        } else if (next_token.has_value()) {
             process_using_the_rules_for(m_insertion_mode, next_token.value());
         }
         return;
@@ -3852,63 +3864,99 @@ void HTMLParser::handle_in_template(HTMLToken& token)
     }
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inframeset
 void HTMLParser::handle_in_frameset(HTMLToken& token)
 {
+    // -> A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF),
+    //    U+000C FORM FEED (FF), U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
     if (token.is_character() && token.is_parser_whitespace()) {
+        // Insert the character.
         insert_character(token.code_point());
         return;
     }
 
+    // -> A comment token
     if (token.is_comment()) {
+        // Insert a comment.
         insert_comment(token);
         return;
     }
 
+    // -> A DOCTYPE token
     if (token.is_doctype()) {
+        // Parse error. Ignore the token.
         log_parse_error();
         return;
     }
 
+    // -> A start tag whose tag name is "html"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
+        // Process the token using the rules for the "in body" insertion mode.
         process_using_the_rules_for(InsertionMode::InBody, token);
         return;
     }
 
+    // -> A start tag whose tag name is "frameset"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::frameset) {
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> An end tag whose tag name is "frameset"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::frameset) {
-        // FIXME: If the current node is the root html element, then this is a parse error; ignore the token. (fragment case)
+        // If the current node is the root html element, then this is a parse error; ignore the token. (fragment case)
+        if (current_node().is_document_element()) {
+            log_parse_error();
+            return;
+        }
 
+        // Otherwise, pop the current node from the stack of open elements.
         (void)m_stack_of_open_elements.pop();
 
+        // If the parser was not created as part of the HTML fragment parsing algorithm (fragment case),
+        // and the current node is no longer a frameset element, then switch the insertion mode to "after frameset".
         if (!m_parsing_fragment && current_node().local_name() != HTML::TagNames::frameset) {
             m_insertion_mode = InsertionMode::AfterFrameset;
         }
         return;
     }
 
+    // -> A start tag whose tag name is "frame"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::frame) {
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
+
+        // Immediately pop the current node off the stack of open elements.
         (void)m_stack_of_open_elements.pop();
+
+        // Acknowledge the token's self-closing flag, if it is set.
         token.acknowledge_self_closing_flag_if_set();
         return;
     }
 
+    // -> A start tag whose tag name is "noframes"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::noframes) {
+        // Process the token using the rules for the "in head" insertion mode.
         process_using_the_rules_for(InsertionMode::InHead, token);
         return;
     }
 
+    // -> An end-of-file token
     if (token.is_end_of_file()) {
-        // FIXME: If the current node is not the root html element, then this is a parse error.
+        // If the current node is not the root html element, then this is a parse error.
+        if (!current_node().is_document_element()) {
+            log_parse_error();
+        }
 
+        // Stop parsing.
         stop_parsing();
         return;
     }
 
+    // -> Anything else
+
+    // Parse error. Ignore the token.
     log_parse_error();
 }
 
