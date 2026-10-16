@@ -81,7 +81,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`fio`](fio/)                                   | fio - Flexible I/O tester                                     | 3.43                  | https://fio.readthedocs.io/en/latest/                                |
 | [`flac`](flac/)                                 | Free Lossless Audio Codec                                     | 1.5.0                 | https://xiph.org/flac/                                               |
 | [`flare-engine`](flare-engine/)                 | Flare (engine)                                                | 1.15                  | https://flarerpg.org/                                                |
-| [`flare-game`](flare-game/)                     | Flare (game)                                                  | 1.14                  | https://flarerpg.org/                                                |
+| [`flare-game`](flare-game/)                     | Flare (game)                                                  | 1.15                  | https://flarerpg.org/                                                |
 | [`flatbuffers`](flatbuffers/)                   | Flatbuffers                                                   | 25.12.19              | https://github.com/google/flatbuffers                                |
 | [`flex`](flex/)                                 | flex                                                          | 2.6.4                 | https://github.com/westes/flex                                       |
 | [`fluidsynth`](fluidsynth/)                     | fluidsynth                                                    | 2.6.1                 | https://www.fluidsynth.org/                                          |
