@@ -4,24 +4,22 @@ Date: Sat, 19 Feb 2022 19:46:06 -0800
 Subject: [PATCH] gdb: Disable xmalloc for alternate_signal_stack for serenity
 
 ---
- gdbsupport/alt-stack.h | 37 ++++++++++++++++++++++++++-----------
- 1 file changed, 26 insertions(+), 11 deletions(-)
+ gdbsupport/alt-stack.h | 36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
 diff --git a/gdbsupport/alt-stack.h b/gdbsupport/alt-stack.h
-index 8ae229b..6e5b133 100644
+index e42cc3cc2130140699a1f2edb0e7ca0b36ea4b91..c973c82c88385216e1df302c93657b5b57337811 100644
 --- a/gdbsupport/alt-stack.h
 +++ b/gdbsupport/alt-stack.h
-@@ -20,7 +20,9 @@
- #ifndef GDBSUPPORT_ALT_STACK_H
+@@ -21,6 +21,7 @@
  #define GDBSUPPORT_ALT_STACK_H
  
-+#include "common-defs.h"
  #include <signal.h>
 +#include <sys/mman.h>
  
  namespace gdb
  {
-@@ -36,31 +38,44 @@ class alternate_signal_stack
+@@ -36,31 +37,44 @@ class alternate_signal_stack
  public:
    alternate_signal_stack ()
    {
