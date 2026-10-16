@@ -69,7 +69,8 @@ private:
     public:
         using List = Vector<OwnPtr<DataBlock>>;
 
-        static ErrorOr<NonnullOwnPtr<DataBlock>> create();
+        static ErrorOr<NonnullOwnPtr<DataBlock>> create(RAMFS&);
+        ~DataBlock();
 
         constexpr static size_t block_size = 128 * KiB;
 
@@ -77,11 +78,13 @@ private:
         Memory::AnonymousVMObject const& vmobject() const { return *m_content_buffer_vmobject; }
 
     private:
-        explicit DataBlock(NonnullLockRefPtr<Memory::AnonymousVMObject> content_buffer_vmobject)
-            : m_content_buffer_vmobject(move(content_buffer_vmobject))
+        explicit DataBlock(RAMFS& filesystem, NonnullLockRefPtr<Memory::AnonymousVMObject> content_buffer_vmobject)
+            : m_filesystem(filesystem)
+            , m_content_buffer_vmobject(move(content_buffer_vmobject))
         {
         }
 
+        RAMFS& m_filesystem;
         NonnullLockRefPtr<Memory::AnonymousVMObject> m_content_buffer_vmobject;
     };
 
