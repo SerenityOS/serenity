@@ -353,22 +353,22 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
 {
     set_override_cursor(Gfx::StandardCursor::None);
     switch (event.key()) {
-    case KeyCode::Key_Left:
+    case GUI::Key_Left:
         playback_move(PlaybackDirection::Backward);
         break;
-    case KeyCode::Key_Right:
+    case GUI::Key_Right:
         playback_move(PlaybackDirection::Forward);
         break;
-    case KeyCode::Key_Up:
+    case GUI::Key_Up:
         playback_move(PlaybackDirection::Last);
         break;
-    case KeyCode::Key_Down:
+    case GUI::Key_Down:
         playback_move(PlaybackDirection::First);
         break;
-    case KeyCode::Key_Home:
+    case GUI::Key_Home:
         playback_move(PlaybackDirection::First);
         break;
-    case KeyCode::Key_End:
+    case GUI::Key_End:
         playback_move(PlaybackDirection::Last);
         break;
     default:

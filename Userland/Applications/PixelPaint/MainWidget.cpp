@@ -156,7 +156,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto file_menu = window.add_menu("&File"_string);
 
     m_new_image_action = GUI::Action::create(
-        "&New Image...", { Mod_Ctrl, Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
+        "&New Image...", { Mod_Ctrl, GUI::Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 auto image_result = PixelPaint::Image::create_with_size(dialog->image_size());
@@ -189,7 +189,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_new_image_from_clipboard_action = GUI::Action::create(
-        "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, Key_V }, g_icon_bag.new_clipboard, [&](auto&) {
+        "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, GUI::Key_V }, g_icon_bag.new_clipboard, [&](auto&) {
             auto result = create_image_from_clipboard();
             if (result.is_error()) {
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create image from clipboard: {}", result.release_error())));
@@ -279,7 +279,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         open_image(response.release_value());
     });
 
-    m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, Key_W }, g_icon_bag.close_image, [&](auto&) {
+    m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, GUI::Key_W }, g_icon_bag.close_image, [&](auto&) {
         auto* active_widget = m_tab_widget->active_widget();
         VERIFY(active_widget);
         m_tab_widget->on_tab_close_click(*active_widget);
@@ -335,7 +335,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_copy_merged_action = GUI::Action::create(
-        "Copy &Merged", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.edit_copy, [&](auto&) {
+        "Copy &Merged", { Mod_Ctrl | Mod_Shift, GUI::Key_C }, g_icon_bag.edit_copy, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
 
@@ -444,7 +444,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_edit_menu->add_separator();
     m_edit_menu->add_action(GUI::Action::create(
-        "S&wap Colors", { Mod_None, Key_X }, g_icon_bag.swap_colors, [&](auto&) {
+        "S&wap Colors", { Mod_None, GUI::Key_X }, g_icon_bag.swap_colors, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto old_primary_color = editor->primary_color();
@@ -452,7 +452,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->set_secondary_color(old_primary_color);
         }));
     m_edit_menu->add_action(GUI::Action::create(
-        "&Default Colors", { Mod_None, Key_D }, g_icon_bag.default_colors, [&](auto&) {
+        "&Default Colors", { Mod_None, GUI::Key_D }, g_icon_bag.default_colors, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->set_primary_color(Color::Black);
@@ -567,7 +567,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*show_pixel_grid_action);
 
     m_show_rulers_action = GUI::Action::create_checkable(
-        "Show R&ulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
+        "Show R&ulers", { Mod_Ctrl, GUI::Key_R }, [&](auto& action) {
             Config::write_bool("PixelPaint"sv, "Rulers"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -658,7 +658,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_image_menu->add_separator();
 
-    m_image_menu->add_action(GUI::Action::create("Rotate Image &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-rotate-ccw.png"sv)),
+    m_image_menu->add_action(GUI::Action::create("Rotate Image &Counterclockwise", { Mod_Ctrl | Mod_Shift, GUI::Key_LessThan }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-rotate-ccw.png"sv)),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -670,7 +670,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Rotate Image Counterclockwise"sv);
         }));
 
-    m_image_menu->add_action(GUI::Action::create("Rotate Image Clock&wise", { Mod_Ctrl | Mod_Shift, Key_GreaterThan }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-rotate-cw.png"sv)),
+    m_image_menu->add_action(GUI::Action::create("Rotate Image Clock&wise", { Mod_Ctrl | Mod_Shift, GUI::Key_GreaterThan }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/edit-rotate-cw.png"sv)),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -683,7 +683,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_image_menu->add_separator();
     m_image_menu->add_action(GUI::Action::create(
-        "&Resize Image...", { Mod_Ctrl | Mod_Shift, Key_R }, g_icon_bag.resize_image, [&](auto&) {
+        "&Resize Image...", { Mod_Ctrl | Mod_Shift, GUI::Key_R }, g_icon_bag.resize_image, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
@@ -738,7 +738,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_image_menu->add_separator();
 
     m_levels_dialog_action = GUI::Action::create(
-        "Change &Levels...", { Mod_Ctrl, Key_L }, g_icon_bag.levels, [&](auto&) {
+        "Change &Levels...", { Mod_Ctrl, GUI::Key_L }, g_icon_bag.levels, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto dialog = PixelPaint::LevelsDialog::construct(&window, editor);
@@ -761,7 +761,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     };
 
     m_layer_menu->add_action(GUI::Action::create(
-        "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, g_icon_bag.new_layer, [&](auto&) {
+        "New &Layer...", { Mod_Ctrl | Mod_Shift, GUI::Key_N }, g_icon_bag.new_layer, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), &window);
@@ -779,7 +779,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
-        "Duplicate Layer", { Mod_Ctrl | Mod_Shift, Key_D }, g_icon_bag.new_layer, [&](auto&) {
+        "Duplicate Layer", { Mod_Ctrl | Mod_Shift, GUI::Key_D }, g_icon_bag.new_layer, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto* active_layer = editor->active_layer();
@@ -801,7 +801,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     m_layer_via_copy = GUI::Action::create(
-        "Layer via Copy", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.new_layer, [&](auto&) {
+        "Layer via Copy", { Mod_Ctrl | Mod_Shift, GUI::Key_C }, g_icon_bag.new_layer, [&](auto&) {
             auto add_layer_success = current_image_editor()->add_new_layer_from_selection();
             if (add_layer_success.is_error()) {
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("{}", add_layer_success.release_error())));
@@ -813,7 +813,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(*m_layer_via_copy);
 
     m_layer_via_cut = GUI::Action::create(
-        "Layer via Cut", { Mod_Ctrl | Mod_Shift, Key_X }, g_icon_bag.new_layer, [&](auto&) {
+        "Layer via Cut", { Mod_Ctrl | Mod_Shift, GUI::Key_X }, g_icon_bag.new_layer, [&](auto&) {
             auto add_layer_success = current_image_editor()->add_new_layer_from_selection();
             if (add_layer_success.is_error()) {
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("{}", add_layer_success.release_error())));
@@ -847,7 +847,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto mask_submenu = m_layer_menu->add_submenu("&Masks"_string);
 
     m_add_mask_action = GUI::Action::create(
-        "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, g_icon_bag.add_mask, create_layer_mask_callback("Add Mask", [&](Layer* active_layer) {
+        "Add M&ask", { Mod_Ctrl | Mod_Shift, GUI::Key_M }, g_icon_bag.add_mask, create_layer_mask_callback("Add Mask", [&](Layer* active_layer) {
             VERIFY(!active_layer->is_masked());
             if (auto maybe_error = active_layer->create_mask(Layer::MaskType::BasicMask); maybe_error.is_error())
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer mask: {}", maybe_error.release_error())));
@@ -855,7 +855,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     mask_submenu->add_action(*m_add_mask_action);
 
     m_add_editing_mask_action = GUI::Action::create(
-        "Add E&diting Mask", { Mod_Ctrl | Mod_Alt, Key_E }, g_icon_bag.add_mask, create_layer_mask_callback("Add Editing Mask", [&](Layer* active_layer) {
+        "Add E&diting Mask", { Mod_Ctrl | Mod_Alt, GUI::Key_E }, g_icon_bag.add_mask, create_layer_mask_callback("Add Editing Mask", [&](Layer* active_layer) {
             VERIFY(!active_layer->is_masked());
             if (auto maybe_error = active_layer->create_mask(Layer::MaskType::EditingMask); maybe_error.is_error())
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer mask: {}", maybe_error.release_error())));
@@ -935,19 +935,19 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_separator();
 
     m_layer_menu->add_action(GUI::Action::create(
-        "Select &Previous Layer", { 0, Key_PageUp }, g_icon_bag.previous_layer, [&](auto&) {
+        "Select &Previous Layer", { 0, GUI::Key_PageUp }, g_icon_bag.previous_layer, [&](auto&) {
             m_layer_list_widget->cycle_through_selection(1);
         }));
     m_layer_menu->add_action(GUI::Action::create(
-        "Select &Next Layer", { 0, Key_PageDown }, g_icon_bag.next_layer, [&](auto&) {
+        "Select &Next Layer", { 0, GUI::Key_PageDown }, g_icon_bag.next_layer, [&](auto&) {
             m_layer_list_widget->cycle_through_selection(-1);
         }));
     m_layer_menu->add_action(GUI::Action::create(
-        "Select &Top Layer", { 0, Key_Home }, g_icon_bag.top_layer, [&](auto&) {
+        "Select &Top Layer", { 0, GUI::Key_Home }, g_icon_bag.top_layer, [&](auto&) {
             m_layer_list_widget->select_top_layer();
         }));
     m_layer_menu->add_action(GUI::Action::create(
-        "Select B&ottom Layer", { 0, Key_End }, g_icon_bag.bottom_layer, [&](auto&) {
+        "Select B&ottom Layer", { 0, GUI::Key_End }, g_icon_bag.bottom_layer, [&](auto&) {
             m_layer_list_widget->select_bottom_layer();
         }));
     m_layer_menu->add_separator();
@@ -973,7 +973,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
-        "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, g_icon_bag.active_layer_up, [&](auto&) {
+        "Move Active Layer &Up", { Mod_Ctrl, GUI::Key_PageUp }, g_icon_bag.active_layer_up, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();
@@ -982,7 +982,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->image().move_layer_up(*active_layer);
         }));
     m_layer_menu->add_action(GUI::Action::create(
-        "Move Active Layer &Down", { Mod_Ctrl, Key_PageDown }, g_icon_bag.active_layer_down, [&](auto&) {
+        "Move Active Layer &Down", { Mod_Ctrl, GUI::Key_PageDown }, g_icon_bag.active_layer_down, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();
@@ -992,7 +992,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
-        "&Remove Active Layer", { Mod_Ctrl, Key_D }, g_icon_bag.delete_layer, [&](auto&) {
+        "&Remove Active Layer", { Mod_Ctrl, GUI::Key_D }, g_icon_bag.delete_layer, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();
@@ -1023,7 +1023,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     };
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
-        "Fl&atten Image", { Mod_Ctrl, Key_F }, g_icon_bag.flatten_image, [&](auto&) {
+        "Fl&atten Image", { Mod_Ctrl, GUI::Key_F }, g_icon_bag.flatten_image, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             if (auto maybe_error = editor->image().flatten_all_layers(); maybe_error.is_error()) {
@@ -1034,7 +1034,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
-        "&Merge Visible", { Mod_Ctrl, Key_M }, g_icon_bag.merge_visible, [&](auto&) {
+        "&Merge Visible", { Mod_Ctrl, GUI::Key_M }, g_icon_bag.merge_visible, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             if (auto maybe_error = editor->image().merge_visible_layers(); maybe_error.is_error()) {
@@ -1060,7 +1060,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
-        "M&erge Active Layer Down", { Mod_Ctrl, Key_E }, g_icon_bag.merge_active_layer_down, [&](auto&) {
+        "M&erge Active Layer Down", { Mod_Ctrl, GUI::Key_E }, g_icon_bag.merge_active_layer_down, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();

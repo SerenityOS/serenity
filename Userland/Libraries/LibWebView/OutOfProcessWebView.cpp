@@ -436,7 +436,7 @@ struct KeyData : Web::ChromeInputData {
 
 void OutOfProcessWebView::enqueue_native_event(Web::KeyEvent::Type type, GUI::KeyEvent const& event)
 {
-    enqueue_input_event(Web::KeyEvent { type, event.key(), static_cast<KeyModifier>(event.modifiers()), event.code_point(), make<KeyData>(event) });
+    enqueue_input_event(Web::KeyEvent { type, event.key_code(), static_cast<KeyModifier>(event.modifiers()), event.code_point(), make<KeyData>(event) });
 }
 
 void OutOfProcessWebView::finish_handling_key_event(Web::KeyEvent const& key_event)

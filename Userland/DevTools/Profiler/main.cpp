@@ -172,12 +172,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_source_model();
     };
 
-    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/x86.png"sv)), [&](auto& action) {
+    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, GUI::Key_D }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/x86.png"sv)), [&](auto& action) {
         disassembly_view.set_visible(action.is_checked());
         update_disassembly_model();
     });
 
-    auto source_action = GUI::Action::create_checkable("Show &Source", { Mod_Ctrl, Key_S }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/x86.png"sv)), [&](auto& action) {
+    auto source_action = GUI::Action::create_checkable("Show &Source", { Mod_Ctrl, GUI::Key_S }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/x86.png"sv)), [&](auto& action) {
         source_view.set_visible(action.is_checked());
         update_source_model();
     });
@@ -277,19 +277,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto view_menu = window->add_menu("&View"_string);
 
-    auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
+    auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, GUI::Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
     });
     invert_action->set_checked(false);
     view_menu->add_action(invert_action);
 
-    auto top_functions_action = GUI::Action::create_checkable("&Top Functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
+    auto top_functions_action = GUI::Action::create_checkable("&Top Functions", { Mod_Ctrl, GUI::Key_T }, [&](auto& action) {
         profile->set_show_top_functions(action.is_checked());
     });
     top_functions_action->set_checked(false);
     view_menu->add_action(top_functions_action);
 
-    auto percent_action = GUI::Action::create_checkable("Show &Percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
+    auto percent_action = GUI::Action::create_checkable("Show &Percentages", { Mod_Ctrl, GUI::Key_P }, [&](auto& action) {
         profile->set_show_percentages(action.is_checked());
         tree_view.update();
         disassembly_view.update();
