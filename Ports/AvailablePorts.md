@@ -110,7 +110,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`gmp`](gmp/)                                   | GNU Multiple Precision Arithmetic Library (GMP)               | 6.3.0                 | https://gmplib.org/                                                  |
 | [`gn`](gn/)                                     | GN Meta Build System                                          | 2023.07.12            | https://gn.googlesource.com/gn/                                      |
 | [`gnuapl`](gnuapl/)                             | GNU APL                                                       | 1.8                   | https://www.gnu.org/software/apl/                                    |
-| [`gnucobol`](gnucobol/)                         | GnuCOBOL                                                      | 3.1.2                 | https://gnucobol.sourceforge.io/                                     |
+| [`gnucobol`](gnucobol/)                         | GnuCOBOL                                                      | 3.2                   | https://gnucobol.sourceforge.io/                                     |
 | [`gnupg`](gnupg/)                               | GnuPG                                                         | 2.4.5                 | https://gnupg.org/software/index.html                                |
 | [`gnuplot`](gnuplot/)                           | Gnuplot                                                       | 6.0.5                 | http://www.gnuplot.info/                                             |
 | [`gperf`](gperf/)                               | GNU gperf                                                     | 3.3                   | https://www.gnu.org/software/gperf/                                  |
