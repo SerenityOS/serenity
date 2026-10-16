@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::do_statvfs(FileSystem const& fs, Custody const* custody, statvfs* buf)
+ErrorOr<FlatPtr> Process::do_statvfs(FileSystem const& fs, Custody const* custody, Userspace<statvfs*> buf)
 {
     statvfs kernelbuf = {};
 
@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$statvfs(Userspace<Syscall::SC_statvfs_params const
     return do_statvfs(fs, custody, params.buf);
 }
 
-ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
+ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, Userspace<statvfs*> buf)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));

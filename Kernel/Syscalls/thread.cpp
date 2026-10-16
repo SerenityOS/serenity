@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Syscall::SC_create_thread_params const*> user_params)
+ErrorOr<FlatPtr> Process::sys$create_thread(Userspace<void* (*)(void*)> entry, Userspace<Syscall::SC_create_thread_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::thread));
@@ -22,7 +22,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     int schedule_priority = params.schedule_priority;
     unsigned stack_size = params.stack_size;
 
-    auto user_sp = Checked<FlatPtr>((FlatPtr)params.stack_location);
+    auto user_sp = Checked<FlatPtr>(params.stack_location.ptr());
     user_sp += stack_size;
     if (user_sp.has_overflow())
         return EOVERFLOW;
@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
         thread->detach();
 
     auto& regs = thread->regs();
-    regs.set_ip((FlatPtr)entry);
+    regs.set_ip(entry.ptr());
     regs.set_sp(user_sp.value());
 
 #if ARCH(X86_64)
@@ -62,30 +62,30 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.cr3 = address_space().with([](auto& space) { return space->page_directory().cr3(); });
 
     // Set up the argument registers expected by pthread_create_helper.
-    regs.rdi = (FlatPtr)params.entry;
-    regs.rsi = (FlatPtr)params.entry_argument;
-    regs.rdx = (FlatPtr)params.stack_location;
-    regs.rcx = (FlatPtr)params.stack_size;
+    regs.rdi = params.entry.ptr();
+    regs.rsi = params.entry_argument.ptr();
+    regs.rdx = params.stack_location.ptr();
+    regs.rcx = params.stack_size;
 
     thread->arch_specific_data().fs_base = bit_cast<FlatPtr>(params.tls_pointer);
 #elif ARCH(AARCH64)
     regs.ttbr0_el1 = address_space().with([](auto& space) { return space->page_directory().ttbr0(); });
 
     // Set up the argument registers expected by pthread_create_helper.
-    regs.x[0] = (FlatPtr)params.entry;
-    regs.x[1] = (FlatPtr)params.entry_argument;
-    regs.x[2] = (FlatPtr)params.stack_location;
-    regs.x[3] = (FlatPtr)params.stack_size;
+    regs.x[0] = params.entry.ptr();
+    regs.x[1] = params.entry_argument.ptr();
+    regs.x[2] = params.stack_location.ptr();
+    regs.x[3] = params.stack_size;
 
     regs.tpidr_el0 = bit_cast<FlatPtr>(params.tls_pointer);
 #elif ARCH(RISCV64)
     regs.satp = address_space().with([](auto& space) { return space->page_directory().satp(); });
 
     // Set up the argument registers expected by pthread_create_helper.
-    regs.x[9] = (FlatPtr)params.entry;
-    regs.x[10] = (FlatPtr)params.entry_argument;
-    regs.x[11] = (FlatPtr)params.stack_location;
-    regs.x[12] = (FlatPtr)params.stack_size;
+    regs.x[9] = params.entry.ptr();
+    regs.x[10] = params.entry_argument.ptr();
+    regs.x[11] = params.stack_location.ptr();
+    regs.x[12] = params.stack_size;
 
     regs.x[3] = bit_cast<FlatPtr>(params.tls_pointer);
 #else

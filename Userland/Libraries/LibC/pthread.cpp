@@ -81,7 +81,7 @@ static void* pthread_create_helper(void* (*routine)(void*), void* argument, void
 
 static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argument, PthreadAttrImpl* thread_params)
 {
-    void** stack = (void**)((uintptr_t)thread_params->stack_location + thread_params->stack_size);
+    void** stack = (void**)((uintptr_t)thread_params->stack_location.ptr() + thread_params->stack_size);
 
     auto push_on_stack = [&](void* data) {
         stack--;
@@ -158,7 +158,7 @@ int pthread_create(pthread_t* thread, pthread_attr_t const* attributes, void* (*
         used_attributes->schedule_priority,
         used_attributes->guard_page_size,
         used_attributes->stack_size,
-        used_attributes->stack_location);
+        used_attributes->stack_location.ptr());
 
     return create_thread(thread, start_routine, argument_to_start_routine, used_attributes);
 }
@@ -287,7 +287,7 @@ int pthread_attr_init(pthread_attr_t* attributes)
         impl->schedule_priority,
         impl->guard_page_size,
         impl->stack_size,
-        impl->stack_location);
+        impl->stack_location.ptr());
 
     return 0;
 }
@@ -331,7 +331,7 @@ int pthread_attr_setdetachstate(pthread_attr_t* attributes, int detach_state)
         attributes_impl->schedule_priority,
         attributes_impl->guard_page_size,
         attributes_impl->stack_size,
-        attributes_impl->stack_location);
+        attributes_impl->stack_location.ptr());
 
     return 0;
 }
@@ -375,7 +375,7 @@ int pthread_attr_setguardsize(pthread_attr_t* attributes, size_t guard_size)
         attributes_impl->schedule_priority,
         attributes_impl->guard_page_size,
         attributes_impl->stack_size,
-        attributes_impl->stack_location);
+        attributes_impl->stack_location.ptr());
 
     return 0;
 }
@@ -410,7 +410,7 @@ int pthread_attr_setschedparam(pthread_attr_t* attributes, const struct sched_pa
         attributes_impl->schedule_priority,
         attributes_impl->guard_page_size,
         attributes_impl->stack_size,
-        attributes_impl->stack_location);
+        attributes_impl->stack_location.ptr());
 
     return 0;
 }
@@ -423,7 +423,7 @@ int pthread_attr_getstack(pthread_attr_t const* attributes, void** p_stack_ptr, 
     if (!attributes_impl || !p_stack_ptr || !p_stack_size)
         return EINVAL;
 
-    *p_stack_ptr = attributes_impl->stack_location;
+    *p_stack_ptr = attributes_impl->stack_location.ptr();
     *p_stack_size = attributes_impl->stack_size;
 
     return 0;
@@ -455,7 +455,7 @@ int pthread_attr_setstack(pthread_attr_t* attributes, void* p_stack, size_t stac
         attributes_impl->schedule_priority,
         attributes_impl->guard_page_size,
         attributes_impl->stack_size,
-        attributes_impl->stack_location);
+        attributes_impl->stack_location.ptr());
 
     return 0;
 }
@@ -491,7 +491,7 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
         attributes_impl->schedule_priority,
         attributes_impl->guard_page_size,
         attributes_impl->stack_size,
-        attributes_impl->stack_location);
+        attributes_impl->stack_location.ptr());
 
     return 0;
 }
