@@ -539,7 +539,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(VFSRootContext const& vfs_root_context, C
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
     auto base_custody = TRY(base.resolve());
-    auto result = resolve_path_without_veil(vfs_root_context, credentials, path, base_custody, &parent_custody);
+    auto result = resolve_path_without_veil(vfs_root_context, credentials, path, base_custody, &parent_custody, O_NOFOLLOW_NOERROR);
     if (!result.is_error())
         return EEXIST;
     else if (!parent_custody)
@@ -623,7 +623,7 @@ ErrorOr<void> VirtualFileSystem::rename(VFSRootContext const& vfs_root_context, 
     auto& old_inode = old_custody->inode();
 
     RefPtr<Custody> new_parent_custody;
-    auto new_custody_or_error = resolve_path(vfs_root_context, credentials, new_path, new_base, &new_parent_custody);
+    auto new_custody_or_error = resolve_path(vfs_root_context, credentials, new_path, new_base, &new_parent_custody, O_NOFOLLOW_NOERROR);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error().code() != ENOENT || !new_parent_custody)
             return new_custody_or_error.release_error();
