@@ -70,11 +70,16 @@ ErrorOr<void> RAMFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     }
     return {};
 }
-
-ErrorOr<NonnullOwnPtr<RAMFSInode::DataBlock>> RAMFSInode::DataBlock::create()
+ErrorOr<NonnullOwnPtr<RAMFSInode::DataBlock>> RAMFSInode::DataBlock::create(RAMFS& filesystem)
 {
+    TRY(filesystem.update_size(DataBlock::block_size));
     auto data_block_buffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(DataBlock::block_size, AllocationStrategy::AllocateNow));
-    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DataBlock(move(data_block_buffer_vmobject))));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DataBlock(filesystem, move(data_block_buffer_vmobject))));
+}
+
+RAMFSInode::DataBlock::~DataBlock()
+{
+    MUST(m_filesystem.update_size(-DataBlock::block_size));
 }
 
 ErrorOr<void> RAMFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
@@ -98,7 +103,7 @@ ErrorOr<void> RAMFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
     for (size_t block_index = block_start_index; block_index < block_last_index; block_index++) {
         if (!m_blocks[block_index]) {
             TRY(allocated_block_indices.try_append(block_index));
-            m_blocks[block_index] = TRY(DataBlock::create());
+            m_blocks[block_index] = TRY(DataBlock::create(fs()));
         }
     }
     clean_allocated_blocks_on_failure.disarm();
