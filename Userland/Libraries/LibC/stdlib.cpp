@@ -67,6 +67,29 @@ static Sign strtosign(char const* str, char** endptr)
     }
 }
 
+static int strtobase(char const* str, char** endptr, int base)
+{
+    // "0x" is only a prefix if a hexadecimal digit follows it. Otherwise, the subject sequence is just the "0".
+    bool const has_hex_prefix = str[0] == '0' && tolower(str[1]) == 'x' && isxdigit(str[2]);
+
+    if (base == 0) {
+        if (has_hex_prefix)
+            base = 16;
+        else if (str[0] == '0')
+            base = 8;
+        else
+            base = 10;
+    }
+
+    // Dr. POSIX: "If the value of base is 16, the characters 0x or 0X may optionally precede
+    //             the sequence of letters and digits, following the sign if present."
+    if (base == 16 && has_hex_prefix)
+        str += 2;
+
+    *endptr = const_cast<char*>(str);
+    return base;
+}
+
 enum DigitConsumeDecision {
     Consumed,
     PosOverflow,
@@ -978,24 +1001,11 @@ unsigned long strtoul(char const* str, char** endptr, int base)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoll.html
 long long strtoll(char const* str, char** endptr, int base)
 {
-    // Parse spaces and sign
+    // Parse spaces, sign and base
     char* parse_ptr = const_cast<char*>(str);
     strtons(parse_ptr, &parse_ptr);
     Sign const sign = strtosign(parse_ptr, &parse_ptr);
-
-    // Parse base
-    if (base == 0) {
-        if (*parse_ptr == '0') {
-            if (tolower(*(parse_ptr + 1)) == 'x') {
-                base = 16;
-                parse_ptr += 2;
-            } else {
-                base = 8;
-            }
-        } else {
-            base = 10;
-        }
-    }
+    base = strtobase(parse_ptr, &parse_ptr, base);
 
     // Parse actual digits.
     LongLongParser digits { sign, base };
@@ -1056,31 +1066,10 @@ long long strtoll(char const* str, char** endptr, int base)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoull.html
 unsigned long long strtoull(char const* str, char** endptr, int base)
 {
-    // Parse spaces and sign
+    // Parse spaces and base
     char* parse_ptr = const_cast<char*>(str);
     strtons(parse_ptr, &parse_ptr);
-
-    if (base == 16) {
-        // Dr. POSIX: "If the value of base is 16, the characters 0x or 0X may optionally precede
-        //             the sequence of letters and digits, following the sign if present."
-        if (*parse_ptr == '0') {
-            if (tolower(*(parse_ptr + 1)) == 'x')
-                parse_ptr += 2;
-        }
-    }
-    // Parse base
-    if (base == 0) {
-        if (*parse_ptr == '0') {
-            if (tolower(*(parse_ptr + 1)) == 'x') {
-                base = 16;
-                parse_ptr += 2;
-            } else {
-                base = 8;
-            }
-        } else {
-            base = 10;
-        }
-    }
+    base = strtobase(parse_ptr, &parse_ptr, base);
 
     // Parse actual digits.
     ULongLongParser digits { Sign::Positive, base };
