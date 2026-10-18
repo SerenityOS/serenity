@@ -108,7 +108,8 @@ public:
         , m_sign(sign)
     {
         m_cutoff = positive() ? (max_value / base) : (min_value / base);
-        m_max_digit_after_cutoff = positive() ? (max_value % base) : (min_value % base);
+        // The remainder of a negative min_value is negative, but it is compared against (positive) digit values.
+        m_max_digit_after_cutoff = positive() ? (max_value % base) : -(min_value % base);
     }
 
     int parse_digit(char ch)
