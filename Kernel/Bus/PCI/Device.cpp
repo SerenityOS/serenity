@@ -7,6 +7,9 @@
 #include <AK/AnyOf.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/PCIMSI.h>
+#if ARCH(X86_64)
+#    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
+#endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/BarMapping.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -24,9 +27,15 @@ Device::Device(DeviceIdentifier const& pci_identifier)
 
 bool Device::is_msi_capable() const
 {
+    // FIXME: Move those checks to a better place
     // FIXME: Support MSI on aarch64 and riscv64
 #if ARCH(AARCH64) || ARCH(RISCV64)
     return false;
+#endif
+
+#if ARCH(X86_64)
+    if (!APIC::initialized())
+        return false;
 #endif
 
     return m_pci_identifier->is_msi_capable();
@@ -34,9 +43,15 @@ bool Device::is_msi_capable() const
 
 bool Device::is_msix_capable() const
 {
+    // FIXME: Move those checks to a better place
     // FIXME: Support MSIx on aarch64 and riscv64
 #if ARCH(AARCH64) || ARCH(RISCV64)
     return false;
+#endif
+
+#if ARCH(X86_64)
+    if (!APIC::initialized())
+        return false;
 #endif
 
     return m_pci_identifier->is_msix_capable();
