@@ -1066,9 +1066,10 @@ long long strtoll(char const* str, char** endptr, int base)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoull.html
 unsigned long long strtoull(char const* str, char** endptr, int base)
 {
-    // Parse spaces and base
+    // Parse spaces, sign and base
     char* parse_ptr = const_cast<char*>(str);
     strtons(parse_ptr, &parse_ptr);
+    Sign const sign = strtosign(parse_ptr, &parse_ptr);
     base = strtobase(parse_ptr, &parse_ptr, base);
 
     // Parse actual digits.
@@ -1117,8 +1118,13 @@ unsigned long long strtoull(char const* str, char** endptr, int base)
 
     if (overflow) {
         errno = ERANGE;
-        return LONG_LONG_MAX;
+        return ULONG_LONG_MAX;
     }
+
+    // Dr. POSIX: "If the subject sequence begins with a <hyphen-minus>, the value resulting from
+    //             the conversion shall be negated."
+    if (sign == Sign::Negative)
+        return -digits.number();
 
     return digits.number();
 }
