@@ -1345,6 +1345,8 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
             VERIFY_NOT_REACHED();
         }
 
+        factor = AK::SIMD::clamp(factor, expand4(0.f), expand4(1.f));
+
         // Mix texel's RGB with fog's RBG - leave alpha alone
         auto fog_color = expand4(m_options.fog_color);
         current_color.set_x(mix(fog_color.x(), current_color.x(), factor));
