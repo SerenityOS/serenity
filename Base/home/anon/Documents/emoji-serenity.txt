@@ -261,7 +261,3 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁵󠁳󠁡󠁺󠁿 - U+1F3F4 U+E0075 U+E0073 U+E0061 U+E007A U+E007F US-AZ Arizona
 🏴󠁵󠁳󠁴󠁸󠁿 - U+1F3F4 U+E0075 U+E0073 U+E0074 U+E0078 U+E007F US-TX Texas
 🏴󠁺󠁷󠁨󠁡󠁿 - U+1F3F4 U+E007A U+E0077 U+E0068 U+E0061 U+E007F ZW-HA Harare
-
-Emoji 15.1
-----------
-🔗‍💥 - U+1F517 U+200D U+1F4A5 BROKEN CHAIN
