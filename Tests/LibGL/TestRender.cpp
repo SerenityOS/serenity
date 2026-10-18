@@ -376,3 +376,40 @@ TEST_CASE(0012_blend_equations)
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0012_blend_equations"sv);
 }
+
+TEST_CASE(0013_fog_linear)
+{
+    auto width = 64;
+    auto height = 64;
+
+    auto context = create_testing_context(width, height);
+
+    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    auto zoom = 0.5;
+    auto const half_aspect_ratio = static_cast<double>(width) / height * zoom;
+    glFrustum(-half_aspect_ratio, half_aspect_ratio, -zoom, zoom, .5, 10.);
+
+    float fog_color[] = { 0.1f, 0.1f, 0.5f, 1.f };
+    glFogfv(GL_FOG_COLOR, fog_color);
+    glFogi(GL_FOG_MODE, GL_LINEAR);
+    glFogf(GL_FOG_START, 0.1f);
+    glFogf(GL_FOG_END, 3.0f);
+    glEnable(GL_FOG);
+
+    glBegin(GL_QUADS);
+    glColor3f(1.f, 0.f, 1.f);
+    glVertex3f(-1.f, -.7f, 10.f);
+    glVertex3f(-1.f, -.7f, -10.f);
+    glVertex3f(1.f, -.7f, -10.f);
+    glVertex3f(1.f, -.7f, 10.f);
+    glEnd();
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0013_fog_linear"sv);
+}
