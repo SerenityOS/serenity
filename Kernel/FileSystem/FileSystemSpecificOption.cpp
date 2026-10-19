@@ -8,70 +8,36 @@
 
 namespace Kernel {
 
-Optional<u64> parse_unsigned_filesystem_specific_option(FileSystemSpecificOptions const& filesystem_specific_options, StringView name)
+template<OneOf<u64, i64, bool> T>
+static Optional<T> parse_impl(FileSystemSpecificOptions const& filesystem_specific_options, StringView name)
 {
-    Optional<u64> maybe_value;
+    Optional<T> maybe_value;
     auto maybe_flag = filesystem_specific_options.get(name);
     if (maybe_flag.has_value()) {
         maybe_flag.value()->property_value().visit(
-            [&](unsigned value) {
+            [&](T value) {
                 maybe_value = value;
             },
-            [&](NonnullOwnPtr<KString>) {
-                VERIFY_NOT_REACHED();
-            },
-            [&](bool) {
-                VERIFY_NOT_REACHED();
-            },
-            [&](signed) {
+            [&](auto) {
                 VERIFY_NOT_REACHED();
             });
     }
     return maybe_value;
+}
+
+Optional<u64> parse_unsigned_filesystem_specific_option(FileSystemSpecificOptions const& filesystem_specific_options, StringView name)
+{
+    return parse_impl<u64>(filesystem_specific_options, name);
 }
 
 Optional<i64> parse_signed_filesystem_specific_option(FileSystemSpecificOptions const& filesystem_specific_options, StringView name)
 {
-    Optional<i64> maybe_value;
-    auto maybe_flag = filesystem_specific_options.get(name);
-    if (maybe_flag.has_value()) {
-        maybe_flag.value()->property_value().visit(
-            [&](unsigned) {
-                VERIFY_NOT_REACHED();
-            },
-            [&](NonnullOwnPtr<KString>) {
-                VERIFY_NOT_REACHED();
-            },
-            [&](bool) {
-                VERIFY_NOT_REACHED();
-            },
-            [&](signed value) {
-                maybe_value = value;
-            });
-    }
-    return maybe_value;
+    return parse_impl<i64>(filesystem_specific_options, name);
 }
 
 Optional<bool> parse_bool_filesystem_specific_option(FileSystemSpecificOptions const& filesystem_specific_options, StringView name)
 {
-    Optional<bool> maybe_value;
-    auto maybe_flag = filesystem_specific_options.get(name);
-    if (maybe_flag.has_value()) {
-        maybe_flag.value()->property_value().visit(
-            [&](unsigned) {
-                VERIFY_NOT_REACHED();
-            },
-            [&](NonnullOwnPtr<KString>) {
-                VERIFY_NOT_REACHED();
-            },
-            [&](bool value) {
-                maybe_value = value;
-            },
-            [&](signed) {
-                VERIFY_NOT_REACHED();
-            });
-    }
-    return maybe_value;
+    return parse_impl<bool>(filesystem_specific_options, name);
 }
 
 ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> FileSystemSpecificOption::create_as_unsigned(unsigned value)
