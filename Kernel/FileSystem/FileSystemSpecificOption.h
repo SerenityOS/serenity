@@ -35,13 +35,10 @@ private:
     Variant<unsigned, signed, bool> const m_value;
 };
 
-// NOTE: It's OK to use a StringView as a key because we are storing the actual string
-// in the FileSystemSpecificOption object.
 using FileSystemSpecificOptions = HashMap<NonnullOwnPtr<KString>, NonnullOwnPtr<FileSystemSpecificOption>>;
 
 Optional<u64> parse_unsigned_filesystem_specific_option(FileSystemSpecificOptions const&, StringView name);
 Optional<i64> parse_signed_filesystem_specific_option(FileSystemSpecificOptions const&, StringView name);
 Optional<bool> parse_bool_filesystem_specific_option(FileSystemSpecificOptions const&, StringView name);
-ErrorOr<OwnPtr<KString>> parse_string_filesystem_specific_option(FileSystemSpecificOptions const&, StringView name);
 
 }
