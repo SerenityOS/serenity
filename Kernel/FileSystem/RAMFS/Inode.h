@@ -72,7 +72,7 @@ private:
         static ErrorOr<NonnullOwnPtr<DataBlock>> create(RAMFS&);
         ~DataBlock();
 
-        constexpr static size_t block_size = 128 * KiB;
+        constexpr static size_t block_size = 4 * KiB;
 
         Memory::AnonymousVMObject& vmobject() { return *m_content_buffer_vmobject; }
         Memory::AnonymousVMObject const& vmobject() const { return *m_content_buffer_vmobject; }
