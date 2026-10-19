@@ -21,18 +21,18 @@ namespace Kernel {
 
 class FileSystemSpecificOption {
 public:
-    static ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> create_as_unsigned(unsigned);
-    static ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> create_as_signed(signed);
+    static ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> create_as_unsigned(u64);
+    static ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> create_as_signed(i64);
     static ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> create_as_boolean(bool);
 
-    Variant<unsigned, signed, bool> const& property_value() const { return m_value; }
+    Variant<u64, i64, bool> const& property_value() const { return m_value; }
 
 private:
-    explicit FileSystemSpecificOption(unsigned);
-    explicit FileSystemSpecificOption(signed);
+    explicit FileSystemSpecificOption(u64);
+    explicit FileSystemSpecificOption(i64);
     explicit FileSystemSpecificOption(bool);
 
-    Variant<unsigned, signed, bool> const m_value;
+    Variant<u64, i64, bool> const m_value;
 };
 
 using FileSystemSpecificOptions = HashMap<NonnullOwnPtr<KString>, NonnullOwnPtr<FileSystemSpecificOption>>;

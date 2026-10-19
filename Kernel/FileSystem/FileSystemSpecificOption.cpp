@@ -40,12 +40,12 @@ Optional<bool> parse_bool_filesystem_specific_option(FileSystemSpecificOptions c
     return parse_impl<bool>(filesystem_specific_options, name);
 }
 
-ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> FileSystemSpecificOption::create_as_unsigned(unsigned value)
+ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> FileSystemSpecificOption::create_as_unsigned(u64 value)
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) FileSystemSpecificOption(value));
 }
 
-ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> FileSystemSpecificOption::create_as_signed(signed value)
+ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> FileSystemSpecificOption::create_as_signed(i64 value)
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) FileSystemSpecificOption(value));
 }
@@ -55,12 +55,12 @@ ErrorOr<NonnullOwnPtr<FileSystemSpecificOption>> FileSystemSpecificOption::creat
     return adopt_nonnull_own_or_enomem(new (nothrow) FileSystemSpecificOption(value));
 }
 
-FileSystemSpecificOption::FileSystemSpecificOption(unsigned value)
+FileSystemSpecificOption::FileSystemSpecificOption(u64 value)
     : m_value(value)
 {
 }
 
-FileSystemSpecificOption::FileSystemSpecificOption(signed value)
+FileSystemSpecificOption::FileSystemSpecificOption(i64 value)
     : m_value(value)
 {
 }
