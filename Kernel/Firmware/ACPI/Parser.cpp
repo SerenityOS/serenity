@@ -335,19 +335,11 @@ size_t Parser::get_table_size(PhysicalAddress table_header)
     return Memory::map_typed<::ACPI::Structures::SDTHeader>(table_header).release_value_but_fixme_should_propagate_errors()->length;
 }
 
-u8 Parser::get_table_revision(PhysicalAddress table_header)
-{
-    InterruptDisabler disabler;
-    dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Revision");
-    return Memory::map_typed<::ACPI::Structures::SDTHeader>(table_header).release_value_but_fixme_should_propagate_errors()->revision;
-}
-
 UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 {
     dbgln_if(ACPI_DEBUG, "ACPI: Checking Main SDT Length to choose the correct mapping size");
     VERIFY(!m_main_system_description_table.is_null());
     auto length = get_table_size(m_main_system_description_table);
-    auto revision = get_table_revision(m_main_system_description_table);
 
     auto sdt = Memory::map_typed<::ACPI::Structures::SDTHeader>(m_main_system_description_table, length).release_value_but_fixme_should_propagate_errors();
 
@@ -356,7 +348,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
     if (m_xsdt_supported) {
         auto& xsdt = (::ACPI::Structures::XSDT const&)*sdt;
         dmesgln("ACPI: Using XSDT, enumerating tables @ {}", m_main_system_description_table);
-        dmesgln("ACPI: XSDT revision {}, total length: {}", revision, length);
+        dmesgln("ACPI: XSDT revision {}, total length: {}", sdt->revision, length);
         dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
         for (u32 i = 0; i < ((length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u64)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
@@ -365,7 +357,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
     } else {
         auto& rsdt = (::ACPI::Structures::RSDT const&)*sdt;
         dmesgln("ACPI: Using RSDT, enumerating tables @ {}", m_main_system_description_table);
-        dmesgln("ACPI: RSDT revision {}, total length: {}", revision, length);
+        dmesgln("ACPI: RSDT revision {}, total length: {}", sdt->revision, length);
         dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
         for (u32 i = 0; i < ((length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u32)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
