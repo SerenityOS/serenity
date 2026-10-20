@@ -28,10 +28,7 @@ UNMAP_AFTER_INIT ErrorOr<void> initialize()
     if (!facp.has_value())
         return ENOENT;
 
-    auto facp_table = TRY(Memory::map_typed<::ACPI::Structures::FADT>(facp.value()));
-    InterruptNumber irq_line = facp_table->sci_int;
-
-    TRY(Parser::initialize(rsdp.value(), facp.value(), irq_line));
+    TRY(Parser::initialize(rsdp.value(), facp.value()));
 
     if (kernel_command_line().acpi_feature_level() == AcpiFeatureLevel::Enabled)
         Parser::the()->enable_aml_parsing();

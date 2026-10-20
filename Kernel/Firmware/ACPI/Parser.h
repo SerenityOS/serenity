@@ -48,14 +48,11 @@ protected:
     NonnullOwnPtr<KString> m_table_name;
 };
 
-class Parser final : public IRQHandler {
+class Parser final {
 public:
     static Parser* the();
 
-    static ErrorOr<void> initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number);
-
-    virtual StringView purpose() const override { return "ACPI Parser"sv; }
-    virtual bool handle_irq() override;
+    static ErrorOr<void> initialize(PhysicalAddress rsdp, PhysicalAddress fadt);
 
     Optional<PhysicalAddress> find_table(StringView signature);
 
@@ -83,7 +80,34 @@ public:
     ~Parser() = default;
 
 private:
-    Parser(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number);
+    class InterruptHandler final : public IRQHandler {
+    public:
+        static ErrorOr<NonnullOwnPtr<InterruptHandler>> create(Parser& parser, InterruptNumber interrupt_number)
+        {
+            auto interrupt_handler = TRY(adopt_nonnull_own_or_enomem(new (nothrow) InterruptHandler(parser, interrupt_number)));
+            // TODO: interrupt_handler->enable_irq();
+            return interrupt_handler;
+        }
+
+    private:
+        InterruptHandler(Parser& parser, InterruptNumber interrupt_number)
+            : IRQHandler(interrupt_number)
+            , m_parser(parser)
+        {
+        }
+
+        virtual StringView purpose() const override { return "ACPI Parser Handler"sv; }
+        virtual bool handle_irq() override
+        {
+            return m_parser.handle_interrupt();
+        }
+
+        Parser& m_parser;
+    };
+
+    Parser(PhysicalAddress rsdp, PhysicalAddress fadt);
+
+    bool handle_interrupt();
 
     ErrorOr<void> locate_static_data();
     ErrorOr<void> locate_main_system_description_table();
@@ -94,6 +118,8 @@ private:
 
     bool validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FADT> const&);
     ErrorOr<void> access_generic_address(::ACPI::Structures::GenericAddressStructure const&, u32 value);
+
+    OwnPtr<InterruptHandler> m_interrupt_handler;
 
     PhysicalAddress m_rsdp;
     PhysicalAddress m_main_system_description_table;
