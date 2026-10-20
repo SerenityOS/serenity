@@ -115,7 +115,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ {}", m_fadt);
 
     auto sdt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
-    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)sdt->h.revision, (size_t)sdt->h.length);
+    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", static_cast<size_t>(sdt->h.revision), static_cast<size_t>(sdt->h.length));
     m_x86_specific_flags.cmos_rtc_not_present = has_flag(sdt->ia_pc_boot_arch_flags, ::ACPI::FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
     // FIXME: QEMU doesn't report that we have an i8042 controller in these flags, even if it should (when FADT revision is 3),
@@ -312,22 +312,22 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::initialize_main_system_description_table(
     dmesgln("ACPI: Main Description Table valid? {}", ::ACPI::validate_table(*sdt));
 
     if (m_xsdt_supported) {
-        auto& xsdt = (::ACPI::Structures::XSDT const&)*sdt;
+        auto const* xsdt = reinterpret_cast<::ACPI::Structures::XSDT const*>(sdt.ptr());
         dmesgln("ACPI: Using XSDT, enumerating tables @ {}", m_main_system_description_table);
         dmesgln("ACPI: XSDT revision {}, total length: {}", sdt->revision, length);
-        dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
+        dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { xsdt });
         for (u32 i = 0; i < ((length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u64)); i++) {
-            dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
-            TRY(m_sdt_pointers.try_append(PhysicalAddress(xsdt.table_ptrs[i])));
+            dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt->table_ptrs[i]);
+            TRY(m_sdt_pointers.try_append(PhysicalAddress(xsdt->table_ptrs[i])));
         }
     } else {
-        auto& rsdt = (::ACPI::Structures::RSDT const&)*sdt;
+        auto const* rsdt = reinterpret_cast<::ACPI::Structures::RSDT const*>(sdt.ptr());
         dmesgln("ACPI: Using RSDT, enumerating tables @ {}", m_main_system_description_table);
         dmesgln("ACPI: RSDT revision {}, total length: {}", sdt->revision, length);
-        dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
+        dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ {}", VirtualAddress { rsdt });
         for (u32 i = 0; i < ((length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u32)); i++) {
-            dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
-            TRY(m_sdt_pointers.try_append(PhysicalAddress(rsdt.table_ptrs[i])));
+            dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt->table_ptrs[i]);
+            TRY(m_sdt_pointers.try_append(PhysicalAddress(rsdt->table_ptrs[i])));
         }
     }
 
