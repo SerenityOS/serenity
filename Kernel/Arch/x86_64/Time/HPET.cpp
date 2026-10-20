@@ -13,6 +13,7 @@
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>
+#include <LibACPI/Definitions.h>
 
 namespace Kernel {
 
@@ -125,7 +126,7 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
     }
 
     // Note: HPET is only usable from System Memory
-    VERIFY(sdt_or_error.value()->event_timer_block.address_space == (u8)::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
+    VERIFY(sdt_or_error.value()->event_timer_block.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
 
     if (TimeManagement::is_hpet_periodic_mode_allowed()) {
         if (!check_for_exisiting_periodic_timers()) {
@@ -147,7 +148,7 @@ UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
     if (sdt_or_error.is_error())
         return false;
     auto sdt = sdt_or_error.release_value();
-    VERIFY(sdt->event_timer_block.address_space == 0);
+    VERIFY(sdt->event_timer_block.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
     auto registers_or_error = Memory::map_typed<HPETRegistersBlock>(PhysicalAddress(sdt->event_timer_block.address));
     if (registers_or_error.is_error())
         return false;
@@ -389,7 +390,7 @@ void HPET::set_comparators_to_optimal_interrupt_state(size_t)
 PhysicalAddress HPET::find_acpi_hpet_registers_block()
 {
     auto sdt = Memory::map_typed<::ACPI::Structures::HPET const volatile>(m_physical_acpi_hpet_table).release_value_but_fixme_should_propagate_errors();
-    VERIFY(sdt->event_timer_block.address_space == (u8)::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
+    VERIFY(sdt->event_timer_block.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
     return PhysicalAddress(sdt->event_timer_block.address);
 }
 

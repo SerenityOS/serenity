@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
@@ -115,38 +116,38 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
 
     auto sdt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
     dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)sdt->h.revision, (size_t)sdt->h.length);
-    m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)::ACPI::FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
+    m_x86_specific_flags.cmos_rtc_not_present = has_flag(sdt->ia_pc_boot_arch_flags, ::ACPI::FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
     // FIXME: QEMU doesn't report that we have an i8042 controller in these flags, even if it should (when FADT revision is 3),
     // Later on, we need to make sure that we enumerate the ACPI namespace (AML encoded), instead of just using this value.
-    m_x86_specific_flags.keyboard_8042 = (sdt->h.revision <= 3) || (sdt->ia_pc_boot_arch_flags & (u8)::ACPI::FADTFlags::IA_PC_Flags::PS2_8042);
+    m_x86_specific_flags.keyboard_8042 = (sdt->h.revision <= 3) || has_flag(sdt->ia_pc_boot_arch_flags, ::ACPI::FADTFlags::IA_PC_Flags::PS2_8042);
 
-    m_x86_specific_flags.legacy_devices = (sdt->ia_pc_boot_arch_flags & (u8)::ACPI::FADTFlags::IA_PC_Flags::Legacy_Devices);
-    m_x86_specific_flags.msi_not_supported = (sdt->ia_pc_boot_arch_flags & (u8)::ACPI::FADTFlags::IA_PC_Flags::MSI_Not_Supported);
-    m_x86_specific_flags.vga_not_present = (sdt->ia_pc_boot_arch_flags & (u8)::ACPI::FADTFlags::IA_PC_Flags::VGA_Not_Present);
+    m_x86_specific_flags.legacy_devices = has_flag(sdt->ia_pc_boot_arch_flags, ::ACPI::FADTFlags::IA_PC_Flags::Legacy_Devices);
+    m_x86_specific_flags.msi_not_supported = has_flag(sdt->ia_pc_boot_arch_flags, ::ACPI::FADTFlags::IA_PC_Flags::MSI_Not_Supported);
+    m_x86_specific_flags.vga_not_present = has_flag(sdt->ia_pc_boot_arch_flags, ::ACPI::FADTFlags::IA_PC_Flags::VGA_Not_Present);
 
-    m_hardware_flags.cpu_software_sleep = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::CPU_SW_SLP);
-    m_hardware_flags.docking_capability = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::DCK_CAP);
-    m_hardware_flags.fix_rtc = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::FIX_RTC);
-    m_hardware_flags.force_apic_cluster_model = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::FORCE_APIC_CLUSTER_MODEL);
-    m_hardware_flags.force_apic_physical_destination_mode = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::FORCE_APIC_PHYSICAL_DESTINATION_MODE);
-    m_hardware_flags.hardware_reduced_acpi = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::HW_REDUCED_ACPI);
-    m_hardware_flags.headless = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::HEADLESS);
-    m_hardware_flags.low_power_s0_idle_capable = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::LOW_POWER_S0_IDLE_CAPABLE);
-    m_hardware_flags.multiprocessor_c2 = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::P_LVL2_UP);
-    m_hardware_flags.pci_express_wake = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::PCI_EXP_WAK);
-    m_hardware_flags.power_button = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::PWR_BUTTON);
-    m_hardware_flags.processor_c1 = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::PROC_C1);
-    m_hardware_flags.remote_power_on_capable = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::REMOTE_POWER_ON_CAPABLE);
-    m_hardware_flags.reset_register_supported = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::RESET_REG_SUPPORTED);
-    m_hardware_flags.rtc_s4 = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::RTC_s4);
-    m_hardware_flags.s4_rtc_status_valid = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::S4_RTC_STS_VALID);
-    m_hardware_flags.sealed_case = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::SEALED_CASE);
-    m_hardware_flags.sleep_button = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::SLP_BUTTON);
-    m_hardware_flags.timer_value_extension = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::TMR_VAL_EXT);
-    m_hardware_flags.use_platform_clock = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK);
-    m_hardware_flags.wbinvd = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::WBINVD);
-    m_hardware_flags.wbinvd_flush = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::WBINVD_FLUSH);
+    m_hardware_flags.cpu_software_sleep = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::CPU_SW_SLP);
+    m_hardware_flags.docking_capability = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::DCK_CAP);
+    m_hardware_flags.fix_rtc = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::FIX_RTC);
+    m_hardware_flags.force_apic_cluster_model = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::FORCE_APIC_CLUSTER_MODEL);
+    m_hardware_flags.force_apic_physical_destination_mode = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::FORCE_APIC_PHYSICAL_DESTINATION_MODE);
+    m_hardware_flags.hardware_reduced_acpi = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::HW_REDUCED_ACPI);
+    m_hardware_flags.headless = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::HEADLESS);
+    m_hardware_flags.low_power_s0_idle_capable = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::LOW_POWER_S0_IDLE_CAPABLE);
+    m_hardware_flags.multiprocessor_c2 = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::P_LVL2_UP);
+    m_hardware_flags.pci_express_wake = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::PCI_EXP_WAK);
+    m_hardware_flags.power_button = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::PWR_BUTTON);
+    m_hardware_flags.processor_c1 = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::PROC_C1);
+    m_hardware_flags.remote_power_on_capable = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::REMOTE_POWER_ON_CAPABLE);
+    m_hardware_flags.reset_register_supported = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::RESET_REG_SUPPORTED);
+    m_hardware_flags.rtc_s4 = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::RTC_s4);
+    m_hardware_flags.s4_rtc_status_valid = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::S4_RTC_STS_VALID);
+    m_hardware_flags.sealed_case = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::SEALED_CASE);
+    m_hardware_flags.sleep_button = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::SLP_BUTTON);
+    m_hardware_flags.timer_value_extension = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::TMR_VAL_EXT);
+    m_hardware_flags.use_platform_clock = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK);
+    m_hardware_flags.wbinvd = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::WBINVD);
+    m_hardware_flags.wbinvd_flush = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::WBINVD_FLUSH);
 
     m_interrupt_handler = TRY(InterruptHandler::create(*this, sdt->sci_int));
 
@@ -188,22 +189,22 @@ ErrorOr<void> Parser::access_generic_address(::ACPI::Structures::GenericAddressS
         IOAddress address(structure.address);
         dbgln("ACPI: Sending value {:x} to {}", value, address);
         switch (structure.access_size) {
-        case (u8)::ACPI::GenericAddressStructure::AccessSize::QWord: {
+        case ::ACPI::GenericAddressStructure::AccessSize::QWord: {
             dbgln("Trying to send QWord to IO port");
             return EINVAL;
         }
-        case (u8)::ACPI::GenericAddressStructure::AccessSize::Undefined: {
-            dbgln("ACPI Warning: Unknown access size {}", structure.access_size);
-            if (structure.bit_width == (u8)::ACPI::GenericAddressStructure::BitWidth::QWord || structure.bit_width == (u8)::ACPI::GenericAddressStructure::BitWidth::Undefined) {
+        case ::ACPI::GenericAddressStructure::AccessSize::Undefined: {
+            dbgln("ACPI Warning: Unknown access size {}", to_underlying(structure.access_size));
+            if (structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::QWord || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::Undefined) {
                 return EINVAL;
             }
 
-            dbgln("ACPI: Bit Width - {} bits", structure.bit_width);
-            address.out(value, structure.bit_width);
+            dbgln("ACPI: Bit Width - {} bits", to_underlying(structure.bit_width));
+            address.out(value, to_underlying(structure.bit_width));
             break;
         }
         default:
-            address.out(value, (8 << (structure.access_size - 1)));
+            address.out(value, (8 << (to_underlying(structure.access_size) - 1)));
             break;
         }
 #endif
@@ -237,13 +238,13 @@ ErrorOr<void> Parser::access_generic_address(::ACPI::Structures::GenericAddressS
         dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
 
         u32 offset_in_pci_address = structure.address & 0xFFFF;
-        if (structure.access_size == (u8)::ACPI::GenericAddressStructure::AccessSize::QWord || structure.access_size == (u8)::ACPI::GenericAddressStructure::AccessSize::Undefined) {
+        if (structure.access_size == ::ACPI::GenericAddressStructure::AccessSize::QWord || structure.access_size == ::ACPI::GenericAddressStructure::AccessSize::Undefined) {
             dbgln("Trying to send QWord or Undefined to PCI configuration space");
             return EINVAL;
         }
 
         auto& pci_device_identifier = PCI::get_device_identifier(pci_address);
-        PCI::raw_access(pci_device_identifier, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
+        PCI::raw_access(pci_device_identifier, offset_in_pci_address, (1 << (to_underlying(structure.access_size) - 1)), value);
         return {};
     }
     default:
@@ -258,7 +259,7 @@ bool Parser::validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FA
 {
     // According to https://uefi.org/specs/ACPI/6.5/04_ACPI_Hardware_Specification.html#reset-register,
     // the reset register can only be located in I/O bus, PCI bus or memory-mapped.
-    return (fadt->reset_reg.address_space == (u8)::ACPI::GenericAddressStructure::AddressSpace::PCIConfigurationSpace || fadt->reset_reg.address_space == (u8)::ACPI::GenericAddressStructure::AddressSpace::SystemMemory || fadt->reset_reg.address_space == (u8)::ACPI::GenericAddressStructure::AddressSpace::SystemIO);
+    return (fadt->reset_reg.address_space == ::ACPI::GenericAddressStructure::AddressSpace::PCIConfigurationSpace || fadt->reset_reg.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory || fadt->reset_reg.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemIO);
 }
 
 void Parser::try_acpi_reboot()

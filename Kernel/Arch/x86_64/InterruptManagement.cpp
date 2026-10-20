@@ -191,12 +191,12 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
     auto* madt_entry = madt->entries;
     while (entries_length > 0) {
         size_t entry_length = madt_entry->length;
-        if (madt_entry->type == (u8)::ACPI::Structures::MADTEntryType::IOAPIC) {
+        if (madt_entry->type == ::ACPI::Structures::MADTEntryType::IOAPIC) {
             auto* ioapic_entry = (::ACPI::Structures::MADTEntries::IOAPIC const*)madt_entry;
             dbgln("IOAPIC found @ MADT entry {}, MMIO Registers @ {}", entry_index, PhysicalAddress(ioapic_entry->ioapic_address));
             m_interrupt_controllers.try_append(adopt_lock_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base))).release_value_but_fixme_should_propagate_errors();
         }
-        if (madt_entry->type == (u8)::ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
+        if (madt_entry->type == ::ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
             auto* interrupt_override_entry = (::ACPI::Structures::MADTEntries::InterruptSourceOverride const*)madt_entry;
             u32 global_system_interrupt = 0;
             ByteReader::load<u32>(reinterpret_cast<u8 const*>(&interrupt_override_entry->global_system_interrupt), global_system_interrupt);

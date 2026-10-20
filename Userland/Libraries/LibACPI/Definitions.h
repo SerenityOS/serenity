@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
@@ -39,8 +40,10 @@ enum class FeatureFlags : u32 {
     LOW_POWER_S0_IDLE_CAPABLE = 1 << 21
 };
 
+AK_ENUM_BITWISE_OPERATORS(FeatureFlags);
+
 // https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#fixed-acpi-description-table-boot-ia-pc-boot-architecture-flags
-enum class IA_PC_Flags : u8 {
+enum class IA_PC_Flags : u16 {
     Legacy_Devices = 1 << 0,
     PS2_8042 = 1 << 1,
     VGA_Not_Present = 1 << 2,
@@ -48,6 +51,8 @@ enum class IA_PC_Flags : u8 {
     PCIe_ASPM_Controls = 1 << 4,
     CMOS_RTC_Not_Present = 1 << 5
 };
+
+AK_ENUM_BITWISE_OPERATORS(IA_PC_Flags);
 
 struct [[gnu::packed]] HardwareFeatures {
     bool wbinvd : 1;
@@ -84,7 +89,7 @@ struct [[gnu::packed]] x86_Specific_Flags {
 
 namespace GenericAddressStructure {
 
-enum class AddressSpace {
+enum class AddressSpace : u8 {
     SystemMemory = 0,
     SystemIO = 1,
     PCIConfigurationSpace = 2,
@@ -94,7 +99,7 @@ enum class AddressSpace {
     FunctionalFixedHardware = 0x7F
 };
 
-enum class AccessSize {
+enum class AccessSize : u8 {
     Undefined = 0,
     Byte = 1,
     Word = 2,
@@ -102,7 +107,7 @@ enum class AccessSize {
     QWord = 4
 };
 
-enum class BitWidth {
+enum class BitWidth : u8 {
     Undefined = 0,
     Byte = 8,
     Word = 16,
@@ -156,10 +161,10 @@ struct [[gnu::packed]] XSDT {
 };
 
 struct [[gnu::packed]] GenericAddressStructure {
-    u8 address_space;
-    u8 bit_width;
+    ::ACPI::GenericAddressStructure::AddressSpace address_space;
+    ::ACPI::GenericAddressStructure::BitWidth bit_width;
     u8 bit_offset;
-    u8 access_size;
+    ::ACPI::GenericAddressStructure::AccessSize access_size;
     u64 address;
 };
 
@@ -212,9 +217,9 @@ struct [[gnu::packed]] FADT {
     u8 day_alrm;
     u8 mon_alrm;
     u8 century;
-    u16 ia_pc_boot_arch_flags;
+    FADTFlags::IA_PC_Flags ia_pc_boot_arch_flags;
     u8 reserved2;
-    u32 flags;
+    FADTFlags::FeatureFlags flags;
     GenericAddressStructure reset_reg;
     u8 reset_value;
     u16 arm_boot_arch;
@@ -235,7 +240,7 @@ struct [[gnu::packed]] FADT {
 };
 
 // https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#interrupt-controller-structure-types
-enum class MADTEntryType {
+enum class MADTEntryType : u8 {
     LocalAPIC = 0x0,
     IOAPIC = 0x1,
     InterruptSourceOverride = 0x2,
@@ -255,7 +260,7 @@ enum class MADTEntryType {
 };
 
 struct [[gnu::packed]] MADTEntryHeader {
-    u8 type;
+    MADTEntryType type;
     u8 length;
 };
 
