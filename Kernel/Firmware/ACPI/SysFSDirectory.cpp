@@ -8,6 +8,7 @@
 
 #include "SysFSDirectory.h"
 #include "Parser.h"
+#include "SysFSComponent.h"
 
 namespace Kernel::ACPI {
 

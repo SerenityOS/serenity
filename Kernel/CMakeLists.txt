@@ -240,6 +240,7 @@ set(KERNEL_SOURCES
     FileSystem/VirtualFileSystem.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
+    Firmware/ACPI/SysFSComponent.cpp
     Firmware/ACPI/SysFSDirectory.cpp
     Firmware/DeviceTree/Device.cpp
     Firmware/DeviceTree/DeviceTree.cpp
