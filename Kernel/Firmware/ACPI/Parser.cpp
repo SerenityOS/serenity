@@ -8,6 +8,7 @@
 
 #include <AK/Format.h>
 #include <AK/Platform.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
@@ -21,6 +22,7 @@
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
+#include <LibACPI/Definitions.h>
 #include <LibACPI/Table.h>
 
 namespace Kernel::ACPI {
@@ -32,11 +34,24 @@ Parser* Parser::the()
     return s_acpi_parser;
 }
 
-void Parser::must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number)
+ErrorOr<void> Parser::initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number)
 {
     VERIFY(!s_acpi_parser);
+
+    ArmedScopeGuard guard = [] {
+        // Make sure ACPI::is_enabled returns false.
+        delete s_acpi_parser;
+        s_acpi_parser = nullptr;
+    };
+
     s_acpi_parser = new (nothrow) Parser(rsdp, fadt, irq_number);
-    VERIFY(s_acpi_parser);
+    if (!s_acpi_parser)
+        return ENOMEM;
+
+    TRY(s_acpi_parser->locate_static_data());
+
+    guard.disarm();
+    return {};
 }
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(StringView name, PhysicalAddress paddr, size_t table_size)
@@ -121,12 +136,14 @@ void Parser::enumerate_static_tables(Function<void(StringView, PhysicalAddress, 
     }
 }
 
-UNMAP_AFTER_INIT void Parser::locate_static_data()
+UNMAP_AFTER_INIT ErrorOr<void> Parser::locate_static_data()
 {
-    locate_main_system_description_table();
-    initialize_main_system_description_table();
-    process_fadt_data();
-    process_dsdt();
+    TRY(locate_main_system_description_table());
+    TRY(initialize_main_system_description_table());
+    TRY(process_fadt_data());
+    TRY(process_dsdt());
+
+    return {};
 }
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(StringView signature)
@@ -158,14 +175,14 @@ UNMAP_AFTER_INIT void Parser::enable_aml_parsing()
     m_can_process_bytecode = true;
 }
 
-UNMAP_AFTER_INIT void Parser::process_fadt_data()
+UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");
 
     VERIFY(!m_fadt.is_null());
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ {}", m_fadt);
 
-    auto sdt = Memory::map_typed<::ACPI::Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+    auto sdt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
     dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)sdt->h.revision, (size_t)sdt->h.length);
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)::ACPI::FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
@@ -199,21 +216,25 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
     m_hardware_flags.use_platform_clock = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK);
     m_hardware_flags.wbinvd = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::WBINVD);
     m_hardware_flags.wbinvd_flush = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::WBINVD_FLUSH);
+
+    return {};
 }
 
-UNMAP_AFTER_INIT void Parser::process_dsdt()
+UNMAP_AFTER_INIT ErrorOr<void> Parser::process_dsdt()
 {
-    auto sdt = Memory::map_typed<::ACPI::Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+    auto sdt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
 
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
-    m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)).release_value_but_fixme_should_propagate_errors();
+    TRY(m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)));
 
     auto dsdt_or_error = Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
     if (dsdt_or_error.is_error()) {
         dmesgln("ACPI: DSDT is unmappable");
-        return;
+        return {};
     }
     dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt_or_error.value()->h.length);
+
+    return {};
 }
 
 bool Parser::can_reboot()
@@ -226,7 +247,7 @@ bool Parser::can_reboot()
     return m_hardware_flags.reset_register_supported;
 }
 
-void Parser::access_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u32 value)
+ErrorOr<void> Parser::access_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u32 value)
 {
     switch ((::ACPI::GenericAddressStructure::AddressSpace)structure.address_space) {
     case ::ACPI::GenericAddressStructure::AddressSpace::SystemIO: {
@@ -236,13 +257,14 @@ void Parser::access_generic_address(::ACPI::Structures::GenericAddressStructure 
         switch (structure.access_size) {
         case (u8)::ACPI::GenericAddressStructure::AccessSize::QWord: {
             dbgln("Trying to send QWord to IO port");
-            VERIFY_NOT_REACHED();
-            break;
+            return EINVAL;
         }
         case (u8)::ACPI::GenericAddressStructure::AccessSize::Undefined: {
             dbgln("ACPI Warning: Unknown access size {}", structure.access_size);
-            VERIFY(structure.bit_width != (u8)::ACPI::GenericAddressStructure::BitWidth::QWord);
-            VERIFY(structure.bit_width != (u8)::ACPI::GenericAddressStructure::BitWidth::Undefined);
+            if (structure.bit_width == (u8)::ACPI::GenericAddressStructure::BitWidth::QWord || structure.bit_width == (u8)::ACPI::GenericAddressStructure::BitWidth::Undefined) {
+                return EINVAL;
+            }
+
             dbgln("ACPI: Bit Width - {} bits", structure.bit_width);
             address.out(value, structure.bit_width);
             break;
@@ -252,47 +274,50 @@ void Parser::access_generic_address(::ACPI::Structures::GenericAddressStructure 
             break;
         }
 #endif
-        return;
+        return {};
     }
     case ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory: {
         dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
         switch ((::ACPI::GenericAddressStructure::AccessSize)structure.access_size) {
         case ::ACPI::GenericAddressStructure::AccessSize::Byte:
-            *Memory::map_typed<u8>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *TRY(Memory::map_typed<u8>(PhysicalAddress(structure.address))) = value;
             break;
         case ::ACPI::GenericAddressStructure::AccessSize::Word:
-            *Memory::map_typed<u16>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *TRY(Memory::map_typed<u16>(PhysicalAddress(structure.address))) = value;
             break;
         case ::ACPI::GenericAddressStructure::AccessSize::DWord:
-            *Memory::map_typed<u32>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *TRY(Memory::map_typed<u32>(PhysicalAddress(structure.address))) = value;
             break;
         case ::ACPI::GenericAddressStructure::AccessSize::QWord: {
-            *Memory::map_typed<u64>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *TRY(Memory::map_typed<u64>(PhysicalAddress(structure.address))) = value;
             break;
         }
         default:
             VERIFY_NOT_REACHED();
         }
-        return;
+        return {};
     }
     case ::ACPI::GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
         // According to https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#address-space-format,
         // PCI addresses must be confined to devices on Segment group 0, bus 0.
         auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
         dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
+
         u32 offset_in_pci_address = structure.address & 0xFFFF;
-        if (structure.access_size == (u8)::ACPI::GenericAddressStructure::AccessSize::QWord) {
-            dbgln("Trying to send QWord to PCI configuration space");
-            VERIFY_NOT_REACHED();
+        if (structure.access_size == (u8)::ACPI::GenericAddressStructure::AccessSize::QWord || structure.access_size == (u8)::ACPI::GenericAddressStructure::AccessSize::Undefined) {
+            dbgln("Trying to send QWord or Undefined to PCI configuration space");
+            return EINVAL;
         }
-        VERIFY(structure.access_size != (u8)::ACPI::GenericAddressStructure::AccessSize::Undefined);
+
         auto& pci_device_identifier = PCI::get_device_identifier(pci_address);
         PCI::raw_access(pci_device_identifier, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
-        return;
+        return {};
     }
     default:
-        VERIFY_NOT_REACHED();
+        dbgln("ACPI: Tried to access an unsupported address space");
+        return EINVAL;
     }
+
     VERIFY_NOT_REACHED();
 }
 
@@ -318,8 +343,13 @@ void Parser::try_acpi_reboot()
         return;
     }
     auto fadt = fadt_or_error.release_value();
+
     VERIFY(validate_reset_register(fadt));
-    access_generic_address(fadt->reset_reg, fadt->reset_value);
+    if (auto maybe_error = access_generic_address(fadt->reset_reg, fadt->reset_value); maybe_error.is_error()) {
+        dmesgln("ACPI: Failed to write FADT reset register: {}", maybe_error.release_error());
+        return;
+    }
+
     Processor::halt();
 }
 
@@ -328,20 +358,22 @@ void Parser::try_acpi_shutdown()
     dmesgln("ACPI: Shutdown is not supported with the current configuration, aborting!");
 }
 
-size_t Parser::get_table_size(PhysicalAddress table_header)
+ErrorOr<size_t> Parser::get_table_size(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
     dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Length");
-    return Memory::map_typed<::ACPI::Structures::SDTHeader>(table_header).release_value_but_fixme_should_propagate_errors()->length;
+    auto mapped = TRY(Memory::map_typed<::ACPI::Structures::SDTHeader>(table_header));
+    auto length = mapped->length;
+    return length;
 }
 
-UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
+UNMAP_AFTER_INIT ErrorOr<void> Parser::initialize_main_system_description_table()
 {
     dbgln_if(ACPI_DEBUG, "ACPI: Checking Main SDT Length to choose the correct mapping size");
     VERIFY(!m_main_system_description_table.is_null());
-    auto length = get_table_size(m_main_system_description_table);
+    auto length = TRY(get_table_size(m_main_system_description_table));
 
-    auto sdt = Memory::map_typed<::ACPI::Structures::SDTHeader>(m_main_system_description_table, length).release_value_but_fixme_should_propagate_errors();
+    auto sdt = TRY(Memory::map_typed<::ACPI::Structures::SDTHeader>(m_main_system_description_table, length));
 
     dmesgln("ACPI: Main Description Table valid? {}", ::ACPI::validate_table(*sdt));
 
@@ -352,7 +384,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
         dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
         for (u32 i = 0; i < ((length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u64)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
-            m_sdt_pointers.try_append(PhysicalAddress(xsdt.table_ptrs[i])).release_value_but_fixme_should_propagate_errors();
+            TRY(m_sdt_pointers.try_append(PhysicalAddress(xsdt.table_ptrs[i])));
         }
     } else {
         auto& rsdt = (::ACPI::Structures::RSDT const&)*sdt;
@@ -361,14 +393,16 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
         dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
         for (u32 i = 0; i < ((length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u32)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
-            m_sdt_pointers.try_append(PhysicalAddress(rsdt.table_ptrs[i])).release_value_but_fixme_should_propagate_errors();
+            TRY(m_sdt_pointers.try_append(PhysicalAddress(rsdt.table_ptrs[i])));
         }
     }
+
+    return {};
 }
 
-UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
+UNMAP_AFTER_INIT ErrorOr<void> Parser::locate_main_system_description_table()
 {
-    auto rsdp = Memory::map_typed<::ACPI::Structures::RSDPDescriptor20>(m_rsdp).release_value_but_fixme_should_propagate_errors();
+    auto rsdp = TRY(Memory::map_typed<::ACPI::Structures::RSDPDescriptor20>(m_rsdp));
     if (rsdp->base.revision == 0) {
         m_xsdt_supported = false;
     } else if (rsdp->base.revision >= 2) {
@@ -383,6 +417,8 @@ UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
     } else {
         m_main_system_description_table = PhysicalAddress(rsdp->xsdt_ptr);
     }
+
+    return {};
 }
 
 UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number)
@@ -391,7 +427,6 @@ UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, Inte
     , m_fadt(fadt)
 {
     dmesgln("ACPI: Using RSDP @ {}", rsdp);
-    locate_static_data();
 }
 
 }

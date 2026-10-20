@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <AK/Error.h>
+
 namespace Kernel::ACPI {
 
 bool is_enabled();
-void initialize();
+ErrorOr<void> initialize();
 
 }

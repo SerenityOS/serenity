@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <AK/Platform.h>
 #include <AK/SetOnce.h>
 #include <AK/Types.h>
@@ -238,7 +239,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
     MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Early));
 #endif
 
-    ACPI::initialize();
+    if (auto maybe_error = ACPI::initialize(); maybe_error.is_error())
+        dmesgln("Error while initializing ACPI: {}", maybe_error.release_error());
 
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);
