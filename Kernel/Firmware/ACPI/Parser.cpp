@@ -21,6 +21,7 @@
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
+#include <LibACPI/Table.h>
 
 namespace Kernel::ACPI {
 
@@ -119,8 +120,6 @@ void Parser::enumerate_static_tables(Function<void(StringView, PhysicalAddress, 
         callback({ table->sig, 4 }, p_table, table->length);
     }
 }
-
-static bool validate_table(::ACPI::Structures::SDTHeader const&, size_t length);
 
 UNMAP_AFTER_INIT void Parser::locate_static_data()
 {
@@ -352,7 +351,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 
     auto sdt = Memory::map_typed<::ACPI::Structures::SDTHeader>(m_main_system_description_table, length).release_value_but_fixme_should_propagate_errors();
 
-    dmesgln("ACPI: Main Description Table valid? {}", validate_table(*sdt, length));
+    dmesgln("ACPI: Main Description Table valid? {}", ::ACPI::validate_table(*sdt));
 
     if (m_xsdt_supported) {
         auto& xsdt = (::ACPI::Structures::XSDT const&)*sdt;
@@ -401,17 +400,6 @@ UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, Inte
 {
     dmesgln("ACPI: Using RSDP @ {}", rsdp);
     locate_static_data();
-}
-
-static bool validate_table(::ACPI::Structures::SDTHeader const& v_header, size_t length)
-{
-    u8 checksum = 0;
-    auto* sdt = (u8 const*)&v_header;
-    for (size_t i = 0; i < length; i++)
-        checksum += sdt[i];
-    if (checksum == 0)
-        return true;
-    return false;
 }
 
 }
