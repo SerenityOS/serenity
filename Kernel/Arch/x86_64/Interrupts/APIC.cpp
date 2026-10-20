@@ -15,7 +15,6 @@
 #include <Kernel/Arch/x86_64/Time/APICTimer.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/ACPI/StaticParsing.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -286,18 +285,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
         m_apic_base = region_or_error.release_value();
     }
 
-    auto possible_rsdp_physical_address = ACPI::StaticParsing::find_rsdp();
-    if (!possible_rsdp_physical_address.has_value()) {
-        dbgln("APIC: RSDP not found");
-        return false;
-    }
-
-    auto possible_apic_physical_address_or_error = ACPI::StaticParsing::find_table(possible_rsdp_physical_address.value(), "APIC"sv);
-    if (possible_apic_physical_address_or_error.is_error()) {
-        dbgln("APIC: Failed to map RSDT/XSDT");
-        return false;
-    }
-    auto possible_apic_physical_address = possible_apic_physical_address_or_error.release_value();
+    auto possible_apic_physical_address = ACPI::Parser::the()->find_table("APIC"sv);
     if (!possible_apic_physical_address.has_value()) {
         dbgln("APIC: MADT table not found");
         return false;
