@@ -34,7 +34,7 @@ Parser* Parser::the()
     return s_acpi_parser;
 }
 
-ErrorOr<void> Parser::initialize(PhysicalAddress rsdp, PhysicalAddress fadt)
+ErrorOr<void> Parser::initialize(PhysicalAddress rsdp)
 {
     VERIFY(!s_acpi_parser);
 
@@ -44,7 +44,7 @@ ErrorOr<void> Parser::initialize(PhysicalAddress rsdp, PhysicalAddress fadt)
         s_acpi_parser = nullptr;
     };
 
-    s_acpi_parser = new (nothrow) Parser(rsdp, fadt);
+    s_acpi_parser = new (nothrow) Parser(rsdp);
     if (!s_acpi_parser)
         return ENOMEM;
 
@@ -179,7 +179,13 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");
 
-    VERIFY(!m_fadt.is_null());
+    auto maybe_fadt = find_table("FACP"sv);
+    if (!maybe_fadt.has_value() || maybe_fadt->is_null()) {
+        dbgln("ACPI: Failed to find the FADT table");
+        return ENOENT;
+    }
+    m_fadt = maybe_fadt.release_value();
+
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ {}", m_fadt);
 
     auto sdt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
@@ -423,9 +429,8 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::locate_main_system_description_table()
     return {};
 }
 
-UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt)
+UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp)
     : m_rsdp(rsdp)
-    , m_fadt(fadt)
 {
     dmesgln("ACPI: Using RSDP @ {}", rsdp);
 }
