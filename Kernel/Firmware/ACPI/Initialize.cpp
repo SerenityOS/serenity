@@ -14,7 +14,7 @@
 
 namespace Kernel::ACPI {
 
-UNMAP_AFTER_INIT ErrorOr<void> initialize()
+UNMAP_AFTER_INIT ErrorOr<void> early_initialize()
 {
     auto feature_level = kernel_command_line().acpi_feature_level();
     if (feature_level == AcpiFeatureLevel::Disabled)

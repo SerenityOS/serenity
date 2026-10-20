@@ -11,6 +11,6 @@
 namespace Kernel::ACPI {
 
 bool is_enabled();
-ErrorOr<void> initialize();
+ErrorOr<void> early_initialize();
 
 }

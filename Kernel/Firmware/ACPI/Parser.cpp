@@ -48,7 +48,8 @@ ErrorOr<void> Parser::initialize(PhysicalAddress rsdp)
     if (!s_acpi_parser)
         return ENOMEM;
 
-    TRY(s_acpi_parser->locate_static_data());
+    TRY(s_acpi_parser->locate_main_system_description_table());
+    TRY(s_acpi_parser->initialize_main_system_description_table());
 
     guard.disarm();
     return {};
@@ -136,10 +137,8 @@ void Parser::enumerate_static_tables(Function<void(StringView, PhysicalAddress, 
     }
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> Parser::locate_static_data()
+UNMAP_AFTER_INIT ErrorOr<void> Parser::full_initialize()
 {
-    TRY(locate_main_system_description_table());
-    TRY(initialize_main_system_description_table());
     TRY(process_fadt_data());
     TRY(process_dsdt());
 

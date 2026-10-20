@@ -55,6 +55,7 @@ public:
     static ErrorOr<void> initialize(PhysicalAddress rsdp);
 
     Optional<PhysicalAddress> find_table(StringView signature);
+    ErrorOr<void> full_initialize();
 
     void try_acpi_reboot();
     bool can_reboot();
@@ -109,7 +110,6 @@ private:
 
     bool handle_interrupt();
 
-    ErrorOr<void> locate_static_data();
     ErrorOr<void> locate_main_system_description_table();
     ErrorOr<void> initialize_main_system_description_table();
     ErrorOr<size_t> get_table_size(PhysicalAddress);
