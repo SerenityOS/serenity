@@ -14,8 +14,4 @@
 namespace Kernel::ACPI::StaticParsing {
 
 Optional<PhysicalAddress> find_rsdp();
-ErrorOr<Optional<PhysicalAddress>> find_table(PhysicalAddress rsdp, StringView signature);
-ErrorOr<Optional<PhysicalAddress>> search_table_in_xsdt(PhysicalAddress xsdt, StringView signature);
-ErrorOr<Optional<PhysicalAddress>> search_table_in_rsdt(PhysicalAddress rsdt, StringView signature);
-
 }
