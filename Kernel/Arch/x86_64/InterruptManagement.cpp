@@ -13,7 +13,7 @@
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/PICSpuriousInterruptHandler.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Firmware/ACPI/StaticParsing.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -118,13 +118,7 @@ NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_contro
 UNMAP_AFTER_INIT ErrorOr<Optional<PhysicalAddress>> InterruptManagement::find_madt_physical_address()
 {
     dbgln("Early access to ACPI tables for interrupt setup");
-    auto possible_rsdp_physical_address = ACPI::StaticParsing::find_rsdp();
-    if (!possible_rsdp_physical_address.has_value())
-        return Optional<PhysicalAddress> {};
-    auto possible_apic_physical_address = TRY(ACPI::StaticParsing::find_table(possible_rsdp_physical_address.value(), "APIC"sv));
-    if (!possible_apic_physical_address.has_value())
-        return Optional<PhysicalAddress> {};
-    return possible_apic_physical_address.value();
+    return ACPI::Parser::the()->find_table("APIC"sv);
 }
 
 UNMAP_AFTER_INIT InterruptManagement::InterruptManagement()
