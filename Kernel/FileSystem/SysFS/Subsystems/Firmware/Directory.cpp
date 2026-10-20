@@ -7,7 +7,8 @@
 #include <AK/Platform.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
-#include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/ACPI/Initialize.h>
+#include <Kernel/Firmware/ACPI/SysFSDirectory.h>
 #include <Kernel/Firmware/SMBIOS/SysFSDirectory.h>
 #include <Kernel/Sections.h>
 
