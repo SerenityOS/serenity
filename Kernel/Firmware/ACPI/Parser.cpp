@@ -34,7 +34,7 @@ Parser* Parser::the()
     return s_acpi_parser;
 }
 
-ErrorOr<void> Parser::initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number)
+ErrorOr<void> Parser::initialize(PhysicalAddress rsdp, PhysicalAddress fadt)
 {
     VERIFY(!s_acpi_parser);
 
@@ -44,7 +44,7 @@ ErrorOr<void> Parser::initialize(PhysicalAddress rsdp, PhysicalAddress fadt, Int
         s_acpi_parser = nullptr;
     };
 
-    s_acpi_parser = new (nothrow) Parser(rsdp, fadt, irq_number);
+    s_acpi_parser = new (nothrow) Parser(rsdp, fadt);
     if (!s_acpi_parser)
         return ENOMEM;
 
@@ -164,7 +164,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(StringView signatu
     return {};
 }
 
-bool Parser::handle_irq()
+bool Parser::handle_interrupt()
 {
     TODO();
 }
@@ -216,6 +216,8 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
     m_hardware_flags.use_platform_clock = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK);
     m_hardware_flags.wbinvd = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::WBINVD);
     m_hardware_flags.wbinvd_flush = (sdt->flags & (u32)::ACPI::FADTFlags::FeatureFlags::WBINVD_FLUSH);
+
+    m_interrupt_handler = TRY(InterruptHandler::create(*this, sdt->sci_int));
 
     return {};
 }
@@ -421,9 +423,8 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::locate_main_system_description_table()
     return {};
 }
 
-UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number)
-    : IRQHandler(irq_number)
-    , m_rsdp(rsdp)
+UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt)
+    : m_rsdp(rsdp)
     , m_fadt(fadt)
 {
     dmesgln("ACPI: Using RSDP @ {}", rsdp);
