@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT void initialize()
     auto facp = MUST(StaticParsing::find_table(rsdp.value(), "FACP"sv));
     if (!facp.has_value())
         return;
-    auto facp_table_or_error = Memory::map_typed<Structures::FADT>(facp.value());
+    auto facp_table_or_error = Memory::map_typed<::ACPI::Structures::FADT>(facp.value());
     if (facp_table_or_error.is_error())
         return;
     InterruptNumber irq_line = facp_table_or_error.value()->sci_int;

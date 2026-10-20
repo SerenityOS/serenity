@@ -6,20 +6,20 @@
 
 #include <Kernel/Arch/x86_64/Firmware/ACPI.h>
 #include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
-#include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Memory/MemoryManager.h>
+#include <LibACPI/Definitions.h>
 
 namespace Kernel::ACPI::StaticParsing {
 
 static bool is_rsdp_valid(ReadonlyBytes rsdp)
 {
-    if (rsdp.size() < sizeof(Structures::RSDPDescriptor))
+    if (rsdp.size() < sizeof(::ACPI::Structures::RSDPDescriptor))
         return false;
 
-    u8 revision = reinterpret_cast<Structures::RSDPDescriptor const*>(rsdp.data())->revision;
+    u8 revision = reinterpret_cast<::ACPI::Structures::RSDPDescriptor const*>(rsdp.data())->revision;
 
     u8 checksum = 0;
-    for (size_t i = 0; i < sizeof(Structures::RSDPDescriptor); ++i)
+    for (size_t i = 0; i < sizeof(::ACPI::Structures::RSDPDescriptor); ++i)
         checksum += rsdp[i];
 
     if (checksum != 0)
@@ -29,11 +29,11 @@ static bool is_rsdp_valid(ReadonlyBytes rsdp)
         // Checksum matched and there's nothing more to check.
         return true;
 
-    if (rsdp.size() < sizeof(Structures::RSDPDescriptor20))
+    if (rsdp.size() < sizeof(::ACPI::Structures::RSDPDescriptor20))
         return false;
 
     checksum = 0;
-    for (size_t i = 0; i < sizeof(Structures::RSDPDescriptor20); ++i)
+    for (size_t i = 0; i < sizeof(::ACPI::Structures::RSDPDescriptor20); ++i)
         checksum += rsdp[i];
     return checksum == 0;
 }

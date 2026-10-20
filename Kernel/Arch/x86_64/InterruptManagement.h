@@ -12,7 +12,6 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86_64/IRQController.h>
 #include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
-#include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
 

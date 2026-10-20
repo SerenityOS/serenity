@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
-#include <Kernel/Memory/PhysicalAddress.h>
 
-namespace Kernel::ACPI {
+namespace ACPI {
 
 namespace FADTFlags {
 
@@ -83,6 +83,7 @@ struct [[gnu::packed]] x86_Specific_Flags {
 };
 
 namespace GenericAddressStructure {
+
 enum class AddressSpace {
     SystemMemory = 0,
     SystemIO = 1,
@@ -92,6 +93,7 @@ enum class AddressSpace {
     PCC = 0xA,
     FunctionalFixedHardware = 0x7F
 };
+
 enum class AccessSize {
     Undefined = 0,
     Byte = 1,
@@ -99,6 +101,7 @@ enum class AccessSize {
     DWord = 3,
     QWord = 4
 };
+
 enum class BitWidth {
     Undefined = 0,
     Byte = 8,
@@ -325,6 +328,7 @@ struct [[gnu::packed]] DSDT {
     SDTHeader h;
     unsigned char definition_block[];
 };
+
 }
 
 }

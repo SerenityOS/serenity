@@ -10,7 +10,6 @@
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
-#include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
@@ -18,6 +17,7 @@
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Memory/VirtualAddress.h>
+#include <LibACPI/Definitions.h>
 
 namespace Kernel::ACPI {
 
@@ -77,8 +77,8 @@ public:
         return m_x86_specific_flags.keyboard_8042;
     }
 
-    FADTFlags::HardwareFeatures const& hardware_features() const { return m_hardware_flags; }
-    FADTFlags::x86_Specific_Flags const& x86_specific_flags() const { return m_x86_specific_flags; }
+    ::ACPI::FADTFlags::HardwareFeatures const& hardware_features() const { return m_hardware_flags; }
+    ::ACPI::FADTFlags::x86_Specific_Flags const& x86_specific_flags() const { return m_x86_specific_flags; }
 
     ~Parser() = default;
 
@@ -93,8 +93,8 @@ private:
     void process_fadt_data();
     void process_dsdt();
 
-    bool validate_reset_register(Memory::TypedMapping<Structures::FADT> const&);
-    void access_generic_address(Structures::GenericAddressStructure const&, u32 value);
+    bool validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FADT> const&);
+    void access_generic_address(::ACPI::Structures::GenericAddressStructure const&, u32 value);
 
     PhysicalAddress m_rsdp;
     PhysicalAddress m_main_system_description_table;
@@ -104,8 +104,8 @@ private:
 
     bool m_xsdt_supported { false };
     bool m_can_process_bytecode { false };
-    FADTFlags::HardwareFeatures m_hardware_flags;
-    FADTFlags::x86_Specific_Flags m_x86_specific_flags;
+    ::ACPI::FADTFlags::HardwareFeatures m_hardware_flags;
+    ::ACPI::FADTFlags::x86_Specific_Flags m_x86_specific_flags;
 };
 
 }

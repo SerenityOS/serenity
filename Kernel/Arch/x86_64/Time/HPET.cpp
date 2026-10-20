@@ -118,14 +118,14 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
         return false;
     dmesgln("HPET @ {}", hpet_table.value());
 
-    auto sdt_or_error = Memory::map_typed<ACPI::Structures::HPET>(hpet_table.value());
+    auto sdt_or_error = Memory::map_typed<::ACPI::Structures::HPET>(hpet_table.value());
     if (sdt_or_error.is_error()) {
         dbgln("Failed mapping HPET table");
         return false;
     }
 
     // Note: HPET is only usable from System Memory
-    VERIFY(sdt_or_error.value()->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
+    VERIFY(sdt_or_error.value()->event_timer_block.address_space == (u8)::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
 
     if (TimeManagement::is_hpet_periodic_mode_allowed()) {
         if (!check_for_exisiting_periodic_timers()) {
@@ -143,7 +143,7 @@ UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
     if (!hpet_table.has_value())
         return false;
 
-    auto sdt_or_error = Memory::map_typed<ACPI::Structures::HPET>(hpet_table.value());
+    auto sdt_or_error = Memory::map_typed<::ACPI::Structures::HPET>(hpet_table.value());
     if (sdt_or_error.is_error())
         return false;
     auto sdt = sdt_or_error.release_value();
@@ -388,8 +388,8 @@ void HPET::set_comparators_to_optimal_interrupt_state(size_t)
 
 PhysicalAddress HPET::find_acpi_hpet_registers_block()
 {
-    auto sdt = Memory::map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table).release_value_but_fixme_should_propagate_errors();
-    VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
+    auto sdt = Memory::map_typed<::ACPI::Structures::HPET const volatile>(m_physical_acpi_hpet_table).release_value_but_fixme_should_propagate_errors();
+    VERIFY(sdt->event_timer_block.address_space == (u8)::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
     return PhysicalAddress(sdt->event_timer_block.address);
 }
 
@@ -421,7 +421,7 @@ UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
 {
     s_hpet = this; // Make available as soon as possible so that IRQs can use it
 
-    auto sdt = Memory::map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table).release_value_but_fixme_should_propagate_errors();
+    auto sdt = Memory::map_typed<::ACPI::Structures::HPET const volatile>(m_physical_acpi_hpet_table).release_value_but_fixme_should_propagate_errors();
     m_vendor_id = sdt->pci_vendor_id;
     m_minimum_tick = sdt->mininum_clock_tick;
     dmesgln("HPET: Minimum clock tick - {}", m_minimum_tick);
