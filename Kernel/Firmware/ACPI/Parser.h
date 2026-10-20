@@ -52,7 +52,7 @@ class Parser final : public IRQHandler {
 public:
     static Parser* the();
 
-    static void must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number);
+    static ErrorOr<void> initialize(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number);
 
     virtual StringView purpose() const override { return "ACPI Parser"sv; }
     virtual bool handle_irq() override;
@@ -85,15 +85,15 @@ public:
 private:
     Parser(PhysicalAddress rsdp, PhysicalAddress fadt, InterruptNumber irq_number);
 
-    void locate_static_data();
-    void locate_main_system_description_table();
-    void initialize_main_system_description_table();
-    size_t get_table_size(PhysicalAddress);
-    void process_fadt_data();
-    void process_dsdt();
+    ErrorOr<void> locate_static_data();
+    ErrorOr<void> locate_main_system_description_table();
+    ErrorOr<void> initialize_main_system_description_table();
+    ErrorOr<size_t> get_table_size(PhysicalAddress);
+    ErrorOr<void> process_fadt_data();
+    ErrorOr<void> process_dsdt();
 
     bool validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FADT> const&);
-    void access_generic_address(::ACPI::Structures::GenericAddressStructure const&, u32 value);
+    ErrorOr<void> access_generic_address(::ACPI::Structures::GenericAddressStructure const&, u32 value);
 
     PhysicalAddress m_rsdp;
     PhysicalAddress m_main_system_description_table;
