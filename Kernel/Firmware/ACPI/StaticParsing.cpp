@@ -5,10 +5,10 @@
  */
 
 #include <AK/ByteReader.h>
-#include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Firmware/ACPI/StaticParsing.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
+#include <LibACPI/Definitions.h>
 
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Firmware/ACPI.h>
@@ -61,9 +61,9 @@ ErrorOr<Optional<PhysicalAddress>> search_table_in_xsdt(PhysicalAddress xsdt_add
 {
     VERIFY(signature.length() == 4);
 
-    auto xsdt = TRY(Memory::map_typed<Structures::XSDT>(xsdt_address));
+    auto xsdt = TRY(Memory::map_typed<::ACPI::Structures::XSDT>(xsdt_address));
 
-    for (size_t i = 0; i < ((xsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u64)); ++i) {
+    for (size_t i = 0; i < ((xsdt->h.length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u64)); ++i) {
         if (match_table_signature(PhysicalAddress((PhysicalPtr)xsdt->table_ptrs[i]), signature))
             return PhysicalAddress((PhysicalPtr)xsdt->table_ptrs[i]);
     }
@@ -74,7 +74,7 @@ ErrorOr<Optional<PhysicalAddress>> find_table(PhysicalAddress rsdp_address, Stri
 {
     VERIFY(signature.length() == 4);
 
-    auto rsdp = TRY(Memory::map_typed<Structures::RSDPDescriptor20>(rsdp_address));
+    auto rsdp = TRY(Memory::map_typed<::ACPI::Structures::RSDPDescriptor20>(rsdp_address));
 
     if (rsdp->base.revision == 0)
         return search_table_in_rsdt(PhysicalAddress(rsdp->base.rsdt_ptr), signature);
@@ -91,9 +91,9 @@ ErrorOr<Optional<PhysicalAddress>> search_table_in_rsdt(PhysicalAddress rsdt_add
 {
     VERIFY(signature.length() == 4);
 
-    auto rsdt = TRY(Memory::map_typed<Structures::RSDT>(rsdt_address));
+    auto rsdt = TRY(Memory::map_typed<::ACPI::Structures::RSDT>(rsdt_address));
 
-    for (u32 i = 0; i < ((rsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
+    for (u32 i = 0; i < ((rsdt->h.length - sizeof(::ACPI::Structures::SDTHeader)) / sizeof(u32)); i++) {
         if (match_table_signature(PhysicalAddress((PhysicalPtr)rsdt->table_ptrs[i]), signature))
             return PhysicalAddress((PhysicalPtr)rsdt->table_ptrs[i]);
     }

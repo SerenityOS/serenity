@@ -18,6 +18,7 @@
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
+#include <LibACPI/Definitions.h>
 
 #define PCAT_COMPAT_FLAG 0x1
 
@@ -187,22 +188,22 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
 UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
 {
     VERIFY(m_madt_physical_address.has_value());
-    auto madt = Memory::map_typed<ACPI::Structures::MADT>(m_madt_physical_address.value()).release_value_but_fixme_should_propagate_errors();
+    auto madt = Memory::map_typed<::ACPI::Structures::MADT>(m_madt_physical_address.value()).release_value_but_fixme_should_propagate_errors();
 
     if (madt->flags & PCAT_COMPAT_FLAG)
         m_interrupt_controllers.try_append(adopt_lock_ref(*new PIC())).release_value_but_fixme_should_propagate_errors();
     size_t entry_index = 0;
-    size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
+    size_t entries_length = madt->h.length - sizeof(::ACPI::Structures::MADT);
     auto* madt_entry = madt->entries;
     while (entries_length > 0) {
         size_t entry_length = madt_entry->length;
-        if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::IOAPIC) {
-            auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
+        if (madt_entry->type == (u8)::ACPI::Structures::MADTEntryType::IOAPIC) {
+            auto* ioapic_entry = (::ACPI::Structures::MADTEntries::IOAPIC const*)madt_entry;
             dbgln("IOAPIC found @ MADT entry {}, MMIO Registers @ {}", entry_index, PhysicalAddress(ioapic_entry->ioapic_address));
             m_interrupt_controllers.try_append(adopt_lock_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base))).release_value_but_fixme_should_propagate_errors();
         }
-        if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
-            auto* interrupt_override_entry = (const ACPI::Structures::MADTEntries::InterruptSourceOverride*)madt_entry;
+        if (madt_entry->type == (u8)::ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
+            auto* interrupt_override_entry = (::ACPI::Structures::MADTEntries::InterruptSourceOverride const*)madt_entry;
             u32 global_system_interrupt = 0;
             ByteReader::load<u32>(reinterpret_cast<u8 const*>(&interrupt_override_entry->global_system_interrupt), global_system_interrupt);
             u16 flags = 0;
@@ -218,7 +219,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
                 global_system_interrupt,
                 interrupt_override_entry->bus);
         }
-        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
+        madt_entry = (::ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
         entries_length -= entry_length;
         entry_index++;
     }
