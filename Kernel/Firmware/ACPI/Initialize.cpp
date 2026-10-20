@@ -24,11 +24,7 @@ UNMAP_AFTER_INIT ErrorOr<void> initialize()
     if (!rsdp.has_value())
         return ENOENT;
 
-    auto facp = TRY(StaticParsing::find_table(rsdp.value(), "FACP"sv));
-    if (!facp.has_value())
-        return ENOENT;
-
-    TRY(Parser::initialize(rsdp.value(), facp.value()));
+    TRY(Parser::initialize(rsdp.value()));
 
     if (kernel_command_line().acpi_feature_level() == AcpiFeatureLevel::Enabled)
         Parser::the()->enable_aml_parsing();

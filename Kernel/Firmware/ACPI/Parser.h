@@ -52,7 +52,7 @@ class Parser final {
 public:
     static Parser* the();
 
-    static ErrorOr<void> initialize(PhysicalAddress rsdp, PhysicalAddress fadt);
+    static ErrorOr<void> initialize(PhysicalAddress rsdp);
 
     Optional<PhysicalAddress> find_table(StringView signature);
 
@@ -105,7 +105,7 @@ private:
         Parser& m_parser;
     };
 
-    Parser(PhysicalAddress rsdp, PhysicalAddress fadt);
+    Parser(PhysicalAddress rsdp);
 
     bool handle_interrupt();
 
