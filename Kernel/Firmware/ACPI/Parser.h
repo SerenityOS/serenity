@@ -9,7 +9,6 @@
 #include <AK/Types.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
@@ -20,16 +19,6 @@
 #include <LibACPI/Definitions.h>
 
 namespace Kernel::ACPI {
-
-class ACPISysFSDirectory : public SysFSDirectory {
-public:
-    virtual StringView name() const override { return "acpi"sv; }
-    static NonnullLockRefPtr<ACPISysFSDirectory> must_create(SysFSFirmwareDirectory& firmware_directory);
-
-private:
-    void find_tables_and_register_them_as_components();
-    explicit ACPISysFSDirectory(SysFSFirmwareDirectory& firmware_directory);
-};
 
 class ACPISysFSComponent : public SysFSComponent {
 public:
