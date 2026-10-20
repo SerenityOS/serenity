@@ -8,11 +8,28 @@
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/ACPI/StaticParsing.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
+#if ARCH(X86_64)
+#    include <Kernel/Arch/x86_64/Firmware/ACPI.h>
+#endif
+
 namespace Kernel::ACPI {
+
+static Optional<PhysicalAddress> find_rsdp()
+{
+    Optional<PhysicalAddress> rsdp;
+    if (!g_boot_info.acpi_rsdp_paddr.is_null())
+        rsdp = g_boot_info.acpi_rsdp_paddr;
+
+#if ARCH(X86_64)
+    if (!rsdp.has_value() && g_boot_info.boot_method == BootMethod::Multiboot1)
+        rsdp = StaticParsing::find_rsdp_in_ia_pc_specific_memory_locations();
+#endif
+
+    return rsdp;
+}
 
 UNMAP_AFTER_INIT ErrorOr<void> early_initialize()
 {
@@ -20,7 +37,7 @@ UNMAP_AFTER_INIT ErrorOr<void> early_initialize()
     if (feature_level == AcpiFeatureLevel::Disabled)
         return {};
 
-    auto rsdp = StaticParsing::find_rsdp();
+    auto rsdp = find_rsdp();
     if (!rsdp.has_value())
         return ENOENT;
 
