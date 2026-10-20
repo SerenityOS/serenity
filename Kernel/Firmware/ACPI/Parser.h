@@ -89,7 +89,6 @@ private:
     void locate_main_system_description_table();
     void initialize_main_system_description_table();
     size_t get_table_size(PhysicalAddress);
-    u8 get_table_revision(PhysicalAddress);
     void process_fadt_data();
     void process_dsdt();
 
