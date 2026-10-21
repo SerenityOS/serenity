@@ -337,15 +337,13 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::initialize_main_system_description_table(
 UNMAP_AFTER_INIT ErrorOr<void> Parser::locate_main_system_description_table()
 {
     auto rsdp = TRY(Memory::map_typed<::ACPI::Structures::RSDPDescriptor20>(m_rsdp));
+
     if (rsdp->base.revision == 0) {
         m_xsdt_supported = false;
     } else if (rsdp->base.revision >= 2) {
-        if (rsdp->xsdt_ptr != (u64) nullptr) {
-            m_xsdt_supported = true;
-        } else {
-            m_xsdt_supported = false;
-        }
+        m_xsdt_supported = rsdp->xsdt_ptr != 0;
     }
+
     if (!m_xsdt_supported) {
         m_main_system_description_table = PhysicalAddress(rsdp->base.rsdt_ptr);
     } else {
