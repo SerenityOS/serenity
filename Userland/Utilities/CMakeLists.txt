@@ -1,6 +1,7 @@
 set(CMD_SOURCES_CPP
     abench.cpp
     aconv.cpp
+    acpi.cpp
     adjtime.cpp
     allocate.cpp
     animation.cpp
@@ -300,6 +301,7 @@ install(CODE "file(CREATE_LINK /usr/lib/Loader.so ${CMAKE_INSTALL_PREFIX}/bin/ld
 
 target_link_libraries(abench PRIVATE LibAudio LibFileSystem)
 target_link_libraries(aconv PRIVATE LibAudio LibFileSystem)
+target_link_libraries(acpi PRIVATE LibACPI LibFileSystem LibMain)
 target_link_libraries(animation PRIVATE LibGfx)
 target_link_libraries(aplay PRIVATE LibAudio LibFileSystem LibIPC)
 target_link_libraries(asctl PRIVATE LibAudio LibIPC)
