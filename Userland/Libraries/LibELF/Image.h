@@ -221,7 +221,7 @@ public:
     bool is_dynamic() const { return header().e_type == ET_DYN; }
 
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
-    Elf64_Quarter machine() const { return header().e_machine; }
+    Elf64_Half machine() const { return header().e_machine; }
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
 

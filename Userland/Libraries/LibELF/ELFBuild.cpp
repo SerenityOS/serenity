@@ -47,7 +47,7 @@ u32 StringTable::insert(StringView str) noexcept
     return offset;
 }
 
-FixedArray<u8> build_elf_image(u64 shstrndx, Elf64_Quarter image_type, ReadonlySpan<Section> sections)
+FixedArray<u8> build_elf_image(u64 shstrndx, Elf64_Half image_type, ReadonlySpan<Section> sections)
 {
     Checked<u64> final_image_size = sizeof(Elf64_Ehdr);
     Vector<u64> section_offsets;
