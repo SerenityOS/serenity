@@ -684,6 +684,7 @@ U+1F4FA.png
 U+1F4FB.png
 U+1F4FC.png
 U+1F4FD.png
+U+1F4FF.png
 U+1F500.png
 U+1F501.png
 U+1F502.png
@@ -749,6 +750,7 @@ U+1F53D.png
 U+1F549.png
 U+1F54A.png
 U+1F54B.png
+U+1F54C.png
 U+1F54D.png
 U+1F54E.png
 U+1F550.png
