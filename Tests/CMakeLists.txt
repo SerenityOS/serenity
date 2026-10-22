@@ -1,5 +1,6 @@
 add_subdirectory(AK)
 add_subdirectory(Kernel)
+add_subdirectory(LibACPI)
 add_subdirectory(LibAudio)
 add_subdirectory(LibC)
 add_subdirectory(LibCompress)

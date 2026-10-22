@@ -691,6 +691,7 @@ if (BUILD_LAGOM)
         set(TEST_DIRECTORIES
             AK
             Kernel/POSIX
+            LibACPI
             LibCompress
             LibCrypto
             LibDisassembly
