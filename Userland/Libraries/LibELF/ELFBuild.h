@@ -49,7 +49,7 @@ struct Section {
 // - `shstrndx` is the index of the `Section` that contains the section name
 // string table.
 // - `image_type` is the image file type: ET_CORE, ET_REL, ET_EXEC, etc.
-FixedArray<u8> build_elf_image(u64 shstrndx, Elf64_Quarter image_type, ReadonlySpan<Section> sections);
+FixedArray<u8> build_elf_image(u64 shstrndx, Elf64_Half image_type, ReadonlySpan<Section> sections);
 
 // Takes care of tracking section header indices and their order
 struct SectionTable {

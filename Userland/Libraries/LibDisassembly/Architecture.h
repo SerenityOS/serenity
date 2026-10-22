@@ -34,7 +34,7 @@ constexpr Architecture host_architecture()
 #endif
 }
 
-ALWAYS_INLINE Optional<Architecture> architecture_from_elf_machine(Elf64_Quarter e_machine)
+ALWAYS_INLINE Optional<Architecture> architecture_from_elf_machine(Elf64_Half e_machine)
 {
     switch (e_machine) {
     case EM_AARCH64:
