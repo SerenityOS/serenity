@@ -14,8 +14,13 @@ extern "C" {
 
 int flock(int fd, int operation)
 {
+    short type = F_RDLCK;
+    if (operation & LOCK_UN)
+        type = F_UNLCK;
+    else if (operation & LOCK_EX)
+        type = F_WRLCK;
     struct flock lock {
-        short(operation & 0b11), SEEK_SET, 0, 0, 0
+        type, SEEK_SET, 0, 0, 0
     };
     return fcntl(fd, (operation & LOCK_NB) ? F_SETLK : F_SETLKW, &lock);
 }

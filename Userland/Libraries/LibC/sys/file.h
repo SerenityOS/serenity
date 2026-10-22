@@ -10,10 +10,10 @@
 
 __BEGIN_DECLS
 
-#define LOCK_SH 0
-#define LOCK_EX 1
-#define LOCK_UN 2
+#define LOCK_SH (1 << 0)
+#define LOCK_EX (1 << 1)
 #define LOCK_NB (1 << 2)
+#define LOCK_UN (1 << 3)
 
 int flock(int fd, int operation);
 
