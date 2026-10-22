@@ -73,8 +73,8 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 #define PTHREAD_MUTEX_INITIALIZER __PTHREAD_MUTEX_INITIALIZER
 #define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP __PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 
-#define PTHREAD_PROCESS_PRIVATE 1
-#define PTHREAD_PROCESS_SHARED 2
+#define PTHREAD_PROCESS_PRIVATE 0
+#define PTHREAD_PROCESS_SHARED 1
 
 #define PTHREAD_COND_INITIALIZER    \
     {                               \
