@@ -465,6 +465,7 @@ if (BUILD_LAGOM)
     # Lagom Libraries
     set(lagom_standard_libraries
         AccelGfx
+        ACPI
         Archive
         Audio
         Compress
@@ -571,6 +572,7 @@ if (BUILD_LAGOM)
 
         # Lagom Utilities
         lagom_utility(abench SOURCES ../../Userland/Utilities/abench.cpp LIBS LibMain LibFileSystem LibAudio)
+        lagom_utility(acpi SOURCES ../../Userland/Utilities/acpi.cpp LIBS LibACPI LibFileSystem LibMain)
         lagom_utility(aconv SOURCES ../../Userland/Utilities/aconv.cpp LIBS LibMain LibFileSystem LibAudio)
 
         if (NOT EMSCRIPTEN)
