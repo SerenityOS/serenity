@@ -7,7 +7,9 @@
 #pragma once
 
 #include <AK/EnumBits.h>
+#include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace ACPI {
@@ -336,4 +338,156 @@ struct [[gnu::packed]] DSDT {
 
 }
 
+namespace AML {
+
+// https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#aml-byte-stream-byte-values
+constexpr u8 EXT_OP_PREFIX = 0x5B;
+constexpr u8 DUAL_NAME_PREFIX = 0x2E;
+constexpr u8 MULTI_NAME_PREFIX = 0x2F;
+
+// https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#aml-byte-stream-byte-values
+enum class Opcode : u16 {
+    ZeroOp = 0x0000,
+    OneOp = 0x0001,
+    OnesOp = 0x00FF,
+
+    BytePrefix = 0x000A,
+    WordPrefix = 0x000B,
+    DWordPrefix = 0x000C,
+    QWordPrefix = 0x000E,
+    StringPrefix = 0x000D,
+
+    RevisionOp = 0x5B30,
+    DebugOp = 0x5B31,
+
+    AliasOp = 0x0006,
+    NameOp = 0x0008,
+    ScopeOp = 0x0010,
+    BufferOp = 0x0011,
+    PackageOp = 0x0012,
+    VarPackageOp = 0x0013,
+    MethodOp = 0x0014,
+    ExternalOp = 0x0015,
+    MutexOp = 0x5B01,
+    EventOp = 0x5B02,
+    TimerOp = 0x5B33,
+    OpRegionOp = 0x5B80,
+    FieldOp = 0x5B81,
+    DeviceOp = 0x5B82,
+    // NOTE: This opcode is missing in the latest spec but is still being used.
+    ProcessorOp = 0x5B83,
+    PowerResOp = 0x5B84,
+    ThermalZoneOp = 0x5B85,
+    IndexFieldOp = 0x5B86,
+    BankFieldOp = 0x5B87,
+    DataRegionOp = 0x5B88,
+
+    CondRefOfOp = 0x5B12,
+    CreateFieldOp = 0x5B13,
+    LoadTableOp = 0x5B1F,
+    LoadOp = 0x5B20,
+    StallOp = 0x5B21,
+    SleepOp = 0x5B22,
+    AcquireOp = 0x5B23,
+    SignalOp = 0x5B24,
+    WaitOp = 0x5B25,
+    ResetOp = 0x5B26,
+    ReleaseOp = 0x5B27,
+    FromBCDOp = 0x5B28,
+    ToBCDOp = 0x5B29,
+    FatalOp = 0x5B32,
+    StoreOp = 0x70,
+    RefOfOp = 0x71,
+
+    AddOp = 0x72,
+    ConcatOp = 0x73,
+    SubtractOp = 0x74,
+    IncrementOp = 0x75,
+    DecrementOp = 0x76,
+    MultiplyOp = 0x77,
+    DivideOp = 0x78,
+    ShiftLeftOp = 0x79,
+    ShiftRightOp = 0x7A,
+    AndOp = 0x7B,
+    NandOp = 0x7C,
+    OrOp = 0x7D,
+    NorOp = 0x7E,
+    XorOp = 0x7F,
+
+    NotOp = 0x80,
+    FindSetLeftBitOp = 0x81,
+    FindSetRightBitOp = 0x82,
+
+    DerefOfOp = 0x83,
+    ConcatResOp = 0x84,
+    ModOp = 0x85,
+    NotifyOp = 0x86,
+    SizeOfOp = 0x87,
+    IndexOp = 0x88,
+    MatchOp = 0x89,
+    ObjectTypeOp = 0x8E,
+
+    LAndOp = 0x90,
+    LOrOp = 0x91,
+    LNotOp = 0x92,
+    LEqualOp = 0x93,
+    LGreaterOp = 0x94,
+    LLessOp = 0x95,
+
+    ToBufferOp = 0x96,
+    ToDecimalStringOp = 0x97,
+    ToHexStringOp = 0x98,
+    ToIntegerOp = 0x99,
+    ToStringOp = 0x9C,
+
+    CreateBitFieldOp = 0x8D,
+    CreateByteFieldOp = 0x8C,
+    CreateWordFieldOp = 0x8B,
+    CreateDWordFieldOp = 0x8A,
+    CreateQWordFieldOp = 0x8F,
+
+    CopyObjectOp = 0x9D,
+    MidOp = 0x9E,
+    ContinueOp = 0x9F,
+    IfOp = 0xA0,
+    ElseOp = 0xA1,
+    WhileOp = 0xA2,
+    NoopOp = 0xA3,
+    ReturnOp = 0xA4,
+    BreakOp = 0xA5,
+    BreakPointOp = 0xCC,
+
+    Local0Op = 0x60,
+    Local1Op = 0x61,
+    Local2Op = 0x62,
+    Local3Op = 0x63,
+    Local4Op = 0x64,
+    Local5Op = 0x65,
+    Local6Op = 0x66,
+    Local7Op = 0x67,
+    Arg0Op = 0x68,
+    Arg1Op = 0x69,
+    Arg2Op = 0x6A,
+    Arg3Op = 0x6B,
+    Arg4Op = 0x6C,
+    Arg5Op = 0x6D,
+    Arg6Op = 0x6E,
+};
+
 }
+
+}
+
+template<>
+class AK::Traits<::ACPI::Structures::SDTHeader> : public DefaultTraits<::ACPI::Structures::SDTHeader> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+struct AK::Formatter<::ACPI::AML::Opcode> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, ::ACPI::AML::Opcode opcode)
+    {
+        return AK::Formatter<FormatString>::format(builder, "{:04X}"sv, static_cast<u16>(opcode));
+    }
+};

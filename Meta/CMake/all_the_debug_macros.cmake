@@ -2,6 +2,7 @@ set(AC97_DEBUG ON)
 set(ACPI_DEBUG ON)
 set(AFLACLOADER_DEBUG ON)
 set(AHCI_DEBUG ON)
+set(AML_DEBUG ON)
 set(APIC_DEBUG ON)
 set(APIC_SMP_DEBUG ON)
 set(ARP_DEBUG ON)
@@ -282,3 +283,5 @@ set(XML_PARSER_DEBUG ON)
 # set(IA32_DEBUG_INTERFACE ON)
 # False positive: DEBUG_STRIPPED is a PE characteristic, not a debug flag
 # set(DEBUG_STRIPPED ON)
+# False positive: DEBUG_LOG is a macro in the ACPI interpreter
+# set(DEBUG_LOG ON)
