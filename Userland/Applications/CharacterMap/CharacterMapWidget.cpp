@@ -58,17 +58,17 @@ CharacterMapWidget::CharacterMapWidget()
     });
     m_copy_selection_action->set_status_tip("Copy the highlighted characters to the clipboard"_string);
 
-    m_previous_glyph_action = GUI::Action::create("&Previous Glyph", { Mod_Alt, Key_Left }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv)), [&](auto&) {
+    m_previous_glyph_action = GUI::Action::create("&Previous Glyph", { Mod_Alt, GUI::Key_Left }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-back.png"sv)), [&](auto&) {
         m_glyph_map->select_previous_existing_glyph();
     });
     m_previous_glyph_action->set_status_tip("Seek the previous visible glyph"_string);
 
-    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [&](auto&) {
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, GUI::Key_Right }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-forward.png"sv)), [&](auto&) {
         m_glyph_map->select_next_existing_glyph();
     });
     m_next_glyph_action->set_status_tip("Seek the next visible glyph"_string);
 
-    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-to.png"sv)), [&](auto&) {
+    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, GUI::Key_G }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/go-to.png"sv)), [&](auto&) {
         String input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to Glyph"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
@@ -83,7 +83,7 @@ CharacterMapWidget::CharacterMapWidget()
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point"_string);
 
-    m_find_glyphs_action = GUI::Action::create("&Find Glyphs...", { Mod_Ctrl, Key_F }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find.png"sv)), [&](auto&) {
+    m_find_glyphs_action = GUI::Action::create("&Find Glyphs...", { Mod_Ctrl, GUI::Key_F }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/find.png"sv)), [&](auto&) {
         if (m_find_window.is_null()) {
             m_find_window = GUI::Window::construct(window());
             auto search_widget = m_find_window->set_main_widget<CharacterSearchWidget>();

@@ -584,7 +584,7 @@ void DirectoryView::handle_selection_change()
 
 void DirectoryView::setup_actions()
 {
-    m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/mkdir.png"sv)), [&](GUI::Action const&) {
+    m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, GUI::Key_N }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/mkdir.png"sv)), [&](GUI::Action const&) {
         String value;
         auto icon = MUST(Gfx::Bitmap::load_from_uri("resource://icons/32x32/filetype-folder.png"sv));
         if (GUI::InputBox::show(window(), value, "Enter a name:"sv, "New Directory"sv, GUI::InputType::NonemptyText, {}, move(icon)) == GUI::InputBox::ExecResult::OK) {
@@ -597,7 +597,7 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/new.png"sv)), [&](GUI::Action const&) {
+    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, GUI::Key_F }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/new.png"sv)), [&](GUI::Action const&) {
         String value;
         auto icon = MUST(Gfx::Bitmap::load_from_uri("resource://icons/32x32/filetype-unknown.png"sv));
         if (GUI::InputBox::show(window(), value, "Enter a name:"sv, "New File"sv, GUI::InputType::NonemptyText, {}, move(icon)) == GUI::InputBox::ExecResult::OK) {
@@ -636,26 +636,26 @@ void DirectoryView::setup_actions()
         window());
 
     m_force_delete_action = GUI::Action::create(
-        "Delete Without Confirmation", { Mod_Shift, Key_Delete },
+        "Delete Without Confirmation", { Mod_Shift, GUI::Key_Delete },
         [this](auto&) { do_delete(false); },
         window());
 
     m_view_as_icons_action = GUI::Action::create_checkable(
-        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/icon-view.png"sv)), [&](GUI::Action const&) {
+        "View as &Icons", { Mod_Ctrl, GUI::Key_1 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/icon-view.png"sv)), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Icon);
             Config::write_string("FileManager"sv, "DirectoryView"sv, "ViewMode"sv, "Icon"sv);
         },
         window());
 
     m_view_as_table_action = GUI::Action::create_checkable(
-        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/table-view.png"sv)), [&](GUI::Action const&) {
+        "View as &Table", { Mod_Ctrl, GUI::Key_2 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/table-view.png"sv)), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Table);
             Config::write_string("FileManager"sv, "DirectoryView"sv, "ViewMode"sv, "Table"sv);
         },
         window());
 
     m_view_as_columns_action = GUI::Action::create_checkable(
-        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/columns-view.png"sv)), [&](GUI::Action const&) {
+        "View as &Columns", { Mod_Ctrl, GUI::Key_3 }, MUST(Gfx::Bitmap::load_from_uri("resource://icons/16x16/columns-view.png"sv)), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Columns);
             Config::write_string("FileManager"sv, "DirectoryView"sv, "ViewMode"sv, "Columns"sv);
         },
