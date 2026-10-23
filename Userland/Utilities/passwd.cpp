@@ -55,6 +55,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
+    if (current_uid != 0 && (del || lock || unlock)) {
+        warnln("Only root can delete, lock or unlock passwords");
+        return 1;
+    }
+
     if (del) {
         target_account.delete_password();
     } else if (lock) {
