@@ -160,7 +160,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`libgpg-error`](libgpg-error/)                 | libgpg-error                                                  | 1.61                  | https://gnupg.org/software/libgpg-error/index.html                   |
 | [`libiconv`](libiconv/)                         | GNU libiconv                                                  | 1.19                  | https://www.gnu.org/software/libiconv/                               |
 | [`libicu`](libicu/)                             | ICU                                                           | 79.1                  | http://site.icu-project.org/                                         |
-| [`libjodycode`](libjodycode/)                   | libjodycode                                                   | 4.1.2                 | https://codeberg.org/jbruchon/libjodycode                            |
+| [`libjodycode`](libjodycode/)                   | libjodycode                                                   | 4.2                   | https://codeberg.org/jbruchon/libjodycode                            |
 | [`libjpeg`](libjpeg/)                           | libjpeg                                                       | 10                    | https://ijg.org/                                                     |
 | [`libjxl`](libjxl/)                             | libjxl                                                        | 0.12.0                | https://github.com/libjxl/libjxl                                     |
 | [`libksba`](libksba/)                           | libksba                                                       | 1.8.1                 | https://gnupg.org/software/libksba/index.html                        |
