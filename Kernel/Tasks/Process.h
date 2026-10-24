@@ -530,6 +530,7 @@ public:
     clock_t m_ticks_in_kernel { 0 };
     clock_t m_ticks_in_user_for_dead_children { 0 };
     clock_t m_ticks_in_kernel_for_dead_children { 0 };
+    Atomic<int, AK::MemoryOrder::memory_order_relaxed> m_pdeath_signal { 0 };
 
     NonnullRefPtr<Custody> current_directory();
     RefPtr<Custody> executable();
@@ -549,6 +550,9 @@ public:
 
     void terminate_due_to_signal(u8 signal);
     ErrorOr<void> send_signal(u8 signal, Process* sender);
+
+    int pdeath_signal() const { return m_pdeath_signal.load(AK::MemoryOrder::memory_order_relaxed); }
+    void set_pdeath_signal(int signal) { m_pdeath_signal.store(signal, AK::MemoryOrder::memory_order_relaxed); }
 
     u8 termination_signal() const
     {
