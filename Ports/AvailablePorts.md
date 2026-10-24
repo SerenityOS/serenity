@@ -24,7 +24,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`bochs`](bochs/)                               | Bochs x86 PC emulator                                         | 3.1                   | https://sourceforge.net/projects/bochs/                              |
 | [`boost`](boost/)                               | Boost C++ libraries                                           | 1.92.0                | https://www.boost.org/                                               |
 | [`brogue`](brogue/)                             | BrogueCE                                                      | 1.15.1                | https://github.com/tmewett/BrogueCE                                  |
-| [`brotli`](brotli/)                             | Brotli                                                        | 1.2.0                 | https://github.com/google/brotli                                     |
+| [`brotli`](brotli/)                             | Brotli                                                        | 1.2.1                 | https://github.com/google/brotli                                     |
 | [`byacc`](byacc/)                               | Berkeley Yacc                                                 | 20260126              | https://invisible-island.net/byacc/byacc.html                        |
 | [`bzip2`](bzip2/)                               | bzip2                                                         | 1.0.8                 | https://sourceware.org/bzip2/                                        |
 | [`bzip3`](bzip3/)                               | bzip3                                                         | 1.5.4                 | https://github.com/kspalaiologos/bzip3                               |
