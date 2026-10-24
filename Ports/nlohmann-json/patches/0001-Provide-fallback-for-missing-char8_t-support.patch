@@ -1,0 +1,125 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sergiu Deitsch <sergiu.deitsch@gmail.com>
+Date: Fri, 11 Apr 2025 21:11:52 +0200
+Subject: [PATCH] Provide fallback for missing `char8_t` support
+
+Clang 11.0.x with libc++ fails to compile tests in C++20 mode due to
+incomplete char8_t support in std::filesystem::path.
+---
+ .../nlohmann/detail/conversions/from_json.hpp |  5 +++-
+ .../nlohmann/detail/conversions/to_json.hpp   | 21 ++++++++++-----
+ single_include/nlohmann/json.hpp              | 26 +++++++++++++------
+ 3 files changed, 36 insertions(+), 16 deletions(-)
+
+diff --git a/include/nlohmann/detail/conversions/from_json.hpp b/include/nlohmann/detail/conversions/from_json.hpp
+index d647d742399a50684c05a70f790fcd310c98a347..e161a4282f38de1d7255eac3163d51ff216f3e46 100644
+--- a/include/nlohmann/detail/conversions/from_json.hpp
++++ b/include/nlohmann/detail/conversions/from_json.hpp
+@@ -540,7 +540,10 @@ inline void from_json(const BasicJsonType& j, std_fs::path& p)
+         JSON_THROW(type_error::create(302, concat("type must be string, but is ", j.type_name()), &j));
+     }
+     const auto& s = *j.template get_ptr<const typename BasicJsonType::string_t*>();
+-#ifdef JSON_HAS_CPP_20
++    // Checking for C++20 standard or later can be insufficient in case the
++    // library support for char8_t is either incomplete or was disabled
++    // altogether. Use the __cpp_lib_char8_t feature test instead.
++#if defined(__cpp_lib_char8_t) && (__cpp_lib_char8_t >= 201907L)
+     p = std_fs::path(std::u8string_view(reinterpret_cast<const char8_t*>(s.data()), s.size()));
+ #else
+     p = std_fs::u8path(s); // accepts UTF-8 encoded std::string in C++17, deprecated in C++20
+diff --git a/include/nlohmann/detail/conversions/to_json.hpp b/include/nlohmann/detail/conversions/to_json.hpp
+index ead45665f1be4c7dad58216210783b4ba03efe2a..b17e8af4374a014a31c205fb0a4e630f37974600 100644
+--- a/include/nlohmann/detail/conversions/to_json.hpp
++++ b/include/nlohmann/detail/conversions/to_json.hpp
+@@ -15,7 +15,8 @@
+ 
+ #include <algorithm> // copy
+ #include <iterator> // begin, end
+-#include <string> // string
++#include <memory> // allocator_traits
++#include <string> //  basic_string, char_traits
+ #include <tuple> // tuple, get
+ #include <type_traits> // is_same, is_constructible, is_floating_point, is_enum, underlying_type
+ #include <utility> // move, forward, declval, pair
+@@ -440,15 +441,21 @@ inline void to_json(BasicJsonType& j, const T& t)
+ }
+ 
+ #if JSON_HAS_FILESYSTEM || JSON_HAS_EXPERIMENTAL_FILESYSTEM
++#if defined(__cpp_lib_char8_t)
++template<typename BasicJsonType, typename Tr, typename Allocator>
++inline void to_json(BasicJsonType& j, const std::basic_string<char8_t, Tr, Allocator>& s)
++{
++    using OtherAllocator = typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
++    j = std::basic_string<char, std::char_traits<char>, OtherAllocator>(s.begin(), s.end(), s.get_allocator());
++}
++#endif
++
+ template<typename BasicJsonType>
+ inline void to_json(BasicJsonType& j, const std_fs::path& p)
+ {
+-#ifdef JSON_HAS_CPP_20
+-    const std::u8string s = p.u8string();
+-    j = std::string(s.begin(), s.end());
+-#else
+-    j = p.u8string(); // returns std::string in C++17
+-#endif
++    // Returns either a std::string or a std::u8string depending whether library
++    // support for char8_t is enabled.
++    j = p.u8string();
+ }
+ #endif
+ 
+diff --git a/single_include/nlohmann/json.hpp b/single_include/nlohmann/json.hpp
+index 82d69f7c5d044c9887c96b90c97f5639083ecd14..be3493efa86ac0726d1a9f00a7fe45f9ea1e8492 100644
+--- a/single_include/nlohmann/json.hpp
++++ b/single_include/nlohmann/json.hpp
+@@ -5325,7 +5325,10 @@ inline void from_json(const BasicJsonType& j, std_fs::path& p)
+         JSON_THROW(type_error::create(302, concat("type must be string, but is ", j.type_name()), &j));
+     }
+     const auto& s = *j.template get_ptr<const typename BasicJsonType::string_t*>();
+-#ifdef JSON_HAS_CPP_20
++    // Checking for C++20 standard or later can be insufficient in case the
++    // library support for char8_t is either incomplete or was disabled
++    // altogether. Use the __cpp_lib_char8_t feature test instead.
++#if defined(__cpp_lib_char8_t) && (__cpp_lib_char8_t >= 201907L)
+     p = std_fs::path(std::u8string_view(reinterpret_cast<const char8_t*>(s.data()), s.size()));
+ #else
+     p = std_fs::u8path(s); // accepts UTF-8 encoded std::string in C++17, deprecated in C++20
+@@ -5380,7 +5383,8 @@ NLOHMANN_JSON_NAMESPACE_END
+ 
+ #include <algorithm> // copy
+ #include <iterator> // begin, end
+-#include <string> // string
++#include <memory> // allocator_traits
++#include <string> //  basic_string, char_traits
+ #include <tuple> // tuple, get
+ #include <type_traits> // is_same, is_constructible, is_floating_point, is_enum, underlying_type
+ #include <utility> // move, forward, declval, pair
+@@ -6087,15 +6091,21 @@ inline void to_json(BasicJsonType& j, const T& t)
+ }
+ 
+ #if JSON_HAS_FILESYSTEM || JSON_HAS_EXPERIMENTAL_FILESYSTEM
++#if defined(__cpp_lib_char8_t)
++template<typename BasicJsonType, typename Tr, typename Allocator>
++inline void to_json(BasicJsonType& j, const std::basic_string<char8_t, Tr, Allocator>& s)
++{
++    using OtherAllocator = typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
++    j = std::basic_string<char, std::char_traits<char>, OtherAllocator>(s.begin(), s.end(), s.get_allocator());
++}
++#endif
++
+ template<typename BasicJsonType>
+ inline void to_json(BasicJsonType& j, const std_fs::path& p)
+ {
+-#ifdef JSON_HAS_CPP_20
+-    const std::u8string s = p.u8string();
+-    j = std::string(s.begin(), s.end());
+-#else
+-    j = p.u8string(); // returns std::string in C++17
+-#endif
++    // Returns either a std::string or a std::u8string depending whether library
++    // support for char8_t is enabled.
++    j = p.u8string();
+ }
+ #endif
+ 
