@@ -123,7 +123,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`guile`](guile/)                               | The GNU guile programming language                            | 3.0.8                 | https://www.gnu.org/software/guile/                                  |
 | [`gzip`](gzip/)                                 | GNU gzip                                                      | 1.15                  | https://www.gnu.org/software/gzip/                                   |
 | [`halflife`](halflife/)                         | Half-Life                                                     | 63e3769               | https://github.com/FWGS/hlsdk-portable                               |
-| [`harfbuzz`](harfbuzz/)                         | HarfBuzz                                                      | 14.6.0                | https://github.com/harfbuzz/harfbuzz                                 |
+| [`harfbuzz`](harfbuzz/)                         | HarfBuzz                                                      | 15.0.0                | https://github.com/harfbuzz/harfbuzz                                 |
 | [`hatari`](hatari/)                             | Atari ST/STE/TT/Falcon emulator                               | 2.6.1                 | https://hatari.tuxfamily.org/                                        |
 | [`hexedit`](hexedit/)                           | A console-based hex editor                                    | 1.6                   | https://github.com/pixel/hexedit                                     |
 | [`highway`](highway/)                           | Highway                                                       | 1.4.0                 | https://github.com/google/highway                                    |
