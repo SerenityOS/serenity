@@ -346,7 +346,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`tree-sitter`](tree-sitter/)                   | tree-sitter                                                   | 0.27.1                | https://tree-sitter.github.io/                                       |
 | [`tree-sitter-c`](tree-sitter-c/)               | C grammar for tree-sitter                                     | 0.24.2                | https://github.com/tree-sitter/tree-sitter-c                         |
 | [`tree-sitter-lua`](tree-sitter-lua/)           | Lua grammar for tree-sitter                                   | 0.5.0                 | https://github.com/tree-sitter-grammars/tree-sitter-lua              |
-| [`tree-sitter-markdown`](tree-sitter-markdown/) | Markdown grammar tree-sitter                                  | 0.5.3                 | https://github.com/tree-sitter-grammars/tree-sitter-markdown         |
+| [`tree-sitter-markdown`](tree-sitter-markdown/) | Markdown grammar tree-sitter                                  | 0.5.4                 | https://github.com/tree-sitter-grammars/tree-sitter-markdown         |
 | [`tree-sitter-query`](tree-sitter-query/)       | TS query grammar for tree-sitter                              | 0.8.0                 | https://github.com/tree-sitter-grammars/tree-sitter-query            |
 | [`tree-sitter-vim`](tree-sitter-vim/)           | Vimscript grammar for tree-sitter                             | 0.8.1                 | https://github.com/tree-sitter-grammars/tree-sitter-vim              |
 | [`tree-sitter-vimdoc`](tree-sitter-vimdoc/)     | Tree-sitter parser for Vim help files                         | 4.2.0                 | https://github.com/neovim/tree-sitter-vimdoc                         |
