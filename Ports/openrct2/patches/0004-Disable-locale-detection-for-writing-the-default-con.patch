@@ -9,10 +9,10 @@ At the time of writing, locale support in Serenity is not great. We always retur
  1 file changed, 2 insertions(+)
 
 diff --git a/src/openrct2/platform/Platform.Linux.cpp b/src/openrct2/platform/Platform.Linux.cpp
-index 3f3f48b949fd9c6b24a09f8f88b51266c74462f2..ce5acb00a19b00c5adc2d7be07db42e4c49eebc6 100644
+index ac5357dba07442a508c71e52a9636d06b79acc6e..1a311fec87f325be6519ef7379115861198a70d2 100644
 --- a/src/openrct2/platform/Platform.Linux.cpp
 +++ b/src/openrct2/platform/Platform.Linux.cpp
-@@ -178,6 +178,7 @@ namespace Platform
+@@ -243,6 +243,7 @@ namespace OpenRCT2::Platform
  
      uint16_t GetLocaleLanguage()
      {
@@ -20,7 +20,7 @@ index 3f3f48b949fd9c6b24a09f8f88b51266c74462f2..ce5acb00a19b00c5adc2d7be07db42e4
          const char* langString = setlocale(LC_MESSAGES, "");
          if (langString != nullptr)
          {
-@@ -238,6 +239,7 @@ namespace Platform
+@@ -303,6 +304,7 @@ namespace OpenRCT2::Platform
                  }
              }
          }

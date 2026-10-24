@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 24 Oct 2026 18:10:29 +0100
+Subject: [PATCH] Use the SDL software renderer
+
+---
+ .../drawing/engines/HardwareDisplayDrawingEngine.cpp            | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/openrct2-ui/drawing/engines/HardwareDisplayDrawingEngine.cpp b/src/openrct2-ui/drawing/engines/HardwareDisplayDrawingEngine.cpp
+index 9037b47b51e2a6b41b3b440fc225a1ca84f5d31d..bc2a22430ea65163674799edd7cec2218ac31bf8 100644
+--- a/src/openrct2-ui/drawing/engines/HardwareDisplayDrawingEngine.cpp
++++ b/src/openrct2-ui/drawing/engines/HardwareDisplayDrawingEngine.cpp
+@@ -75,7 +75,7 @@ public:
+ 
+     void Initialise() override
+     {
+-        _sdlRenderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED | (_useVsync ? SDL_RENDERER_PRESENTVSYNC : 0));
++        _sdlRenderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_SOFTWARE | (_useVsync ? SDL_RENDERER_PRESENTVSYNC : 0));
+     }
+ 
+     void SetVSync(bool vsync) override

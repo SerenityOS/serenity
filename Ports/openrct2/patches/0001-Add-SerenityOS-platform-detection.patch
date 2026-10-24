@@ -9,16 +9,16 @@ We teach OpenRCT2 about the name of our platform.
  1 file changed, 3 insertions(+)
 
 diff --git a/src/openrct2/Version.h b/src/openrct2/Version.h
-index 14c26ea19956318a1a82d21d69a63c6a2cebdbe6..07df815d073a4e623ac9ae5ff01936e1055a9891 100644
+index 19251d1e4aa6cce3323d642b791690de2e250869..939858ccb4fb71f5ff102ec66ce586cdd238facd 100644
 --- a/src/openrct2/Version.h
 +++ b/src/openrct2/Version.h
-@@ -70,6 +70,9 @@
- #ifdef __EMSCRIPTEN__
- #    define OPENRCT2_PLATFORM "Emscripten"
+@@ -75,6 +75,9 @@
+ #ifdef __HAIKU__
+     #define OPENRCT2_PLATFORM "Haiku"
  #endif
 +#ifdef __serenity__
-+#    define OPENRCT2_PLATFORM "SerenityOS"
++    #define OPENRCT2_PLATFORM "SerenityOS"
 +#endif
  #ifndef OPENRCT2_PLATFORM
- #    error Unknown platform!
+     #error Unknown platform!
  #endif
