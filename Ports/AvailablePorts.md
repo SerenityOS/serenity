@@ -349,7 +349,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`tree-sitter-markdown`](tree-sitter-markdown/) | Markdown grammar tree-sitter                                  | 0.5.4                 | https://github.com/tree-sitter-grammars/tree-sitter-markdown         |
 | [`tree-sitter-query`](tree-sitter-query/)       | TS query grammar for tree-sitter                              | 0.8.0                 | https://github.com/tree-sitter-grammars/tree-sitter-query            |
 | [`tree-sitter-vim`](tree-sitter-vim/)           | Vimscript grammar for tree-sitter                             | 0.8.1                 | https://github.com/tree-sitter-grammars/tree-sitter-vim              |
-| [`tree-sitter-vimdoc`](tree-sitter-vimdoc/)     | Tree-sitter parser for Vim help files                         | 4.2.0                 | https://github.com/neovim/tree-sitter-vimdoc                         |
+| [`tree-sitter-vimdoc`](tree-sitter-vimdoc/)     | Tree-sitter parser for Vim help files                         | 4.3.0                 | https://github.com/neovim/tree-sitter-vimdoc                         |
 | [`tuxracer`](tuxracer/)                         | Tux Racer                                                     | 0.61                  | http://tuxracer.sourceforge.net/                                     |
 | [`unibilium`](unibilium/)                       | Unibilium                                                     | 2.1.4                 | https://github.com/neovim/unibilium                                  |
 | [`utf8proc`](utf8proc/)                         | utf8proc                                                      | 2.12.0                | https://juliastrings.github.io/utf8proc/                             |
