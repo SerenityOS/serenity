@@ -1,11 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='ClassiCube'
-version='1.3.8'
+version='1.3.9'
 files=(
-    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz#35293acf1e63baeca832dec2512283f2975c79ddf80cc855a12c10464723a6c4"
+    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz#5bb62dbb3ad27e1fbb09842f0cb1f4802b2686553b017e0b67ce09b36f908246"
 )
-workdir="${port}-${version}/"
 depends=(
     'SDL2'
     'curl'

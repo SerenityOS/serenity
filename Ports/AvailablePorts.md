@@ -41,7 +41,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`chocolate-doom`](chocolate-doom/)             | Chocolate Doom                                                | 3.1.1                 | https://www.chocolate-doom.org/                                      |
 | [`chromaprint`](chromaprint/)                   | chromaprint                                                   | 1.6.2                 | https://acoustid.org/                                                |
 | [`citron`](citron/)                             | Citron Programming Language                                   | 0.0.9.3               | https://github.com/alimpfard/citron                                  |
-| [`ClassiCube`](ClassiCube/)                     | ClassiCube                                                    | 1.3.8                 | https://github.com/UnknownShadow200/ClassiCube                       |
+| [`ClassiCube`](ClassiCube/)                     | ClassiCube                                                    | 1.3.9                 | https://github.com/UnknownShadow200/ClassiCube                       |
 | [`cmake`](cmake/)                               | CMake                                                         | 3.30.3                | https://cmake.org/                                                   |
 | [`cmatrix`](cmatrix/)                           | cmatrix                                                       | 5c082c6               | https://github.com/abishekvashok/cmatrix                             |
 | [`composer`](composer/)                         | Composer                                                      | 2.10.3                | https://getcomposer.org/                                             |
