@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openrct2'
-version='0.4.9'
+version='0.5.6'
 depends=(
     'curl'
     'flac'
@@ -18,8 +18,8 @@ depends=(
     'zlib'
 )
 files=(
-    "https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz#d9eb7bb99923152122716707888a6182491662e106bef91b86106fa7b45b4309"
-    "https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-${version}-linux-jammy-x86_64.tar.gz#f388d46956f32755a504df1582fea7b800a8c100333667cb3f9c495c5c9d7201"
+    "https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz#f4732724c1a709cfaff02ddff7fe3b6d027ad7827b343bf6f2a254114d32128b"
+    "https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-v${version}-Linux-noble-x86_64.tar.gz#2220407872ed9aba2c7c67dbf46bb321bb7b88b4b526123d8f075938cc4c6c02"
 )
 useconfigure='true'
 workdir="OpenRCT2-${version}"
@@ -27,28 +27,34 @@ icon_file='resources/logo/icon.ico'
 launcher_name='OpenRCT2'
 launcher_category='&Games'
 launcher_command='/usr/local/bin/openrct2'
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    '-DCMAKE_BUILD_TYPE=Release'
+    '-DDISABLE_DISCORD_RPC=ON'
+    '-DDISABLE_GOOGLE_BENCHMARK=ON'
+    '-DWITH_TESTS=OFF'
+    '-DDISABLE_OPENGL=ON'
+    '-DDOWNLOAD_TITLE_SEQUENCES=OFF'
+    '-DDOWNLOAD_OBJECTS=OFF'
+    '-DDOWNLOAD_OPENSFX=OFF'
+    '-DDOWNLOAD_OPENMUSIC=OFF'
+)
 
 configure() {
-    mkdir -p "${PORT_BUILD_DIR}/OpenRCT2-${version}-build"
-    cd "${PORT_BUILD_DIR}/OpenRCT2-${version}-build"
-    cmake \
-        -G Ninja \
-        -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
-        -DCMAKE_BUILD_TYPE='Release' \
-        -DDISABLE_DISCORD_RPC='ON' \
-        -DDISABLE_GOOGLE_BENCHMARK='ON' \
-        -DWITH_TESTS='OFF' \
-        -DDISABLE_OPENGL='ON' \
-        "${PORT_BUILD_DIR}/OpenRCT2-${version}"
+    run cmake -G Ninja -B build -S . "${configopts[@]}"
 }
 
 build() {
-    cd "${PORT_BUILD_DIR}/OpenRCT2-${version}-build"
-    [ -f 'g2.dat' ] || mv "${PORT_BUILD_DIR}/OpenRCT2/data/g2.dat" '.'
-    ninja
+    for data_file in g2 fonts palettes tracks; do
+        [ -f "${workdir}/build/${data_file}.dat" ] || cp "${PORT_BUILD_DIR}/OpenRCT2/data/${data_file}.dat" "${workdir}/build/"
+    done
+    run cmake --build build
 }
 
 install() {
-    cd "${PORT_BUILD_DIR}/OpenRCT2-${version}-build"
-    ninja install
+    run cmake --install build
+    for data_dir in assetpack sequence object; do
+        mkdir -p "${DESTDIR}/usr/local/share/openrct2/${data_dir}"
+        cp -a "${PORT_BUILD_DIR}/OpenRCT2/data/${data_dir}/." "${DESTDIR}/usr/local/share/openrct2/${data_dir}/"
+    done
 }

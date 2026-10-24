@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 24 Oct 2026 18:09:39 +0100
+Subject: [PATCH] Include alloca.h on SerenityOS
+
+---
+ src/openrct2/core/String.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/openrct2/core/String.cpp b/src/openrct2/core/String.cpp
+index 89143081e0101dee1fd4cc8064da1fd97812bf99..bd1a37a1f0ee585e327f6a5f5d51d7a038e5f5d0 100644
+--- a/src/openrct2/core/String.cpp
++++ b/src/openrct2/core/String.cpp
+@@ -19,7 +19,7 @@
+ #include <vector>
+ 
+ #ifndef _WIN32
+-    #if defined(__linux__) || defined(__sun)
++    #if defined(__linux__) || defined(__sun) || defined(__serenity__)
+         #include <alloca.h>
+     #endif
+     #include <unicode/unistr.h>

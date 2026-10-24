@@ -9,10 +9,10 @@ This irons out some compiler warnings that turned into errors when compiling a r
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 0f62a0bb62ebb1ea867898f3eb18e819d6a513ac..6a5da9dd95fb23f2063e79951b0df29032f9dcc0 100644
+index 871e16c966c0aaaff76a47fae20b3e9b096b41ff..4db8be809c63b25f71bc60d199c63735698e107b 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -304,6 +304,8 @@ else ()
+@@ -318,6 +318,8 @@ else ()
      # unused-const-variable[=2] would check for unused values from headers as well
      ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WARN_UNUSED_CONST_VARIABLE -Wunused-const-variable=1)
      ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WNO_CLOBBERED -Wno-clobbered)
@@ -21,7 +21,7 @@ index 0f62a0bb62ebb1ea867898f3eb18e819d6a513ac..6a5da9dd95fb23f2063e79951b0df290
      # Disabled due to problems compiling OpenSSL on macOS.
      # ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WARN_DOCUMENTATION -Wdocumentation)
  
-@@ -313,7 +315,7 @@ else ()
+@@ -327,7 +329,7 @@ else ()
          ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WARN_REDUNDANT_DECLS -Wredundant-decls)
  
          # Currently used MinGW w/GCC 7.2 doesn't provide sane error messages for this

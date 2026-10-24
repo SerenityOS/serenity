@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 24 Oct 2026 18:06:36 +0100
+Subject: [PATCH] Add SerenityOS support to bundled QuickJS
+
+---
+ src/thirdparty/quickjs-ng/quickjs-amalgam.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/thirdparty/quickjs-ng/quickjs-amalgam.c b/src/thirdparty/quickjs-ng/quickjs-amalgam.c
+index d90b64cda990646505282182ebabaa7da9fbaf28..44b365488518dc2015f0efb34033df44dc7c4135 100644
+--- a/src/thirdparty/quickjs-ng/quickjs-amalgam.c
++++ b/src/thirdparty/quickjs-ng/quickjs-amalgam.c
+@@ -8687,6 +8687,11 @@ JS_EXTERN uintptr_t js_std_cmd(int cmd, ...);
+ #define NO_TM_GMTOFF
+ #endif
+ 
++#if defined(__serenity__)
++#include <alloca.h>
++#define NO_TM_GMTOFF
++#endif
++
+ // atomic_store etc. are completely busted in recent versions of tcc;
+ // somehow the compiler forgets to load |ptr| into %rdi when calling
+ // the __atomic_*() helpers in its lib/stdatomic.c and lib/atomic.S

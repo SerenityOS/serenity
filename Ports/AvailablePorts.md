@@ -253,7 +253,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`open-adventure`](open-adventure/)             | Open Adventure                                                | 1.22                  | https://gitlab.com/esr/open-adventure/                               |
 | [`OpenJDK`](OpenJDK/)                           | OpenJDK                                                       | 17.0.6                | https://openjdk.java.net/                                            |
 | [`openjpeg`](openjpeg/)                         | OpenJPEG                                                      | 2.5.4                 | https://www.openjpeg.org/                                            |
-| [`openrct2`](openrct2/)                         | OpenRCT2                                                      | 0.4.9                 | https://openrct2.org/                                                |
+| [`openrct2`](openrct2/)                         | OpenRCT2                                                      | 0.5.6                 | https://openrct2.org/                                                |
 | [`openssh`](openssh/)                           | OpenSSH                                                       | 10.6p1                | https://github.com/openssh/openssh-portable                          |
 | [`openssl`](openssl/)                           | OpenSSL                                                       | 4.0.3                 | https://www.openssl.org/                                             |
 | [`openttd`](openttd/)                           | OpenTTD                                                       | 15.3                  | https://www.openttd.org/                                             |
