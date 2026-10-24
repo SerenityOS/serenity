@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libunistring'
-version='1.4.2'
+version='1.5'
 files=(
-    "mirror://gnu/libunistring/libunistring-${version}.tar.gz#e82664b170064e62331962126b259d452d53b227bb4a93ab20040d846fec01d8"
+    "mirror://gnu/libunistring/libunistring-${version}.tar.gz#5b0ecd46cbf225375f20ab4056197e66a7ac590e2684c069af407ae3383c9d81"
 )
 useconfigure='true'
 configopts=(
