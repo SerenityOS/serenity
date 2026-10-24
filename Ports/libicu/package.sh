@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libicu'
-version='78.3'
+version='79.1'
 useconfigure='true'
 use_fresh_config_sub='true'
 workdir='icu/source'
 files=(
-    "https://github.com/unicode-org/icu/releases/download/release-${version}/icu4c-${version}-sources.tgz#3a2e7a47604ba702f345878308e6fefeca612ee895cf4a5f222e7955fabfe0c0"
+    "https://github.com/unicode-org/icu/releases/download/release-${version}/icu4c-${version}-sources.tgz#06fa63ecb521048f8082f12ad988f6b678d90cbd88aafce24cbc94902b191d99"
 )
 
 configure() {
