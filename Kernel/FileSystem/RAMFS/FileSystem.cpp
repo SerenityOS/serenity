@@ -11,16 +11,31 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(FileSystemSpecificOptions const&)
+static constexpr StringView MAXIMUM_SIZE_OPTION = "maximum_size"sv;
+
+ErrorOr<void> RAMFS::validate_mount_unsigned_integer_flag(StringView key, u64)
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS));
+    if (key == MAXIMUM_SIZE_OPTION)
+        return {};
+    return EINVAL;
 }
 
-RAMFS::RAMFS() = default;
+ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create(FileSystemSpecificOptions const& options)
+{
+    u64 maximum_size = parse_unsigned_filesystem_specific_option(options, MAXIMUM_SIZE_OPTION).value_or(0);
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS(maximum_size)));
+}
+
+RAMFS::RAMFS(u64 maximum_size)
+    : m_maximum_size(maximum_size)
+{
+}
 RAMFS::~RAMFS() = default;
 
 ErrorOr<void> RAMFS::initialize()
 {
+    set_logical_block_size(LOGICAL_BLOCK_SIZE);
+    set_fragment_size(LOGICAL_BLOCK_SIZE);
     m_root_inode = TRY(RAMFSInode::try_create_root(*this));
     return {};
 }
@@ -58,6 +73,38 @@ unsigned RAMFS::next_inode_index()
 u8 RAMFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     return ram_backed_file_type_to_directory_entry_type(entry);
+}
+
+ErrorOr<void> RAMFS::update_size(i64 delta)
+{
+    SpinlockLocker locker(m_size_lock);
+    if (m_maximum_size > 0 && m_current_size + delta > m_maximum_size)
+        return Error::from_errno(ENOSPC);
+
+    m_current_size += delta;
+    return {};
+}
+
+u32 RAMFS::total_block_count_impl() const
+{
+    VERIFY(m_size_lock.is_locked());
+    if (m_maximum_size == 0)
+        return ceil_div(m_current_size, LOGICAL_BLOCK_SIZE);
+    return ceil_div(m_maximum_size, LOGICAL_BLOCK_SIZE);
+}
+
+unsigned RAMFS::total_block_count() const
+{
+    SpinlockLocker locker(m_size_lock);
+    return total_block_count_impl();
+}
+
+unsigned RAMFS::free_block_count() const
+{
+    SpinlockLocker locker(m_size_lock);
+    if (m_maximum_size == 0)
+        return 0;
+    return total_block_count_impl() - ceil_div(m_current_size, LOGICAL_BLOCK_SIZE);
 }
 
 }

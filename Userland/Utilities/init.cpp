@@ -11,11 +11,45 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Types.h>
 #include <Kernel/API/DeviceFileTypes.h>
+#include <Kernel/API/FileSystem/MountSpecificFlags.h>
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
+
+static ErrorOr<u64> available_ram_size()
+{
+    auto proc_memstat = TRY(Core::File::open("/sys/kernel/memstat"sv, Core::File::OpenMode::Read));
+
+    auto file_contents = TRY(proc_memstat->read_until_eof());
+    auto json_result = TRY(JsonValue::from_string(file_contents));
+    auto const& json = json_result.as_object();
+
+    u64 physical_allocated = json.get_u64("physical_allocated"sv).value_or(0);
+    u64 physical_available = json.get_u64("physical_available"sv).value_or(0);
+
+    u64 physical_pages_total = physical_allocated + physical_available;
+    return physical_pages_total * PAGE_SIZE;
+}
+
+static ErrorOr<void> mount_ramfs(StringView target, int flags, u64 maximum_size)
+{
+    int mount_fd = TRY(Core::System::fsopen("ram"sv, flags));
+
+    MountSpecificFlag flag;
+    static constexpr StringView key = "maximum_size"sv;
+    flag.key_string_length = key.length();
+    flag.key_string_addr = reinterpret_cast<unsigned char const*>(key.characters_without_null_termination());
+    flag.value_type = MountSpecificFlag::ValueType::UnsignedInteger;
+    flag.value_length = sizeof(maximum_size);
+    flag.value_addr = &maximum_size;
+
+    TRY(Core::System::ioctl(mount_fd, MOUNT_IOCTL_SET_MOUNT_SPECIFIC_FLAG, &flag));
+
+    TRY(Core::System::fsmount({}, mount_fd, -1, target));
+    return {};
+}
 
 static ErrorOr<void> prepare_bare_minimum_filesystem_mounts()
 {
@@ -23,7 +57,7 @@ static ErrorOr<void> prepare_bare_minimum_filesystem_mounts()
     TRY(Core::System::mount({}, -1, "/proc"sv, "proc"sv, MS_IMMUTABLE | MS_NOSUID));
     TRY(Core::System::mount({}, -1, "/sys"sv, "sys"sv, MS_IMMUTABLE));
     TRY(Core::System::mount({}, -1, "/dev"sv, "ram"sv, MS_IMMUTABLE | MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
-    TRY(Core::System::mount({}, -1, "/tmp"sv, "ram"sv, MS_IMMUTABLE | MS_NOSUID | MS_NODEV));
+    TRY(mount_ramfs("/tmp"sv, MS_IMMUTABLE | MS_NOSUID | MS_NODEV, 9 * TRY(available_ram_size()) / 10));
     // NOTE: Set /tmp to have a sticky bit with 0777 permissions.
     TRY(Core::System::chmod("/tmp"sv, 01777));
     return {};
