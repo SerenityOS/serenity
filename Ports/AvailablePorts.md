@@ -231,7 +231,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`msgpack-c`](msgpack-c/)                       | `msgpack` for C/C++                                           | 7.0.2                 | https://msgpack.org/                                                 |
 | [`msttcorefonts`](msttcorefonts/)               | Microsoft's TrueType core fonts                               | 1.0                   | https://corefonts.sourceforge.net/                                   |
 | [`mysthous`](mysthous/)                         | Hi-Res Adventure #1: Mystery House                            | 1.0                   | https://www.scummvm.org/games/#games-hires1                          |
-| [`nano`](nano/)                                 | GNU nano                                                      | 9.2                   | https://www.nano-editor.org/                                         |
+| [`nano`](nano/)                                 | GNU nano                                                      | 9.3                   | https://www.nano-editor.org/                                         |
 | [`nasm`](nasm/)                                 | Netwide Assembler (NASM)                                      | 3.02                  | https://www.nasm.us/                                                 |
 | [`ncdu`](ncdu/)                                 | Ncdu                                                          | 1.22                  | https://dev.yorhel.nl/ncdu                                           |
 | [`ncurses`](ncurses/)                           | ncurses                                                       | 6.6                   | https://invisible-island.net/ncurses/announce.html                   |
