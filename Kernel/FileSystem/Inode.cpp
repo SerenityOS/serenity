@@ -212,9 +212,6 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
         VERIFY(!fs().is_readonly());
     }
 
-    if (m_metadata_dirty == metadata_dirty)
-        return;
-
     m_metadata_dirty = metadata_dirty;
     if (m_metadata_dirty) {
         // FIXME: Maybe we should hook into modification events somewhere else, I'm not sure where.

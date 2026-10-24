@@ -316,6 +316,11 @@ ErrorOr<void> RAMFSInode::add_child(Inode& child, StringView name, mode_t)
         return ENOMEM;
 
     m_children.append(*child_entry);
+    TRY(child_entry->inode->increment_link_count());
+
+    // Update ctime and mtime.
+    did_modify_contents();
+
     did_add_child(child.identifier(), name);
     return {};
 }
@@ -333,7 +338,7 @@ ErrorOr<void> RAMFSInode::remove_child(StringView name)
         return ENOENT;
 
     auto child_id = child->inode->identifier();
-    child->inode->did_delete_self();
+    TRY(child->inode->decrement_link_count());
     m_children.remove(*child);
     did_remove_child(child_id, name);
     // Balanced by `new` in add_child()
@@ -375,6 +380,39 @@ ErrorOr<void> RAMFSInode::update_timestamps(Optional<UnixDateTime> atime, Option
     if (mtime.has_value())
         m_metadata.mtime = mtime.value();
     set_metadata_dirty(true);
+    return {};
+}
+
+ErrorOr<void> RAMFSInode::increment_link_count()
+{
+    MutexLocker locker(m_inode_lock);
+
+    if (fs().is_readonly())
+        return EROFS;
+
+    Checked checked(m_metadata.link_count);
+    checked.add(1);
+    if (checked.has_overflow())
+        return EMLINK;
+
+    m_metadata.link_count += 1;
+
+    set_metadata_dirty(true);
+    return {};
+}
+
+ErrorOr<void> RAMFSInode::decrement_link_count()
+{
+    MutexLocker locker(m_inode_lock);
+    if (fs().is_readonly())
+        return EROFS;
+    VERIFY(m_metadata.link_count);
+
+    --m_metadata.link_count;
+    set_metadata_dirty(true);
+    if (m_metadata.link_count == 0)
+        did_delete_self();
+
     return {};
 }
 
