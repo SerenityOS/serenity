@@ -10,7 +10,10 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/MemoryStream.h>
+#include <AK/NumericLimits.h>
 #include <AK/Random.h>
+#include <AK/ScopeGuard.h>
+#include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/Account.h>
 #include <LibCore/EventLoop.h>
@@ -25,9 +28,18 @@
 
 namespace SSH::Server {
 
+static constexpr u32 MAXIMUM_AUTHENTICATION_ATTEMPTS = 6;
+static constexpr u32 SERVER_INITIAL_CHANNEL_WINDOW_SIZE = 512 * 1024;
+static constexpr u32 SERVER_MAXIMUM_CHANNEL_PACKET_SIZE = 32 * 1024;
+static constexpr u32 MINIMUM_PEER_CHANNEL_PACKET_SIZE = 1024;
+// Bound memory retained for channel output while the peer's window is closed.
+static constexpr size_t MAXIMUM_QUEUED_CHANNEL_DATA_SIZE = 512 * 1024;
+static constexpr size_t MAXIMUM_QUEUED_CHANNEL_DATA_MESSAGES = 1024;
+// Bounds the aggregate advertised receive window to 8 MiB per SSH connection.
+static constexpr size_t MAXIMUM_CHANNELS_PER_CONNECTION = 16;
+
 SSHClient::SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect)
     : Peer(tcp_socket)
-    , m_tcp_socket(tcp_socket)
     , m_disconnect(move(disconnect))
 {
     m_sigchld_handler_id = Core::EventLoop::register_signal(SIGCHLD, [this](int) {
@@ -40,13 +52,34 @@ SSHClient::SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect)
 
 SSHClient::~SSHClient()
 {
+    shutdown();
+}
+
+void SSHClient::shutdown()
+{
+    if (m_is_shutdown)
+        return;
+
+    m_is_shutdown = true;
+    revoke_weak_ptrs();
+    set_output_pending_callback({});
     Core::EventLoop::unregister_signal(m_sigchld_handler_id);
+    m_sigchld_handler_id = 0;
+
+    for (auto& session : m_sessions) {
+        session->is_closed = true;
+        session->pending_outgoing_channel_data.clear();
+        session->pending_outgoing_channel_data_bytes = 0;
+        session->notify_remote_window_waiters();
+        if (session->system.has<ExecData>())
+            session->system.get<ExecData>().terminate();
+    }
 }
 
 ErrorOr<BehaviorControl> SSHClient::handle_data(ByteBuffer& data)
 {
     if (m_state != State::Constructed) {
-        if (!is_buffer_containing_a_full_packet(data))
+        if (!TRY(is_buffer_containing_a_full_packet(data)))
             return BehaviorControl::WaitForMoreData;
     }
 
@@ -90,7 +123,7 @@ ErrorOr<void> SSHClient::handle_protocol_version(ByteBuffer& data)
 
     data.clear();
 
-    TRY(m_tcp_socket.write_until_depleted(PROTOCOL_STRING));
+    TRY(write_raw_bytes(PROTOCOL_STRING.bytes()));
 
     m_state = State::WaitingForKeyProtocolExchange;
 
@@ -224,6 +257,8 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
 
     // "Compute shared secret."
     auto shared_secret = TRY(curve.compute_coordinate(private_key, client_public_key));
+    if (!KeyExchangeData::is_valid_x25519_shared_secret(shared_secret.bytes()))
+        return Error::from_string_literal("ECDH produced an invalid shared secret");
     m_key_exchange_data.shared_secret = shared_secret;
 
     if (auto keylog_file = ServerConfiguration::the().keylog_file(); keylog_file.has_value()) {
@@ -235,8 +270,6 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
     m_cookie = {};
 
     set_shared_secret(move(shared_secret));
-
-    // FIXME: Abort if shared_point is not valid (at least when it's all zero, maybe there are other cases too).
 
     // Generate and sign exchange hash.
     auto hash = TRY(m_key_exchange_data.compute_sha_256());
@@ -329,6 +362,10 @@ ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
     if (message.type != MessageID::USERAUTH_REQUEST)
         return Error::from_string_literal("Expected packet of type USERAUTH_REQUEST");
 
+    if (m_authentication_attempts >= MAXIMUM_AUTHENTICATION_ATTEMPTS)
+        return Error::from_string_literal("Too many authentication attempts");
+    ++m_authentication_attempts;
+
     auto username = TRY(decode_string(message.payload));
     auto service_name = TRY(decode_string(message.payload));
     auto method_name = TRY(decode_string(message.payload));
@@ -362,8 +399,6 @@ ErrorOr<void> SSHClient::handle_user_authentication(GenericMessage message)
     }
 
     TRY(send_available_authentication_methods());
-    // FIXME: Disconnect the client after too many attempts.
-
     return {};
 }
 
@@ -547,7 +582,23 @@ ErrorOr<void> SSHClient::handle_channel_open_message(GenericMessage& message)
     if (channel_type != "session"sv.bytes())
         return Error::from_string_literal("Unexpected channel type");
 
-    m_sessions.empend(TRY(Session::create(sender_channel_id, initial_window_size, maximum_packet_size)));
+    // Tiny peer limits can turn every byte of command output into a separate
+    // SSH packet, so reject pathological values rather than amplify CPU work.
+    if (maximum_packet_size < MINIMUM_PEER_CHANNEL_PACKET_SIZE)
+        return Error::from_string_literal("Channel maximum packet size is too small");
+
+    if (m_sessions.size() >= MAXIMUM_CHANNELS_PER_CONNECTION)
+        return Error::from_string_literal("Too many channels for this SSH connection");
+
+    for (auto const& session : m_sessions) {
+        if (session->sender_channel_id == sender_channel_id)
+            return Error::from_string_literal("Duplicate channel ID");
+    }
+
+    // Do not reuse the peer's window as our receive capacity: advertise a
+    // bounded server window for each channel.
+    TRY(m_sessions.try_empend(TRY(Session::create(sender_channel_id, SERVER_INITIAL_CHANNEL_WINDOW_SIZE, maximum_packet_size))));
+    m_sessions.last()->remote_window_size = initial_window_size;
 
     TRY(send_channel_open_confirmation(m_sessions.last()));
 
@@ -574,16 +625,16 @@ ErrorOr<void> SSHClient::send_channel_open_confirmation(Session const& session)
     TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
 
     TRY(stream.write_value<NetworkOrdered<u32>>(session.initial_window_size));
-    TRY(stream.write_value<NetworkOrdered<u32>>(session.maximum_packet_size));
+    TRY(stream.write_value<NetworkOrdered<u32>>(SERVER_MAXIMUM_CHANNEL_PACKET_SIZE));
 
     TRY(write_packet(TRY(stream.read_until_eof())));
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Session>> SSHClient::find_session(u32 sender_channel_id)
+ErrorOr<NonnullRefPtr<Session>> SSHClient::find_session(u32 local_channel_id)
 {
     for (auto& session : m_sessions) {
-        if (session->sender_channel_id == sender_channel_id)
+        if (session->local_channel_id == local_channel_id)
             return session;
     }
     return Error::from_string_literal("Session not found");
@@ -627,23 +678,32 @@ ErrorOr<void> SSHClient::handle_channel_data(GenericMessage& message)
 {
     auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
     auto data = TRY(decode_string(message.payload));
+    if (message.payload.remaining() != 0)
+        return Error::from_string_literal("Trailing data in channel data message");
+    if (data.is_empty())
+        return Error::from_string_literal("Empty channel data message");
 
     auto& session = *TRY(find_session(recipient_channel_id));
 
+    if (session.is_closed)
+        return Error::from_string_literal("Received channel data for a closed channel");
     if (session.system.has<Empty>())
         return Error::from_string_literal("Received channel data while subsystem is unknown");
 
     if (session.has_received_eof)
         return Error::from_string_literal("Received channel data after EOF");
 
+    if (data.size() > SERVER_MAXIMUM_CHANNEL_PACKET_SIZE)
+        return Error::from_string_literal("Received oversized channel data");
+
+    if (!session.can_receive_data(data.size()))
+        return Error::from_string_literal("Received channel data beyond the advertised window");
+
     session.channel_data.append(data);
     session.total_received_bytes += data.size();
 
-    // FIXME: Try to tune this logic, there is probably some performance to gain here.
-    if (session.local_window_size - session.total_received_bytes < session.initial_window_size / 2)
-        TRY(send_channel_window_adjust_message(session));
-
-    // FIXME: Make sure to cancel this coroutine if anything goes wrong.
+    // Only one consumer coroutine may dequeue this channel at a time. Shutdown
+    // marks the session closed and wakes it so it can safely exit.
     if (!session.has_streaming_coroutine)
         Core::EventLoop::adopt_coroutine(async_stream_data_to_subsystem(session));
 
@@ -652,16 +712,22 @@ ErrorOr<void> SSHClient::handle_channel_data(GenericMessage& message)
 
 Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session> session)
 {
+    auto weak_this = make_weak_ptr();
     TemporaryChange t(session->has_streaming_coroutine, true);
 
     auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
         while (true) {
-            if (session->channel_data.data().is_empty())
+            if (session->is_closed || session->channel_data.data().is_empty())
                 break;
 
-            auto behavior = CO_TRY(co_await session->system.visit(
+            auto maybe_behavior = co_await session->system.visit(
                 [&](auto& system) -> Coroutine<ErrorOr<BehaviorControl>> { return system.handle_channel_data(session); },
-                [](Empty) -> Coroutine<ErrorOr<BehaviorControl>> { VERIFY_NOT_REACHED(); }));
+                [](Empty) -> Coroutine<ErrorOr<BehaviorControl>> { VERIFY_NOT_REACHED(); });
+            if (weak_this.is_null() || session->is_closed)
+                co_return {};
+            auto behavior = CO_TRY(move(maybe_behavior));
+
+            CO_TRY(adjust_channel_window_if_needed(*session));
             switch (behavior) {
             case BehaviorControl::ContinueExecution:
                 break;
@@ -672,10 +738,15 @@ Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session>
             }
         }
 
-        CO_TRY(close_session_if_needed(session));
+        if (weak_this.is_null() || session->is_closed)
+            co_return {};
+        CO_TRY(close_session_if_needed(*session));
 
         co_return {};
     }();
+
+    if (weak_this.is_null() || session->is_closed)
+        co_return;
 
     if (maybe_error.is_error())
         disconnect(maybe_error.release_error());
@@ -687,7 +758,12 @@ Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session>
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
 ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
 {
+    if (session->is_closed || !session->system.has<Empty>())
+        return Error::from_string_literal("A request is already active on this channel");
+
     auto command = TRY(decode_string(message.payload));
+    if (message.payload.remaining() != 0)
+        return Error::from_string_literal("Trailing data in exec request");
 
     // FIXME: We should use the user's shell rather than hardcoding it.
 
@@ -701,33 +777,69 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     args.append("-c");
     args.append(ByteString(command.bytes()));
 
-    // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
-    //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
     auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    ArmedScopeGuard close_stdin_read_fd { [&] { MUST(Core::System::close(stdin_fds[0])); } };
+    auto stdin_read = TRY(Core::File::adopt_fd(stdin_fds[0], Core::File::OpenMode::Read));
+    close_stdin_read_fd.disarm();
+    ArmedScopeGuard close_stdin_write_fd { [&] { MUST(Core::System::close(stdin_fds[1])); } };
+    auto stdin_write = TRY(Core::File::adopt_fd(stdin_fds[1], Core::File::OpenMode::Write));
+    close_stdin_write_fd.disarm();
+
     auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    ArmedScopeGuard close_stdout_read_fd { [&] { MUST(Core::System::close(stdout_fds[0])); } };
+    auto stdout_read = TRY(Core::File::adopt_fd(stdout_fds[0], Core::File::OpenMode::Read));
+    close_stdout_read_fd.disarm();
+    ArmedScopeGuard close_stdout_write_fd { [&] { MUST(Core::System::close(stdout_fds[1])); } };
+    auto stdout_write = TRY(Core::File::adopt_fd(stdout_fds[1], Core::File::OpenMode::Write));
+    close_stdout_write_fd.disarm();
+
     auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    ArmedScopeGuard close_stderr_read_fd { [&] { MUST(Core::System::close(stderr_fds[0])); } };
+    auto stderr_read = TRY(Core::File::adopt_fd(stderr_fds[0], Core::File::OpenMode::Read));
+    close_stderr_read_fd.disarm();
+    ArmedScopeGuard close_stderr_write_fd { [&] { MUST(Core::System::close(stderr_fds[1])); } };
+    auto stderr_write = TRY(Core::File::adopt_fd(stderr_fds[1], Core::File::OpenMode::Write));
+    close_stderr_write_fd.disarm();
+
+    TRY(stdin_write->set_blocking(false));
+    TRY(stdout_read->set_blocking(false));
+    TRY(stderr_read->set_blocking(false));
 
     auto child = TRY(Core::Process::spawn({
         .executable = shell,
         .arguments = args,
+        .create_process_group = true,
         .file_actions = {
-            Core::FileAction::DuplicateFile { stdin_fds[0], STDIN_FILENO },
-            Core::FileAction::DuplicateFile { stdout_fds[1], STDOUT_FILENO },
-            Core::FileAction::DuplicateFile { stderr_fds[1], STDERR_FILENO },
+            Core::FileAction::DuplicateFile { stdin_read->fd(), STDIN_FILENO },
+            Core::FileAction::DuplicateFile { stdout_write->fd(), STDOUT_FILENO },
+            Core::FileAction::DuplicateFile { stderr_write->fd(), STDERR_FILENO },
         },
     }));
 
-    TRY(Core::System::close(stdin_fds[0]));
-    TRY(Core::System::close(stdout_fds[1]));
-    TRY(Core::System::close(stderr_fds[1]));
+    stdin_read->close();
+    stdout_write->close();
+    stderr_write->close();
 
-    session->system = TRY(ExecData::create(move(child), stdin_fds[1], stdout_fds[0], stderr_fds[0]));
+    session->system = ExecData::create(move(child), move(stdin_write), move(stdout_read), move(stderr_read));
 
     TRY(send_channel_success_message(session));
 
-    // FIXME: Make sure to cancel these coroutines if anything goes wrong.
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stdout_; }, [this](auto&... args) { return send_channel_data(args...); }));
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stderr_; }, [this](auto&... args) { return send_channel_extended_data(args...); }));
+    auto weak_this = make_weak_ptr();
+    auto send_stdout = [weak_this](Session& session, ReadonlyBytes data) -> ErrorOr<void> {
+        auto* client = weak_this.ptr();
+        if (!client)
+            return Error::from_string_literal("SSH client has shut down");
+        return client->send_channel_data(session, data);
+    };
+    auto send_stderr = [weak_this](Session& session, ReadonlyBytes data) -> ErrorOr<void> {
+        auto* client = weak_this.ptr();
+        if (!client)
+            return Error::from_string_literal("SSH client has shut down");
+        return client->send_channel_extended_data(session, data);
+    };
+
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stdout_; }, move(send_stdout)));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stderr_; }, move(send_stderr)));
 
     return {};
 }
@@ -735,25 +847,45 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
 template<typename F, typename F2>
 Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session, F file_extractor, F2 sender)
 {
+    auto weak_this = make_weak_ptr();
     auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
         while (true) {
+            if (session->is_closed)
+                co_return {};
+
             auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
-            auto output = CO_TRY(co_await file_extractor(session->system.template get<ExecData>()).async_read_some(output_buffer));
+            auto maybe_output = co_await file_extractor(session->system.template get<ExecData>()).async_read_some(output_buffer);
+            if (weak_this.is_null() || session->is_closed)
+                co_return {};
+            auto output = CO_TRY(move(maybe_output));
 
             if (output.is_empty())
                 break;
 
             CO_TRY(sender(session, output));
+            while (session->has_pending_outgoing_channel_data()) {
+                auto maybe_window = co_await session->wait_for_remote_window();
+                if (weak_this.is_null() || session->is_closed)
+                    co_return {};
+                CO_TRY(move(maybe_window));
+                CO_TRY(flush_pending_channel_data(*session));
+            }
         }
 
+        if (weak_this.is_null() || session->is_closed)
+            co_return {};
         CO_TRY(close_session_if_needed(session));
 
         co_return {};
     }();
 
+    if (weak_this.is_null() || session->is_closed)
+        co_return;
+
     if (maybe_error.is_error()) {
-        dbgln("Unable to read stdout from process: {}", maybe_error.error());
-        // FIXME: Think about what we should do with this error.
+        auto error = maybe_error.release_error();
+        dbgln("Unable to stream process output: {}", error);
+        disconnect(move(error));
     }
     co_return;
 }
@@ -762,7 +894,12 @@ Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session,
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
 ErrorOr<void> SSHClient::handle_channel_subsystem(Session& session, GenericMessage& message)
 {
+    if (session.is_closed || !session.system.has<Empty>())
+        return Error::from_string_literal("A request is already active on this channel");
+
     auto subsystem = TRY(decode_string(message.payload));
+    if (message.payload.remaining() != 0)
+        return Error::from_string_literal("Trailing data in subsystem request");
     dbgln_if(SSH_DEBUG, "Subsystem requested: {:s}", subsystem.bytes());
 
     if (subsystem == "sftp"sv.bytes()) {
@@ -787,55 +924,76 @@ ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
     return {};
 }
 
-static ErrorOr<void> for_each_part(ReadonlyBytes data, u32 part_size, auto callback)
+ErrorOr<void> SSHClient::send_channel_data(Session& session, ReadonlyBytes data)
 {
-    do {
-        auto part = data.trim(part_size);
+    return queue_channel_data(session, data, false);
+}
 
-        TRY(callback(part));
+ErrorOr<void> SSHClient::send_channel_extended_data(Session& session, ReadonlyBytes data)
+{
+    return queue_channel_data(session, data, true);
+}
 
-        data = data.slice(part.size());
-    } while (!data.is_empty());
+ErrorOr<void> SSHClient::queue_channel_data(Session& session, ReadonlyBytes data, bool is_extended_data)
+{
+    if (data.is_empty())
+        return {};
+    if (session.is_closed)
+        return Error::from_string_literal("Cannot send data on a closed channel");
+    if (session.pending_outgoing_channel_data.size() >= MAXIMUM_QUEUED_CHANNEL_DATA_MESSAGES
+        || session.pending_outgoing_channel_data_bytes > MAXIMUM_QUEUED_CHANNEL_DATA_SIZE
+        || data.size() > MAXIMUM_QUEUED_CHANNEL_DATA_SIZE - session.pending_outgoing_channel_data_bytes)
+        return Error::from_string_literal("Pending channel data exceeds its limit");
+
+    auto pending_bytes = TRY(ByteBuffer::copy(data));
+    TRY(session.pending_outgoing_channel_data.try_empend(move(pending_bytes), 0, is_extended_data));
+    session.pending_outgoing_channel_data_bytes += data.size();
+
+    return flush_pending_channel_data(session);
+}
+
+ErrorOr<void> SSHClient::flush_pending_channel_data(Session& session)
+{
+    while (!session.pending_outgoing_channel_data.is_empty() && session.remote_window_size > 0) {
+        auto& pending = session.pending_outgoing_channel_data.first();
+        VERIFY(pending.offset <= pending.bytes.size());
+        auto remaining_data = pending.bytes.bytes().slice(pending.offset);
+
+        auto maximum_part_size = min(session.maximum_packet_size, SERVER_MAXIMUM_CHANNEL_PACKET_SIZE);
+        maximum_part_size = min(maximum_part_size, session.remote_window_size);
+        if (maximum_part_size == 0)
+            return Error::from_string_literal("Channel packet size is zero");
+
+        auto part = remaining_data.trim(maximum_part_size);
+        TRY(send_channel_data_packet(session, part, pending.is_extended_data));
+        session.consume_remote_window(part.size());
+        pending.offset += part.size();
+
+        if (pending.offset == pending.bytes.size()) {
+            session.pending_outgoing_channel_data_bytes -= pending.bytes.size();
+            session.pending_outgoing_channel_data.remove(0);
+        }
+    }
 
     return {};
 }
 
-// 5.2. Data Transfer
-// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
-ErrorOr<void> SSHClient::send_channel_data(Session const& session, ReadonlyBytes data)
+ErrorOr<void> SSHClient::send_channel_data_packet(Session const& session, ReadonlyBytes data, bool is_extended_data)
 {
-    return for_each_part(data, session.maximum_packet_size, [&](ReadonlyBytes part) -> ErrorOr<void> {
-        AllocatingMemoryStream stream;
-        TRY(stream.write_value(MessageID::CHANNEL_DATA));
-        TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
-        TRY(encode_string(stream, part));
-        TRY(write_packet(TRY(stream.read_until_eof())));
-        return {};
-    });
-}
-
-// 5.2. Data Transfer
-// https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
-ErrorOr<void> SSHClient::send_channel_extended_data(Session const& session, ReadonlyBytes data)
-{
-    // This only supports sending stderr data.
-
-    // "Additionally, some channels can transfer several types of data.  An
-    //   example of this is stderr data from interactive sessions.  Such data
-    //   can be passed with SSH_MSG_CHANNEL_EXTENDED_DATA messages, where a
-    //   separate integer specifies the type of data."
-
     static constexpr u32 EXTENDED_DATA_STDERR = 1;
 
-    return for_each_part(data, session.maximum_packet_size, [&](ReadonlyBytes part) -> ErrorOr<void> {
-        AllocatingMemoryStream stream;
+    AllocatingMemoryStream stream;
+    if (is_extended_data) {
         TRY(stream.write_value(MessageID::CHANNEL_EXTENDED_DATA));
         TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
         TRY(stream.write_value<NetworkOrdered<u32>>(EXTENDED_DATA_STDERR));
-        TRY(encode_string(stream, part));
-        TRY(write_packet(TRY(stream.read_until_eof())));
-        return {};
-    });
+    } else {
+        TRY(stream.write_value(MessageID::CHANNEL_DATA));
+        TRY(stream.write_value<NetworkOrdered<u32>>(session.local_channel_id));
+    }
+    TRY(encode_string(stream, data));
+    TRY(write_packet(TRY(stream.read_until_eof())));
+    return {};
 }
 
 ErrorOr<void> SSHClient::handle_channel_eof(GenericMessage& message)
@@ -864,26 +1022,64 @@ ErrorOr<void> SSHClient::handle_channel_eof(GenericMessage& message)
 // https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
 ErrorOr<void> SSHClient::handle_channel_window_adjust_message(GenericMessage& message)
 {
-    [[maybe_unused]] auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
-    [[maybe_unused]] auto bytes_to_add = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto recipient_channel_id = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto bytes_to_add = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    if (message.payload.remaining() != 0)
+        return Error::from_string_literal("Trailing data in channel window adjustment");
 
-    // FIXME: Actually support this packet and don't spam the client without
-    //        respecting its window size.
+    auto& session = *TRY(find_session(recipient_channel_id));
+    if (session.is_closed)
+        return Error::from_string_literal("Window adjustment for a closed channel");
+
+    TRY(session.adjust_remote_window(bytes_to_add));
+    TRY(flush_pending_channel_data(session));
+
+    if (!session.has_pending_outgoing_channel_data())
+        TRY(close_session_if_needed(session));
+
+    if (bytes_to_add > 0)
+        session.notify_remote_window_waiters();
     return {};
+}
+
+ErrorOr<void> SSHClient::adjust_channel_window_if_needed(Session& session)
+{
+    if (session.total_received_bytes > session.local_window_size
+        || session.total_consumed_bytes > session.total_received_bytes
+        || session.total_window_adjusted_bytes > session.total_consumed_bytes)
+        return Error::from_string_literal("Invalid channel window accounting");
+
+    auto available_window = session.local_window_size - session.total_received_bytes;
+    if (available_window > session.initial_window_size / 2)
+        return {};
+
+    auto consumed_since_last_adjustment = session.total_consumed_bytes - session.total_window_adjusted_bytes;
+    if (consumed_since_last_adjustment == 0)
+        return {};
+
+    auto bytes_to_add = static_cast<u32>(min(consumed_since_last_adjustment, static_cast<u64>(NumericLimits<u32>::max())));
+    return send_channel_window_adjust_message(session, bytes_to_add);
 }
 
 // 5.2.  Data Transfer
 // https://datatracker.ietf.org/doc/html/rfc4254#section-5.2
-ErrorOr<void> SSHClient::send_channel_window_adjust_message(Session& session)
+ErrorOr<void> SSHClient::send_channel_window_adjust_message(Session& session, u32 bytes_to_add)
 {
-    session.local_window_size += session.initial_window_size;
+    if (bytes_to_add == 0)
+        return {};
+
+    if (session.local_window_size > NumericLimits<u64>::max() - bytes_to_add
+        || session.total_window_adjusted_bytes > NumericLimits<u64>::max() - bytes_to_add)
+        return Error::from_string_literal("Channel window accounting overflow");
 
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_WINDOW_ADJUST));
     TRY(stream.write_value<NetworkOrdered<u32>>(session.sender_channel_id));
-    TRY(stream.write_value<NetworkOrdered<u32>>(session.initial_window_size));
+    TRY(stream.write_value<NetworkOrdered<u32>>(bytes_to_add));
     TRY(write_packet(TRY(stream.read_until_eof())));
 
+    session.local_window_size += bytes_to_add;
+    session.total_window_adjusted_bytes += bytes_to_add;
     return {};
 }
 
@@ -902,7 +1098,13 @@ ErrorOr<void> SSHClient::handle_channel_close(GenericMessage& message)
 
 ErrorOr<void> SSHClient::send_channel_close(Session& session)
 {
+    if (session.system.has<ExecData>())
+        session.system.get<ExecData>().terminate();
+
     session.is_closed = true;
+    session.pending_outgoing_channel_data.clear();
+    session.pending_outgoing_channel_data_bytes = 0;
+    session.notify_remote_window_waiters();
 
     AllocatingMemoryStream stream;
     TRY(stream.write_value(MessageID::CHANNEL_CLOSE));
@@ -929,7 +1131,9 @@ ErrorOr<void> SSHClient::send_exit_status(Session const& session)
 ErrorOr<void> SSHClient::manage_child_death()
 {
     while (true) {
-        auto maybe_result = Core::System::waitpid(-1, WNOHANG);
+        // Observe the exit without reaping first so the process-group ID remains
+        // pinned by its zombie leader while any background descendants are killed.
+        auto maybe_result = Core::System::waitid(P_ALL, 0, WEXITED | WNOHANG | WNOWAIT);
 
         if (maybe_result.is_error()) {
             auto error = maybe_result.release_error();
@@ -940,35 +1144,59 @@ ErrorOr<void> SSHClient::manage_child_death()
             return error;
         }
 
-        auto result = maybe_result.value();
-
-        if (result.pid == 0)
+        auto result = maybe_result.release_value();
+        if (result.si_pid == 0)
             return {};
 
+        Session* exited_session = nullptr;
         for (auto& session : m_sessions) {
-            if (session->system.has<ExecData>()) {
-                auto& exec_data = session->system.get<ExecData>();
-                if (exec_data.child.pid() == result.pid) {
-                    bool exited_with_code_0 = true;
-                    if (WIFEXITED(result.status)) {
-                        exited_with_code_0 &= WEXITSTATUS(result.status) == 0;
-                    } else if (WIFSIGNALED(result.status)) {
-                        exited_with_code_0 = false;
-                    }
+            if (!session->system.has<ExecData>())
+                continue;
 
-                    // FIXME: Send the actual exit status.
-                    exec_data.exit_status = exited_with_code_0 ? 0 : -1;
+            auto& exec_data = session->system.get<ExecData>();
+            if (exec_data.child.pid() != result.si_pid)
+                continue;
 
-                    TRY(close_session_if_needed(*session));
-                }
+            // A command may leave background descendants behind after its shell
+            // exits. Terminate the whole group before reaping the leader, which
+            // prevents both orphaned commands and a later PID-reuse race.
+            auto maybe_kill_error = Core::System::killpg(result.si_pid, SIGKILL);
+            if (maybe_kill_error.is_error()) {
+                auto error = maybe_kill_error.release_error();
+                if (!error.is_errno() || error.code() != ESRCH)
+                    dbgln("Unable to terminate SSH child process group: {}", error);
             }
+
+            bool exited_with_code_0 = result.si_code == CLD_EXITED && result.si_status == 0;
+            // FIXME: Send the actual exit status.
+            exec_data.exit_status = exited_with_code_0 ? 0 : -1;
+            exited_session = session.ptr();
+            break;
         }
+
+        // waitid(WNOWAIT) did not reap the child; do so now to avoid retaining
+        // zombies. Ignore EINTR and retry the same PID.
+        while (true) {
+            auto maybe_reaped = Core::System::waitpid(result.si_pid);
+            if (!maybe_reaped.is_error())
+                break;
+
+            auto error = maybe_reaped.release_error();
+            if (error.code() == EINTR)
+                continue;
+            if (error.code() == ECHILD)
+                break;
+            return error;
+        }
+
+        if (exited_session)
+            TRY(close_session_if_needed(*exited_session));
     }
 }
 
 ErrorOr<void> SSHClient::close_session_if_needed(Session& session)
 {
-    if (session.is_closed)
+    if (session.is_closed || session.has_pending_outgoing_channel_data())
         return {};
 
     if (!session.is_ready_to_be_closed())

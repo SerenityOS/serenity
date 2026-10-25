@@ -10,6 +10,7 @@ set(TEST_SOURCES
     TestSSHEncodeDecode.cpp
     TestSSHIdentificationString.cpp
     TestSSHPeer.cpp
+    TestSSHSession.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)

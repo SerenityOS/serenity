@@ -69,6 +69,56 @@ TEST_CASE(test_x25519)
     EXPECT_EQ(shared_bob, shared_secret);
 
     EXPECT_EQ(shared_alice, shared_bob);
+
+    // RFC 7748 permits the primitive to return an all-zero result for low-order inputs;
+    // protocols such as SSH must reject that result before using it as a session secret.
+    Array<u8, 32> low_order_public_key_data {};
+    ReadonlyBytes low_order_public_key { low_order_public_key_data.data(), low_order_public_key_data.size() };
+    auto low_order_shared_secret = MUST(curve.compute_coordinate(alice_private_key, low_order_public_key));
+    for (auto byte : low_order_shared_secret.bytes())
+        EXPECT(byte == 0);
+}
+
+TEST_CASE(test_x25519_rejects_invalid_input_sizes)
+{
+    Array<u8, 32> valid_key_data {};
+    Array<u8, 31> short_key_data {};
+    Array<u8, 33> long_key_data {};
+    ReadonlyBytes valid_key { valid_key_data.data(), valid_key_data.size() };
+    ReadonlyBytes short_key { short_key_data.data(), short_key_data.size() };
+    ReadonlyBytes long_key { long_key_data.data(), long_key_data.size() };
+
+    Crypto::Curves::X25519 curve;
+
+    EXPECT(curve.compute_coordinate(short_key, valid_key).is_error());
+    EXPECT(curve.compute_coordinate(valid_key, short_key).is_error());
+    EXPECT(curve.compute_coordinate(long_key, valid_key).is_error());
+    EXPECT(curve.compute_coordinate(valid_key, long_key).is_error());
+    EXPECT(curve.generate_public_key(short_key).is_error());
+    EXPECT(curve.generate_public_key(long_key).is_error());
+    EXPECT(curve.derive_premaster_key(short_key).is_error());
+    EXPECT(curve.derive_premaster_key(long_key).is_error());
+}
+
+TEST_CASE(test_x448_rejects_invalid_input_sizes)
+{
+    Array<u8, 56> valid_key_data {};
+    Array<u8, 55> short_key_data {};
+    Array<u8, 57> long_key_data {};
+    ReadonlyBytes valid_key { valid_key_data.data(), valid_key_data.size() };
+    ReadonlyBytes short_key { short_key_data.data(), short_key_data.size() };
+    ReadonlyBytes long_key { long_key_data.data(), long_key_data.size() };
+
+    Crypto::Curves::X448 curve;
+
+    EXPECT(curve.compute_coordinate(short_key, valid_key).is_error());
+    EXPECT(curve.compute_coordinate(valid_key, short_key).is_error());
+    EXPECT(curve.compute_coordinate(long_key, valid_key).is_error());
+    EXPECT(curve.compute_coordinate(valid_key, long_key).is_error());
+    EXPECT(curve.generate_public_key(short_key).is_error());
+    EXPECT(curve.generate_public_key(long_key).is_error());
+    EXPECT(curve.derive_premaster_key(short_key).is_error());
+    EXPECT(curve.derive_premaster_key(long_key).is_error());
 }
 
 TEST_CASE(test_x448)

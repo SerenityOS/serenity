@@ -1032,6 +1032,14 @@ ErrorOr<WaitPidResult> waitpid(pid_t waitee, int options)
     return WaitPidResult { pid, wstatus };
 }
 
+ErrorOr<siginfo_t> waitid(idtype_t id_type, id_t id, int options)
+{
+    siginfo_t info {};
+    if (::waitid(id_type, id, &info, options) < 0)
+        return Error::from_syscall("waitid"sv, -errno);
+    return info;
+}
+
 ErrorOr<void> setuid(uid_t uid)
 {
     if (::setuid(uid) < 0)

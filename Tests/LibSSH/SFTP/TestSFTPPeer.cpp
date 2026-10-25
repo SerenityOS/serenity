@@ -63,8 +63,11 @@ TEST_CASE(write_packet)
 
 TEST_CASE(is_buffer_containing_packet)
 {
-    EXPECT(!PeerMock::is_buffer_containing_a_full_packet({}));
-    EXPECT(!PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes().trim(1)));
-    EXPECT(!PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes().trim(g_initialization_packet.length() - 1)));
-    EXPECT(PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes()));
+    EXPECT(!TRY_OR_FAIL(PeerMock::is_buffer_containing_a_full_packet({})));
+    EXPECT(!TRY_OR_FAIL(PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes().trim(1))));
+    EXPECT(!TRY_OR_FAIL(PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes().trim(g_initialization_packet.length() - 1))));
+    EXPECT(TRY_OR_FAIL(PeerMock::is_buffer_containing_a_full_packet(g_initialization_packet.bytes())));
+
+    auto oversized_length = to_array<u8>({ 0xff, 0xff, 0xff, 0xff });
+    EXPECT(PeerMock::is_buffer_containing_a_full_packet(oversized_length.span()).is_error());
 }

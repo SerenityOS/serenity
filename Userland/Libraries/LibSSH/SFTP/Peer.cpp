@@ -13,13 +13,23 @@ namespace SSH::SFTP {
 
 // 3. General Packet Format
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-3
-bool Peer::is_buffer_containing_a_full_packet(ReadonlyBytes data)
+// SFTP packets may span multiple SSH channel messages, so cap their declared size
+// before waiting for the rest of a packet to arrive. This permits 256 KiB data
+// chunks plus their SFTP headers while bounding per-channel buffering.
+static constexpr u32 MAXIMUM_SFTP_PACKET_LENGTH = 256 * 1024 + 64;
+
+ErrorOr<bool> Peer::is_buffer_containing_a_full_packet(ReadonlyBytes data)
 {
     if (data.size() < sizeof(u32))
         return false;
 
     FixedMemoryStream stream { data };
-    u32 packet_length = MUST(stream.read_value<NetworkOrdered<u32>>());
+    u32 packet_length = TRY(stream.read_value<NetworkOrdered<u32>>());
+
+    if (packet_length == 0)
+        return Error::from_string_literal("SFTP packet is empty");
+    if (packet_length > MAXIMUM_SFTP_PACKET_LENGTH)
+        return Error::from_string_literal("SFTP packet is too large");
 
     return sizeof(u32) + packet_length <= data.size();
 }
@@ -29,7 +39,7 @@ bool Peer::is_buffer_containing_a_full_packet(ReadonlyBytes data)
 ErrorOr<FXPMessageID> Peer::read_header(FixedMemoryStream& stream)
 {
     u32 length = TRY(stream.read_value<NetworkOrdered<u32>>());
-    if (length > stream.remaining())
+    if (length == 0 || length > MAXIMUM_SFTP_PACKET_LENGTH || length > stream.remaining())
         return Error::from_string_literal("Invalid packet size");
 
     auto type = TRY(stream.read_value<FXPMessageID>());
@@ -40,6 +50,9 @@ ErrorOr<FXPMessageID> Peer::read_header(FixedMemoryStream& stream)
 // https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02#section-3
 ErrorOr<void> Peer::write_packet(ReadonlyBytes bytes)
 {
+    if (bytes.size() > MAXIMUM_SFTP_PACKET_LENGTH)
+        return Error::from_string_literal("SFTP response packet is too large");
+
     AllocatingMemoryStream stream;
     TRY(stream.write_value<NetworkOrdered<u32>>(bytes.size()));
     TRY(stream.write_until_depleted(bytes));
@@ -61,6 +74,9 @@ AK_ENUM_BITWISE_OPERATORS(AttributesFlags)
 ErrorOr<Attributes> Attributes::from_stream(FixedMemoryStream& stream)
 {
     u32 raw_flags = TRY(stream.read_value<NetworkOrdered<u32>>());
+    constexpr u32 known_flags = 0x8000000f;
+    if ((raw_flags & ~known_flags) != 0)
+        return Error::from_string_literal("Unknown SFTP attribute flag");
     auto flags = static_cast<AttributesFlags>(raw_flags);
 
     SSH::SFTP::Attributes attributes;

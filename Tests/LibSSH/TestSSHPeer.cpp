@@ -6,6 +6,7 @@
 
 #include <AK/MemoryStream.h>
 #include <LibSSH/Peer.h>
+#include <errno.h>
 #include <LibTest/TestCase.h>
 
 class SocketMock final : public Core::Socket {
@@ -19,6 +20,13 @@ public:
     ErrorOr<Bytes> read_some(Bytes) override { VERIFY_NOT_REACHED(); }
     ErrorOr<size_t> write_some(ReadonlyBytes bytes) override
     {
+        ++m_write_attempts;
+        if (m_successful_write_limit > 0 && m_successful_writes >= m_successful_write_limit)
+            return Error::from_errno(EWOULDBLOCK);
+
+        ++m_successful_writes;
+        if (m_maximum_write_size > 0 && bytes.size() > m_maximum_write_size)
+            bytes = bytes.trim(m_maximum_write_size);
         return stream.write_some(bytes);
     }
 
@@ -34,6 +42,10 @@ public:
 
     AllocatingMemoryStream& stream;
     bool m_is_open { true };
+    size_t m_write_attempts { 0 };
+    size_t m_successful_writes { 0 };
+    size_t m_successful_write_limit { 0 };
+    size_t m_maximum_write_size { 0 };
 };
 
 class PeerMock final : public SSH::Peer {
@@ -62,6 +74,8 @@ public:
     using SSH::Peer::send_new_keys_message;
     using SSH::Peer::session_id;
     using SSH::Peer::set_hash;
+    using SSH::Peer::write_packet;
+    using SSH::Peer::write_raw_bytes;
 };
 
 // Copied from wireshark, sniffed from a connection between an openssh server and client.
@@ -82,6 +96,40 @@ TEST_CASE(new_keys)
 
     auto message = TRY_OR_FAIL(ByteBuffer::copy(new_keys_message.bytes()));
     TRY_OR_FAIL(peer.handle_new_keys_message(message));
+}
+
+TEST_CASE(nonblocking_output_queue)
+{
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    socket.m_maximum_write_size = 2;
+    socket.m_successful_write_limit = 1;
+    auto peer = PeerMock(socket);
+
+    bool output_pending = false;
+    peer.set_output_pending_callback([&](bool is_pending) { output_pending = is_pending; });
+
+    auto identification = "banner"sv;
+    TRY_OR_FAIL(peer.write_raw_bytes(identification.bytes()));
+    EXPECT_EQ(socket.m_write_attempts, 2u);
+    EXPECT(output_pending);
+
+    TRY_OR_FAIL(peer.write_packet("first"sv.bytes()));
+    EXPECT_EQ(socket.m_write_attempts, 3u);
+    EXPECT(output_pending);
+
+    socket.m_successful_write_limit = 0;
+    TRY_OR_FAIL(peer.flush_pending_output());
+    EXPECT(!output_pending);
+
+    auto output = TRY_OR_FAIL(stream.read_until_eof());
+    EXPECT_EQ(output.bytes().slice(0, identification.length()), identification.bytes());
+
+    auto packet_length = output.size() - identification.length();
+    auto packet_bytes = TRY_OR_FAIL(ByteBuffer::copy(output.bytes().slice(identification.length(), packet_length)));
+    auto packet = TRY_OR_FAIL(peer.read_packet(packet_bytes));
+    EXPECT_EQ(packet.bytes(), "first"sv.bytes());
+    EXPECT(packet_bytes.is_empty());
 }
 
 TEST_CASE(consecutive_packets)
@@ -164,9 +212,9 @@ TEST_CASE(is_buffer_containing_a_full_packet)
     auto message = TRY_OR_FAIL(ByteBuffer::copy(new_keys_message.bytes()));
     message.append("Additional data"sv.bytes());
 
-    EXPECT(peer.is_buffer_containing_a_full_packet(new_keys_message.bytes()));
-    EXPECT(peer.is_buffer_containing_a_full_packet(new_keys_message.bytes().trim(new_keys_message.length())));
-    EXPECT(!peer.is_buffer_containing_a_full_packet(new_keys_message.bytes().trim(new_keys_message.length() - 1)));
+    EXPECT(TRY_OR_FAIL(peer.is_buffer_containing_a_full_packet(new_keys_message.bytes())));
+    EXPECT(TRY_OR_FAIL(peer.is_buffer_containing_a_full_packet(new_keys_message.bytes().trim(new_keys_message.length()))));
+    EXPECT(!TRY_OR_FAIL(peer.is_buffer_containing_a_full_packet(new_keys_message.bytes().trim(new_keys_message.length() - 1))));
 }
 
 TEST_CASE(is_buffer_containing_a_full_packet_encrypted)
@@ -205,7 +253,27 @@ TEST_CASE(is_buffer_containing_a_full_packet_encrypted)
     auto additional_data = "Additional data"sv.bytes();
     packet.append(additional_data);
 
-    EXPECT(peer.is_buffer_containing_a_full_packet(packet));
-    EXPECT(peer.is_buffer_containing_a_full_packet(packet.bytes().trim(encrypted_raw.size())));
-    EXPECT(!peer.is_buffer_containing_a_full_packet(packet.bytes().trim(encrypted_raw.size() - 1)));
+    EXPECT(TRY_OR_FAIL(peer.is_buffer_containing_a_full_packet(packet)));
+    EXPECT(TRY_OR_FAIL(peer.is_buffer_containing_a_full_packet(packet.bytes().trim(encrypted_raw.size()))));
+    EXPECT(!TRY_OR_FAIL(peer.is_buffer_containing_a_full_packet(packet.bytes().trim(encrypted_raw.size() - 1))));
+
+    auto decrypted_packet = TRY_OR_FAIL(peer.read_packet(packet));
+    EXPECT(!decrypted_packet.is_empty());
+    EXPECT_EQ(packet.bytes(), additional_data);
+}
+
+TEST_CASE(reject_oversized_packet_length_before_body_is_received)
+{
+    AllocatingMemoryStream stream;
+    SocketMock socket(stream);
+    auto peer = PeerMock(socket);
+
+    auto oversized_length = to_array<u8>({ 0xff, 0xff, 0xff, 0xff });
+    EXPECT(peer.is_buffer_containing_a_full_packet(oversized_length.span()).is_error());
+
+    // Direct packet decoding also validates the length before a cipher can use
+    // it to construct a span into a packet buffer.
+    auto truncated_packet = to_array<u8>({ 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0 });
+    auto packet = TRY_OR_FAIL(ByteBuffer::copy(truncated_packet.span()));
+    EXPECT(peer.read_packet(packet).is_error());
 }

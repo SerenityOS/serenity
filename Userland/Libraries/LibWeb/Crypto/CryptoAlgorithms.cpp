@@ -2866,6 +2866,13 @@ WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<Crypto
     return Variant<JS::NonnullGCPtr<CryptoKey>, JS::NonnullGCPtr<CryptoKeyPair>> { CryptoKeyPair::create(m_realm, public_key, private_key) };
 }
 
+static WebIDL::ExceptionOr<void> validate_x25519_key_length(JS::Realm& realm, size_t key_length)
+{
+    if (key_length != 32)
+        return WebIDL::DataError::create(realm, "X25519 keys must be exactly 32 bytes"_string);
+    return {};
+}
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> X25519::import_key([[maybe_unused]] Web::Crypto::AlgorithmParams const& params, Bindings::KeyFormat key_format, CryptoKey::InternalKeyData key_data, bool extractable, Vector<Bindings::KeyUsage> const& usages)
 {
     // NOTE: This is a parameter to the function
@@ -2895,6 +2902,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> X25519::import_key([[maybe_unus
 
         // 6. Let publicKey be the X25519 public key identified by the subjectPublicKey field of spki.
         auto public_key = spki.raw_key;
+        TRY(validate_x25519_key_length(*m_realm, public_key.size()));
 
         // 7. Let key be a new CryptoKey associated with the relevant global object of this [HTML], and that represents publicKey.
         key = CryptoKey::create(m_realm, CryptoKey::InternalKeyData { public_key });
@@ -2941,6 +2949,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> X25519::import_key([[maybe_unus
         // 7. If an error occurred while parsing, then throw a DataError.
         auto curve_private_key = TRY(parse_an_ASN1_structure<StringView>(m_realm, private_key_info.raw_key, true));
         auto curve_private_key_bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(curve_private_key.bytes()));
+        TRY(validate_x25519_key_length(*m_realm, curve_private_key_bytes.size()));
 
         // 8. Let key be a new CryptoKey associated with the relevant global object of this [HTML],
         //    and that represents the X25519 private key identified by curvePrivateKey.
@@ -3027,8 +3036,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> X25519::import_key([[maybe_unus
                 return WebIDL::DataError::create(m_realm, "Missing d field"_string);
 
             // 2. Let key be a new CryptoKey object that represents the X25519 private key identified by interpreting jwk according to Section 2 of [RFC8037].
+            auto public_key_base_64 = jwk.x.value();
+            auto public_key = TRY(base64_url_bytes_decode(*m_realm, public_key_base_64));
+            TRY(validate_x25519_key_length(*m_realm, public_key.size()));
+
             auto private_key_base_64 = jwk.d.value();
-            auto private_key = TRY_OR_THROW_OOM(vm, decode_base64(private_key_base_64));
+            auto private_key = TRY(base64_url_bytes_decode(*m_realm, private_key_base_64));
+            TRY(validate_x25519_key_length(*m_realm, private_key.size()));
             key = CryptoKey::create(m_realm, CryptoKey::InternalKeyData { private_key });
 
             // 3. Set the [[type]] internal slot of Key to "private".
@@ -3057,7 +3071,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> X25519::import_key([[maybe_unus
 
             // 2. Let key be a new CryptoKey object that represents the X25519 public key identified by interpreting jwk according to Section 2 of [RFC8037].
             auto public_key_base_64 = jwk.x.value();
-            auto public_key = TRY_OR_THROW_OOM(vm, decode_base64(public_key_base_64));
+            auto public_key = TRY(base64_url_bytes_decode(*m_realm, public_key_base_64));
+            TRY(validate_x25519_key_length(*m_realm, public_key.size()));
             key = CryptoKey::create(m_realm, CryptoKey::InternalKeyData { public_key });
 
             // 3. Set the [[type]] internal slot of Key to "public".
@@ -3087,6 +3102,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CryptoKey>> X25519::import_key([[maybe_unus
         algorithm->set_name("X25519"_string);
 
         // 4. Let key be a new CryptoKey associated with the relevant global object of this [HTML], and representing the key data provided in keyData.
+        TRY(validate_x25519_key_length(*m_realm, key_data.get<ByteBuffer>().size()));
         key = CryptoKey::create(m_realm, key_data);
 
         // 5. Set the [[type]] internal slot of key to "public"

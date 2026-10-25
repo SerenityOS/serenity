@@ -7,11 +7,22 @@
 #include "Server.h"
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/NumericLimits.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/System.h>
 #include <LibSSH/DataTypes.h>
 #include <LibSSH/Session.h>
 
 namespace SSH::SFTP {
+
+static constexpr u32 MAXIMUM_READ_REQUEST_SIZE = 32 * 1024;
+static constexpr size_t MAXIMUM_OPEN_FILES = 64;
+
+static bool offset_range_fits_off_t(u64 offset, u64 length)
+{
+    auto maximum_offset = static_cast<u64>(NumericLimits<off_t>::max());
+    return offset <= maximum_offset && length <= maximum_offset - offset;
+}
 
 Coroutine<ErrorOr<BehaviorControl>> Server::handle_channel_data(Session& session)
 {
@@ -19,19 +30,31 @@ Coroutine<ErrorOr<BehaviorControl>> Server::handle_channel_data(Session& session
     //        probably make most IO related syscall asynchronous.
 
     FixedMemoryStream stream { session.channel_data.data() };
-    ScopeGuard commit_read_bytes { [&] { session.channel_data.dequeue(stream.offset()); } };
+    ScopeGuard commit_read_bytes { [&] { session.dequeue_channel_data(stream.offset()); } };
 
     if (m_state == State::Constructed) {
-        CO_TRY(handle_init_message(stream));
-        co_return BehaviorControl::ContinueExecution;
+        auto packet_data = session.channel_data.data().slice(stream.offset());
+        if (!CO_TRY(is_buffer_containing_a_full_packet(packet_data)))
+            co_return BehaviorControl::WaitForMoreData;
+
+        FixedMemoryStream packet_header { packet_data };
+        u32 packet_length = CO_TRY(packet_header.read_value<NetworkOrdered<u32>>());
+        FixedMemoryStream packet_stream { packet_data.trim(sizeof(u32) + packet_length) };
+        CO_TRY(handle_init_message(packet_stream));
+        CO_TRY(stream.discard(sizeof(u32) + packet_length));
     }
 
     VERIFY(m_state == State::Initialized);
     while (stream.remaining() > 0) {
-        if (!is_buffer_containing_a_full_packet(session.channel_data.data().slice(stream.offset())))
+        auto packet_data = session.channel_data.data().slice(stream.offset());
+        if (!CO_TRY(is_buffer_containing_a_full_packet(packet_data)))
             co_return BehaviorControl::WaitForMoreData;
 
-        CO_TRY(handle_packet(stream));
+        FixedMemoryStream packet_header { packet_data };
+        u32 packet_length = CO_TRY(packet_header.read_value<NetworkOrdered<u32>>());
+        FixedMemoryStream packet_stream { packet_data.trim(sizeof(u32) + packet_length) };
+        CO_TRY(handle_packet(packet_stream));
+        CO_TRY(stream.discard(sizeof(u32) + packet_length));
     }
 
     if (session.has_received_eof)
@@ -172,6 +195,10 @@ ErrorOr<void> Server::handle_setstat(FixedMemoryStream& stream, StatType type)
     auto path_or_handle = TRY(decode_string(stream));
     auto attr = TRY(Attributes::from_stream(stream));
 
+    if (type == StatType::FStat && attr.size.has_value()
+        && *attr.size > static_cast<u64>(NumericLimits<off_t>::max()))
+        return send_status_message(id, FXStatus::FAILURE);
+
     Optional<int> maybe_fd {};
     if (type == StatType::FStat)
         maybe_fd = TRY(find_file(path_or_handle))->file->fd();
@@ -179,7 +206,7 @@ ErrorOr<void> Server::handle_setstat(FixedMemoryStream& stream, StatType type)
     auto maybe_error = [&] -> ErrorOr<void> {
         if (attr.size.has_value()) {
             if (type == StatType::FStat)
-                TRY(Core::System::ftruncate(*maybe_fd, *attr.size));
+                TRY(Core::System::ftruncate(*maybe_fd, static_cast<off_t>(*attr.size)));
             else
                 dbgln("FIXME: FSETSTAT should set file size");
         }
@@ -235,6 +262,9 @@ struct CoreAndPosixFlags {
 
 static ErrorOr<CoreAndPosixFlags> convert_pflags(PFlag& pflags)
 {
+    if (!has_flag(pflags, PFlag::READ) && !has_flag(pflags, PFlag::WRITE))
+        return Error::from_string_literal("Open requires read or write access");
+
     int open_flags {};
     Core::File::OpenMode open_mode {};
     auto consume = [](PFlag& flags, PFlag mask) {
@@ -271,11 +301,16 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
     auto filename = TRY(decode_string(stream));
     u32 raw_pflags = TRY(stream.read_value<NetworkOrdered<u32>>());
     PFlag pflags = static_cast<PFlag>(raw_pflags);
+    if (raw_pflags != to_underlying(pflags))
+        return Error::from_string_literal("Open flags exceed the supported flag width");
     auto attrs = TRY(Attributes::from_stream(stream));
 
     if (attrs.size.has_value() || attrs.uid.has_value() || attrs.gid.has_value()
         || attrs.atim.has_value() || attrs.mtim.has_value())
         return Error::from_string_literal("Unsupported file attribute");
+
+    if (m_open_files.size() >= MAXIMUM_OPEN_FILES)
+        return send_status_message(id, FXStatus::FAILURE);
 
     // FIXME: Support relative path.
     if (filename.is_empty() || filename[0] != '/')
@@ -288,7 +323,7 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
     // matters when adopting).
     auto [open_mode, open_flags] = TRY(convert_pflags(pflags));
 
-    auto maybe_fd = Core::System::open(StringView { filename.bytes() }, open_flags, attrs.mode.value_or(0644));
+    auto maybe_fd = Core::System::open(StringView { filename.bytes() }, open_flags | O_CLOEXEC, attrs.mode.value_or(0644));
 
     // "The response to this message will be either SSH_FXP_HANDLE (if the
     //   operation is successful) or SSH_FXP_STATUS (if the operation fails)."
@@ -297,8 +332,12 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
         return maybe_fd.release_error();
     }
 
-    m_open_files.empend(TRY(Core::File::adopt_fd(maybe_fd.value(), open_mode)),
-        Crypto::Hash::MD5::hash(filename));
+    int fd = maybe_fd.release_value();
+    ArmedScopeGuard close_fd { [&] { MUST(Core::System::close(fd)); } };
+    auto file = TRY(Core::File::adopt_fd(fd, open_mode));
+    close_fd.disarm();
+
+    TRY(m_open_files.try_empend(move(file), Crypto::Hash::MD5::hash(filename)));
 
     TRY(send_file_handle(id, m_open_files.last()));
 
@@ -351,6 +390,13 @@ ErrorOr<void> Server::handle_read(FixedMemoryStream& stream)
     u64 offset = TRY(stream.read_value<NetworkOrdered<u64>>());
     u32 len = TRY(stream.read_value<NetworkOrdered<u32>>());
 
+    // The requested length is client-controlled. Keep both the allocation and the
+    // response packet bounded instead of trusting it as a ByteBuffer size.
+    if (len > MAXIMUM_READ_REQUEST_SIZE)
+        return send_status_message(id, FXStatus::FAILURE);
+    if (len > 0 && !offset_range_fits_off_t(offset, len))
+        return send_status_message(id, FXStatus::FAILURE);
+
     auto& file = *TRY(find_file(handle));
 
     // "If an error occurs or EOF is encountered before reading any
@@ -359,7 +405,6 @@ ErrorOr<void> Server::handle_read(FixedMemoryStream& stream)
     ByteBuffer buffer;
     bool should_send_eof { false };
     auto operation_result = [&]() -> ErrorOr<void> {
-        // FIXME: Ensure len is somewhat reasonable.
         TRY(buffer.try_resize(len));
 
         Optional<u64> last_read;
@@ -402,11 +447,17 @@ ErrorOr<void> Server::handle_write(FixedMemoryStream& stream)
     u64 offset = TRY(stream.read_value<NetworkOrdered<u64>>());
     auto data = TRY(decode_string(stream));
 
+    if (!data.is_empty() && !offset_range_fits_off_t(offset, data.size()))
+        return send_status_message(id, FXStatus::FAILURE);
+
     auto& file = *TRY(find_file(handle));
 
     u64 written = 0;
     while (written < data.size()) {
-        written += TRY(Core::System::pwrite(file.file->fd(), data.bytes().slice(written), offset + written));
+        auto amount_written = TRY(Core::System::pwrite(file.file->fd(), data.bytes().slice(written), offset + written));
+        if (amount_written == 0)
+            return send_status_message(id, FXStatus::FAILURE);
+        written += static_cast<u64>(amount_written);
     }
 
     TRY(send_status_message(id, FXStatus::OK));

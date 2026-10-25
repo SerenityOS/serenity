@@ -31,43 +31,83 @@ NonnullOwnPtr<TCPClient> TCPClient::create(NonnullOwnPtr<Core::TCPSocket>&& sock
         }
     };
 
+    client->m_write_notifier = Core::Notifier::construct(client->m_socket->fd(), Core::Notifier::Type::Write);
+    client->m_write_notifier->on_activation = [ptr = client.ptr()] {
+        ptr->on_ready_to_write();
+    };
+    client->m_write_notifier->set_enabled(false);
+    auto write_notifier = client->m_write_notifier;
+    client->m_ssh_client.set_output_pending_callback([write_notifier = move(write_notifier)](bool is_pending) {
+        write_notifier->set_enabled(is_pending);
+    });
+
     return client;
 }
 
 ErrorOr<void> TCPClient::on_ready_to_read()
 {
-    auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
+    if (m_is_dying)
+        return {};
 
+    auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
+    bool reached_eof = false;
+
+    // Parse before draining more of the socket so a peer cannot grow the
+    // application buffer by flooding data faster than we inspect it.
     for (;;) {
+        if (!m_read_buffer.is_empty()) {
+            auto next_behavior = TRY(m_ssh_client.handle_data(m_read_buffer));
+            switch (next_behavior) {
+            case SSH::BehaviorControl::ContinueExecution:
+                continue;
+            case SSH::BehaviorControl::WaitForMoreData:
+                if (reached_eof) {
+                    die();
+                    return {};
+                }
+                break;
+            case SSH::BehaviorControl::Disconnect:
+                die();
+                return {};
+            }
+        }
+
+        if (reached_eof) {
+            die();
+            return {};
+        }
+
         if (!TRY(m_socket->can_read_without_blocking()))
-            break;
+            return {};
 
         auto data = TRY(m_socket->read_some(buffer));
         TRY(m_read_buffer.try_append(data));
-
-        if (m_socket->is_eof())
-            break;
+        reached_eof = m_socket->is_eof();
     }
+}
 
-    if (m_read_buffer.is_empty())
-        return {};
+void TCPClient::on_ready_to_write()
+{
+    if (m_is_dying)
+        return;
 
-    while (!m_read_buffer.is_empty()) {
-        auto next_behavior = TRY(m_ssh_client.handle_data(m_read_buffer));
-        switch (next_behavior) {
-        case SSH::BehaviorControl::ContinueExecution:
-            continue;
-        case SSH::BehaviorControl::WaitForMoreData:
-            return {};
-        case SSH::BehaviorControl::Disconnect:
-            die();
-        }
+    auto maybe_error = m_ssh_client.flush_pending_output();
+    if (maybe_error.is_error()) {
+        dbgln("error while writing SSH output: {}", maybe_error.error());
+        die();
     }
-    return {};
 }
 
 void TCPClient::die()
 {
+    if (m_is_dying)
+        return;
+
+    m_is_dying = true;
+    m_ssh_client.shutdown();
+    if (m_write_notifier)
+        m_write_notifier->close();
+    m_socket->set_notifications_enabled(false);
     m_socket->close();
     Core::EventLoop::current().deferred_invoke([on_quit = move(m_on_quit)] { on_quit(); });
 }

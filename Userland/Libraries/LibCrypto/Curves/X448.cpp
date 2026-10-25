@@ -304,6 +304,9 @@ ErrorOr<ByteBuffer> X448::generate_public_key(ReadonlyBytes a)
 // https://datatracker.ietf.org/doc/html/rfc7748#section-5
 ErrorOr<ByteBuffer> X448::compute_coordinate(ReadonlyBytes input_k, ReadonlyBytes input_u)
 {
+    if (input_k.size() != BYTES || input_u.size() != BYTES)
+        return Error::from_string_literal("X448: private key and public coordinate must be 56 bytes");
+
     u32 k[WORDS] {};
     u32 u[WORDS] {};
     u32 x1[WORDS] {};
@@ -375,7 +378,9 @@ ErrorOr<ByteBuffer> X448::compute_coordinate(ReadonlyBytes input_k, ReadonlyByte
 
 ErrorOr<ByteBuffer> X448::derive_premaster_key(ReadonlyBytes shared_point)
 {
-    VERIFY(shared_point.size() == BYTES);
+    if (shared_point.size() != BYTES)
+        return Error::from_string_literal("X448: shared point must be 56 bytes");
+
     ByteBuffer premaster_key = TRY(ByteBuffer::copy(shared_point));
     return premaster_key;
 }

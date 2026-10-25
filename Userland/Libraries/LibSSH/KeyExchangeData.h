@@ -15,6 +15,9 @@ namespace SSH {
 // 4.  ECDH Key Exchange
 // https://datatracker.ietf.org/doc/html/rfc5656#section-4
 struct KeyExchangeData {
+    // RFC 7748 section 6.1 describes the all-zero result for low-order X25519 inputs; SSH rejects it.
+    static bool is_valid_x25519_shared_secret(ReadonlyBytes shared_secret);
+
     // FIXME: Add a reset method to erase sensitive information.
     ErrorOr<Crypto::Hash::Digest<256>> compute_sha_256() const;
 

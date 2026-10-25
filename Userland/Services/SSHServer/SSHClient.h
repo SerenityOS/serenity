@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Weakable.h>
 #include <LibCore/Forward.h>
 #include <LibSSH/BehaviorControl.h>
 #include <LibSSH/KeyExchangeData.h>
@@ -40,12 +41,13 @@ public:
     MessageID type {};
 };
 
-class SSHClient : public Peer {
+class SSHClient : public Peer, public Weakable<SSHClient> {
 public:
     explicit SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect);
     ~SSHClient();
 
     ErrorOr<BehaviorControl> handle_data(ByteBuffer& data);
+    void shutdown();
 
 private:
     enum class State : u8 {
@@ -86,15 +88,19 @@ private:
     ErrorOr<void> handle_channel_subsystem(Session&, GenericMessage&);
     ErrorOr<void> handle_channel_exec(NonnullRefPtr<Session> const&, GenericMessage&);
     ErrorOr<void> send_channel_success_message(Session const&);
-    ErrorOr<void> send_channel_data(Session const&, ReadonlyBytes);
-    ErrorOr<void> send_channel_extended_data(Session const&, ReadonlyBytes);
+    ErrorOr<void> send_channel_data(Session&, ReadonlyBytes);
+    ErrorOr<void> send_channel_extended_data(Session&, ReadonlyBytes);
+    ErrorOr<void> queue_channel_data(Session&, ReadonlyBytes, bool is_extended_data);
+    ErrorOr<void> flush_pending_channel_data(Session&);
+    ErrorOr<void> send_channel_data_packet(Session const&, ReadonlyBytes, bool is_extended_data);
     ErrorOr<void> handle_channel_window_adjust_message(GenericMessage&);
-    ErrorOr<void> send_channel_window_adjust_message(Session&);
+    ErrorOr<void> adjust_channel_window_if_needed(Session&);
+    ErrorOr<void> send_channel_window_adjust_message(Session&, u32 bytes_to_add);
     ErrorOr<void> handle_channel_eof(GenericMessage&);
     ErrorOr<void> send_exit_status(Session const&);
     ErrorOr<void> handle_channel_close(GenericMessage&);
     ErrorOr<void> send_channel_close(Session&);
-    ErrorOr<NonnullRefPtr<Session>> find_session(u32 sender_channel_id);
+    ErrorOr<NonnullRefPtr<Session>> find_session(u32 local_channel_id);
 
     template<typename F, typename F2>
     Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, F file_extractor, F2 sender);
@@ -106,7 +112,8 @@ private:
     void disconnect(Error);
 
     State m_state { State::Constructed };
-    Core::TCPSocket& m_tcp_socket;
+    u32 m_authentication_attempts {};
+    bool m_is_shutdown { false };
 
     Function<void()> m_disconnect;
 

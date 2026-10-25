@@ -9,18 +9,31 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Random.h>
+#include <errno.h>
 
 namespace SSH {
 
-bool Peer::is_buffer_containing_a_full_packet(ReadonlyBytes data)
+static constexpr u32 MAXIMUM_SSH_PACKET_LENGTH = 20 * PAGE_SIZE;
+// Bound encrypted bytes retained while the peer is not reading from the socket.
+static constexpr size_t MAXIMUM_PENDING_OUTPUT_PACKETS = 256;
+static constexpr size_t MAXIMUM_PENDING_OUTPUT_BYTES = 2 * 1024 * 1024;
+static constexpr size_t MAXIMUM_WRITE_BUDGET_PER_CALL = 64 * 1024;
+
+ErrorOr<bool> Peer::is_buffer_containing_a_full_packet(ReadonlyBytes data)
 {
     if (data.size() < sizeof(u32))
         return false;
 
     // We make a copy to ensure the input bytes stay unchanged.
-    auto copy = MUST(ByteBuffer::copy(data.trim(sizeof(u32))));
+    auto copy = TRY(ByteBuffer::copy(data.trim(sizeof(u32))));
 
     auto packet_length = m_cipher->decrypt_packet_length(m_incoming_packet_sequence_number, copy);
+    // Check the length as soon as its header is available. Waiting for an
+    // attacker-controlled, multi-gigabyte length would let the TCP read buffer
+    // grow without bound before read_packet() gets a chance to reject it.
+    if (packet_length > MAXIMUM_SSH_PACKET_LENGTH)
+        return Error::from_string_literal("Packet length is too long");
+
     return sizeof(u32) + packet_length + m_cipher->mac_size() <= data.size();
 }
 
@@ -33,10 +46,11 @@ ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
     if (data.size() < m_cipher->mac_size() + sizeof(u32) + 1 + 4)
         return Error::from_string_literal("Packet is too small");
 
-    TRY(m_cipher->decrypt(m_incoming_packet_sequence_number, data.bytes()));
-
-    auto stream = FixedMemoryStream { data.bytes() };
-    u32 packet_length = TRY(stream.read_value<NetworkOrdered<u32>>());
+    // Validate the decrypted length before Cipher::decrypt() uses it to form
+    // spans into the packet. Work on a copy because the ChaCha20 length
+    // decryption is in-place and the original ciphertext is covered by the MAC.
+    auto encrypted_length = TRY(ByteBuffer::copy(data.bytes().trim(sizeof(u32))));
+    auto packet_length_from_header = m_cipher->decrypt_packet_length(m_incoming_packet_sequence_number, encrypted_length.bytes());
 
     // "All implementations MUST be able to process packets with an
     // uncompressed payload length of 32768 bytes or less and a total
@@ -44,8 +58,20 @@ ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
     // "However, implementations SHOULD check that the packet length
     // is reasonable in order for the implementation to avoid denial
     // of service and/or buffer overflow attacks."
-    if (packet_length > 20 * PAGE_SIZE)
+    if (packet_length_from_header > MAXIMUM_SSH_PACKET_LENGTH)
         return Error::from_string_literal("Packet length is too long");
+
+    auto total_packet_size = sizeof(u32) + packet_length_from_header + m_cipher->mac_size();
+    if (total_packet_size > data.size())
+        return Error::from_string_literal("Packet is incomplete");
+
+    TRY(m_cipher->decrypt(m_incoming_packet_sequence_number, data.bytes().trim(total_packet_size)));
+
+    auto stream = FixedMemoryStream { data.bytes() };
+    u32 packet_length = TRY(stream.read_value<NetworkOrdered<u32>>());
+
+    if (packet_length != packet_length_from_header)
+        return Error::from_string_literal("Decrypted packet length mismatch");
 
     u8 padding_length = TRY(stream.read_value<u8>());
 
@@ -62,7 +88,6 @@ ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
 
     m_incoming_packet_sequence_number++;
 
-    auto total_packet_size = sizeof(u32) + packet_length + m_cipher->mac_size();
     data = TRY(data.slice(total_packet_size, data.size() - total_packet_size));
 
     return payload;
@@ -70,6 +95,11 @@ ErrorOr<ByteBuffer> Peer::read_packet(ByteBuffer& data)
 
 ErrorOr<void> Peer::write_packet(ReadonlyBytes payload)
 {
+    // Leave room for the padding length and the maximum legal padding before
+    // doing size arithmetic or allocating the packet buffer.
+    if (payload.size() > MAXIMUM_SSH_PACKET_LENGTH - 256)
+        return Error::from_string_literal("SSH payload is too large");
+
     AllocatingMemoryStream stream;
 
     // "Arbitrary-length padding, such that the total length of
@@ -112,9 +142,93 @@ ErrorOr<void> Peer::write_packet(ReadonlyBytes payload)
     auto packet_buffer = TRY(stream.read_until_eof());
 
     TRY(m_cipher->encrypt(m_outgoing_packet_sequence_number, packet_buffer));
+    TRY(enqueue_output_data(move(packet_buffer)));
     m_outgoing_packet_sequence_number++;
 
-    TRY(m_tcp_socket.write_until_depleted(packet_buffer));
+    return flush_pending_output();
+}
+
+ErrorOr<void> Peer::write_raw_bytes(ReadonlyBytes bytes)
+{
+    auto output = TRY(ByteBuffer::copy(bytes));
+    TRY(enqueue_output_data(move(output)));
+    return flush_pending_output();
+}
+
+ErrorOr<void> Peer::enqueue_output_data(ByteBuffer&& bytes)
+{
+    if (bytes.is_empty())
+        return {};
+
+    if (bytes.size() > MAXIMUM_PENDING_OUTPUT_BYTES
+        || m_pending_output_bytes > MAXIMUM_PENDING_OUTPUT_BYTES - bytes.size()
+        || m_pending_output.size() >= MAXIMUM_PENDING_OUTPUT_PACKETS)
+        return Error::from_string_literal("Pending SSH socket output exceeds its limit");
+
+    auto bytes_size = bytes.size();
+    TRY(m_pending_output.try_empend(move(bytes), 0));
+    m_pending_output_bytes += bytes_size;
+    return {};
+}
+
+void Peer::set_output_pending_callback(Function<void(bool)> callback)
+{
+    m_output_pending_callback = move(callback);
+    notify_output_pending(!m_pending_output.is_empty());
+}
+
+void Peer::notify_output_pending(bool is_pending)
+{
+    if (m_output_pending_callback)
+        m_output_pending_callback(is_pending);
+}
+
+ErrorOr<void> Peer::flush_pending_output()
+{
+    // This runs on the event loop: stop at backpressure and resume only after
+    // the socket's write notifier fires instead of polling or blocking here.
+    size_t bytes_written_this_call = 0;
+    while (!m_pending_output.is_empty()) {
+        if (bytes_written_this_call >= MAXIMUM_WRITE_BUDGET_PER_CALL) {
+            notify_output_pending(true);
+            return {};
+        }
+
+        auto& pending = m_pending_output.first();
+        VERIFY(pending.offset < pending.bytes.size());
+        auto remaining_bytes = pending.bytes.bytes().slice(pending.offset);
+        auto write_size = min(remaining_bytes.size(), MAXIMUM_WRITE_BUDGET_PER_CALL - bytes_written_this_call);
+        auto maybe_written = m_tcp_socket.write_some(remaining_bytes.trim(write_size));
+        if (maybe_written.is_error()) {
+            auto error = maybe_written.release_error();
+            if (error.is_errno() && error.code() == EINTR)
+                continue;
+            if (error.is_errno() && (error.code() == EWOULDBLOCK || error.code() == EAGAIN)) {
+                notify_output_pending(true);
+                return {};
+            }
+
+            notify_output_pending(false);
+            return move(error);
+        }
+
+        auto bytes_written = maybe_written.release_value();
+        if (bytes_written == 0) {
+            notify_output_pending(false);
+            return Error::from_string_literal("Socket closed while writing SSH output");
+        }
+
+        VERIFY(bytes_written <= write_size);
+        pending.offset += bytes_written;
+        bytes_written_this_call += bytes_written;
+
+        if (pending.offset == pending.bytes.size()) {
+            m_pending_output_bytes -= pending.bytes.size();
+            m_pending_output.remove(0);
+        }
+    }
+
+    notify_output_pending(false);
     return {};
 }
 

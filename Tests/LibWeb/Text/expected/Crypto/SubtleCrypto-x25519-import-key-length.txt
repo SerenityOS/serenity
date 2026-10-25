@@ -1,0 +1,5 @@
+short raw key: DataError
+long raw key: DataError
+short JWK public key: DataError
+short JWK private key: DataError
+valid raw key: X25519

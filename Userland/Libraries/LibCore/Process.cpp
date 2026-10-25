@@ -106,6 +106,21 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
             }));
     }
 
+    posix_spawnattr_t spawn_attributes {};
+    posix_spawnattr_t* spawn_attributes_ptr = nullptr;
+    bool did_initialize_spawn_attributes = false;
+    ScopeGuard cleanup_spawn_attributes = [&] {
+        if (did_initialize_spawn_attributes)
+            posix_spawnattr_destroy(&spawn_attributes);
+    };
+    if (options.create_process_group) {
+        CHECK(posix_spawnattr_init(&spawn_attributes));
+        did_initialize_spawn_attributes = true;
+        CHECK(posix_spawnattr_setpgroup(&spawn_attributes, 0));
+        CHECK(posix_spawnattr_setflags(&spawn_attributes, POSIX_SPAWN_SETPGROUP));
+        spawn_attributes_ptr = &spawn_attributes;
+    }
+
 #undef CHECK
 
     ArgvList argv_list(options.executable, options.arguments.size());
@@ -114,9 +129,9 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
 
     pid_t pid;
     if (options.search_for_executable_in_path) {
-        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
+        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, spawn_attributes_ptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
     } else {
-        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
+        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, spawn_attributes_ptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
     }
     return Process { pid };
 }

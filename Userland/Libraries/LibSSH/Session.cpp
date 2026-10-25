@@ -6,31 +6,56 @@
 
 #include "Session.h"
 
+#include <AK/Debug.h>
+#include <AK/ScopeGuard.h>
+#include <LibCore/System.h>
+#include <errno.h>
+#include <signal.h>
+
 namespace SSH {
 
-ErrorOr<ExecData> ExecData::create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr)
+ExecData ExecData::create(
+    Core::Process&& process,
+    NonnullOwnPtr<Core::File>&& stdin_,
+    NonnullOwnPtr<Core::File>&& stdout_,
+    NonnullOwnPtr<Core::File>&& stderr_)
 {
-    ExecData exec_data = {
+    return {
         move(process),
-        TRY(Core::File::adopt_fd(fd_stdin, Core::File::OpenMode::Write)),
-        TRY(Core::File::adopt_fd(fd_stdout, Core::File::OpenMode::Read)),
-        TRY(Core::File::adopt_fd(fd_stderr, Core::File::OpenMode::Read)),
+        move(stdin_),
+        move(stdout_),
+        move(stderr_),
     };
+}
 
-    TRY(exec_data.stdin_->set_blocking(false));
-    TRY(exec_data.stdout_->set_blocking(false));
-    TRY(exec_data.stderr_->set_blocking(false));
-
-    return exec_data;
+static ErrorOr<size_t> write_to_child_stdin(Core::File& stdin_file, ReadonlyBytes bytes)
+{
+    struct sigaction previous_action {};
+    struct sigaction ignored_action {};
+    ignored_action.sa_handler = SIG_IGN;
+    sigemptyset(&ignored_action.sa_mask);
+    TRY(Core::System::sigaction(SIGPIPE, &ignored_action, &previous_action));
+    ScopeGuard restore_sigpipe_action { [&] { MUST(Core::System::sigaction(SIGPIPE, &previous_action, nullptr)); } };
+    return stdin_file.write_some(bytes);
 }
 
 Coroutine<ErrorOr<BehaviorControl>> ExecData::handle_channel_data(Session& session)
 {
-    CO_TRY(co_await stdin_->wait_for_state(Core::Notifier::Type::Write));
+    CO_TRY(co_await stdin_->wait_for_state(Core::Notifier::Type::Write | Core::Notifier::Type::Error | Core::Notifier::Type::HangUp));
     auto& stream = session.channel_data;
-    auto written = CO_TRY(stdin_->write_some(stream.data()));
-    stream.dequeue(written);
+    auto maybe_written = write_to_child_stdin(*stdin_, stream.data());
+    if (maybe_written.is_error()) {
+        auto error = maybe_written.release_error();
+        if (!error.is_errno() || error.code() != EPIPE)
+            co_return move(error);
 
+        session.dequeue_channel_data(stream.data().size());
+        stdin_->close();
+        close_stdin_if_required(session);
+        co_return BehaviorControl::ContinueExecution;
+    }
+
+    session.dequeue_channel_data(maybe_written.release_value());
     close_stdin_if_required(session);
 
     co_return BehaviorControl::ContinueExecution;
@@ -39,6 +64,21 @@ Coroutine<ErrorOr<BehaviorControl>> ExecData::handle_channel_data(Session& sessi
 void ExecData::handle_channel_eof(Session const& session)
 {
     close_stdin_if_required(session);
+}
+
+void ExecData::terminate()
+{
+    if (!exit_status.has_value()) {
+        auto maybe_error = Core::System::killpg(child.pid(), SIGKILL);
+        if (maybe_error.is_error()) {
+            auto error = maybe_error.release_error();
+            if (!error.is_errno() || error.code() != ESRCH)
+                dbgln("Unable to terminate SSH child process: {}", error);
+        }
+    }
+
+    // Keep the pipe descriptors open until the async coroutines observe the
+    // child's exit; closing them first would leave their poll waiters behind.
 }
 
 void ExecData::close_stdin_if_required(Session const& session) const

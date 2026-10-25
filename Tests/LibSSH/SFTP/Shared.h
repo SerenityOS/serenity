@@ -29,8 +29,9 @@ inline constexpr auto g_version_packet = "\x00\x00\x00\x05\x02\x00\x00\x00\x03"s
 
 inline ErrorOr<void> server_process_data(SSH::SFTP::Server& server, ReadonlyBytes bytes)
 {
-    auto session = MUST(SSH::Session::create(0, 0, 0));
+    auto session = MUST(SSH::Session::create(0, 512 * 1024, 32 * 1024));
     session->channel_data.append(bytes);
+    session->total_received_bytes += bytes.size();
 
     TRY(Core::run_async_in_new_event_loop([&]() { return server.handle_channel_data(session); }));
     return {};
@@ -62,14 +63,14 @@ inline SSH::SFTP::Server make_initialized_server(Function<ErrorOr<void>(Message)
     return server;
 }
 
-inline ErrorOr<ByteBuffer> make_open_packet(StringView path, u32 request_id)
+inline ErrorOr<ByteBuffer> make_open_packet(StringView path, u32 request_id, u32 pflags = 1 | 2)
 {
     AllocatingMemoryStream inner;
 
     TRY(inner.write_value(SSH::SFTP::FXPMessageID::OPEN));
     TRY(inner.write_value<NetworkOrdered<u32>>(request_id));
     TRY(SSH::encode_string(inner, path));
-    TRY(inner.write_value<NetworkOrdered<u32>>(1 | 2)); // SSH_FXF_READ | SSH_FXF_WRITE
+    TRY(inner.write_value<NetworkOrdered<u32>>(pflags));
     TRY(inner.write_value<NetworkOrdered<u32>>(0));     // No attributes.
 
     auto payload = TRY(inner.read_until_eof());

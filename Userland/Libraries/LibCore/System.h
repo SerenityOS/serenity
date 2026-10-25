@@ -172,6 +172,7 @@ struct WaitPidResult {
     int status;
 };
 ErrorOr<WaitPidResult> waitpid(pid_t waitee, int options = 0);
+ErrorOr<siginfo_t> waitid(idtype_t id_type, id_t id, int options);
 ErrorOr<void> setuid(uid_t);
 ErrorOr<void> seteuid(uid_t);
 ErrorOr<void> setgid(gid_t);

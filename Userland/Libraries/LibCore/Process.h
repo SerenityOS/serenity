@@ -44,6 +44,8 @@ struct ProcessSpawnOptions {
     bool search_for_executable_in_path { false };
     Vector<ByteString> const& arguments {};
     Optional<ByteString> working_directory {};
+    // Give the spawned process its own process group, with its PID as the group ID.
+    bool create_process_group { false };
 
     using FileActionType = Variant<FileAction::OpenFile, FileAction::CloseFile, FileAction::DuplicateFile>;
     Vector<FileActionType> file_actions {};

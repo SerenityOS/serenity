@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Function.h>
+#include <AK/Vector.h>
 #include <LibCore/Socket.h>
 #include <LibSSH/Cipher.h>
 #include <LibSSH/KeyExchangeData.h>
@@ -23,11 +25,15 @@ public:
     }
     virtual ~Peer() = default;
 
+    void set_output_pending_callback(Function<void(bool)> callback);
+    ErrorOr<void> flush_pending_output();
+
 protected:
-    bool is_buffer_containing_a_full_packet(ReadonlyBytes);
+    ErrorOr<bool> is_buffer_containing_a_full_packet(ReadonlyBytes);
 
     ErrorOr<ByteBuffer> read_packet(ByteBuffer&);
     ErrorOr<void> write_packet(ReadonlyBytes payload);
+    ErrorOr<void> write_raw_bytes(ReadonlyBytes);
 
     ErrorOr<void> handle_new_keys_message(ByteBuffer& data);
     ErrorOr<void> send_new_keys_message();
@@ -55,8 +61,19 @@ protected:
     }
 
 private:
+    struct PendingOutputPacket {
+        ByteBuffer bytes;
+        size_t offset { 0 };
+    };
+
+    ErrorOr<void> enqueue_output_data(ByteBuffer&&);
+    void notify_output_pending(bool);
+
     Core::Socket& m_tcp_socket;
     NonnullOwnPtr<Cipher> m_cipher;
+    Function<void(bool)> m_output_pending_callback;
+    Vector<PendingOutputPacket> m_pending_output;
+    size_t m_pending_output_bytes { 0 };
 
     Optional<Crypto::Hash::Digest<256>> m_session_id {};
     Crypto::Hash::Digest<256> m_hash {};

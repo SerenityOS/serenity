@@ -10,6 +10,20 @@
 
 namespace SSH {
 
+bool KeyExchangeData::is_valid_x25519_shared_secret(ReadonlyBytes shared_secret)
+{
+    // This KEX uses X25519, whose output is exactly 32 bytes. Accumulate every byte before
+    // branching so the all-zero check does not stop at the first non-zero byte.
+    if (shared_secret.size() != 32)
+        return false;
+
+    u8 nonzero_byte = 0;
+    for (auto byte : shared_secret)
+        nonzero_byte |= byte;
+
+    return nonzero_byte != 0;
+}
+
 ErrorOr<Crypto::Hash::Digest<256>> KeyExchangeData::compute_sha_256() const
 {
     AllocatingMemoryStream stream;

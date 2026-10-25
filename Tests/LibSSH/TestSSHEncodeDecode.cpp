@@ -5,6 +5,7 @@
  */
 
 #include <LibSSH/DataTypes.h>
+#include <LibSSH/KeyExchangeData.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(string)
@@ -28,6 +29,15 @@ TEST_CASE(string)
         auto decoded = TRY_OR_FAIL(SSH::decode_string(decoded_stream));
         EXPECT_EQ(test.bytes(), decoded);
     }
+}
+
+TEST_CASE(decode_string_rejects_length_beyond_input)
+{
+    // A malicious length must be rejected before decode_string tries to allocate it.
+    auto input = to_array<u8>({ 0xff, 0xff, 0xff, 0xff });
+    FixedMemoryStream stream { ReadonlyBytes { input.data(), input.size() } };
+
+    EXPECT(SSH::decode_string(stream).is_error());
 }
 
 // Examples are from:
@@ -65,6 +75,16 @@ TEST_CASE(name_list)
     TRY_OR_FAIL(test({}, to_array<u8>({ 0, 0, 0, 0 })));
     TRY_OR_FAIL(test(to_array<StringView>({ "zlib"sv }), to_array<u8>({ 0, 0, 0, 4, 0x7a, 0x6c, 0x69, 0x62 })));
     TRY_OR_FAIL(test(to_array<StringView>({ "zlib"sv, "none"sv }), to_array<u8>({ 0, 0, 0, 9, 0x7a, 0x6c, 0x69, 0x62, 0x2c, 0x6e, 0x6f, 0x6e, 0x65 })));
+}
+
+TEST_CASE(x25519_shared_secret_must_be_nonzero)
+{
+    Array<u8, 32> shared_secret {};
+    EXPECT(!SSH::KeyExchangeData::is_valid_x25519_shared_secret(shared_secret));
+
+    shared_secret[0] = 1;
+    EXPECT(SSH::KeyExchangeData::is_valid_x25519_shared_secret(shared_secret));
+    EXPECT(!SSH::KeyExchangeData::is_valid_x25519_shared_secret(ReadonlyBytes { shared_secret.data(), 31 }));
 }
 
 TEST_CASE(mpint)

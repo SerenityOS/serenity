@@ -9,6 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <LibCore/EventReceiver.h>
 #include <LibCore/Forward.h>
+#include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
 #include <Services/SSHServer/SSHClient.h>
 
@@ -23,6 +24,7 @@ private:
     TCPClient(NonnullOwnPtr<Core::TCPSocket>&& socket, Function<void()>&& on_quit);
 
     ErrorOr<void> on_ready_to_read();
+    void on_ready_to_write();
     void die();
 
     Function<void()> m_on_quit;
@@ -31,6 +33,8 @@ private:
     ByteBuffer m_read_buffer;
 
     SSHClient m_ssh_client;
+    RefPtr<Core::Notifier> m_write_notifier;
+    bool m_is_dying { false };
 };
 
 } // SSHServer

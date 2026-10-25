@@ -117,3 +117,33 @@ TEST_CASE(read_zero_length)
     auto file = TRY_OR_FAIL(FileSystem::TempFile::create_temp_file());
     TRY_OR_FAIL(run_read_test(file->path(), 0, 0));
 }
+
+TEST_CASE(read_rejects_unbounded_length)
+{
+    bool received_failure_status = false;
+    auto server = make_initialized_server([&](Message message) -> ErrorOr<void> {
+        received_failure_status = true;
+        return check_status_message(message, SSH::SFTP::FXStatus::FAILURE, 42);
+    });
+
+    auto handle = TRY_OR_FAIL(ByteBuffer::copy("invalid handle"sv.bytes()));
+    auto read_packet = TRY_OR_FAIL(make_read_packet(handle, 42, 0, 0xffffffffu));
+    TRY_OR_FAIL(server_process_data(server, read_packet));
+
+    EXPECT(received_failure_status);
+}
+
+TEST_CASE(read_rejects_unrepresentable_offset)
+{
+    bool received_failure_status = false;
+    auto server = make_initialized_server([&](Message message) -> ErrorOr<void> {
+        received_failure_status = true;
+        return check_status_message(message, SSH::SFTP::FXStatus::FAILURE, 42);
+    });
+
+    auto handle = TRY_OR_FAIL(ByteBuffer::copy("invalid handle"sv.bytes()));
+    auto read_packet = TRY_OR_FAIL(make_read_packet(handle, 42, 0xffffffffffffffffull, 1));
+    TRY_OR_FAIL(server_process_data(server, read_packet));
+
+    EXPECT(received_failure_status);
+}

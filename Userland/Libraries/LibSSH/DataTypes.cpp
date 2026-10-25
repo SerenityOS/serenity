@@ -15,6 +15,9 @@ namespace SSH {
 ErrorOr<ByteBuffer> decode_string(FixedMemoryStream& stream)
 {
     auto length = TRY(stream.read_value<NetworkOrdered<u32>>());
+    if (length > stream.remaining())
+        return Error::from_string_literal("String length exceeds the remaining input");
+
     auto data = TRY(ByteBuffer::create_uninitialized(length));
     TRY(stream.read_until_filled(data));
     return data;
