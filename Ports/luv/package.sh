@@ -2,7 +2,7 @@
 port='luv'
 version='1.53.0-0'
 files=(
-    "https://github.com/luvit/luv/releases/download/${version}/luv-${version}.tar.gz#ce6260efb974647e7687f54a54a6810bc5eb81cdc14b45b69868a5ea048f96e1"
+    "https://github.com/luvit/luv/releases/download/${version}/luv-${version}.tar.gz#fccabc7bb37fcc3b84ab258a19a862c55f67abc2059af0a744a1ae64119dfc6c"
 )
 useconfigure='true'
 
