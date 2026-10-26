@@ -236,7 +236,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`ncdu`](ncdu/)                                 | Ncdu                                                          | 1.22                  | https://dev.yorhel.nl/ncdu                                           |
 | [`ncurses`](ncurses/)                           | ncurses                                                       | 6.6                   | https://invisible-island.net/ncurses/announce.html                   |
 | [`neofetch`](neofetch/)                         | neofetch                                                      | 7.1.0                 | https://github.com/dylanaraps/neofetch                               |
-| [`neovim`](neovim/)                             | neovim                                                        | 0.12.0                | https://neovim.io/                                                   |
+| [`neovim`](neovim/)                             | neovim                                                        | 0.12.6                | https://neovim.io/                                                   |
 | [`nesalizer`](nesalizer/)                       | Nesalizer                                                     | 5bb0458               | https://github.com/ulfalizer/nesalizer                               |
 | [`nethack`](nethack/)                           | nethack                                                       | 5.0.0                 | https://www.nethack.org/                                             |
 | [`ninja`](ninja/)                               | Ninja                                                         | 1.13.2                | https://ninja-build.org/                                             |

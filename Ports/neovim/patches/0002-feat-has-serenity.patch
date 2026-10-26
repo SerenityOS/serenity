@@ -5,17 +5,17 @@ Subject: [PATCH] feat: has('serenity')
 
 ---
  runtime/doc/vimfn.txt               | 1 +
- runtime/lua/vim/_meta/vimfn.lua     | 1 +
+ runtime/lua/vim/_meta/vimfn.gen.lua | 1 +
  src/nvim/eval.lua                   | 1 +
  src/nvim/eval/funcs.c               | 3 +++
  test/old/testdir/test_functions.vim | 2 ++
  5 files changed, 8 insertions(+)
 
 diff --git a/runtime/doc/vimfn.txt b/runtime/doc/vimfn.txt
-index afb253a4f3be78a174151c74fe4efbd968218005..68b3425ca37ab3a5d2f1ce10af72f94e09658f20 100644
+index 7cfb15c6697a3aded2e3f391c83b82e5d7b1f832..ec17730e7e772834be18be51f5fc722136cfd496 100644
 --- a/runtime/doc/vimfn.txt
 +++ b/runtime/doc/vimfn.txt
-@@ -4702,6 +4702,7 @@ has({feature})                                                           *has()*
+@@ -4703,6 +4703,7 @@ has({feature})                                                           *has()*
  			nvim		This is Nvim.
  			python3		Legacy Vim |python3| interface. |has-python|
  			pythonx		Legacy Vim |python_x| interface. |has-pythonx|
@@ -23,11 +23,11 @@ index afb253a4f3be78a174151c74fe4efbd968218005..68b3425ca37ab3a5d2f1ce10af72f94e
  			sun		SunOS system.
  			*termux*	Termux, an |android| terminal app and packaging environment.
  			ttyin		input is a terminal (tty).
-diff --git a/runtime/lua/vim/_meta/vimfn.lua b/runtime/lua/vim/_meta/vimfn.lua
-index 347862e865ded433cbbe63060e69c010a17cbe71..b2b00825667b17fa11863e2405bc7838727e68c1 100644
---- a/runtime/lua/vim/_meta/vimfn.lua
-+++ b/runtime/lua/vim/_meta/vimfn.lua
-@@ -4249,6 +4249,7 @@ function vim.fn.globpath(path, expr, nosuf, list, allinks) end
+diff --git a/runtime/lua/vim/_meta/vimfn.gen.lua b/runtime/lua/vim/_meta/vimfn.gen.lua
+index dcf98870beb76032e6247e98d1cd566060137ea0..5fa31c9df14317d04bf643207f688583b7450824 100644
+--- a/runtime/lua/vim/_meta/vimfn.gen.lua
++++ b/runtime/lua/vim/_meta/vimfn.gen.lua
+@@ -4251,6 +4251,7 @@ function vim.fn.globpath(path, expr, nosuf, list, allinks) end
  ---   nvim    This is Nvim.
  ---   python3    Legacy Vim |python3| interface. |has-python|
  ---   pythonx    Legacy Vim |python_x| interface. |has-pythonx|
@@ -36,10 +36,10 @@ index 347862e865ded433cbbe63060e69c010a17cbe71..b2b00825667b17fa11863e2405bc7838
  ---   *termux*  Termux, an |android| terminal app and packaging environment.
  ---   ttyin    input is a terminal (tty).
 diff --git a/src/nvim/eval.lua b/src/nvim/eval.lua
-index a52b0660214d5030aa5266687ec2fea19fe18e94..7e8cc65b2ffa0b4bc5b43278bc0875ba1ea29ff3 100644
+index 7b6d089c017ec51c7b9518088098d10917f4ab8d..420c2cac14b788875230011d1915f3fa63b7eb44 100644
 --- a/src/nvim/eval.lua
 +++ b/src/nvim/eval.lua
-@@ -5234,6 +5234,7 @@ M.funcs = {
+@@ -5235,6 +5235,7 @@ M.funcs = {
        	nvim		This is Nvim.
        	python3		Legacy Vim |python3| interface. |has-python|
        	pythonx		Legacy Vim |python_x| interface. |has-pythonx|
@@ -48,10 +48,10 @@ index a52b0660214d5030aa5266687ec2fea19fe18e94..7e8cc65b2ffa0b4bc5b43278bc0875ba
        	*termux*	Termux, an |android| terminal app and packaging environment.
        	ttyin		input is a terminal (tty).
 diff --git a/src/nvim/eval/funcs.c b/src/nvim/eval/funcs.c
-index 07361d820cb46af42608c836112027152565c413..8e2043f46906a080f1ceaf97cf81f67f1552804f 100644
+index afe356a72c550923580dd81a767611a07de0df92..0abc44165c751f8a587e9d980194c0d218ed81a2 100644
 --- a/src/nvim/eval/funcs.c
 +++ b/src/nvim/eval/funcs.c
-@@ -2666,6 +2666,9 @@ static void f_has(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
+@@ -2665,6 +2665,9 @@ static void f_has(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
  #ifdef __linux__
      "linux",
  #endif

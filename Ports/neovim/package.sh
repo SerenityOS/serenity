@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='neovim'
-version='0.12.0'
+version='0.12.6'
 files=(
-    "https://github.com/neovim/neovim/archive/refs/tags/v${version}.tar.gz#76b4875fc1a4805a807a9fa53ff0c8fb081620137a40fb879b32436e375aeb65"
+    "https://github.com/neovim/neovim/archive/refs/tags/v${version}.tar.gz#8629fdc5eb951daf89a76f68cad12f2f1e03fab0d539150ba3fe6d177d254b7f"
 )
 useconfigure='true'
 launcher_name='Neovim'
