@@ -8,10 +8,10 @@ Subject: [PATCH] feat(vim.ui.open): support serenity "open" tool
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/runtime/lua/vim/ui.lua b/runtime/lua/vim/ui.lua
-index 28ae4bfee08a0f556eaf27d78b3a3fe0c55eb1d9..af5a338f58cd47d7e50cd087a755a8a6aa65be02 100644
+index 94db2ab9b626fc26cd0079ce177e055903b8fce2..1a200e0a5dbb06d519672db14b0ec105b7f16d1f 100644
 --- a/runtime/lua/vim/ui.lua
 +++ b/runtime/lua/vim/ui.lua
-@@ -196,8 +196,10 @@ function M._get_open_cmd()
+@@ -221,8 +221,10 @@ function M._get_open_cmd()
      return { 'explorer.exe' }, nil
    elseif vim.fn.executable('lemonade') == 1 then
      return { 'lemonade', 'open' }, nil
