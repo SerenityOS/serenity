@@ -28,6 +28,7 @@ GLContext::GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device> devi
     , m_device_info { m_rasterizer->info() }
     , m_viewport { frontbuffer.rect() }
     , m_frontbuffer { frontbuffer }
+    , m_proxy_texture_2d(make_ref_counted<Texture2D>())
 {
     m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
