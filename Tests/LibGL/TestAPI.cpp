@@ -109,3 +109,18 @@ TEST_CASE(0006_gl_stencil_clear_value)
     glGetIntegerv(GL_STENCIL_CLEAR_VALUE, &clear_stencil);
     EXPECT_EQ(clear_stencil, 255);
 }
+
+TEST_CASE(0008_default_texture_size)
+{
+    auto context = create_testing_context();
+
+    GLint width = -1;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    EXPECT_EQ(glGetError(), 0u);
+    EXPECT_EQ(width, 0);
+
+    GLint height = -1;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &height);
+    EXPECT_EQ(glGetError(), 0u);
+    EXPECT_EQ(height, 0);
+}
