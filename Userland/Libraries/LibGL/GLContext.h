@@ -50,12 +50,17 @@ namespace GL {
             return;                                                  \
     }
 
-#define RETURN_WITH_ERROR_IF(condition, error)                    \
-    if (condition) {                                              \
+#define RETURN_WITH_ERROR(error)                                  \
+    do {                                                          \
         dbgln_if(GL_DEBUG, "{}(): error {:#x}", __func__, error); \
         if (m_error == GL_NO_ERROR)                               \
             m_error = error;                                      \
         return;                                                   \
+    } while (0)
+
+#define RETURN_WITH_ERROR_IF(condition, error) \
+    if (condition) {                           \
+        RETURN_WITH_ERROR(error);              \
     }
 
 #define RETURN_VALUE_WITH_ERROR_IF(condition, error, return_value) \
@@ -403,6 +408,7 @@ private:
     TextureUnit* m_active_texture_unit;
     size_t m_active_texture_unit_index { 0 };
     bool m_texture_units_dirty { true };
+    NonnullRefPtr<Texture2D> m_proxy_texture_2d;
 
     // Texture coordinate generation state
     struct TextureCoordinateGeneration {

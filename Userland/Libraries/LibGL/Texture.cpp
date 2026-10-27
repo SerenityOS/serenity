@@ -12,6 +12,21 @@
 
 namespace GL {
 
+// Placeholder GPU::Image used by GL_PROXY_TEXTURE_2D
+class ProxyImage final : public GPU::Image {
+public:
+    ProxyImage(GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 max_levels)
+        : GPU::Image(nullptr, pixel_format, width, height, depth, max_levels)
+    {
+    }
+
+    virtual void regenerate_mipmaps() override { }
+
+    virtual void write_texels(u32, Vector3<i32> const&, void const*, GPU::ImageDataLayout const&) override { }
+    virtual void read_texels(u32, Vector3<i32> const&, void*, GPU::ImageDataLayout const&) const override { }
+    virtual void copy_texels(GPU::Image const&, u32, Vector3<u32> const&, Vector3<u32> const&, u32, Vector3<u32> const&) override { }
+};
+
 // Helper functions to handle type casting.
 static u16 max_texture_size(GPU::DeviceInfo const& device_info)
 {
@@ -253,16 +268,22 @@ void GLContext::gl_get_tex_image(GLenum target, GLint level, GLenum format, GLen
 void GLContext::gl_get_tex_parameter_integerv(GLenum target, GLint level, GLenum pname, GLint* params)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    // FIXME: support targets other than GL_TEXTURE_2D
-    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+    // FIXME: support targets other than GL_TEXTURE_2D and GL_PROXY_TEXTURE_2D.
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D && target != GL_PROXY_TEXTURE_2D, GL_INVALID_ENUM);
     // FIXME: support other parameter names
     RETURN_WITH_ERROR_IF(pname < GL_TEXTURE_WIDTH || pname > GL_TEXTURE_HEIGHT, GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
     // FIXME: GL_INVALID_VALUE is generated if target is GL_TEXTURE_BUFFER and level is not zero
     // FIXME: GL_INVALID_OPERATION is generated if GL_TEXTURE_COMPRESSED_IMAGE_SIZE is queried on texture images with an uncompressed internal format or on proxy targets
 
-    VERIFY(!m_active_texture_unit->texture_2d_target_texture().is_null());
-    auto const texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    RefPtr<Texture2D> texture_2d;
+    if (target == GL_TEXTURE_2D)
+        texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    else if (target == GL_PROXY_TEXTURE_2D)
+        texture_2d = m_proxy_texture_2d;
+    else
+        VERIFY_NOT_REACHED();
+    VERIFY(!texture_2d.is_null());
 
     switch (pname) {
     case GL_TEXTURE_HEIGHT:
@@ -559,18 +580,50 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
+    // FIXME: Support targets other than GL_TEXTURE_2D and GL_PROXY_TEXTURE_2D.
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D && target != GL_PROXY_TEXTURE_2D, GL_INVALID_ENUM);
+
     RETURN_WITH_ERROR_IF(internal_format == GL_NONE || format == GL_NONE || type == GL_NONE, GL_INVALID_ENUM);
     auto pixel_type_or_error = get_validated_pixel_type(target, internal_format, format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
     RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + max_texture_size(m_device_info)) || height > (2 + max_texture_size(m_device_info)), GL_INVALID_VALUE);
-    if (!m_device_info.supports_npot_textures)
-        RETURN_WITH_ERROR_IF(!is_power_of_two(width) || !is_power_of_two(height), GL_INVALID_VALUE);
+
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0, GL_INVALID_VALUE);
+
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
-    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    RefPtr<Texture2D> texture_2d;
+    if (target == GL_TEXTURE_2D)
+        texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    else if (target == GL_PROXY_TEXTURE_2D)
+        texture_2d = m_proxy_texture_2d;
+    else
+        VERIFY_NOT_REACHED();
     VERIFY(!texture_2d.is_null());
+
+    bool texture_size_is_supported = width <= (2 + max_texture_size(m_device_info)) && height <= (2 + max_texture_size(m_device_info));
+    if (!m_device_info.supports_npot_textures)
+        texture_size_is_supported &= is_power_of_two(width) && is_power_of_two(height);
+
+    if (!texture_size_is_supported) {
+        if (target == GL_PROXY_TEXTURE_2D) {
+            // OpenGL specification version 1.5, 3.8.11 Texture State and Proxy State:
+            // "When TexImage3D is executed with target specified as PROXY_TEXTURE_3D,
+            //  the three-dimensional proxy state values of the specified
+            //  level-of-detail are recomputed and updated. If the image array would
+            //  not be supported by TexImage3D called with target set to TEXTURE_3D,
+            //  no error is generated, but the proxy width, height, depth,
+            //  border width, and component resolutions are set to zero."
+            // (The same also applies to TexImage2D.)
+            // We represent null textures (textures whose dimensions are all zero)
+            // by setting the device image to null.
+            texture_2d->set_device_image(nullptr);
+            return;
+        }
+
+        RETURN_WITH_ERROR(GL_INVALID_VALUE);
+    }
 
     if (level == 0) {
         // FIXME: OpenGL has the concept of texture and mipmap completeness. A texture has to fulfill certain criteria to be considered complete.
@@ -580,7 +633,14 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
         auto internal_pixel_format = pixel_format_for_internal_format(internal_format);
-        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, log2_max_texture_size(m_device_info)));
+
+        RefPtr<GPU::Image> image;
+        if (target == GL_PROXY_TEXTURE_2D)
+            image = try_make_ref_counted<ProxyImage>(internal_pixel_format, width, height, 1, log2_max_texture_size(m_device_info)).release_value_but_fixme_should_propagate_errors();
+        else
+            image = m_rasterizer->create_image(internal_pixel_format, width, height, 1, log2_max_texture_size(m_device_info));
+
+        texture_2d->set_device_image(move(image));
         m_sampler_config_is_dirty = true;
     }
 
