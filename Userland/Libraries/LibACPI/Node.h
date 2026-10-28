@@ -49,11 +49,6 @@ public:
     virtual ~Node() = default;
 
 protected:
-    Node(RefPtr<Node> parent)
-        : m_parent(move(parent))
-    {
-    }
-
     NameSegment m_name;
 
     WeakPtr<Node> m_parent;
@@ -62,11 +57,6 @@ protected:
 
 class ScopeNode : public Node {
 public:
-    ScopeNode()
-        : Node(nullptr)
-    {
-    }
-
     virtual NodeType type() const override { return NodeType::Scope; }
     virtual StringView kind() const override { return "Scope"sv; }
 };
@@ -74,8 +64,7 @@ public:
 class NameNode : public Node {
 public:
     NameNode(Object value)
-        : Node(nullptr)
-        , m_data(move(value))
+        : m_data(move(value))
     {
     }
 
@@ -93,8 +82,7 @@ protected:
 class OperationRegionNode : public Node {
 public:
     OperationRegionNode(u8 region_space, i64 region_offset, i64 region_length)
-        : Node(nullptr)
-        , m_space_raw(region_space)
+        : m_space_raw(region_space)
         , m_offset(region_offset)
         , m_length(region_length)
     {
@@ -125,8 +113,7 @@ protected:
 class FieldNode : public Node {
 public:
     FieldNode(RefPtr<Node> const& operation_region, u8 flags, size_t offset, size_t size)
-        : Node(nullptr)
-        , m_operation_region(operation_region)
+        : m_operation_region(operation_region)
         , m_flags(flags)
         , m_offset(offset)
         , m_size(size)
