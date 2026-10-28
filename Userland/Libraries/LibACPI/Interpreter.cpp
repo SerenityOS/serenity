@@ -326,6 +326,9 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
         auto opcode = TRY(stream.read_opcode());
         if (!top_opcode_frame.filter_opcode_for_next_operand(opcode)) {
             DEBUG_LOG("Failure!");
+            if (m_opcode_frames.size() == 1)
+                INTERPRETER_ERROR("Filtered opcode!", EINVAL, "Argument opcode {} filtered at root!", opcode);
+
             INTERPRETER_ERROR("Filtered opcode!", EINVAL, "Argument opcode {} filtered by opcode {}!", opcode, top_opcode_frame.opcode());
         }
 
