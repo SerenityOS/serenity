@@ -47,11 +47,6 @@ public:
     virtual ~Node() = default;
 
 protected:
-    Node(RefPtr<Node> parent)
-        : m_parent(move(parent))
-    {
-    }
-
     NameSegment m_name;
 
     WeakPtr<Node> m_parent;
@@ -60,11 +55,6 @@ protected:
 
 class ScopeNode : public Node {
 public:
-    ScopeNode()
-        : Node(nullptr)
-    {
-    }
-
     virtual NodeType type() const override { return NodeType::Scope; }
     virtual StringView kind() const override { return "Scope"sv; }
 };
@@ -72,8 +62,7 @@ public:
 class NameNode : public Node {
 public:
     NameNode(Object value)
-        : Node(nullptr)
-        , m_data(move(value))
+        : m_data(move(value))
     {
     }
 
