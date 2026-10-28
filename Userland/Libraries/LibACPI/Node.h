@@ -24,6 +24,7 @@ enum class NodeType : u8 {
     Untyped,
     Scope,
     Name,
+    Method,
     OperationRegion,
     Field,
 };
@@ -77,6 +78,37 @@ public:
 
 protected:
     Object m_data;
+};
+
+class MethodNode : public Node {
+public:
+    MethodNode(size_t start, size_t end, size_t table_index, u8 flags)
+        : m_start(start)
+        , m_end(end)
+        , m_table_index(table_index)
+        , m_flags(flags)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::Method; }
+    virtual StringView kind() const override { return "Method"sv; }
+
+    size_t table_index() const { return m_table_index; }
+
+    size_t start() const { return m_start; }
+    size_t end() const { return m_end; }
+
+    u8 flags() const { return m_flags; }
+    u8 argument_count() const { return m_flags & 7; }
+
+private:
+    size_t m_start { 0 };
+    size_t m_end { 0 };
+    size_t m_table_index { 0 };
+
+    u8 m_flags { 0 };
 };
 
 class OperationRegionNode : public Node {

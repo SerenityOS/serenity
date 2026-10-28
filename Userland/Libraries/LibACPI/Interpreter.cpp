@@ -205,7 +205,7 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame)
+ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream& stream)
 {
     switch (frame.opcode()) {
     case Opcode::ScopeOp: {
@@ -224,6 +224,18 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame)
 
         auto node = TRY(try_make_ref_counted<NameNode>(data));
         TRY(m_scope_frames.last().insert_node(path, node));
+        return {};
+    }
+
+    case Opcode::MethodOp: {
+        auto length = TRY(frame.operand(0).as<u64>());
+        auto path = TRY(frame.operand(1).as<NameString>());
+        auto flags = TRY(frame.operand(2).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<MethodNode>(frame.start(), frame.start() + length, m_loaded_tables.size() - 1, flags));
+        TRY(m_scope_frames.last().insert_node(path, node));
+
+        TRY(stream.seek(frame.start() + length));
         return {};
     }
 
@@ -428,7 +440,7 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
         } else {
             DEBUG_LOG("Finalizing term {}", top_frame_value.opcode());
 
-            TRY(finalize_term_opcode(top_frame_value));
+            TRY(finalize_term_opcode(top_frame_value, stream));
 
             m_state = State::ReadingOpcode;
         }
