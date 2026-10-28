@@ -242,37 +242,37 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
     case OperandType::NameString: {
         auto value = TRY(stream.read_name_string());
         DEBUG_LOG("Reading namestring... ({})", value.to_string());
-        TRY(top_opcode_frame.finish_operand(value));
+        TRY(top_opcode_frame.finish_operand(value, stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::PackageLength: {
         auto length = TRY(stream.read_package_length());
         DEBUG_LOG("Reading package length... ({:#X})", length);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(length)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(length), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::ByteData: {
         auto value = TRY(stream.read_value<u8>());
         DEBUG_LOG("Reading byte... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::WordData: {
         auto value = TRY(stream.read_value<u16>());
         DEBUG_LOG("Reading word... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::DWordData: {
         auto value = TRY(stream.read_value<u32>());
         DEBUG_LOG("Reading dword... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::QWordData: {
         auto value = TRY(stream.read_value<u64>());
         DEBUG_LOG("Reading qword... ({})", value);
-        TRY(top_opcode_frame.finish_operand(value));
+        TRY(top_opcode_frame.finish_operand(value, stream.offset()));
         return IterationDecision::Continue;
     }
 
@@ -356,7 +356,7 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             DEBUG_LOG("Finalizing argument {}", top_frame_value.opcode());
 
             auto value = TRY(finalize_value_opcode(top_frame_value));
-            TRY(m_opcode_frames.last().finish_operand(value));
+            TRY(m_opcode_frames.last().finish_operand(value, stream.offset()));
 
             m_state = State::ReadingOperand;
         } else {
