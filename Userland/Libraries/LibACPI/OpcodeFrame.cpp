@@ -66,7 +66,11 @@ ErrorOr<OpcodeFrame> OpcodeFrame::root_frame()
 
 OperandType OpcodeFrame::peek_next_operand()
 {
-    return m_operand_template[m_operand_template_index];
+    auto operand = m_operand_template[m_operand_template_index];
+    if (operand == OperandType::MarkAsCount || operand == OperandType::RepeatNextBytes)
+        operand = m_operand_template[m_operand_template_index + 1];
+
+    return operand;
 }
 
 bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
@@ -90,22 +94,62 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
 
     case OperandType::End:
         return term_filter(opcode);
+
+    case OperandType::MarkAsCount:
+    case OperandType::RepeatNextBytes:
+        VERIFY_NOT_REACHED();
     }
 
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<OperandType> OpcodeFrame::begin_operand()
+ErrorOr<OperandType> OpcodeFrame::begin_operand(size_t current_offset)
 {
+    auto operand = m_operand_template[m_operand_template_index];
+
+    if (operand == OperandType::MarkAsCount) {
+        m_counter_value_index = m_operands.size();
+    } else if (operand == OperandType::RepeatNextBytes) {
+        if (!m_counter.has_value()) {
+            m_counter = TRY(m_operands.at(m_counter_value_index).as<u64>());
+            check_repeat_opcodes(current_offset);
+        }
+    }
+
     return peek_next_operand();
 }
 
-ErrorOr<void> OpcodeFrame::finish_operand(Object const& operand)
+ErrorOr<void> OpcodeFrame::finish_operand(Object const& operand, size_t current_offset)
 {
     TRY(m_operands.try_append(operand));
 
-    m_operand_template_index++;
+    auto operand_type = m_operand_template[m_operand_template_index];
+    if (operand_type == OperandType::MarkAsCount) {
+        m_operand_template_index += 2;
+        return {};
+    }
+
+    if (!check_repeat_opcodes(current_offset))
+        m_operand_template_index++;
+
     return {};
+}
+
+bool OpcodeFrame::check_repeat_opcodes(size_t current_offset)
+{
+    auto operand_type = m_operand_template[m_operand_template_index];
+
+    if (operand_type == OperandType::RepeatNextBytes) {
+        if (current_offset >= m_start + m_counter.value() + 1) {
+            m_counter = {};
+            m_operand_template_index += 2;
+            return true;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 }

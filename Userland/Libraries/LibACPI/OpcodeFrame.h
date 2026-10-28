@@ -25,6 +25,8 @@ enum class OperandType : u8 {
 
     DataRefObject,
 
+    MarkAsCount,
+    RepeatNextBytes,
     End,
 };
 
@@ -35,8 +37,8 @@ public:
 
     bool filter_opcode_for_next_operand(Opcode opcode);
 
-    ErrorOr<OperandType> begin_operand();
-    ErrorOr<void> finish_operand(Object const& operand);
+    ErrorOr<OperandType> begin_operand(size_t current_offset);
+    ErrorOr<void> finish_operand(Object const& operand, size_t current_offset);
 
     Object const& operand(size_t index) const { return m_operands[index]; }
     size_t operand_count() const { return m_operands.size(); }
@@ -54,6 +56,7 @@ private:
     }
 
     OperandType peek_next_operand();
+    bool check_repeat_opcodes(size_t current_offset);
 
     Optional<Opcode> m_opcode;
     Vector<Object> m_operands;
@@ -62,6 +65,9 @@ private:
     size_t m_start;
 
     size_t m_operand_template_index { 0 };
+
+    size_t m_counter_value_index { 0 };
+    Optional<size_t> m_counter;
 };
 
 }
