@@ -227,6 +227,22 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame)
         return {};
     }
 
+    case Opcode::OpRegionOp: {
+        auto path = TRY(frame.operand(0).as<NameString>());
+        auto region_space = TRY(frame.operand(1).as<u64>());
+        auto region_offset = TRY(frame.operand(2).as<u64>());
+        auto region_length = TRY(frame.operand(3).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<OperationRegionNode>(region_space, region_offset, region_length));
+        TRY(m_scope_frames.last().insert_node(path, node));
+        return {};
+    }
+
+    case Opcode::FieldOp:
+        // NOTE: All the field elements are read as operands, so all we need to do is reset the field offset.
+        m_current_field_offset = 0;
+        return {};
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented term opcode {}!", frame.opcode());
     }
@@ -274,6 +290,54 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         DEBUG_LOG("Reading qword... ({})", value);
         TRY(top_opcode_frame.finish_operand(value, stream.offset()));
         return IterationDecision::Continue;
+    }
+
+    // https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#fieldelement
+    case OperandType::FieldElement: {
+#ifndef KERNEL
+        if constexpr (AML_DEBUG)
+            warn("Reading field element...");
+#endif
+        if (is_lead_name_char(TRY(stream.peek_byte()))) {
+            // NamedField := NameSeg PkgLength
+            auto name_segment_bytes = TRY(stream.read_in_place<u8 const>(4));
+            auto name_segment = TRY(NameSegment::from_bytes(name_segment_bytes));
+
+            auto package_length = TRY(stream.read_package_length());
+
+            auto operation_region_node = TRY(find_node(TRY(top_opcode_frame.operand(1).as<NameString>()), m_scope_frames.last().scope()));
+            if (operation_region_node->type() != NodeType::OperationRegion)
+                INTERPRETER_ERROR("Expected operation region node!", EINVAL, "Expected operation region node, got {}", operation_region_node->kind());
+
+            auto flags = TRY(top_opcode_frame.operand(2).as<u64>());
+
+            DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
+
+            auto node = TRY(try_make_ref_counted<FieldNode>(static_ptr_cast<OperationRegionNode>(operation_region_node), flags, m_current_field_offset, package_length));
+            TRY(m_scope_frames.last().scope()->insert_child(name_segment, node));
+
+            m_current_field_offset += package_length;
+
+            TRY(top_opcode_frame.finish_operand(stream.offset()));
+            return IterationDecision::Continue;
+        }
+
+        auto type = TRY(stream.read_value<u8>());
+        DEBUG_LOG(" Type: {:02X}", type);
+        switch (type) {
+        case 0x00: {
+            // ReservedField := 0x00 PkgLength
+            m_current_field_offset += TRY(stream.read_package_length());
+
+            TRY(top_opcode_frame.finish_operand(stream.offset()));
+            return IterationDecision::Continue;
+        }
+
+        default:
+            INTERPRETER_ERROR("Unimplemented field type!", EINVAL, "Unimplemented field type {:02X}!", type);
+        }
+
+        VERIFY_NOT_REACHED();
     }
 
     case OperandType::TermArg:
@@ -384,12 +448,20 @@ ErrorOr<Object> Interpreter::evaluate(NameString const& path)
 
 ErrorOr<Object> Interpreter::evaluate(NonnullRefPtr<Node> node)
 {
-    if (node->type() == NodeType::Name) {
+    switch (node->type()) {
+    case NodeType::Name: {
         auto name_node = static_ptr_cast<NameNode>(node);
         return name_node->data();
     }
 
-    INTERPRETER_ERROR("Cannot evaluate node type!", EINVAL, "Node type {} not supported for evaluation!", node->kind());
+    case NodeType::Field:
+        INTERPRETER_ERROR("Field evaluation not supported!", EINVAL, "Evaluating fields is not supported yet!");
+
+    default:
+        INTERPRETER_ERROR("Cannot evaluate node type!", EINVAL, "Node type {} not supported for evaluation!", node->kind());
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()

@@ -24,6 +24,8 @@ enum class NodeType : u8 {
     Untyped,
     Scope,
     Name,
+    OperationRegion,
+    Field,
 };
 
 class Node : public AtomicRefCounted<Node>
@@ -75,6 +77,66 @@ public:
 
 protected:
     Object m_data;
+};
+
+class OperationRegionNode : public Node {
+public:
+    OperationRegionNode(u8 region_space, u64 region_offset, u64 region_length)
+        : m_space_raw(region_space)
+        , m_offset(region_offset)
+        , m_length(region_length)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::OperationRegion; }
+    virtual StringView kind() const override { return "Operation Region"sv; }
+
+    GenericAddressStructure::AddressSpace space() const
+    {
+        if (m_space_raw >= 0x80)
+            return GenericAddressStructure::AddressSpace::OEMDefined;
+
+        return static_cast<GenericAddressStructure::AddressSpace>(m_space_raw);
+    }
+
+    u64 offset() const { return m_offset; }
+    u64 length() const { return m_length; }
+
+private:
+    u8 m_space_raw;
+    u64 m_offset;
+    u64 m_length;
+};
+
+class FieldNode : public Node {
+public:
+    FieldNode(NonnullRefPtr<OperationRegionNode> const& operation_region, u8 flags, size_t offset, size_t size)
+        : m_operation_region(operation_region)
+        , m_flags(flags)
+        , m_offset(offset)
+        , m_length(size)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::Field; }
+    virtual StringView kind() const override { return "Field"sv; }
+
+    NonnullRefPtr<OperationRegionNode> const& operation_region() const { return m_operation_region; }
+
+    u8 flags() const { return m_flags; }
+    u64 offset() const { return m_offset; }
+    u64 length() const { return m_length; }
+
+private:
+    NonnullRefPtr<OperationRegionNode> m_operation_region;
+
+    u8 m_flags;
+    u64 m_offset;
+    u64 m_length;
 };
 
 }
