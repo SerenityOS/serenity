@@ -77,7 +77,7 @@ private:
     ErrorOr<IterationDecision> read_operand(TableStream& stream, OperandType operand);
 
     ErrorOr<Object> finalize_value_opcode(OpcodeFrame& frame);
-    ErrorOr<void> finalize_term_opcode(OpcodeFrame& frame);
+    ErrorOr<void> finalize_term_opcode(OpcodeFrame& frame, TableStream& stream);
 
     void debug_print_header(TableStream& stream, size_t operand_index = 0);
 

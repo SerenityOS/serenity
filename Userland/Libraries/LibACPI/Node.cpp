@@ -74,6 +74,12 @@ ErrorOr<void> NameNode::write_description(StringBuilder& builder)
     return {};
 }
 
+ErrorOr<void> MethodNode::write_description(StringBuilder& builder)
+{
+    TRY(builder.try_appendff("Method(Table: {}, Arguments: {}, Start: {}, End: {}, Flags: {})", m_table_index, arguments(), m_start, m_end, m_flags));
+    return {};
+}
+
 ErrorOr<void> OperationRegionNode::write_description(StringBuilder& builder)
 {
     TRY(builder.try_appendff("OperationRegion(Space: {}, Offset: {}, Length: {})", m_space_raw, m_offset, m_length));
