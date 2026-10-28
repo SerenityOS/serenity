@@ -16,8 +16,21 @@
 
 namespace ACPI::AML {
 
+class String {
+public:
+    String(ByteBuffer buffer)
+        : m_buffer(move(buffer))
+    {
+    }
+
+    ByteBuffer& buffer() { return m_buffer; }
+
+private:
+    ByteBuffer m_buffer;
+};
+
 template<typename T>
-concept IsNodeData = OneOf<T, u64, NameString>;
+concept IsNodeData = OneOf<T, u64, String, NameString>;
 
 class Object {
 public:
@@ -50,7 +63,7 @@ public:
     }
 
 protected:
-    Variant<AK::Empty, u64, NameString> m_data;
+    Variant<AK::Empty, u64, String, NameString> m_data;
 };
 
 }
@@ -63,6 +76,9 @@ struct AK::Formatter<::ACPI::AML::Object> : AK::Formatter<FormatString> {
             auto value = MUST(object.as<u64>());
             return AK::Formatter<FormatString>::format(builder, "(Decimal: {}, Hexadecimal: {:X})"sv, value, value);
         }
+
+        if (object.is<::ACPI::AML::String>())
+            return AK::Formatter<FormatString>::format(builder, "'{}'"sv, StringView(MUST(object.as<::ACPI::AML::String>()).buffer()));
 
         if (object.is<::ACPI::AML::NameString>())
             return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as<::ACPI::AML::NameString>()).to_string()));

@@ -24,6 +24,7 @@ public:
 
     ErrorOr<Opcode> read_opcode();
     ErrorOr<u32> read_package_length();
+    ErrorOr<ByteBuffer> read_string();
     ErrorOr<NameString> read_name_string();
 
     ErrorOr<u8> peek_byte();
