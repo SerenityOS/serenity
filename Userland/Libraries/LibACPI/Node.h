@@ -24,6 +24,8 @@ enum class NodeType : u8 {
     Untyped,
     Scope,
     Name,
+    OperationRegion,
+    Field,
 };
 
 class Node : public AtomicRefCounted<Node>
@@ -86,6 +88,68 @@ public:
 
 protected:
     Object m_data;
+};
+
+class OperationRegionNode : public Node {
+public:
+    OperationRegionNode(u8 region_space, i64 region_offset, i64 region_length)
+        : Node(nullptr)
+        , m_space_raw(region_space)
+        , m_offset(region_offset)
+        , m_length(region_length)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::OperationRegion; }
+    virtual StringView kind() const override { return "Operation Region"sv; }
+
+    GenericAddressStructure::AddressSpace space() const
+    {
+        if (m_space_raw >= 0x80)
+            return GenericAddressStructure::AddressSpace::OEMDefined;
+
+        return static_cast<GenericAddressStructure::AddressSpace>(m_space_raw);
+    }
+
+    i64 offset() const { return m_offset; }
+    i64 length() const { return m_length; }
+
+protected:
+    u8 m_space_raw;
+    i64 m_offset;
+    i64 m_length;
+};
+
+class FieldNode : public Node {
+public:
+    FieldNode(RefPtr<Node> const& operation_region, u8 flags, size_t offset, size_t size)
+        : Node(nullptr)
+        , m_operation_region(operation_region)
+        , m_flags(flags)
+        , m_offset(offset)
+        , m_size(size)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::Field; }
+    virtual StringView kind() const override { return "Field"sv; }
+
+    RefPtr<Node> const& operation_region() const { return m_operation_region; }
+
+    u8 flags() const { return m_flags; }
+    size_t offset() const { return m_offset; }
+    size_t size() const { return m_size; }
+
+private:
+    RefPtr<Node> m_operation_region;
+
+    u8 m_flags;
+    size_t m_offset;
+    size_t m_size;
 };
 
 }

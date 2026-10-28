@@ -21,6 +21,7 @@ enum class OperandType : u8 {
     DWordData,
     QWordData,
 
+    FieldElement,
     TermArg,
 
     DataRefObject,

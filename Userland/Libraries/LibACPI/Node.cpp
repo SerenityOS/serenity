@@ -74,4 +74,16 @@ ErrorOr<void> NameNode::write_description(StringBuilder& builder)
     return {};
 }
 
+ErrorOr<void> OperationRegionNode::write_description(StringBuilder& builder)
+{
+    TRY(builder.try_appendff("OperationRegion(Space: {}, Offset: {}, Length: {})", m_space_raw, m_offset, m_length));
+    return {};
+}
+
+ErrorOr<void> FieldNode::write_description(StringBuilder& builder)
+{
+    TRY(builder.try_appendff("Field(Flags: {}, Offset: {}, Size: {})", m_flags, m_offset, m_size));
+    return {};
+}
+
 }
