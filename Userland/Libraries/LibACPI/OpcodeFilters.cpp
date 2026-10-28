@@ -31,8 +31,7 @@ bool named_object_filter(Opcode opcode)
 
     // FieldOp missing from 6.6 docs, but given the presence of the DefXYZField
     // opcodes here, I'm adding it in here.
-    // DeviceOp is also missing. Adding it here too.
-    // MutexOp likewise missing. It's named and creates an object, so here it be.
+    // DeviceOp, MethodOp and MutexOp are also missing. Adding them here too because they also create an object.
 
     // ProcessorOp found here in 6.3 docs.
     switch (opcode) {
@@ -44,9 +43,14 @@ bool named_object_filter(Opcode opcode)
     case Opcode::CreateQWordFieldOp:
     case Opcode::CreateWordFieldOp:
     case Opcode::DataRegionOp:
+    case Opcode::DeviceOp:
     case Opcode::ExternalOp:
+    case Opcode::FieldOp:
+    case Opcode::MethodOp:
+    case Opcode::MutexOp:
     case Opcode::OpRegionOp:
     case Opcode::PowerResOp:
+    case Opcode::ProcessorOp:
     case Opcode::ThermalZoneOp:
         return true;
 
