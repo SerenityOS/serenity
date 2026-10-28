@@ -83,6 +83,8 @@ private:
 
     State m_state { State::ReadingOpcode };
 
+    u64 m_current_field_offset { 0 };
+
     AK::Vector<TableStream> m_loaded_tables;
     Vector<ScopeFrame> m_scope_frames;
     Vector<OpcodeFrame> m_opcode_frames;

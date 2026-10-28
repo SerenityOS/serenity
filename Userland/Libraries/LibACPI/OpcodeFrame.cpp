@@ -26,6 +26,24 @@ constexpr static Array<OperandType, 2> WORD_CONST_OPERANDS = { OperandType::Word
 constexpr static Array<OperandType, 2> DWORD_CONST_OPERANDS = { OperandType::DWordData, OperandType::End };
 constexpr static Array<OperandType, 2> QWORD_CONST_OPERANDS = { OperandType::QWordData, OperandType::End };
 
+constexpr static Array<OperandType, 5> OP_REGION_OPERANDS = {
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::TermArg,
+    OperandType::TermArg,
+    OperandType::End,
+};
+
+constexpr static Array<OperandType, 7> FIELD_OPERANDS = {
+    OperandType::MarkAsCount,
+    OperandType::PackageLength,
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::RepeatNextBytes,
+    OperandType::FieldElement,
+    OperandType::End,
+};
+
 static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opcode)
 {
     switch (opcode) {
@@ -42,6 +60,10 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return SCOPE_OPERANDS.span();
     case Opcode::NameOp:
         return NAME_OPERANDS.span();
+    case Opcode::OpRegionOp:
+        return OP_REGION_OPERANDS.span();
+    case Opcode::FieldOp:
+        return FIELD_OPERANDS.span();
 
     case Opcode::ZeroOp:
     case Opcode::OneOp:
@@ -84,6 +106,7 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
     case OperandType::WordData:
     case OperandType::DWordData:
     case OperandType::QWordData:
+    case OperandType::FieldElement:
         return false;
 
     case OperandType::TermArg:
