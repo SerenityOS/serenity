@@ -38,6 +38,7 @@ public:
     bool filter_opcode_for_next_operand(Opcode opcode);
 
     ErrorOr<OperandType> begin_operand(size_t current_offset);
+    ErrorOr<void> finish_operand(size_t current_offset);
     ErrorOr<void> finish_operand(Object const& operand, size_t current_offset);
 
     Object const& operand(size_t index) const { return m_operands[index]; }

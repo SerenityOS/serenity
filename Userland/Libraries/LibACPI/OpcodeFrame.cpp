@@ -119,10 +119,8 @@ ErrorOr<OperandType> OpcodeFrame::begin_operand(size_t current_offset)
     return peek_next_operand();
 }
 
-ErrorOr<void> OpcodeFrame::finish_operand(Object const& operand, size_t current_offset)
+ErrorOr<void> OpcodeFrame::finish_operand(size_t current_offset)
 {
-    TRY(m_operands.try_append(operand));
-
     auto operand_type = m_operand_template[m_operand_template_index];
     if (operand_type == OperandType::MarkAsCount) {
         m_operand_template_index += 2;
@@ -133,6 +131,12 @@ ErrorOr<void> OpcodeFrame::finish_operand(Object const& operand, size_t current_
         m_operand_template_index++;
 
     return {};
+}
+
+ErrorOr<void> OpcodeFrame::finish_operand(Object const& operand, size_t current_offset)
+{
+    TRY(m_operands.try_append(operand));
+    return finish_operand(current_offset);
 }
 
 bool OpcodeFrame::check_repeat_opcodes(size_t current_offset)
