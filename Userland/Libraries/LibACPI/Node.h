@@ -27,6 +27,7 @@ enum class NodeType : u8 {
     Method,
     OperationRegion,
     Field,
+    Device,
 };
 
 class Node : public AtomicRefCounted<Node>
@@ -169,6 +170,12 @@ private:
     u8 m_flags;
     u64 m_offset;
     u64 m_length;
+};
+
+class DeviceNode : public Node {
+public:
+    virtual NodeType type() const override { return NodeType::Device; }
+    virtual StringView kind() const override { return "Device"sv; }
 };
 
 }
