@@ -195,7 +195,7 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::WordPrefix:
     case Opcode::DWordPrefix:
     case Opcode::QWordPrefix:
-        VERIFY(frame.operand(0).is<u64>());
+    case Opcode::StringPrefix:
         return frame.operand(0);
 
     default:
@@ -313,6 +313,12 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         auto value = TRY(stream.read_value<u64>());
         DEBUG_LOG("Reading qword... ({})", value);
         TRY(top_opcode_frame.finish_operand(value, stream.offset()));
+        return IterationDecision::Continue;
+    }
+    case OperandType::String: {
+        DEBUG_LOG("Reading string...");
+        auto value = TRY(stream.read_string());
+        TRY(top_opcode_frame.finish_operand(String(value), stream.offset()));
         return IterationDecision::Continue;
     }
 

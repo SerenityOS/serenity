@@ -20,6 +20,7 @@ enum class OperandType : u8 {
     WordData,
     DWordData,
     QWordData,
+    String,
 
     FieldElement,
     TermArg,

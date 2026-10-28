@@ -25,6 +25,7 @@ constexpr static Array<OperandType, 2> BYTE_CONST_OPERANDS = { OperandType::Byte
 constexpr static Array<OperandType, 2> WORD_CONST_OPERANDS = { OperandType::WordData, OperandType::End };
 constexpr static Array<OperandType, 2> DWORD_CONST_OPERANDS = { OperandType::DWordData, OperandType::End };
 constexpr static Array<OperandType, 2> QWORD_CONST_OPERANDS = { OperandType::QWordData, OperandType::End };
+constexpr static Array<OperandType, 2> STRING_CONST_OPERANDS = { OperandType::String, OperandType::End };
 
 constexpr static Array<OperandType, 4> METHOD_OPERANDS = {
     OperandType::PackageLength,
@@ -68,6 +69,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return DWORD_CONST_OPERANDS.span();
     case Opcode::QWordPrefix:
         return QWORD_CONST_OPERANDS.span();
+    case Opcode::StringPrefix:
+        return STRING_CONST_OPERANDS.span();
 
     case Opcode::ScopeOp:
         return SCOPE_OPERANDS.span();
@@ -123,6 +126,7 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
     case OperandType::WordData:
     case OperandType::DWordData:
     case OperandType::QWordData:
+    case OperandType::String:
     case OperandType::FieldElement:
         return false;
 
