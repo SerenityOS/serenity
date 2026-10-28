@@ -89,6 +89,7 @@ struct [[gnu::packed]] x86_Specific_Flags {
 };
 };
 
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#generic-address-structure
 namespace GenericAddressStructure {
 
 enum class AddressSpace : u8 {
@@ -162,6 +163,7 @@ struct [[gnu::packed]] XSDT {
     u64 table_ptrs[];
 };
 
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#generic-address-structure
 struct [[gnu::packed]] GenericAddressStructure {
     ::ACPI::GenericAddressStructure::AddressSpace address_space;
     ::ACPI::GenericAddressStructure::BitWidth bit_width;
