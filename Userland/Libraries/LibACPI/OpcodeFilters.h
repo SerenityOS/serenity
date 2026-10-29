@@ -20,6 +20,7 @@ bool const_object_filter(Opcode opcode);
 bool computational_data_filter(Opcode opcode);
 bool data_object_filter(Opcode opcode);
 bool data_ref_object_filter(Opcode opcode);
+bool package_element_filter(Opcode opcode);
 bool term_filter(Opcode opcode);
 bool term_arg_filter(Opcode opcode);
 bool arg_obj_filter(Opcode opcode);

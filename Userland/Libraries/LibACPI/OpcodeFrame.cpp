@@ -34,6 +34,15 @@ constexpr static Array<OperandType, 4> BUFFER_CONST_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 6> PACKAGE_OPERANDS = {
+    OperandType::PackageLength,
+    OperandType::MarkAsCount,
+    OperandType::ByteData,
+    OperandType::RepeatNextCount,
+    OperandType::PackageElement,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 4> METHOD_OPERANDS = {
     OperandType::PackageLength,
     OperandType::NameString,
@@ -86,6 +95,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return STRING_CONST_OPERANDS.span();
     case Opcode::BufferOp:
         return BUFFER_CONST_OPERANDS.span();
+    case Opcode::PackageOp:
+        return PACKAGE_OPERANDS.span();
 
     case Opcode::ScopeOp:
         return SCOPE_OPERANDS.span();
@@ -153,6 +164,8 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
 
     case OperandType::DataRefObject:
         return data_ref_object_filter(opcode);
+    case OperandType::PackageElement:
+        return package_element_filter(opcode);
 
     case OperandType::End:
         return term_filter(opcode);
