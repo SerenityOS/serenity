@@ -30,6 +30,7 @@ enum class OperandType : u8 {
 
     MarkAsCount,
     RepeatNextBytes,
+    RepeatNextCount,
     End,
 };
 
