@@ -1,9 +1,5 @@
 #!/bin/Shell
 
-echo "Not running Shell-valid as it has a high failure rate on target #7336"
-echo PASS
-exit 0
-
 source $(dirname "$0")/test-commons.inc
 
 # Are comments ignored?
