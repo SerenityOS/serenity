@@ -25,6 +25,7 @@ enum class NodeType : u8 {
     Scope,
     Name,
     Method,
+    Mutex,
     OperationRegion,
     Field,
     Device,
@@ -111,6 +112,22 @@ protected:
     size_t m_end { 0 };
 
     u8 m_flags { 0 };
+};
+
+class MutexNode : public Node {
+public:
+    MutexNode(u8 sync_flags)
+        : m_sync_flags(sync_flags)
+    {
+    }
+
+    virtual NodeType type() const override { return NodeType::Mutex; }
+    virtual StringView kind() const override { return "Mutex"sv; }
+
+    u8 sync_flags() const { return m_sync_flags; }
+
+protected:
+    u8 m_sync_flags { 0 };
 };
 
 class OperationRegionNode : public Node {
