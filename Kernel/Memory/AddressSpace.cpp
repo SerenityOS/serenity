@@ -265,12 +265,19 @@ ErrorOr<Vector<Region*, 4>> AddressSpace::find_regions_intersecting(VirtualRange
         return regions;
     for (auto iter = m_region_tree.regions().begin_from(*found_region); !iter.is_end(); ++iter) {
         auto const& iter_range = (*iter).range();
-        if (iter_range.base() < range.end() && iter_range.end() > range.base()) {
+        if (iter_range.end() <= range.base())
+            continue;
+
+        if (iter_range.base() < range.end()) {
             TRY(regions.try_append(&*iter));
 
             total_size_collected += (*iter).size() - iter_range.intersect(range).size();
             if (total_size_collected == range.size())
                 break;
+        } else {
+            // We're iterating the tree in ascending order, so as soon as we reach the
+            // first region that is outside the range, we can bail out.
+            break;
         }
     }
 
