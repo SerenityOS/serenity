@@ -27,6 +27,7 @@ enum class OperandType : u8 {
     TermArg,
 
     DataRefObject,
+    PackageElement,
 
     MarkAsCount,
     RepeatNextCount,
@@ -47,6 +48,8 @@ public:
 
     Object const& operand(size_t index) const { return m_operands[index]; }
     size_t operand_count() const { return m_operands.size(); }
+
+    Vector<Object> release_operands() { return move(m_operands); }
 
     // NOTE: This should never get called on the root frame
     Opcode opcode() const { return m_opcode.value(); }
