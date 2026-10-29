@@ -1,12 +1,11 @@
 #!/bin/Shell
 
-echo "Not running Shell-backgrounding as it has a high failure rate"
-echo PASS
-exit 0
-
 source $(dirname "$0")/test-commons.inc
 
 setopt --verbose
+
+TEST_DIR=$(mktemp -d)
+pushd $TEST_DIR
 
 last_idx=''
 block_idx=0
@@ -51,3 +50,8 @@ assert_job_count 2 $i $j
 unblock $i
 unblock $j
 wait
+
+popd
+rm -r $TEST_DIR
+
+pass
