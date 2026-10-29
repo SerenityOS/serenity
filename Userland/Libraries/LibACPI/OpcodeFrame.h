@@ -29,6 +29,7 @@ enum class OperandType : u8 {
     DataRefObject,
 
     MarkAsCount,
+    RepeatNextCount,
     RepeatNextBytes,
     End,
 };

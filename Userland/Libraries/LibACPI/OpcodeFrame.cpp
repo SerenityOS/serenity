@@ -124,7 +124,7 @@ ErrorOr<OpcodeFrame> OpcodeFrame::root_frame()
 OperandType OpcodeFrame::peek_next_operand()
 {
     auto operand = m_operand_template[m_operand_template_index];
-    if (operand == OperandType::MarkAsCount || operand == OperandType::RepeatNextBytes)
+    if (operand == OperandType::MarkAsCount || operand == OperandType::RepeatNextBytes || operand == OperandType::RepeatNextCount)
         operand = m_operand_template[m_operand_template_index + 1];
 
     return operand;
@@ -159,6 +159,7 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
 
     case OperandType::MarkAsCount:
     case OperandType::RepeatNextBytes:
+    case OperandType::RepeatNextCount:
         VERIFY_NOT_REACHED();
     }
 
@@ -171,7 +172,7 @@ ErrorOr<OperandType> OpcodeFrame::begin_operand()
 
     if (operand == OperandType::MarkAsCount) {
         m_counter_value_index = m_operands.size();
-    } else if (operand == OperandType::RepeatNextBytes) {
+    } else if (operand == OperandType::RepeatNextBytes || operand == OperandType::RepeatNextCount) {
         if (!m_counter.has_value()) {
             auto count = TRY(m_operands.at(m_counter_value_index).as<u64>());
             if (count == 0) {
@@ -191,6 +192,17 @@ ErrorOr<void> OpcodeFrame::finish_operand(size_t current_offset)
     auto operand_type = m_operand_template[m_operand_template_index];
     if (operand_type == OperandType::MarkAsCount) {
         m_operand_template_index += 2;
+        return {};
+    }
+
+    if (operand_type == OperandType::RepeatNextCount) {
+        m_counter.value()--;
+
+        if (m_counter.value() == 0) {
+            m_counter = {};
+            m_operand_template_index += 2;
+        }
+
         return {};
     }
 
