@@ -285,6 +285,21 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         return {};
     }
 
+    case Opcode::ProcessorOp: {
+        auto length = TRY(frame.operand(0).as<u64>());
+        auto path = TRY(frame.operand(1).as<NameString>());
+        auto id = TRY(frame.operand(2).as<u64>());
+        auto processor_register_block_address = TRY(frame.operand(3).as<u64>());
+        auto processor_register_block_length = TRY(frame.operand(4).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<ProcessorNode>(id, processor_register_block_address, processor_register_block_length));
+        TRY(m_scope_frames.last().insert_node(path, node));
+
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
+        TRY(m_scope_frames.try_append(scope_frame));
+        return {};
+    }
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented term opcode {}!", frame.opcode());
     }
