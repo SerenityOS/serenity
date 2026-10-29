@@ -29,6 +29,7 @@ enum class NodeType : u8 {
     OperationRegion,
     Field,
     Device,
+    Processor,
 };
 
 class Node : public AtomicRefCounted<Node>
@@ -194,6 +195,24 @@ class DeviceNode : public Node {
 public:
     virtual NodeType type() const override { return NodeType::Device; }
     virtual StringView kind() const override { return "Device"sv; }
+};
+
+class ProcessorNode : public Node {
+public:
+    ProcessorNode(u32 address, u8 id, u8 block_length)
+        : m_address(address)
+        , m_id(id)
+        , m_block_length(block_length)
+    {
+    }
+
+    NodeType type() const override { return NodeType::Processor; }
+    StringView kind() const override { return "Processor"sv; }
+
+protected:
+    u32 m_address { 0 };
+    u8 m_id { 0 };
+    u8 m_block_length { 0 };
 };
 
 }
