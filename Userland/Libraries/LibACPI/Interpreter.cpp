@@ -564,8 +564,15 @@ ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
     TRY(namespace_root->insert_child("_TZ_"sv, TRY(try_make_ref_counted<ScopeNode>())));
 
     // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#predefined-objects
+    TRY(namespace_root->insert_child("_GL_"sv, TRY(try_make_ref_counted<MutexNode>(0))));
     TRY(namespace_root->insert_child("_REV"sv, TRY(try_make_ref_counted<NameNode>(Object(u64(2))))));
-    // FIXME: ACPI spec also mendates we insert _GL, _OSI, _OS, _DLM
+    TRY(namespace_root->insert_child("_OSI"sv, TRY(try_make_ref_counted<MethodNode>(-1, 0, 0, 1))));
+
+    constexpr StringView os_name = "Microsoft Windows NT"sv;
+
+    ByteBuffer os_buffer;
+    TRY(os_buffer.try_append(os_name.bytes()));
+    TRY(namespace_root->insert_child("_OS_"sv, TRY(try_make_ref_counted<NameNode>(String(os_buffer)))));
 
     return namespace_root;
 }
