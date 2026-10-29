@@ -41,6 +41,12 @@ constexpr static Array<OperandType, 4> METHOD_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 3> MUTEX_OPERANDS = {
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 5> OP_REGION_OPERANDS = {
     OperandType::NameString,
     OperandType::ByteData,
@@ -87,6 +93,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return NAME_OPERANDS.span();
     case Opcode::MethodOp:
         return METHOD_OPERANDS.span();
+    case Opcode::MutexOp:
+        return MUTEX_OPERANDS.span();
     case Opcode::OpRegionOp:
         return OP_REGION_OPERANDS.span();
     case Opcode::FieldOp:

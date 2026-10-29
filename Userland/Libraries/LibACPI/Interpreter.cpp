@@ -242,6 +242,15 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         return {};
     }
 
+    case Opcode::MutexOp: {
+        auto path = TRY(frame.operand(0).as<NameString>());
+        auto sync_flags = TRY(frame.operand(1).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<MutexNode>(sync_flags));
+        TRY(m_scope_frames.last().insert_node(path, node));
+        return {};
+    }
+
     case Opcode::OpRegionOp: {
         auto path = TRY(frame.operand(0).as<NameString>());
         auto region_space = TRY(frame.operand(1).as<u64>());
