@@ -216,6 +216,15 @@ public:
     template<UnsignedIntegral T = u64>
     ErrorOr<T> peek_bits(size_t count)
     {
+        auto result = TRY(peek_bits_possibly_past_end<T>(count));
+        if (count > m_bit_count)
+            return Error::from_string_literal("Reached end-of-stream without collecting the required number of bits");
+        return result;
+    }
+
+    template<UnsignedIntegral T = u64>
+    ErrorOr<T> peek_bits_possibly_past_end(size_t count)
+    {
         if (count > m_bit_count)
             TRY(refill_buffer_from_stream(count));
 
@@ -254,10 +263,8 @@ private:
             if (m_stream->is_eof()) [[unlikely]] {
                 if (m_unsatisfiable_read_behavior == UnsatisfiableReadBehavior::FillWithZero) {
                     m_bit_count = requested_bit_count;
-                    return {};
                 }
-
-                return Error::from_string_literal("Reached end-of-stream without collecting the required number of bits");
+                return {};
             }
 
             size_t bits_to_read = bit_buffer_size - m_bit_count;

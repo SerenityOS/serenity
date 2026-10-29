@@ -62,6 +62,113 @@ TEST_CASE(canonical_code_complex)
         EXPECT_EQ(TRY_OR_FAIL(huffman.read_symbol(bit_stream)), output_byte);
 }
 
+TEST_CASE(canonical_code_short_symbols_at_end_of_stream)
+{
+    Array<u8, 4> const code { 1, 2, 3, 3 };
+    Array<u8, 1> const input { 0x07 };
+    Array<u32, 6> const output { 3, 0, 0, 0, 0, 0 };
+
+    auto const huffman = TRY_OR_FAIL(Compress::CanonicalCode::from_bytes(code));
+    auto memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
+
+    for (auto symbol : output)
+        EXPECT_EQ(TRY_OR_FAIL(huffman.read_symbol(bit_stream)), symbol);
+    EXPECT(huffman.read_symbol(bit_stream).is_error());
+}
+
+TEST_CASE(canonical_code_truncated_symbol)
+{
+    Array<u8, 4> const code { 1, 2, 3, 3 };
+    Array<u8, 1> const input { 0x80 };
+
+    auto const huffman = TRY_OR_FAIL(Compress::CanonicalCode::from_bytes(code));
+    auto memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
+
+    TRY_OR_FAIL(bit_stream.read_bits(7));
+    EXPECT(huffman.read_symbol(bit_stream).is_error());
+}
+
+TEST_CASE(canonical_code_two_bit_symbol_at_end_of_stream)
+{
+    Array<u8, 4> const code { 1, 2, 3, 3 };
+    Array<u8, 1> const input { 0x40 };
+
+    auto const huffman = TRY_OR_FAIL(Compress::CanonicalCode::from_bytes(code));
+    auto memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
+
+    TRY_OR_FAIL(bit_stream.read_bits(6));
+    EXPECT_EQ(TRY_OR_FAIL(huffman.read_symbol(bit_stream)), 1u);
+    EXPECT(huffman.read_symbol(bit_stream).is_error());
+}
+
+TEST_CASE(canonical_code_lopsided)
+{
+    Array<u8, 16> const code { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15 };
+    Array<u8, 17> const input { 0xda, 0xbd, 0xef, 0xf7, 0xf7, 0xef, 0xbf, 0xff, 0xfd, 0xdf, 0xff, 0xfb, 0xff, 0xfe, 0x7f, 0xff, 0x7f };
+
+    auto const huffman = TRY_OR_FAIL(Compress::CanonicalCode::from_bytes(code));
+    auto memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
+
+    for (size_t symbol = 0; symbol < code.size(); ++symbol)
+        EXPECT_EQ(TRY_OR_FAIL(huffman.read_symbol(bit_stream)), symbol);
+    EXPECT_EQ(TRY_OR_FAIL(huffman.read_symbol(bit_stream)), 0u);
+    EXPECT(huffman.read_symbol(bit_stream).is_error());
+
+    auto truncated_memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input.span().trim(16)));
+    LittleEndianInputBitStream truncated_bit_stream { move(truncated_memory_stream) };
+    for (size_t symbol = 0; symbol < code.size() - 1; ++symbol)
+        EXPECT_EQ(TRY_OR_FAIL(huffman.read_symbol(truncated_bit_stream)), symbol);
+    TRY_OR_FAIL(truncated_bit_stream.read_bit());
+    EXPECT(huffman.read_symbol(truncated_bit_stream).is_error());
+}
+
+TEST_CASE(canonical_code_stream_error)
+{
+    class FailingStream final : public FixedMemoryStream {
+    public:
+        using FixedMemoryStream::FixedMemoryStream;
+
+        virtual bool is_eof() const override { return false; }
+        virtual ErrorOr<Bytes> read_some(Bytes bytes) override
+        {
+            if (FixedMemoryStream::is_eof())
+                return Error::from_errno(EIO);
+            return FixedMemoryStream::read_some(bytes);
+        }
+    };
+
+    Array<u8, 4> const code { 1, 2, 3, 3 };
+    Array<u8, 1> const input { 0x00 };
+
+    auto const huffman = TRY_OR_FAIL(Compress::CanonicalCode::from_bytes(code));
+    auto memory_stream = TRY_OR_FAIL(try_make<FailingStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
+
+    TRY_OR_FAIL(bit_stream.read_bits(7));
+    auto result = huffman.read_symbol(bit_stream);
+    EXPECT(result.is_error());
+    if (result.is_error())
+        EXPECT_EQ(result.error().code(), EIO);
+}
+
+TEST_CASE(canonical_code_single_symbol_end_of_stream)
+{
+    Array<u8, 2> const code { 0, 1 };
+    Array<u8, 1> const input { 0x00 };
+
+    auto const huffman = TRY_OR_FAIL(Compress::CanonicalCode::from_bytes(code));
+    auto memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
+
+    for (size_t i = 0; i < 8; ++i)
+        EXPECT_EQ(TRY_OR_FAIL(huffman.read_symbol(bit_stream)), 1u);
+    EXPECT(huffman.read_symbol(bit_stream).is_error());
+}
+
 TEST_CASE(invalid_canonical_code)
 {
     Array<u8, 257> code;
@@ -78,6 +185,15 @@ TEST_CASE(deflate_decompress_compressed_block)
     };
 
     auto const uncompressed = "This is a simple text file :)"sv;
+
+    auto const decompressed = TRY_OR_FAIL(Compress::DeflateDecompressor::decompress_all(compressed));
+    EXPECT(decompressed == uncompressed.bytes());
+}
+
+TEST_CASE(deflate_decompress_short_end_of_block)
+{
+    Array<u8, 7> const compressed { 0x4b, 0x4c, 0x4a, 0x4e, 0xc4, 0x86, 0x00 };
+    auto const uncompressed = "abcabcabcabcabcabcabcabc"sv;
 
     auto const decompressed = TRY_OR_FAIL(Compress::DeflateDecompressor::decompress_all(compressed));
     EXPECT(decompressed == uncompressed.bytes());
