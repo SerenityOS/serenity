@@ -201,6 +201,12 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::BufferOp:
         return frame.operand(2);
 
+    case Opcode::PackageOp: {
+        auto operands = frame.release_operands();
+        operands.remove(0, 2);
+        return Package(move(operands));
+    }
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented value opcode {}!", frame.opcode());
     }
@@ -394,6 +400,17 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
             buffer[i] = TRY(stream.read_value<u8>());
 
         TRY(top_opcode_frame.finish_operand(Object(Buffer(buffer)), stream.offset()));
+        return IterationDecision::Continue;
+    }
+
+    case OperandType::PackageElement: {
+        DEBUG_LOG("Reading package element...");
+
+        auto initial = TRY(stream.peek_byte());
+        if (is_namestring_start(initial))
+            INTERPRETER_ERROR("Unsupported name string!", ENOTSUP, "Reading name strings in package elements is not yet supported!");
+
+        m_state = State::ReadingOpcode;
         return IterationDecision::Continue;
     }
 

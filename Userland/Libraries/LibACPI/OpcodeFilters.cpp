@@ -212,6 +212,14 @@ bool data_ref_object_filter(Opcode opcode)
     return data_object_filter(opcode);
 }
 
+// https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#packageelement
+bool package_element_filter(Opcode opcode)
+{
+    // PackageElement := DataRefObject | NameString
+    // NOTE: Reading NameString will be handled a different way.
+    return data_ref_object_filter(opcode);
+}
+
 // https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#termobj
 bool term_filter(Opcode opcode)
 {

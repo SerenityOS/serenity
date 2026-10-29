@@ -16,6 +16,8 @@
 
 namespace ACPI::AML {
 
+class Object;
+
 class String {
 public:
     String(ByteBuffer buffer)
@@ -42,8 +44,21 @@ private:
     ByteBuffer m_buffer;
 };
 
+class Package {
+public:
+    Package(Vector<Object> package)
+        : m_package(move(package))
+    {
+    }
+
+    Vector<Object>& package() { return m_package; }
+
+private:
+    Vector<Object> m_package;
+};
+
 template<typename T>
-concept IsNodeData = OneOf<T, u64, String, Buffer, NameString>;
+concept IsNodeData = OneOf<T, u64, String, Buffer, Package, NameString>;
 
 class Object {
 public:
@@ -76,7 +91,7 @@ public:
     }
 
 protected:
-    Variant<AK::Empty, u64, String, Buffer, NameString> m_data;
+    Variant<AK::Empty, u64, String, Buffer, Package, NameString> m_data;
 };
 
 }
@@ -95,6 +110,9 @@ struct AK::Formatter<::ACPI::AML::Object> : AK::Formatter<FormatString> {
 
         if (object.is<::ACPI::AML::Buffer>())
             return AK::Formatter<FormatString>::format(builder, "Buffer ({:hex-dump})"sv, MUST(object.as<::ACPI::AML::Buffer>()).buffer().bytes());
+
+        if (object.is<::ACPI::AML::Package>())
+            return AK::Formatter<FormatString>::format(builder, "Package ({})"sv, MUST(object.as<::ACPI::AML::Package>()).package());
 
         if (object.is<::ACPI::AML::NameString>())
             return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as<::ACPI::AML::NameString>()).to_string()));
