@@ -212,7 +212,7 @@ void BoardWidget::mousedown_event(GUI::MouseEvent& event)
 
 void BoardWidget::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape) {
+    if (event.key() == GUI::Key_Escape) {
         clear_selected_pattern();
         update();
         return;

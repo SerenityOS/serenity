@@ -109,15 +109,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = window->add_menu("&Game"_string);
 
-    game_menu->add_action(GUI::Action::create("&Resign", { Mod_None, Key_F3 }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&Resign", { Mod_None, GUI::Key_F3 }, [&](auto&) {
         chess_widget.resign();
     }));
-    game_menu->add_action(GUI::Action::create("&Flip Board", { Mod_Ctrl, Key_F }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&Flip Board", { Mod_Ctrl, GUI::Key_F }, [&](auto&) {
         chess_widget.flip_board();
     }));
     game_menu->add_separator();
 
-    game_menu->add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, GUI::Key_O }, [&](auto&) {
         FileSystemAccessClient::OpenFileOptions options {
             .allowed_file_types = Vector {
                 GUI::FileTypeFilter { "PGN Files", { { "pgn" } } },
@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("Imported PGN file from {}", result.value().filename());
         }
     }));
-    game_menu->add_action(GUI::Action::create("&Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&Export PGN...", { Mod_Ctrl, GUI::Key_S }, [&](auto&) {
         auto result = FileSystemAccessClient::Client::the().save_file(window, "Untitled", "pgn");
         if (result.is_error())
             return;
@@ -146,13 +146,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             dbgln("Exported PGN file to {}", result.value().filename());
     }));
-    game_menu->add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, GUI::Key_C }, [&](auto&) {
         GUI::Clipboard::the().set_data(chess_widget.get_fen().release_value_but_fixme_should_propagate_errors().bytes());
         GUI::MessageBox::show(window, "Board state copied to clipboard as FEN."sv, "Copy FEN"sv, GUI::MessageBox::Type::Information);
     }));
     game_menu->add_separator();
 
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, GUI::Key_F2 }, TRY(Gfx::Bitmap::load_from_uri("resource://icons/16x16/reload.png"sv)), [&](auto&) {
         if (chess_widget.board().game_result() == Chess::Board::Result::NotFinished) {
             if (chess_widget.resign() < 0)
                 return;

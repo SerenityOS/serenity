@@ -107,7 +107,7 @@ void BoardView::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
-    switch (event.key()) {
+    switch (event.key_code()) {
     case KeyCode::Key_A:
     case KeyCode::Key_Left:
         on_move(Game::Direction::Left);
