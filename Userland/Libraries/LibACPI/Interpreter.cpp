@@ -198,6 +198,9 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::StringPrefix:
         return frame.operand(0);
 
+    case Opcode::BufferOp:
+        return frame.operand(2);
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented value opcode {}!", frame.opcode());
     }
@@ -363,6 +366,21 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         }
 
         VERIFY_NOT_REACHED();
+    }
+
+    case OperandType::ByteBuffer: {
+        auto package_length = TRY(top_opcode_frame.operand(0).as<u64>());
+        auto buffer_data_length = package_length - (stream.offset() - top_opcode_frame.start() - 1);
+
+        auto size = TRY(top_opcode_frame.operand(1).as<u64>());
+        DEBUG_LOG("Reading byte buffer of size {}...", size);
+        auto buffer = TRY(ByteBuffer::create_zeroed(size));
+
+        for (size_t i = 0; i < buffer_data_length; i++)
+            buffer[i] = TRY(stream.read_value<u8>());
+
+        TRY(top_opcode_frame.finish_operand(Object(Buffer(buffer)), stream.offset()));
+        return IterationDecision::Continue;
     }
 
     case OperandType::TermArg:

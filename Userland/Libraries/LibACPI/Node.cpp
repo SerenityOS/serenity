@@ -67,6 +67,8 @@ ErrorOr<void> NameNode::write_description(StringBuilder& builder)
     } else if (m_data.is<String>()) {
         auto value = MUST(m_data.as<String>());
         TRY(builder.try_appendff("('{}')"sv, StringView(value.buffer())));
+    } else if (m_data.is<Buffer>()) {
+        TRY(builder.try_append("Buffer"sv));
     } else if (m_data.is<NameString>()) {
         auto value = MUST(m_data.as<NameString>());
         TRY(builder.try_appendff("{}"sv, TRY(value.to_string())));
