@@ -2,28 +2,29 @@
 
 source $(dirname "$0")/test-commons.inc
 
-rm -rf /tmp/shell-test 2> /dev/null
-mkdir -p /tmp/shell-test
-cd /tmp/shell-test
+# Some systems may give a path containing symlinks, we need a fully resolved path.
+TEST_DIR="$(realpath "$(mktemp -d)")"
+pushd "$TEST_DIR"
 
 mkdir physical
 ln -s physical logical
 
 cd logical
-if not [ "${PWD}" = "/tmp/shell-test/logical" ] { fail "Incorrect logically resolved path" }
+if not [ "$PWD" = "$TEST_DIR/logical" ] { fail "Incorrect logically resolved path" }
 
-cd /tmp/shell-test
+cd "$TEST_DIR"
 cd -P logical
-if not [ "${PWD}" = "/tmp/shell-test/physical" ] { fail "Incorrect physically resolved path" }
+if not [ "$PWD" = "$TEST_DIR/physical" ] { fail "Incorrect physically resolved path" }
 
-cd /tmp/shell-test
+cd "$TEST_DIR"
 cd -PL logical
-if not [ "${PWD}" = "/tmp/shell-test/logical" ] { fail "Incorrect logically resolved path, positional options" }
+if not [ "$PWD" = "$TEST_DIR/logical" ] { fail "Incorrect logically resolved path, positional options" }
 
-cd /tmp/shell-test
+cd "$TEST_DIR"
 cd -PLP logical
-if not [ "${PWD}" = "/tmp/shell-test/physical" ] { fail "Incorrect physically resolved path, positional options" }
+if not [ "$PWD" = "$TEST_DIR/physical" ] { fail "Incorrect physically resolved path, positional options" }
 
-rm -rf /tmp/shell-test
+popd
+rm -r "$TEST_DIR"
 
 echo PASS
