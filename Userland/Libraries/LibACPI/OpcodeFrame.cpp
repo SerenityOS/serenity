@@ -80,6 +80,15 @@ constexpr static Array<OperandType, 3> DEVICE_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 6> PROCESSOR_OPERANDS = {
+    OperandType::PackageLength,
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::DWordData,
+    OperandType::ByteData,
+    OperandType::End,
+};
+
 static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opcode)
 {
     switch (opcode) {
@@ -112,6 +121,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return FIELD_OPERANDS.span();
     case Opcode::DeviceOp:
         return DEVICE_OPERANDS.span();
+    case Opcode::ProcessorOp:
+        return PROCESSOR_OPERANDS.span();
 
     case Opcode::ZeroOp:
     case Opcode::OneOp:
