@@ -121,7 +121,7 @@ public:
 
     struct SourcePosition {
         Optional<ByteString> source_file;
-        ByteString literal_source_text;
+        StringView literal_source_text;
         Optional<AST::Position> position;
     };
 
