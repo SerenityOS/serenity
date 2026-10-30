@@ -646,25 +646,25 @@ void Ext2FS::uncache_inode(InodeIndex index)
     m_inode_cache.remove(index);
 }
 
-unsigned Ext2FS::total_block_count() const
+u64 Ext2FS::total_block_count() const
 {
     MutexLocker locker(m_lock);
     return super_block().s_blocks_count;
 }
 
-unsigned Ext2FS::free_block_count() const
+u64 Ext2FS::free_block_count() const
 {
     MutexLocker locker(m_lock);
     return super_block().s_free_blocks_count;
 }
 
-unsigned Ext2FS::total_inode_count() const
+u64 Ext2FS::total_inode_count() const
 {
     MutexLocker locker(m_lock);
     return super_block().s_inodes_count;
 }
 
-unsigned Ext2FS::free_inode_count() const
+u64 Ext2FS::free_inode_count() const
 {
     MutexLocker locker(m_lock);
     return super_block().s_free_inodes_count;

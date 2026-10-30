@@ -96,13 +96,13 @@ u32 RAMFS::total_block_count_impl() const
     return ceil_div(m_maximum_size, LOGICAL_BLOCK_SIZE);
 }
 
-unsigned RAMFS::total_block_count() const
+u64 RAMFS::total_block_count() const
 {
     SpinlockLocker locker(m_size_lock);
     return total_block_count_impl();
 }
 
-unsigned RAMFS::free_block_count() const
+u64 RAMFS::free_block_count() const
 {
     SpinlockLocker locker(m_size_lock);
     if (m_maximum_size == 0)

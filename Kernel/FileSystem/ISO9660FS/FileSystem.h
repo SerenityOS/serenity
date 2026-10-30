@@ -38,8 +38,8 @@ public:
 
     virtual ErrorOr<void> rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename) override;
 
-    virtual unsigned total_block_count() const override;
-    virtual unsigned total_inode_count() const override;
+    virtual u64 total_block_count() const override;
+    virtual u64 total_inode_count() const override;
 
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 

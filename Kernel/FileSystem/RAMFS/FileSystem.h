@@ -35,8 +35,8 @@ public:
 
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
-    virtual unsigned total_block_count() const override;
-    virtual unsigned free_block_count() const override;
+    virtual u64 total_block_count() const override;
+    virtual u64 free_block_count() const override;
 
 private:
     RAMFS(u64 maximum_size);

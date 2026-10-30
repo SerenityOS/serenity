@@ -58,12 +58,12 @@ ErrorOr<void> ISO9660FS::rename(Inode&, StringView, Inode&, StringView)
     return EROFS;
 }
 
-unsigned ISO9660FS::total_block_count() const
+u64 ISO9660FS::total_block_count() const
 {
     return LittleEndian { m_primary_volume->volume_space_size.little };
 }
 
-unsigned ISO9660FS::total_inode_count() const
+u64 ISO9660FS::total_inode_count() const
 {
     if (!m_cached_inode_count) {
         auto result = calculate_inode_count();
