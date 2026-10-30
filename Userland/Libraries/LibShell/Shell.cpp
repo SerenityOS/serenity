@@ -2556,39 +2556,7 @@ void Shell::possibly_print_error() const
         StringView current_line;
         i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
 
-        if (source_position.source_file.has_value()) {
-            auto file_or_error = Core::File::open(*source_position.source_file, Core::File::OpenMode::Read);
-            if (file_or_error.is_error()) {
-                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file_or_error.error(), *source_position.source_file);
-                return;
-            }
-            auto file = Core::InputBufferedFile::create(file_or_error.release_value());
-            while (line < line_to_skip_to) {
-                if (file.value()->is_eof())
-                    return;
-                auto current_line_or_error = file.value()->read_line(line_buf);
-                if (current_line_or_error.is_error()) {
-                    warnln("Shell: Internal error while trying to display source information: {} (while reading line {} of '{}')", current_line_or_error.error(), line, source_position.source_file);
-                    return;
-                }
-                current_line = current_line_or_error.release_value();
-                ++line;
-            }
-
-            for (; line < (i64)source_position.position->end_line.line_number + 2; ++line) {
-                do_line(line, current_line);
-                if (file.value()->is_eof()) {
-                    current_line = ""sv;
-                } else {
-                    auto current_line_or_error = file.value()->read_line(line_buf);
-                    if (current_line_or_error.is_error()) {
-                        warnln("Shell: Internal error while trying to display source information: {} (while reading line {} of '{}')", current_line_or_error.error(), line, source_position.source_file);
-                        return;
-                    }
-                    current_line = current_line_or_error.release_value();
-                }
-            }
-        } else if (!source_position.literal_source_text.is_empty()) {
+        if (!source_position.literal_source_text.is_empty()) {
             GenericLexer lexer { source_position.literal_source_text };
             while (line < line_to_skip_to) {
                 if (lexer.is_eof())
