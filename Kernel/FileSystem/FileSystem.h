@@ -41,10 +41,10 @@ public:
 
     bool is_readonly() const { return m_readonly; }
 
-    virtual unsigned total_block_count() const { return 0; }
-    virtual unsigned free_block_count() const { return 0; }
-    virtual unsigned total_inode_count() const { return 0; }
-    virtual unsigned free_inode_count() const { return 0; }
+    virtual u64 total_block_count() const { return 0; }
+    virtual u64 free_block_count() const { return 0; }
+    virtual u64 total_inode_count() const { return 0; }
+    virtual u64 free_inode_count() const { return 0; }
 
     ErrorOr<void> prepare_to_unmount(Inode& mount_guest_inode);
 

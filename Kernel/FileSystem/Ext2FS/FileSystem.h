@@ -42,10 +42,10 @@ public:
 
     virtual ~Ext2FS() override;
 
-    virtual unsigned total_block_count() const override;
-    virtual unsigned free_block_count() const override;
-    virtual unsigned total_inode_count() const override;
-    virtual unsigned free_inode_count() const override;
+    virtual u64 total_block_count() const override;
+    virtual u64 free_block_count() const override;
+    virtual u64 total_inode_count() const override;
+    virtual u64 free_inode_count() const override;
 
     virtual bool supports_watchers() const override { return true; }
     virtual bool supports_backing_loop_devices() const override { return true; }
