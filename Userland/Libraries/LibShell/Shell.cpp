@@ -1138,10 +1138,6 @@ Vector<NonnullRefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
 
 bool Shell::run_file(ByteString const& filename, bool explicitly_invoked)
 {
-    TemporaryChange script_change { current_script, filename };
-    TemporaryChange interactive_change { m_is_interactive, false };
-    TemporaryChange<Optional<SourcePosition>> source_change { m_source_position, SourcePosition { .source_file = filename, .literal_source_text = {}, .position = {} } };
-
     auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error()) {
         auto error = ByteString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_or_error.error());
@@ -1161,6 +1157,11 @@ bool Shell::run_file(ByteString const& filename, bool explicitly_invoked)
             dbgln("reading after open() failed for {}", error);
         return false;
     }
+
+    TemporaryChange script_change { current_script, filename };
+    TemporaryChange interactive_change { m_is_interactive, false };
+    TemporaryChange<Optional<SourcePosition>> source_change { m_source_position, SourcePosition { .source_file = filename, .literal_source_text = data_or_error.value(), .position = {} } };
+
     return run_command(data_or_error.value()) == 0;
 }
 
