@@ -2487,6 +2487,18 @@ void Shell::kill_job(Job const* job, int sig)
 
 void Shell::possibly_print_error() const
 {
+    if (m_error == ShellError::None || is_control_flow(m_error))
+        return;
+
+    if (m_source_position.has_value() && m_source_position->source_file.has_value()) {
+        warn("{}", m_source_position->source_file.value());
+        if (m_source_position->position.has_value()) {
+            warn(":{}", m_source_position->position->start_line.line_number + 1);
+            warn(":{}", m_source_position->position->start_line.line_column + 1);
+        }
+        warn(": ");
+    }
+
     switch (m_error) {
     case ShellError::EvaluatedSyntaxError:
         warnln("Shell Syntax Error: {}", m_error_description);
@@ -2516,16 +2528,15 @@ void Shell::possibly_print_error() const
     case ShellError::InternalControlFlowReturn:
     case ShellError::InternalControlFlowInterrupted:
     case ShellError::InternalControlFlowKilled:
-        return;
     case ShellError::None:
-        return;
+        VERIFY_NOT_REACHED();
     }
 
     if (m_source_position.has_value() && m_source_position->position.has_value()) {
         auto& source_position = m_source_position.value();
         auto do_line = [&](auto line, auto& current_line) {
             auto is_in_range = line >= (i64)source_position.position->start_line.line_number && line <= (i64)source_position.position->end_line.line_number;
-            warnln("{:>3}| {}", line, current_line);
+            warnln("{:>3}| {}", line + 1, current_line);
             if (is_in_range) {
                 warn("\x1b[31m");
                 size_t length_written_so_far = 0;
