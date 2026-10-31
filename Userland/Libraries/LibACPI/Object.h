@@ -25,7 +25,7 @@ public:
     {
     }
 
-    ByteBuffer& buffer() { return m_buffer; }
+    ByteBuffer const& buffer() const { return m_buffer; }
 
 private:
     ByteBuffer m_buffer;
@@ -38,7 +38,7 @@ public:
     {
     }
 
-    ByteBuffer& buffer() { return m_buffer; }
+    ByteBuffer const& buffer() const { return m_buffer; }
 
 private:
     ByteBuffer m_buffer;
@@ -51,7 +51,7 @@ public:
     {
     }
 
-    Vector<Object>& package() { return m_package; }
+    Vector<Object> const& package() const { return m_package; }
 
 private:
     Vector<Object> m_package;
