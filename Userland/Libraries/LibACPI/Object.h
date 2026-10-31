@@ -54,3 +54,19 @@ protected:
 };
 
 }
+
+template<>
+struct AK::Formatter<::ACPI::AML::Object> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, ::ACPI::AML::Object const& object)
+    {
+        if (object.is<u64>()) {
+            auto value = MUST(object.as<u64>());
+            return AK::Formatter<FormatString>::format(builder, "(Decimal: {}, Hexadecimal: {:X})"sv, value, value);
+        }
+
+        if (object.is<::ACPI::AML::NameString>())
+            return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as<::ACPI::AML::NameString>()).to_string()));
+
+        VERIFY_NOT_REACHED();
+    }
+};
