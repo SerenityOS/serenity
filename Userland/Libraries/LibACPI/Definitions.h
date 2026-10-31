@@ -177,6 +177,11 @@ struct [[gnu::packed]] GenericAddressStructure {
     u8 bit_offset;
     ::ACPI::GenericAddressStructure::AccessSize access_size;
     u64 address;
+
+    [[nodiscard]] bool is_null() const
+    {
+        return to_underlying(address_space) == 0 && to_underlying(bit_width) == 0 && bit_offset == 0 && to_underlying(access_size) == 0 && address == 0;
+    }
 };
 
 struct [[gnu::packed]] HPET {
