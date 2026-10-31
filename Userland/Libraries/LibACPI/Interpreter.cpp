@@ -347,7 +347,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
     case OperandType::QWordData: {
         auto value = TRY(stream.read_value<u64>());
         DEBUG_LOG("Reading qword... ({})", value);
-        TRY(top_opcode_frame.finish_operand(value, stream.offset()));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::String: {
