@@ -31,8 +31,8 @@ public:
 
     void try_acpi_reboot();
     bool can_reboot();
-    void try_acpi_shutdown();
-    bool can_shutdown() { return false; }
+    ErrorOr<void> try_acpi_shutdown();
+    bool can_shutdown();
 
     PhysicalAddress rsdp() const { return m_rsdp; }
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
@@ -88,6 +88,13 @@ private:
 
     bool validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FADT> const&);
     ErrorOr<void> access_generic_address(::ACPI::Structures::GenericAddressStructure const&, u32 value);
+
+    struct S5Values {
+        u16 SLP_TYPa;
+        u16 SLP_TYPb;
+    };
+
+    ErrorOr<S5Values> extract_s5_values();
 
     OwnPtr<InterruptHandler> m_interrupt_handler;
 
