@@ -283,7 +283,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`protobuf`](protobuf/)                         | Protocol Buffers                                              | 36.2                  | https://protobuf.dev/                                                |
 | [`pt2-clone`](pt2-clone/)                       | ProTracker 2 clone                                            | 1.92                  | https://github.com/8bitbubsy/pt2-clone                               |
 | [`pv`](pv/)                                     | Pipe Viewer                                                   | 1.12.0                | http://www.ivarch.com/programs/pv.shtml                              |
-| [`python3`](python3/)                           | Python                                                        | 3.15.1                | https://www.python.org/                                              |
+| [`python3`](python3/)                           | Python                                                        | 3.15.2                | https://www.python.org/                                              |
 | [`qemu`](qemu/)                                 | QEMU                                                          | 11.1.2                | https://qemu.org                                                     |
 | [`qoi`](qoi/)                                   | Quite OK Image Format for fast, lossless image compression    | 351450e               | https://github.com/phoboslab/qoi                                     |
 | [`quake`](quake/)                               | Quake                                                         | 0.65                  | https://github.com/SerenityOS/SerenityQuake                          |

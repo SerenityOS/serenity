@@ -31,12 +31,7 @@ Our version/configuration of GCC also complains about this, and various
 other things end up complaining about the size of `struct timeval` being
 unknown.
 
-## `0005-Don-t-include-sys-syscall.h-in-mimalloc.patch`
-
-Don't include `sys/syscall.h` in mimalloc
-
-
-## `0006-Force-disable-pyrepl.patch`
+## `0005-Force-disable-pyrepl.patch`
 
 Force-disable pyrepl
 
