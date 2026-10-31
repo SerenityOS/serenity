@@ -144,7 +144,7 @@ bool OpcodeFrame::check_repeat_opcodes(size_t current_offset)
     auto operand_type = m_operand_template[m_operand_template_index];
 
     if (operand_type == OperandType::RepeatNextBytes) {
-        if (current_offset >= m_start + m_counter.value() + 1) {
+        if (current_offset >= m_start + m_counter.value()) {
             m_counter = {};
             m_operand_template_index += 2;
             return true;

@@ -213,7 +213,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame)
         auto path = TRY(frame.operand(1).as<NameString>());
         auto scope = TRY(find_node(path, m_scope_frames.last().scope()));
 
-        auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length + 1, m_loaded_tables.size() - 1);
+        auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
         TRY(m_scope_frames.try_append(scope_frame));
         return {};
     }
@@ -314,7 +314,6 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
 
         debug_print_header(stream);
 
-        auto start = stream.offset();
         if (is_namestring_start(TRY(stream.peek_byte()))) {
             auto name = TRY(stream.read_name_string());
             DEBUG_LOG("{}", name.to_string());
@@ -334,7 +333,7 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
 
         DEBUG_LOG("Opcode: {}", opcode);
 
-        auto opcode_frame = TRY(OpcodeFrame::from_opcode(static_cast<Opcode>(opcode), start));
+        auto opcode_frame = TRY(OpcodeFrame::from_opcode(static_cast<Opcode>(opcode), stream.offset()));
         TRY(m_opcode_frames.try_append(move(opcode_frame)));
         m_state = State::ReadingOperand;
         return IterationDecision::Continue;
