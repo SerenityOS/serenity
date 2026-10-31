@@ -10,6 +10,7 @@
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/OpenType/Glyf.h>
+#include <LibGfx/Font/OpenType/Tables.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -174,6 +175,36 @@ TEST_CASE(test_character_set_masking)
     EXPECT(masked_font->glyph_index(0x0041).value() == 0x0041);
     EXPECT(!masked_font->glyph_index(0x0100).has_value());
     EXPECT(masked_font->glyph_index(0xFFFD).value() == 0x1FD);
+}
+
+TEST_CASE(cblc_number_of_index_subtables_larger_than_index_tables_size)
+{
+    // A CBLC table with a single BitmapSize record whose numberOfIndexSubTables
+    // claims far more index subtable array entries than indexTablesSize actually
+    // reserves room for. Looking up a glyph in the record's range must not read
+    // past the end of the table.
+    Vector<u8> cblc {
+        0x00, 0x03, 0x00, 0x00, // CblcHeader: major 3, minor 0
+        0x00, 0x00, 0x00, 0x01, // numSizes = 1
+        // BitmapSize[0]:
+        0x00, 0x00, 0x00, 0x38, // indexSubTableArrayOffset = 56
+        0x00, 0x00, 0x00, 0x08, // indexTablesSize = 8 (room for one IndexSubTableArray)
+        0x00, 0x00, 0x03, 0xe8, // numberOfIndexSubTables = 1000
+        0x00, 0x00, 0x00, 0x00, // colorRef
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // hori
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // vert
+        0x00, 0x00, // startGlyphIndex = 0
+        0x00, 0x64, // endGlyphIndex = 100
+        0x00, 0x00, 0x00, 0x00, // ppemX, ppemY, bitDepth, flags
+        // IndexSubTableArray[0] (the only one that fits):
+        0x00, 0x00, // firstGlyphIndex = 0
+        0x00, 0x64, // lastGlyphIndex = 100
+        0x00, 0x00, 0x00, 0x00, // additionalOffsetToIndexSubtable = 0
+    };
+    auto cblc_table = TRY_OR_FAIL(OpenType::CBLC::from_slice(cblc));
+    u16 first_glyph_index {};
+    u16 last_glyph_index {};
+    EXPECT(!cblc_table.index_subtable_for_glyph_id(5, first_glyph_index, last_glyph_index).has_value());
 }
 
 TEST_CASE(resolve_glyph_path_containing_single_off_curve_point)
