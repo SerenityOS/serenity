@@ -74,8 +74,8 @@ public:
     }
 
     template<IsNodeData T>
-    constexpr Object(T const& value)
-        : m_data(value)
+    constexpr Object(T&& value)
+        : m_data(forward<T>(value))
     {
     }
 

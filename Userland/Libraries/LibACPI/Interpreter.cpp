@@ -317,7 +317,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
     case OperandType::NameString: {
         auto value = TRY(stream.read_name_string());
         DEBUG_LOG("Reading namestring... ({})", value.to_string());
-        TRY(top_opcode_frame.finish_operand(value, stream.offset()));
+        TRY(top_opcode_frame.finish_operand(move(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::PackageLength: {
