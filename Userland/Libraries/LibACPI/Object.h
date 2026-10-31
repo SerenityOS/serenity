@@ -127,16 +127,16 @@ struct AK::Formatter<::ACPI::AML::Object> : AK::Formatter<FormatString> {
         }
 
         if (object.is<::ACPI::AML::String>())
-            return AK::Formatter<FormatString>::format(builder, "'{}'"sv, StringView(MUST(object.as<::ACPI::AML::String>()).buffer()));
+            return AK::Formatter<FormatString>::format(builder, "'{}'"sv, StringView(MUST(object.as_pointer<::ACPI::AML::String>())->buffer()));
 
         if (object.is<::ACPI::AML::Buffer>())
-            return AK::Formatter<FormatString>::format(builder, "Buffer ({:hex-dump})"sv, MUST(object.as<::ACPI::AML::Buffer>()).buffer().bytes());
+            return AK::Formatter<FormatString>::format(builder, "Buffer ({:hex-dump})"sv, MUST(object.as_pointer<::ACPI::AML::Buffer>())->buffer().bytes());
 
         if (object.is<::ACPI::AML::Package>())
-            return AK::Formatter<FormatString>::format(builder, "Package ({})"sv, MUST(object.as<::ACPI::AML::Package>()).package());
+            return AK::Formatter<FormatString>::format(builder, "Package ({})"sv, MUST(object.as_pointer<::ACPI::AML::Package>())->package());
 
         if (object.is<::ACPI::AML::NameString>())
-            return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as<::ACPI::AML::NameString>()).to_string()));
+            return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as_pointer<::ACPI::AML::NameString>())->to_string()));
 
         VERIFY_NOT_REACHED();
     }
