@@ -206,7 +206,7 @@ bool CommandLine::is_xhci_polling_enabled() const
 
 UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
 {
-    auto value = kernel_command_line().lookup("acpi"sv).value_or("limited"sv);
+    auto value = kernel_command_line().lookup("acpi"sv).value_or("on"sv);
     if (value == "limited"sv)
         return AcpiFeatureLevel::Limited;
     if (value == "off"sv)
