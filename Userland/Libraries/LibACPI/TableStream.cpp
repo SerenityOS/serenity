@@ -8,6 +8,10 @@
 #include <LibACPI/OpcodeFilters.h>
 #include <LibACPI/TableStream.h>
 
+#ifdef KERNEL
+#    define warnln dbgln
+#endif
+
 namespace ACPI::AML {
 
 // https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#defblockheader
