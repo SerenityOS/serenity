@@ -198,10 +198,10 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::DWordPrefix:
     case Opcode::QWordPrefix:
     case Opcode::StringPrefix:
-        return frame.operand(0);
+        return move(frame.operand(0));
 
     case Opcode::BufferOp:
-        return frame.operand(2);
+        return move(frame.operand(2));
 
     case Opcode::PackageOp: {
         auto operands = frame.release_operands();
@@ -220,8 +220,8 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
 {
     switch (frame.opcode()) {
     case Opcode::ScopeOp: {
-        auto length = TRY(frame.operand(0).as<u64>());
-        auto path = TRY(frame.operand(1).as<NameString>());
+        auto length = TRY(frame.operand(0).release_as<u64>());
+        auto path = TRY(frame.operand(1).release_as<NameString>());
         auto scope = TRY(find_node(path, m_scope_frames.last().scope()));
 
         auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
@@ -230,18 +230,18 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     }
 
     case Opcode::NameOp: {
-        auto path = TRY(frame.operand(0).as<NameString>());
-        auto data = frame.operand(1);
+        auto path = TRY(frame.operand(0).release_as<NameString>());
+        auto data = move(frame.operand(1));
 
-        auto node = TRY(try_make_ref_counted<NameNode>(data));
+        auto node = TRY(try_make_ref_counted<NameNode>(move(data)));
         TRY(m_scope_frames.last().insert_node(path, node));
         return {};
     }
 
     case Opcode::MethodOp: {
-        auto length = TRY(frame.operand(0).as<u64>());
-        auto path = TRY(frame.operand(1).as<NameString>());
-        auto flags = TRY(frame.operand(2).as<u64>());
+        auto length = TRY(frame.operand(0).release_as<u64>());
+        auto path = TRY(frame.operand(1).release_as<NameString>());
+        auto flags = TRY(frame.operand(2).release_as<u64>());
 
         auto node = TRY(try_make_ref_counted<MethodNode>(frame.start(), frame.start() + length, m_loaded_tables.size() - 1, flags));
         TRY(m_scope_frames.last().insert_node(path, node));
@@ -251,8 +251,8 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     }
 
     case Opcode::MutexOp: {
-        auto path = TRY(frame.operand(0).as<NameString>());
-        auto sync_flags = TRY(frame.operand(1).as<u64>());
+        auto path = TRY(frame.operand(0).release_as<NameString>());
+        auto sync_flags = TRY(frame.operand(1).release_as<u64>());
 
         auto node = TRY(try_make_ref_counted<MutexNode>(sync_flags));
         TRY(m_scope_frames.last().insert_node(path, node));
@@ -260,10 +260,10 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     }
 
     case Opcode::OpRegionOp: {
-        auto path = TRY(frame.operand(0).as<NameString>());
-        auto region_space = TRY(frame.operand(1).as<u64>());
-        auto region_offset = TRY(frame.operand(2).as<u64>());
-        auto region_length = TRY(frame.operand(3).as<u64>());
+        auto path = TRY(frame.operand(0).release_as<NameString>());
+        auto region_space = TRY(frame.operand(1).release_as<u64>());
+        auto region_offset = TRY(frame.operand(2).release_as<u64>());
+        auto region_length = TRY(frame.operand(3).release_as<u64>());
 
         auto node = TRY(try_make_ref_counted<OperationRegionNode>(region_space, region_offset, region_length));
         TRY(m_scope_frames.last().insert_node(path, node));
@@ -276,8 +276,8 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         return {};
 
     case Opcode::DeviceOp: {
-        auto length = TRY(frame.operand(0).as<u64>());
-        auto path = TRY(frame.operand(1).as<NameString>());
+        auto length = TRY(frame.operand(0).release_as<u64>());
+        auto path = TRY(frame.operand(1).release_as<NameString>());
 
         auto node = TRY(try_make_ref_counted<DeviceNode>());
         TRY(m_scope_frames.last().insert_node(path, node));
@@ -288,11 +288,11 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     }
 
     case Opcode::ProcessorOp: {
-        auto length = TRY(frame.operand(0).as<u64>());
-        auto path = TRY(frame.operand(1).as<NameString>());
-        auto id = TRY(frame.operand(2).as<u64>());
-        auto processor_register_block_address = TRY(frame.operand(3).as<u64>());
-        auto processor_register_block_length = TRY(frame.operand(4).as<u64>());
+        auto length = TRY(frame.operand(0).release_as<u64>());
+        auto path = TRY(frame.operand(1).release_as<NameString>());
+        auto id = TRY(frame.operand(2).release_as<u64>());
+        auto processor_register_block_address = TRY(frame.operand(3).release_as<u64>());
+        auto processor_register_block_length = TRY(frame.operand(4).release_as<u64>());
 
         auto node = TRY(try_make_ref_counted<ProcessorNode>(id, processor_register_block_address, processor_register_block_length));
         TRY(m_scope_frames.last().insert_node(path, node));
@@ -370,11 +370,11 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
 
             auto package_length = TRY(stream.read_package_length());
 
-            auto operation_region_node = TRY(find_node(TRY(top_opcode_frame.operand(1).as<NameString>()), m_scope_frames.last().scope()));
+            auto operation_region_node = TRY(find_node(*TRY(top_opcode_frame.operand(1).as_pointer<NameString>()), m_scope_frames.last().scope()));
             if (operation_region_node->type() != NodeType::OperationRegion)
                 INTERPRETER_ERROR("Expected operation region node!", EINVAL, "Expected operation region node, got {}", operation_region_node->kind());
 
-            auto flags = TRY(top_opcode_frame.operand(2).as<u64>());
+            auto flags = TRY(top_opcode_frame.operand(2).release_as<u64>());
 
             DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
 
