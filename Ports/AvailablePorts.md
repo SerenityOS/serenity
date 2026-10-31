@@ -180,7 +180,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`libpuffy`](libpuffy/)                         | libpuffy                                                      | 1.0                   | https://github.com/ibara/libpuffy                                    |
 | [`libsamplerate`](libsamplerate/)               | libsamplerate                                                 | 0.2.2                 | https://libsndfile.github.io/libsamplerate/                          |
 | [`libsixel`](libsixel/)                         | libsixel                                                      | 1.10.5                | https://github.com/libsixel/libsixel                                 |
-| [`libslirp`](libslirp/)                         | libslirp                                                      | 4.9.5                 | https://gitlab.freedesktop.org/slirp/libslirp                        |
+| [`libslirp`](libslirp/)                         | libslirp                                                      | 4.9.7                 | https://gitlab.freedesktop.org/slirp/libslirp                        |
 | [`libsndfile`](libsndfile/)                     | libsndfile                                                    | 1.2.2                 | https://libsndfile.github.io/libsndfile/                             |
 | [`libsodium`](libsodium/)                       | libsodium                                                     | 1.0.22                | https://doc.libsodium.org/                                           |
 | [`libssh2`](libssh2/)                           | libssh2                                                       | 1.11.1                | https://www.libssh2.org/                                             |
