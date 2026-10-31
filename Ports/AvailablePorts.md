@@ -158,7 +158,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`libgcrypt`](libgcrypt/)                       | libgcrypt                                                     | 1.12.4                | https://gnupg.org/software/libgcrypt/index.html                      |
 | [`libgd`](libgd/)                               | libgd                                                         | 2.3.3                 | https://libgd.github.io/                                             |
 | [`libgpg-error`](libgpg-error/)                 | libgpg-error                                                  | 1.61                  | https://gnupg.org/software/libgpg-error/index.html                   |
-| [`libiconv`](libiconv/)                         | GNU libiconv                                                  | 1.19                  | https://www.gnu.org/software/libiconv/                               |
+| [`libiconv`](libiconv/)                         | GNU libiconv                                                  | 1.19.1                | https://www.gnu.org/software/libiconv/                               |
 | [`libicu`](libicu/)                             | ICU                                                           | 79.1                  | http://site.icu-project.org/                                         |
 | [`libjodycode`](libjodycode/)                   | libjodycode                                                   | 4.2                   | https://codeberg.org/jbruchon/libjodycode                            |
 | [`libjpeg`](libjpeg/)                           | libjpeg                                                       | 10                    | https://ijg.org/                                                     |
