@@ -95,12 +95,6 @@ bool Parser::handle_interrupt()
     TODO();
 }
 
-UNMAP_AFTER_INIT void Parser::enable_aml_parsing()
-{
-    // FIXME: When enabled, do other things to "parse AML".
-    m_can_process_bytecode = true;
-}
-
 UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");

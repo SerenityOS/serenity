@@ -33,8 +33,6 @@ public:
     void try_acpi_shutdown();
     bool can_shutdown() { return false; }
 
-    void enable_aml_parsing();
-
     PhysicalAddress rsdp() const { return m_rsdp; }
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
     bool is_xsdt_supported() const { return m_xsdt_supported; }
@@ -99,7 +97,6 @@ private:
     PhysicalAddress m_fadt;
 
     bool m_xsdt_supported { false };
-    bool m_can_process_bytecode { false };
     ::ACPI::FADTFlags::HardwareFeatures m_hardware_flags;
     ::ACPI::FADTFlags::x86_Specific_Flags m_x86_specific_flags;
 };
