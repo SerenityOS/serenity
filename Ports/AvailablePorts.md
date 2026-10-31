@@ -90,7 +90,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`freeciv`](freeciv/)                           | Freeciv                                                       | 3.2.6                 | http://freeciv.org/                                                  |
 | [`freedink`](freedink/)                         | FreeDink                                                      | 109.6                 | https://www.gnu.org/software/freedink/                               |
 | [`freetype`](freetype/)                         | FreeType                                                      | 2.15.0                | https://www.freetype.org/                                            |
-| [`fribidi`](fribidi/)                           | GNU FriBidi                                                   | 1.0.17                | https://github.com/fribidi/fribidi                                   |
+| [`fribidi`](fribidi/)                           | GNU FriBidi                                                   | 1.0.18                | https://github.com/fribidi/fribidi                                   |
 | [`frotz`](frotz/)                               | Frotz                                                         | 2.55                  | https://gitlab.com/DavidGriffith/frotz                               |
 | [`fuse-exfat`](fuse-exfat/)                     | fuse-exfat                                                    | 1.4.0                 | https://gitlab.com/relan/exfat                                       |
 | [`gawk`](gawk/)                                 | GNU awk                                                       | 5.3.1                 | https://www.gnu.org/software/gawk/                                   |
