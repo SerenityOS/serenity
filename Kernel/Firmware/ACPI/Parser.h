@@ -16,6 +16,7 @@
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <LibACPI/Definitions.h>
+#include <LibACPI/Interpreter.h>
 
 namespace Kernel::ACPI {
 
@@ -99,6 +100,8 @@ private:
     bool m_xsdt_supported { false };
     ::ACPI::FADTFlags::HardwareFeatures m_hardware_flags;
     ::ACPI::FADTFlags::x86_Specific_Flags m_x86_specific_flags;
+
+    OwnPtr<::ACPI::AML::Interpreter> m_aml_interpreter;
 };
 
 }

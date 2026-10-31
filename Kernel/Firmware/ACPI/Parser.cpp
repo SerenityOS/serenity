@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2026, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -155,12 +156,21 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_dsdt()
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
     TRY(m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)));
 
-    auto dsdt_or_error = Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
-    if (dsdt_or_error.is_error()) {
-        dmesgln("ACPI: DSDT is unmappable");
-        return {};
+    if (kernel_command_line().acpi_feature_level() == AcpiFeatureLevel::Enabled) {
+        m_aml_interpreter = TRY(::ACPI::AML::Interpreter::create());
+        ArmedScopeGuard guard = [&]() {
+            // Ensure the AML interpreter is cleaned up if an error occurs.
+            m_aml_interpreter = nullptr;
+        };
+
+        auto dsdt = TRY(Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr)));
+        dsdt = TRY(Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr), dsdt->h.length));
+
+        dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt->h.length);
+
+        TRY(m_aml_interpreter->load(ReadonlyBytes { dsdt.ptr(), dsdt->h.length }));
+        guard.disarm();
     }
-    dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt_or_error.value()->h.length);
 
     return {};
 }
