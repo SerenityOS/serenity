@@ -513,7 +513,7 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             DEBUG_LOG("Finalizing argument {}", top_frame_value.opcode());
 
             auto value = TRY(finalize_value_opcode(top_frame_value));
-            TRY(m_opcode_frames.last().finish_operand(value, stream.offset()));
+            TRY(m_opcode_frames.last().finish_operand(move(value), stream.offset()));
 
             m_state = State::ReadingOperand;
         } else {
