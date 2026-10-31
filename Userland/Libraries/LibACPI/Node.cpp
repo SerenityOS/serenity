@@ -61,16 +61,7 @@ ErrorOr<void> Node::write_description(StringBuilder& builder)
 
 ErrorOr<void> NameNode::write_description(StringBuilder& builder)
 {
-    if (m_data.is<u64>()) {
-        auto value = MUST(m_data.as<u64>());
-        TRY(builder.try_appendff("(Decimal: {}, Hexadecimal: {:X})", value, value));
-    } else if (m_data.is<NameString>()) {
-        auto value = MUST(m_data.as<NameString>());
-        TRY(builder.try_appendff("{}"sv, TRY(value.to_string())));
-    } else {
-        TRY(builder.try_append("Invalid"sv));
-    }
-
+    TRY(builder.try_appendff("{}"sv, m_data));
     return {};
 }
 
