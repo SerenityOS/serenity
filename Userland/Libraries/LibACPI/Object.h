@@ -53,6 +53,8 @@ public:
 
     Vector<Object> const& package() const { return m_package; }
 
+    ErrorOr<Package> clone() const;
+
 private:
     Vector<Object> m_package;
 };
@@ -106,6 +108,8 @@ public:
         // https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#implicit-source-operand-conversion
         return Error::from_string_view_or_print_error_and_return_errno("Can not cast given type!"sv, EINVAL);
     }
+
+    ErrorOr<Object> clone() const;
 
 protected:
     Variant<AK::Empty, u64, String, Buffer, Package, NameString> m_data;
