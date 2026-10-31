@@ -39,8 +39,10 @@ constexpr int ARM_TO_VIDEOCORE_CHANNEL = 8;
 // We have to use a raw pointer here because this variable will be set before global constructors are called.
 static Mailbox* s_the = nullptr;
 
-Mailbox::Mailbox(Memory::TypedMapping<MailboxRegisters volatile> registers)
+Mailbox::Mailbox(Memory::TypedMapping<MailboxRegisters volatile> registers, NonnullOwnPtr<Memory::Region> dma_region, NonnullRefPtr<Memory::PhysicalRAMPage> dma_page)
     : m_registers(move(registers))
+    , m_dma_region(move(dma_region))
+    , m_dma_page(move(dma_page))
 {
 }
 
@@ -65,7 +67,10 @@ bool Mailbox::MessageHeader::success() const
 ErrorOr<void> Mailbox::initialize(PhysicalAddress physical_address)
 {
     auto registers = TRY(Memory::map_typed_writable<MailboxRegisters volatile>(physical_address));
-    s_the = new (nothrow) Mailbox(move(registers));
+    RefPtr<Memory::PhysicalRAMPage> page;
+    auto region = TRY(MM.allocate_dma_buffer_page_below(PhysicalAddress { 1 * GiB }, "Mailbox DMA"sv, Memory::Region::Access::ReadWrite, page));
+    s_the = new (nothrow) Mailbox(move(registers), move(region), page.release_nonnull());
+
     if (s_the == nullptr)
         return ENOMEM;
     return {};
@@ -111,25 +116,18 @@ bool Mailbox::send_queue(void* queue, u32 queue_size)
 
     wait_until_we_can_write();
 
-    // FIXME: Use MM to allocate a DMA region instead of reserving some static memory.
-    //        The DMA engines in the Pi 4 and 5 can only access memory below 1 GiB (see bcm2711-peripherals.pdf, 1.2.4 Legacy master addresses),
-    //        so we need to make MM reserve low memory for DMA and add functions that can give you memory regions that are below a given address limit.
-    //        Using MM would also allow us to map this region as MemoryType::NonCacheable, so we don't need to flush the data cache manually.
-    alignas(16) static u8 transfer_buffer[4096];
-
-    if (queue_size > sizeof(transfer_buffer))
+    if (queue_size > PAGE_SIZE)
         return false;
 
-    u32 transfer_buffer_paddr = Memory::virtual_to_low_physical(bit_cast<FlatPtr>(&transfer_buffer));
+    auto transfer_buffer_paddr = m_dma_page->paddr().get();
 
-    if (transfer_buffer_paddr + queue_size > (1 * GiB))
-        return false;
+    VERIFY(transfer_buffer_paddr + queue_size <= (1 * GiB));
 
-    memcpy(transfer_buffer, queue, queue_size);
+    memcpy(m_dma_region->vaddr().as_ptr(), queue, queue_size);
 
-    Processor::flush_data_cache(VirtualAddress { &transfer_buffer }, queue_size);
+    Processor::flush_data_cache(m_dma_region->vaddr(), queue_size);
 
-    u32 request = static_cast<u32>(transfer_buffer_paddr & ~0xF) | (channel & 0xF);
+    u32 request = static_cast<u32>(transfer_buffer_paddr & ~0xFu) | (channel & 0xF);
     m_registers->write_data = request;
 
     for (;;) {
@@ -146,9 +144,9 @@ bool Mailbox::send_queue(void* queue, u32 queue_size)
             // We could use an invalidate-only cache operation here (flush_data_cache() both cleans and invalidates),
             // but then we'd need to ensure that the buffer is aligned to the cache line size
             // (which can vary from processor to processor) to not accidentally delete unrelated data from the caches.
-            Processor::flush_data_cache(VirtualAddress { &transfer_buffer }, queue_size);
+            Processor::flush_data_cache(m_dma_region->vaddr(), queue_size);
 
-            memcpy(queue, transfer_buffer, queue_size);
+            memcpy(queue, m_dma_region->vaddr().as_ptr(), queue_size);
             return message_header->success();
         }
     }

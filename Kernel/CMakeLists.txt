@@ -478,6 +478,8 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(RPI_SOURCES
         Arch/aarch64/RPi/AUXPeripherals.cpp
+        Arch/aarch64/RPi/BroadcomSTBGPIOController.cpp
+        Arch/aarch64/RPi/DSI/RpiFT5406.cpp
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/InterruptController.cpp
@@ -491,7 +493,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/RP1/RP1.cpp
         Arch/aarch64/RPi/RP1/xHCI.cpp
         Arch/aarch64/RPi/SDHostController.cpp
-        Arch/aarch64/RPi/BroadcomSTBGPIOController.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/V3D/DeviceNode.cpp
         Arch/aarch64/RPi/V3D/PageTable.cpp

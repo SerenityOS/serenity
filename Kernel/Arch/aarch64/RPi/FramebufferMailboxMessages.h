@@ -110,4 +110,16 @@ public:
 };
 static_assert(sizeof(FramebufferGetPitchMboxMessage) == 16);
 
+class FramebufferGetTouchBuf : public Mailbox::Message {
+public:
+    u32 address;
+
+    FramebufferGetTouchBuf()
+        : Mailbox::Message(0x4000f, 4)
+    {
+        address = 0;
+    }
+};
+static_assert(sizeof(FramebufferGetTouchBuf) == 16);
+
 }
