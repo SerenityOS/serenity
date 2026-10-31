@@ -350,6 +350,35 @@ struct [[gnu::packed]] DSDT {
     unsigned char definition_block[];
 };
 
+// https://uefi.org/specs/ACPI/6.6/04_ACPI_Hardware_Specification.html#pm1-control-registers-fixed-hardware-feature-control-bits
+union PM1ControlRegister {
+    struct
+    {
+        bool SCI_EN : 1;
+        bool BM_RLD : 1;
+        bool GBL_RS : 1;
+        u16 : 7;
+        u16 SLP_TYPx : 3;
+        bool SLP_EN : 1;
+        u16 : 2;
+    };
+    u16 value;
+};
+static_assert(AssertSize<PM1ControlRegister, 2>());
+
+// https://uefi.org/specs/ACPI/6.6/04_ACPI_Hardware_Specification.html#sleep-control-register
+union SleepControlRegister {
+    struct
+    {
+        u8 : 2;
+        u8 SLP_TYPx : 3;
+        bool SLP_EN : 1;
+        u8 : 1;
+    };
+    u8 value;
+};
+static_assert(AssertSize<SleepControlRegister, 1>());
+
 }
 
 namespace AML {
