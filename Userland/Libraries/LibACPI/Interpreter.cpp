@@ -531,6 +531,11 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<Object> Interpreter::evaluate(StringView path)
+{
+    return evaluate(TRY(NameString::from_string_view(path)));
+}
+
 ErrorOr<Object> Interpreter::evaluate(NameString const& path)
 {
     auto node = TRY(find_node(path, m_namespace_root));

@@ -52,6 +52,7 @@ public:
     ErrorOr<void> load(ReadonlyBytes bytes);
     ErrorOr<void> print_namespace() const;
 
+    ErrorOr<Object> evaluate(StringView path);
     ErrorOr<Object> evaluate(NameString const& path);
 
 private:
