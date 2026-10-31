@@ -43,9 +43,6 @@ UNMAP_AFTER_INIT ErrorOr<void> early_initialize()
 
     TRY(Parser::initialize(rsdp.value()));
 
-    if (kernel_command_line().acpi_feature_level() == AcpiFeatureLevel::Enabled)
-        Parser::the()->enable_aml_parsing();
-
     return {};
 }
 
