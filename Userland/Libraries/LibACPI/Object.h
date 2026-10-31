@@ -82,8 +82,25 @@ public:
     template<IsNodeData T>
     constexpr ErrorOr<T> as() const
     {
+        return *TRY(as_pointer<T>());
+    }
+
+    template<IsNodeData T>
+    constexpr ErrorOr<T const*> as_pointer() const
+    {
         if (m_data.has<T>())
-            return m_data.get<T>();
+            return m_data.get_pointer<T>();
+
+        // TODO: Implement casting according both to ACPI spec and whatever Windows does.
+        // https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#implicit-source-operand-conversion
+        return Error::from_string_view_or_print_error_and_return_errno("Can not cast given type!"sv, EINVAL);
+    }
+
+    template<IsNodeData T>
+    constexpr ErrorOr<T> release_as()
+    {
+        if (m_data.has<T>())
+            return move(m_data.get<T>());
 
         // TODO: Implement casting according both to ACPI spec and whatever Windows does.
         // https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#implicit-source-operand-conversion
