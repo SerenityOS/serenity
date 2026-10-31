@@ -213,9 +213,109 @@ void Parser::try_acpi_reboot()
     Processor::halt();
 }
 
-void Parser::try_acpi_shutdown()
+// https://uefi.org/specs/ACPI/6.6/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-soft-off-state
+ErrorOr<void> Parser::try_acpi_shutdown()
 {
-    dmesgln("ACPI: Shutdown is not supported with the current configuration, aborting!");
+    if (!m_aml_interpreter) {
+        dmesgln("ACPI: AML interpreter not available");
+        return Error::from_errno(ENOTSUP);
+    }
+
+    auto fadt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
+
+    // NOTE: We need to check the length, because older ACPI revision might not have those fields
+    auto pm1a_control = TRY(get_pm1a_control());
+    auto pm1b_control = TRY(get_pm1b_control());
+    bool sleep_control_available = fadt->h.length >= offsetof(::ACPI::Structures::FADT, sleep_control) + sizeof(fadt->sleep_control) && !fadt->sleep_control.is_null();
+
+    auto s5_values = TRY(extract_s5_values());
+
+    // FIXME: 1. OSPM executes the _PTS control method, passing the argument 5.
+
+    // 2. OSPM prepares its components to shut down (flushing disk caches).
+    // NOTE: This step is done ahead of this function call
+
+    // 3. If not a HW-reduced ACPI platform, OSPM writes SLP_TYPa (from the \_S5 object) with the SLP_ENa bit set to the PM1a_CNT register.
+    if (!m_hardware_flags.hardware_reduced_acpi) {
+        if (!pm1a_control.has_value()) {
+            dmesgln("ACPI: PM1a control register not available");
+            return Error::from_errno(ENOTSUP);
+        }
+
+        ::ACPI::Structures::PM1ControlRegister shutdown_value = bit_cast<::ACPI::Structures::PM1ControlRegister>(static_cast<u16>(TRY(read_generic_address(*pm1a_control))));
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPa;
+
+        TRY(write_generic_address(*pm1a_control, bit_cast<u16>(shutdown_value)));
+    }
+
+    // 4. OSPM writes SLP_TYPb (from the \_S5 object) with the SLP_ENb bit set to the PM1b_CNT register, or writes the HW-reduced ACPI Sleep
+    //    Type value for S5 and the SLP_EN bit to the Sleep Control Register.
+    if (m_hardware_flags.hardware_reduced_acpi) {
+        if (!sleep_control_available) {
+            dmesgln("ACPI: Sleep control register not available");
+            return Error::from_errno(ENOTSUP);
+        }
+
+        auto shutdown_value = bit_cast<::ACPI::Structures::SleepControlRegister>(static_cast<u8>(TRY(read_generic_address(fadt->sleep_control))));
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPa;
+
+        TRY(write_generic_address(fadt->sleep_control, bit_cast<u8>(shutdown_value)));
+    } else if (pm1b_control.has_value()) {
+        // PM1b control register is optional, and doesn't need to be present for the system to support S5 sleep state.
+        auto shutdown_value = bit_cast<::ACPI::Structures::PM1ControlRegister>(static_cast<u16>(TRY(read_generic_address(*pm1b_control))));
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPb;
+
+        TRY(write_generic_address(*pm1b_control, bit_cast<u16>(shutdown_value)));
+    }
+
+    // 5. The system enters the Soft Off state.
+    Processor::halt();
+}
+
+ErrorOr<Parser::S5Values> Parser::extract_s5_values()
+{
+    auto s5_node = TRY(m_aml_interpreter->evaluate("\\_S5_"sv));
+    auto s5_package = TRY(s5_node.release_as<::ACPI::AML::Package>());
+    if (s5_package.package().size() < 2)
+        return Error::from_errno(EINVAL);
+
+    u16 SLP_TYPa = TRY(s5_package.package()[0].as<u64>());
+    u16 SLP_TYPb = TRY(s5_package.package()[1].as<u64>());
+
+    return Parser::S5Values { SLP_TYPa, SLP_TYPb };
+}
+
+ErrorOr<Optional<::ACPI::Structures::GenericAddressStructure>> Parser::get_pm1a_control()
+{
+    auto fadt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
+
+    if (fadt->h.length >= offsetof(::ACPI::Structures::FADT, x_pm1a_cnt_blk) + sizeof(fadt->x_pm1a_cnt_blk) && !fadt->x_pm1a_cnt_blk.is_null())
+        return fadt->x_pm1a_cnt_blk;
+
+#if ARCH(X86_64)
+    if (fadt->PM1a_CNT_BLK != 0)
+        return make_generic_address_from_io_port(fadt->PM1a_CNT_BLK);
+#endif
+
+    return OptionalNone {};
+}
+
+ErrorOr<Optional<::ACPI::Structures::GenericAddressStructure>> Parser::get_pm1b_control()
+{
+    auto fadt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
+
+    if (fadt->h.length >= offsetof(::ACPI::Structures::FADT, x_pm1b_cnt_blk) + sizeof(fadt->x_pm1b_cnt_blk) && !fadt->x_pm1b_cnt_blk.is_null())
+        return fadt->x_pm1b_cnt_blk;
+
+#if ARCH(X86_64)
+    if (fadt->PM1b_CNT_BLK != 0)
+        return make_generic_address_from_io_port(fadt->PM1b_CNT_BLK);
+#endif
+
+    return OptionalNone {};
 }
 
 ErrorOr<size_t> Parser::get_table_size(PhysicalAddress table_header)
