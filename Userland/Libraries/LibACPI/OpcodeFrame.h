@@ -46,6 +46,7 @@ public:
     ErrorOr<void> finish_operand(size_t current_offset);
     ErrorOr<void> finish_operand(Object const& operand, size_t current_offset);
 
+    Object& operand(size_t index) { return m_operands[index]; }
     Object const& operand(size_t index) const { return m_operands[index]; }
     size_t operand_count() const { return m_operands.size(); }
 
