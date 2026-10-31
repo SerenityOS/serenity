@@ -12,6 +12,7 @@
 # FIXME: misc-non-private-member-variables-in-classes: Audit uses of protected member variables to see if they really need to be protected
 # performance-noexcept-move-constructor: The project does not use exceptions, so there are no such optimizations available
 # performance-no-int-to-ptr: This rule flags every pointer to integer cast, which gets quite noisy. Should only be enabled on a case-by-case basis
+# portability-no-assembler: Writing an operating system requires using assembly in several places.
 # readability-braces-around-statements: Redundant braces around single-line conditions is against project style
 # readability-function-cognitive-complexity: Most regular contributors seem to turn this one off anyway. Violations are hard to fix as well
 # readability-magic-numbers: This check is very noisy in the codebase, especially in AK.
@@ -38,6 +39,7 @@ Checks: >
   -misc-use-anonymous-namespace,
   -performance-noexcept-move-constructor,
   -performance-no-int-to-ptr,
+  -portability-no-assembler,
   -readability-braces-around-statements,
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
