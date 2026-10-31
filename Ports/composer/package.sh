@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='composer'
-version='2.10.3'
+version='2.11.1'
 files=(
-    "https://getcomposer.org/download/${version}/composer.phar#7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6"
+    "https://getcomposer.org/download/${version}/composer.phar#6f1b891e1d4927d62740276c540fb490e47689e19e102c49e8da849794882f8c"
 )
 depends=(
     'php'
