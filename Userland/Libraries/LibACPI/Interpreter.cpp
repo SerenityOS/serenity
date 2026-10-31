@@ -547,7 +547,7 @@ ErrorOr<Object> Interpreter::evaluate(NonnullRefPtr<Node> node)
     switch (node->type()) {
     case NodeType::Name: {
         auto name_node = static_ptr_cast<NameNode>(node);
-        return name_node->data();
+        return name_node->data().clone();
     }
 
     case NodeType::Field:
