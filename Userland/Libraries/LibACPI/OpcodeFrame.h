@@ -20,11 +20,18 @@ enum class OperandType : u8 {
     WordData,
     DWordData,
     QWordData,
+    String,
+    ByteBuffer,
 
+    FieldElement,
     TermArg,
 
     DataRefObject,
+    PackageElement,
 
+    MarkAsCount,
+    RepeatNextCount,
+    RepeatNextBytes,
     End,
 };
 
@@ -36,10 +43,13 @@ public:
     bool filter_opcode_for_next_operand(Opcode opcode);
 
     ErrorOr<OperandType> begin_operand();
-    ErrorOr<void> finish_operand(Object const& operand);
+    ErrorOr<void> finish_operand(size_t current_offset);
+    ErrorOr<void> finish_operand(Object const& operand, size_t current_offset);
 
     Object const& operand(size_t index) const { return m_operands[index]; }
     size_t operand_count() const { return m_operands.size(); }
+
+    Vector<Object> release_operands() { return move(m_operands); }
 
     // NOTE: This should never get called on the root frame
     Opcode opcode() const { return m_opcode.value(); }
@@ -62,6 +72,9 @@ private:
     size_t m_start;
 
     size_t m_operand_template_index { 0 };
+
+    size_t m_counter_value_index { 0 };
+    Optional<size_t> m_counter;
 };
 
 }

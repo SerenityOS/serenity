@@ -24,6 +24,12 @@ enum class NodeType : u8 {
     Untyped,
     Scope,
     Name,
+    Method,
+    Mutex,
+    OperationRegion,
+    Field,
+    Device,
+    Processor,
 };
 
 class Node : public AtomicRefCounted<Node>
@@ -47,11 +53,6 @@ public:
     virtual ~Node() = default;
 
 protected:
-    Node(RefPtr<Node> parent)
-        : m_parent(move(parent))
-    {
-    }
-
     NameSegment m_name;
 
     WeakPtr<Node> m_parent;
@@ -60,11 +61,6 @@ protected:
 
 class ScopeNode : public Node {
 public:
-    ScopeNode()
-        : Node(nullptr)
-    {
-    }
-
     virtual NodeType type() const override { return NodeType::Scope; }
     virtual StringView kind() const override { return "Scope"sv; }
 };
@@ -72,8 +68,7 @@ public:
 class NameNode : public Node {
 public:
     NameNode(Object value)
-        : Node(nullptr)
-        , m_data(move(value))
+        : m_data(move(value))
     {
     }
 
@@ -86,6 +81,138 @@ public:
 
 protected:
     Object m_data;
+};
+
+class MethodNode : public Node {
+public:
+    MethodNode(size_t table_index, size_t start, size_t end, u8 flags)
+        : m_table_index(table_index)
+        , m_start(start)
+        , m_end(end)
+        , m_flags(flags)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::Method; }
+    virtual StringView kind() const override { return "Method"sv; }
+
+    size_t table_index() const { return m_table_index; }
+
+    size_t start() const { return m_start; }
+    size_t end() const { return m_end; }
+
+    u8 flags() const { return m_flags; }
+    u8 arguments() const { return m_flags & 7; }
+
+protected:
+    size_t m_table_index { 0 };
+
+    size_t m_start { 0 };
+    size_t m_end { 0 };
+
+    u8 m_flags { 0 };
+};
+
+class MutexNode : public Node {
+public:
+    MutexNode(u8 sync_flags)
+        : m_sync_flags(sync_flags)
+    {
+    }
+
+    virtual NodeType type() const override { return NodeType::Mutex; }
+    virtual StringView kind() const override { return "Mutex"sv; }
+
+    u8 sync_flags() const { return m_sync_flags; }
+
+protected:
+    u8 m_sync_flags { 0 };
+};
+
+class OperationRegionNode : public Node {
+public:
+    OperationRegionNode(u8 region_space, i64 region_offset, i64 region_length)
+        : m_space_raw(region_space)
+        , m_offset(region_offset)
+        , m_length(region_length)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::OperationRegion; }
+    virtual StringView kind() const override { return "Operation Region"sv; }
+
+    GenericAddressStructure::AddressSpace space() const
+    {
+        if (m_space_raw >= 0x80)
+            return GenericAddressStructure::AddressSpace::OEMDefined;
+
+        return static_cast<GenericAddressStructure::AddressSpace>(m_space_raw);
+    }
+
+    i64 offset() const { return m_offset; }
+    i64 length() const { return m_length; }
+
+protected:
+    u8 m_space_raw;
+    i64 m_offset;
+    i64 m_length;
+};
+
+class FieldNode : public Node {
+public:
+    FieldNode(RefPtr<Node> const& operation_region, u8 flags, size_t offset, size_t size)
+        : m_operation_region(operation_region)
+        , m_flags(flags)
+        , m_offset(offset)
+        , m_size(size)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::Field; }
+    virtual StringView kind() const override { return "Field"sv; }
+
+    RefPtr<Node> const& operation_region() const { return m_operation_region; }
+
+    u8 flags() const { return m_flags; }
+    size_t offset() const { return m_offset; }
+    size_t size() const { return m_size; }
+
+private:
+    RefPtr<Node> m_operation_region;
+
+    u8 m_flags;
+    size_t m_offset;
+    size_t m_size;
+};
+
+class DeviceNode : public Node {
+public:
+    virtual NodeType type() const override { return NodeType::Device; }
+    virtual StringView kind() const override { return "Device"sv; }
+};
+
+class ProcessorNode : public Node {
+public:
+    ProcessorNode(u32 address, u8 id, u8 block_length)
+        : m_address(address)
+        , m_id(id)
+        , m_block_length(block_length)
+    {
+    }
+
+    NodeType type() const override { return NodeType::Processor; }
+    StringView kind() const override { return "Processor"sv; }
+
+protected:
+    u32 m_address { 0 };
+    u8 m_id { 0 };
+    u8 m_block_length { 0 };
 };
 
 }

@@ -77,11 +77,13 @@ private:
     ErrorOr<IterationDecision> read_operand(TableStream& stream, OperandType operand);
 
     ErrorOr<Object> finalize_value_opcode(OpcodeFrame& frame);
-    ErrorOr<void> finalize_term_opcode(OpcodeFrame& frame);
+    ErrorOr<void> finalize_term_opcode(OpcodeFrame& frame, TableStream& stream);
 
     void debug_print_header(TableStream& stream, size_t operand_index = 0);
 
     State m_state { State::ReadingOpcode };
+
+    u32 m_current_field_offset { 0 };
 
     AK::Vector<TableStream> m_loaded_tables;
     Vector<ScopeFrame> m_scope_frames;

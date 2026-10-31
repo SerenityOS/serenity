@@ -16,8 +16,49 @@
 
 namespace ACPI::AML {
 
+class Object;
+
+class String {
+public:
+    String(ByteBuffer buffer)
+        : m_buffer(move(buffer))
+    {
+    }
+
+    ByteBuffer& buffer() { return m_buffer; }
+
+private:
+    ByteBuffer m_buffer;
+};
+
+class Buffer {
+public:
+    Buffer(ByteBuffer buffer)
+        : m_buffer(move(buffer))
+    {
+    }
+
+    ByteBuffer& buffer() { return m_buffer; }
+
+private:
+    ByteBuffer m_buffer;
+};
+
+class Package {
+public:
+    Package(Vector<Object> package)
+        : m_package(move(package))
+    {
+    }
+
+    Vector<Object>& package() { return m_package; }
+
+private:
+    Vector<Object> m_package;
+};
+
 template<typename T>
-concept IsNodeData = OneOf<T, u64, NameString>;
+concept IsNodeData = OneOf<T, u64, String, Buffer, Package, NameString>;
 
 class Object {
 public:
@@ -50,7 +91,7 @@ public:
     }
 
 protected:
-    Variant<AK::Empty, u64, NameString> m_data;
+    Variant<AK::Empty, u64, String, Buffer, Package, NameString> m_data;
 };
 
 }

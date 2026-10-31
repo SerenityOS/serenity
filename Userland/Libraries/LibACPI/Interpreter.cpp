@@ -195,8 +195,17 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::WordPrefix:
     case Opcode::DWordPrefix:
     case Opcode::QWordPrefix:
-        VERIFY(frame.operand(0).is<u64>());
+    case Opcode::StringPrefix:
         return frame.operand(0);
+
+    case Opcode::BufferOp:
+        return frame.operand(2);
+
+    case Opcode::PackageOp: {
+        auto operands = frame.release_operands();
+        operands.remove(0, 2);
+        return Package(move(operands));
+    }
 
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented value opcode {}!", frame.opcode());
@@ -205,7 +214,7 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame)
+ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream& stream)
 {
     switch (frame.opcode()) {
     case Opcode::ScopeOp: {
@@ -227,6 +236,71 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame)
         return {};
     }
 
+    case Opcode::MethodOp: {
+        auto length = TRY(frame.operand(0).as<u64>()) - (stream.offset() - frame.start()) + 1;
+        auto path = TRY(frame.operand(1).as<NameString>());
+        auto flags = TRY(frame.operand(2).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<MethodNode>(m_loaded_tables.size() - 1, stream.offset(), length, flags));
+        TRY(m_scope_frames.last().insert_node(path, node));
+
+        // FIXME: Actually read and do something with the body
+        TRY(stream.seek(length, SeekMode::FromCurrentPosition));
+        return {};
+    }
+
+    case Opcode::MutexOp: {
+        auto path = TRY(frame.operand(0).as<NameString>());
+        auto sync_flags = TRY(frame.operand(1).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<MutexNode>(sync_flags));
+        TRY(m_scope_frames.last().insert_node(path, node));
+        return {};
+    }
+
+    case Opcode::OpRegionOp: {
+        auto path = TRY(frame.operand(0).as<NameString>());
+        auto region_space = TRY(frame.operand(1).as<u64>());
+        auto region_offset = TRY(frame.operand(2).as<u64>());
+        auto region_length = TRY(frame.operand(3).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<OperationRegionNode>(region_space, region_offset, region_length));
+        TRY(m_scope_frames.last().insert_node(path, node));
+        return {};
+    }
+
+    case Opcode::FieldOp:
+        // NOTE: All the field elements are read as operands, so all we need to do is reset the field offset.
+        m_current_field_offset = 0;
+        return {};
+
+    case Opcode::DeviceOp: {
+        auto length = TRY(frame.operand(0).as<u64>());
+        auto path = TRY(frame.operand(1).as<NameString>());
+
+        auto node = TRY(try_make_ref_counted<DeviceNode>());
+        TRY(m_scope_frames.last().insert_node(path, node));
+
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length + 1, m_loaded_tables.size() - 1);
+        TRY(m_scope_frames.try_append(scope_frame));
+        return {};
+    }
+
+    case Opcode::ProcessorOp: {
+        auto length = TRY(frame.operand(0).as<u64>());
+        auto path = TRY(frame.operand(1).as<NameString>());
+        auto id = TRY(frame.operand(2).as<u64>());
+        auto block_address = TRY(frame.operand(3).as<u64>());
+        auto block_length = TRY(frame.operand(4).as<u64>());
+
+        auto node = TRY(try_make_ref_counted<ProcessorNode>(block_address, id, block_length));
+        TRY(m_scope_frames.last().insert_node(path, node));
+
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length + 1, m_loaded_tables.size() - 1);
+        TRY(m_scope_frames.try_append(scope_frame));
+        return {};
+    }
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented term opcode {}!", frame.opcode());
     }
@@ -242,37 +316,114 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
     case OperandType::NameString: {
         auto value = TRY(stream.read_name_string());
         DEBUG_LOG("Reading namestring... ({})", value.to_string());
-        TRY(top_opcode_frame.finish_operand(value));
+        TRY(top_opcode_frame.finish_operand(value, stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::PackageLength: {
         auto length = TRY(stream.read_package_length());
         DEBUG_LOG("Reading package length... ({:#X})", length);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(length)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(length), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::ByteData: {
         auto value = TRY(stream.read_value<u8>());
         DEBUG_LOG("Reading byte... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::WordData: {
         auto value = TRY(stream.read_value<u16>());
         DEBUG_LOG("Reading word... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::DWordData: {
         auto value = TRY(stream.read_value<u32>());
         DEBUG_LOG("Reading dword... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value)));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::QWordData: {
         auto value = TRY(stream.read_value<u64>());
         DEBUG_LOG("Reading qword... ({})", value);
-        TRY(top_opcode_frame.finish_operand(value));
+        TRY(top_opcode_frame.finish_operand(value, stream.offset()));
+        return IterationDecision::Continue;
+    }
+    case OperandType::String: {
+        DEBUG_LOG("Reading string...");
+        auto value = TRY(stream.read_string());
+        TRY(top_opcode_frame.finish_operand(String(value), stream.offset()));
+        return IterationDecision::Continue;
+    }
+
+    // https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#fieldelement
+    case OperandType::FieldElement: {
+        DEBUG_LOG("Reading field element...");
+        if (is_lead_name_char(TRY(stream.peek_byte()))) {
+            // NamedField := NameSeg PkgLength
+            auto name_segment_bytes = TRY(stream.read_in_place<u8 const>(4));
+            auto name_segment = TRY(NameSegment::from_bytes(name_segment_bytes));
+
+            auto package_length = TRY(stream.read_package_length());
+
+            auto operation_region_node = TRY(find_node(TRY(top_opcode_frame.operand(1).as<NameString>()), m_scope_frames.last().scope()));
+            auto flags = TRY(top_opcode_frame.operand(2).as<u64>());
+
+            DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
+
+            auto node = TRY(try_make_ref_counted<FieldNode>(operation_region_node, flags, m_current_field_offset, package_length));
+            TRY(m_scope_frames.last().scope()->insert_child(name_segment, node));
+
+            m_current_field_offset += package_length;
+
+            TRY(top_opcode_frame.finish_operand(stream.offset()));
+            return IterationDecision::Continue;
+        }
+
+        auto type = TRY(stream.read_value<u8>());
+        DEBUG_LOG(" Type: {}", type);
+        switch (type) {
+        case 0x00: {
+            // ReservedField := 0x00 PkgLength
+            m_current_field_offset += TRY(stream.read_package_length());
+
+            TRY(top_opcode_frame.finish_operand(stream.offset()));
+            return IterationDecision::Continue;
+        }
+        default: {
+            INTERPRETER_ERROR("Unimplemented field type!", EINVAL, "Unimplemented field type {:02X}!", type);
+        }
+        }
+
+        VERIFY_NOT_REACHED();
+    }
+
+    case OperandType::ByteBuffer: {
+        auto package_length = TRY(top_opcode_frame.operand(0).as<u64>());
+        auto buffer_data_length = package_length - (stream.offset() - top_opcode_frame.start() - 1);
+
+        auto size = TRY(top_opcode_frame.operand(1).as<u64>());
+        DEBUG_LOG("Reading byte buffer of size {}...", size);
+        auto buffer = TRY(ByteBuffer::create_zeroed(size));
+
+        for (size_t i = 0; i < buffer_data_length; i++)
+            buffer[i] = TRY(stream.read_value<u8>());
+
+        TRY(top_opcode_frame.finish_operand(Object(Buffer(buffer)), stream.offset()));
+        return IterationDecision::Continue;
+    }
+
+    case OperandType::PackageElement: {
+        DEBUG_LOG("Reading package element...");
+
+        auto initial = TRY(stream.peek_byte());
+        if (is_namestring_start(initial)) {
+            auto name_string = TRY(stream.read_name_string());
+            TRY(top_opcode_frame.finish_operand(name_string, stream.offset()));
+            return IterationDecision::Continue;
+        }
+
+        m_state = State::ReadingOpcode;
         return IterationDecision::Continue;
     }
 
@@ -326,6 +477,9 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
         auto opcode = TRY(stream.read_opcode());
         if (!top_opcode_frame.filter_opcode_for_next_operand(opcode)) {
             DEBUG_LOG("Failure!");
+            if (m_opcode_frames.size() == 1)
+                INTERPRETER_ERROR("Filtered opcode!", EINVAL, "Argument opcode {} filtered at root!", opcode);
+
             INTERPRETER_ERROR("Filtered opcode!", EINVAL, "Argument opcode {} filtered by opcode {}!", opcode, top_opcode_frame.opcode());
         }
 
@@ -356,13 +510,13 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             DEBUG_LOG("Finalizing argument {}", top_frame_value.opcode());
 
             auto value = TRY(finalize_value_opcode(top_frame_value));
-            TRY(m_opcode_frames.last().finish_operand(value));
+            TRY(m_opcode_frames.last().finish_operand(value, stream.offset()));
 
             m_state = State::ReadingOperand;
         } else {
             DEBUG_LOG("Finalizing term {}", top_frame_value.opcode());
 
-            TRY(finalize_term_opcode(top_frame_value));
+            TRY(finalize_term_opcode(top_frame_value, stream));
 
             m_state = State::ReadingOpcode;
         }
@@ -382,12 +536,20 @@ ErrorOr<Object> Interpreter::evaluate(NameString const& path)
 
 ErrorOr<Object> Interpreter::evaluate(NonnullRefPtr<Node> node)
 {
-    if (node->type() == NodeType::Name) {
+    switch (node->type()) {
+    case NodeType::Name: {
         auto name_node = static_ptr_cast<NameNode>(node);
         return name_node->data();
     }
 
-    INTERPRETER_ERROR("Cannot evaluate node type!", EINVAL, "Node type {} not supported for evaluation!", node->kind());
+    case NodeType::Field:
+        INTERPRETER_ERROR("Field evaluation not supported!", EINVAL, "Evaluating fields is not supported yet!");
+
+    default:
+        INTERPRETER_ERROR("Cannot evaluate node type!", EINVAL, "Node type {} not supported for evaluation!", node->kind());
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
@@ -402,8 +564,15 @@ ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
     TRY(namespace_root->insert_child("_TZ_"sv, TRY(try_make_ref_counted<ScopeNode>())));
 
     // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#predefined-objects
+    TRY(namespace_root->insert_child("_GL_"sv, TRY(try_make_ref_counted<MutexNode>(0))));
     TRY(namespace_root->insert_child("_REV"sv, TRY(try_make_ref_counted<NameNode>(Object(u64(2))))));
-    // FIXME: ACPI spec also mendates we insert _GL, _OSI, _OS, _DLM
+    TRY(namespace_root->insert_child("_OSI"sv, TRY(try_make_ref_counted<MethodNode>(-1, 0, 0, 1))));
+
+    constexpr StringView os_name = "Microsoft Windows NT"sv;
+
+    ByteBuffer os_buffer;
+    TRY(os_buffer.try_append(os_name.bytes()));
+    TRY(namespace_root->insert_child("_OS_"sv, TRY(try_make_ref_counted<NameNode>(String(os_buffer)))));
 
     return namespace_root;
 }
