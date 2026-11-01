@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2026, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -95,12 +96,6 @@ bool Parser::handle_interrupt()
     TODO();
 }
 
-UNMAP_AFTER_INIT void Parser::enable_aml_parsing()
-{
-    // FIXME: When enabled, do other things to "parse AML".
-    m_can_process_bytecode = true;
-}
-
 UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");
@@ -161,12 +156,21 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_dsdt()
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
     TRY(m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)));
 
-    auto dsdt_or_error = Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
-    if (dsdt_or_error.is_error()) {
-        dmesgln("ACPI: DSDT is unmappable");
-        return {};
+    if (kernel_command_line().acpi_feature_level() == AcpiFeatureLevel::Enabled) {
+        m_aml_interpreter = TRY(::ACPI::AML::Interpreter::create());
+        ArmedScopeGuard guard = [&]() {
+            // Ensure the AML interpreter is cleaned up if an error occurs.
+            m_aml_interpreter = nullptr;
+        };
+
+        auto dsdt = TRY(Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr)));
+        dsdt = TRY(Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr), dsdt->h.length));
+
+        dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt->h.length);
+
+        TRY(m_aml_interpreter->load(ReadonlyBytes { dsdt.ptr(), dsdt->h.length }));
+        guard.disarm();
     }
-    dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt_or_error.value()->h.length);
 
     return {};
 }
@@ -287,9 +291,80 @@ void Parser::try_acpi_reboot()
     Processor::halt();
 }
 
-void Parser::try_acpi_shutdown()
+ErrorOr<void> Parser::try_acpi_shutdown()
 {
-    dmesgln("ACPI: Shutdown is not supported with the current configuration, aborting!");
+    if (!can_shutdown()) {
+        dmesgln("ACPI: Shutdown not supported!");
+        return {};
+    }
+
+    auto fadt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
+
+    auto s5_values = TRY(extract_s5_values());
+
+    // FIXME: 1. OSPM executes the _PTS control method, passing the argument 5.
+
+    // 2. OSPM prepares its components to shut down (flushing disk caches).
+    // NOTE: This step is done ahead of this function call
+
+    // 3. If not a HW-reduced ACPI platform, OSPM writes SLP_TYPa (from the \_S5 object) with the SLP_ENa bit set to the PM1a_CNT register.
+    if (!m_hardware_flags.hardware_reduced_acpi) {
+        ::ACPI::Structures::PM1ControlRegister shutdown_value {};
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPa;
+
+        if (fadt->h.revision >= 2 && !fadt->x_pm1a_cnt_blk.is_null())
+            TRY(access_generic_address(fadt->x_pm1a_cnt_blk, shutdown_value.value));
+#if ARCH(X86_64)
+        else if (fadt->PM1a_CNT_BLK != 0)
+            IO::out16(fadt->PM1a_CNT_BLK, shutdown_value.value);
+#endif
+    }
+
+    // 4. OSPM writes SLP_TYPb (from the \_S5 object) with the SLP_ENb bit set to the PM1b_CNT register, or writes the HW-reduced ACPI Sleep
+    //    Type value for S5 and the SLP_EN bit to the Sleep Control Register.
+    if (fadt->h.revision >= 5 && m_hardware_flags.hardware_reduced_acpi && !fadt->sleep_control.is_null()) {
+        ::ACPI::Structures::SleepControlRegister shutdown_value {};
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPa;
+
+        TRY(access_generic_address(fadt->sleep_control, shutdown_value.value));
+    } else {
+        ::ACPI::Structures::PM1ControlRegister shutdown_value {};
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPb;
+
+        if (fadt->h.revision >= 2 && !fadt->x_pm1b_cnt_blk.is_null())
+            TRY(access_generic_address(fadt->x_pm1b_cnt_blk, shutdown_value.value));
+#if ARCH(X86_64)
+        else if (fadt->PM1b_CNT_BLK != 0)
+            IO::out16(fadt->PM1b_CNT_BLK, shutdown_value.value);
+#endif
+    }
+
+    // 5. The system enters the Soft Off state.
+    Processor::halt();
+}
+
+bool Parser::can_shutdown()
+{
+    if (!m_aml_interpreter)
+        return false;
+
+    return !extract_s5_values().is_error();
+}
+
+ErrorOr<Parser::S5Values> Parser::extract_s5_values()
+{
+    auto s5_node = TRY(m_aml_interpreter->evaluate("\\_S5_"sv));
+    auto s5_package = TRY(s5_node.release_as<::ACPI::AML::Package>());
+    if (s5_package.package().size() < 2)
+        return Error::from_errno(EINVAL);
+
+    u16 SLP_TYPa = TRY(s5_package.package()[0].as<u64>());
+    u16 SLP_TYPb = TRY(s5_package.package()[1].as<u64>());
+
+    return Parser::S5Values { SLP_TYPa, SLP_TYPb };
 }
 
 ErrorOr<size_t> Parser::get_table_size(PhysicalAddress table_header)

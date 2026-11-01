@@ -25,7 +25,7 @@ public:
     {
     }
 
-    ByteBuffer& buffer() { return m_buffer; }
+    ByteBuffer const& buffer() const { return m_buffer; }
 
 private:
     ByteBuffer m_buffer;
@@ -38,7 +38,7 @@ public:
     {
     }
 
-    ByteBuffer& buffer() { return m_buffer; }
+    ByteBuffer const& buffer() const { return m_buffer; }
 
 private:
     ByteBuffer m_buffer;
@@ -51,7 +51,9 @@ public:
     {
     }
 
-    Vector<Object>& package() { return m_package; }
+    Vector<Object> const& package() const { return m_package; }
+
+    ErrorOr<Package> clone() const;
 
 private:
     Vector<Object> m_package;
@@ -68,8 +70,8 @@ public:
     }
 
     template<IsNodeData T>
-    constexpr Object(T const& value)
-        : m_data(value)
+    constexpr Object(T&& value)
+        : m_data(forward<T>(value))
     {
     }
 
@@ -82,13 +84,32 @@ public:
     template<IsNodeData T>
     constexpr ErrorOr<T> as() const
     {
+        return *TRY(as_pointer<T>());
+    }
+
+    template<IsNodeData T>
+    constexpr ErrorOr<T const*> as_pointer() const
+    {
         if (m_data.has<T>())
-            return m_data.get<T>();
+            return m_data.get_pointer<T>();
 
         // TODO: Implement casting according both to ACPI spec and whatever Windows does.
         // https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#implicit-source-operand-conversion
         return Error::from_string_view_or_print_error_and_return_errno("Can not cast given type!"sv, EINVAL);
     }
+
+    template<IsNodeData T>
+    constexpr ErrorOr<T> release_as()
+    {
+        if (m_data.has<T>())
+            return move(m_data.get<T>());
+
+        // TODO: Implement casting according both to ACPI spec and whatever Windows does.
+        // https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#implicit-source-operand-conversion
+        return Error::from_string_view_or_print_error_and_return_errno("Can not cast given type!"sv, EINVAL);
+    }
+
+    ErrorOr<Object> clone() const;
 
 protected:
     Variant<AK::Empty, u64, String, Buffer, Package, NameString> m_data;
@@ -106,16 +127,16 @@ struct AK::Formatter<::ACPI::AML::Object> : AK::Formatter<FormatString> {
         }
 
         if (object.is<::ACPI::AML::String>())
-            return AK::Formatter<FormatString>::format(builder, "'{}'"sv, StringView(MUST(object.as<::ACPI::AML::String>()).buffer()));
+            return AK::Formatter<FormatString>::format(builder, "'{}'"sv, StringView(MUST(object.as_pointer<::ACPI::AML::String>())->buffer()));
 
         if (object.is<::ACPI::AML::Buffer>())
-            return AK::Formatter<FormatString>::format(builder, "Buffer ({:hex-dump})"sv, MUST(object.as<::ACPI::AML::Buffer>()).buffer().bytes());
+            return AK::Formatter<FormatString>::format(builder, "Buffer ({:hex-dump})"sv, MUST(object.as_pointer<::ACPI::AML::Buffer>())->buffer().bytes());
 
         if (object.is<::ACPI::AML::Package>())
-            return AK::Formatter<FormatString>::format(builder, "Package ({})"sv, MUST(object.as<::ACPI::AML::Package>()).package());
+            return AK::Formatter<FormatString>::format(builder, "Package ({})"sv, MUST(object.as_pointer<::ACPI::AML::Package>())->package());
 
         if (object.is<::ACPI::AML::NameString>())
-            return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as<::ACPI::AML::NameString>()).to_string()));
+            return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as_pointer<::ACPI::AML::NameString>())->to_string()));
 
         VERIFY_NOT_REACHED();
     }
