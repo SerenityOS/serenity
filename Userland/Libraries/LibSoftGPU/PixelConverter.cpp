@@ -404,6 +404,8 @@ ErrorOr<void> PixelConverter::convert(void const* input_data, void* output_data,
     auto const input_row_stride = input_row_width_bytes + (input_byte_alignment - input_row_width_bytes % input_byte_alignment) % input_byte_alignment;
     auto const input_rows_per_image = input_packing.depth_stride > 0 ? input_packing.depth_stride : input_dimensions.height;
     auto const input_depth_stride = input_rows_per_image * input_row_stride;
+    auto const input_skip_pixels = input_packing.skip_pixels;
+    auto const input_skip_rows = input_packing.skip_rows;
 
     auto const& output_packing = m_output_specification.packing;
     auto const output_pixels_per_row = output_packing.row_stride > 0 ? output_packing.row_stride : output_dimensions.width;
@@ -413,10 +415,29 @@ ErrorOr<void> PixelConverter::convert(void const* input_data, void* output_data,
     auto const output_row_stride = output_row_width_bytes + (output_byte_alignment - output_row_width_bytes % output_byte_alignment) % output_byte_alignment;
     auto const output_rows_per_image = output_packing.depth_stride > 0 ? output_packing.depth_stride : output_dimensions.height;
     auto const output_depth_stride = output_rows_per_image * output_row_stride;
+    auto const output_skip_pixels = output_packing.skip_pixels;
+    auto const output_skip_rows = output_packing.skip_rows;
 
     // Copy all pixels from input to output
     auto input_bytes = reinterpret_cast<u8 const*>(input_data);
     auto output_bytes = reinterpret_cast<u8*>(output_data);
+
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glPixelStore.xhtml
+    // "Setting GL_UNPACK_SKIP_PIXELS to i is equivalent to incrementing the pointer by i * n components or indices,
+    //  where n is the number of components or indices in each pixel. Setting GL_UNPACK_SKIP_ROWS to j is equivalent
+    //  to incrementing the pointer by j * k components or indices, where k is the number of components or indices per row,
+    //  as just computed in the GL_UNPACK_ROW_LENGTH section."
+    input_bytes += input_skip_pixels * input_pixel_size_in_bytes
+        + input_skip_rows * input_row_width_bytes;
+
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glPixelStore.xhtml
+    // "Setting GL_PACK_SKIP_PIXELS to i is equivalent to incrementing the pointer by i * n components or indices,
+    //  where n is the number of components or indices in each pixel. Setting GL_PACK_SKIP_ROWS to j is equivalent
+    //  to incrementing the pointer by j * m components or indices, where m is the number of components or indices per row,
+    //  as just computed in the GL_PACK_ROW_LENGTH section."
+    output_bytes += output_skip_pixels * output_pixel_size_in_bytes
+        + output_skip_rows * output_row_width_bytes;
+
     auto output_z = output_selection.offset_z;
     for (u32 input_z = input_selection.offset_z; input_z < input_selection.offset_z + input_selection.depth; ++input_z) {
         auto output_y = output_selection.offset_y;

@@ -640,11 +640,13 @@ GLboolean GLContext::gl_is_enabled(GLenum capability)
 
 GPU::PackingSpecification GLContext::get_packing_specification(PackingType packing_type)
 {
-    // FIXME: add support for .least_significant_bit_first, .skip_images, .skip_pixels and .skip_rows
+    // FIXME: add support for .least_significant_bit_first and .skip_images
     auto const& pixel_parameters = (packing_type == PackingType::Pack) ? m_packing_parameters : m_unpacking_parameters;
     return {
         .depth_stride = static_cast<u32>(pixel_parameters.image_height),
         .row_stride = static_cast<u32>(pixel_parameters.row_length),
+        .skip_rows = static_cast<u32>(pixel_parameters.skip_rows),
+        .skip_pixels = static_cast<u32>(pixel_parameters.skip_pixels),
         .byte_alignment = pixel_parameters.pack_alignment,
         .component_bytes_order = pixel_parameters.swap_bytes ? GPU::ComponentBytesOrder::Reversed : GPU::ComponentBytesOrder::Normal,
     };
