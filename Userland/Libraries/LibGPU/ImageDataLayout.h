@@ -20,6 +20,8 @@ enum class ComponentBytesOrder {
 struct PackingSpecification final {
     u32 depth_stride { 0 };
     u32 row_stride { 0 };
+    u32 skip_rows { 0 };
+    u32 skip_pixels { 0 };
     u8 byte_alignment { 1 };
     ComponentBytesOrder component_bytes_order { ComponentBytesOrder::Normal };
 };

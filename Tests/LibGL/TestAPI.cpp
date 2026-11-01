@@ -176,3 +176,44 @@ TEST_CASE(0007_proxy_texture_2d)
     EXPECT_EQ(glGetError(), 0u);
     EXPECT_EQ(height, 0);
 }
+
+TEST_CASE(0008_unpack_pack_skip_pixels_rows)
+{
+    auto context = create_testing_context();
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    EXPECT_EQ(glGetError(), 0u);
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+    EXPECT_EQ(glGetError(), 0u);
+
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 1);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 1);
+
+    // clang-format off
+    u32 input_texture_data[] = {
+                    0xdeadbeef,
+        0xdeadbeef, 0xdeadbeef,
+
+        0x01010101, 0x02020202,
+        0x03030303, 0x04040404,
+    };
+    // clang-format on
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, &input_texture_data);
+    EXPECT_EQ(glGetError(), 0u);
+
+    glPixelStorei(GL_PACK_SKIP_PIXELS, 1);
+    glPixelStorei(GL_PACK_SKIP_ROWS, 2);
+
+    u32 output_texture_data[1 + 2 * 2 + 2 * 2] = {};
+
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &output_texture_data);
+    EXPECT_EQ(glGetError(), 0u);
+
+    EXPECT_EQ(output_texture_data[1 + 2 * 2], 0x01010101u);
+    EXPECT_EQ(output_texture_data[1 + 2 * 2 + 1], 0x02020202u);
+    EXPECT_EQ(output_texture_data[1 + 2 * 2 + 2], 0x03030303u);
+    EXPECT_EQ(output_texture_data[1 + 2 * 2 + 3], 0x04040404u);
+}
