@@ -212,7 +212,7 @@ void BrowserWindow::build_menus(StringView const man_file)
 
     view_menu->add_separator();
     auto find_in_page_action = GUI::Action::create(
-        "&Find in Page", { Mod_Ctrl, Key_F }, g_icon_bag.find, [this](auto&) {
+        "&Find in Page", { Mod_Ctrl, GUI::Key_F }, g_icon_bag.find, [this](auto&) {
             active_tab().show_find_in_page();
         },
         this);
@@ -254,14 +254,14 @@ void BrowserWindow::build_menus(StringView const man_file)
     });
 
     m_view_source_action = GUI::Action::create(
-        "View &Source", { Mod_Ctrl, Key_U }, g_icon_bag.code, [this](auto&) {
+        "View &Source", { Mod_Ctrl, GUI::Key_U }, g_icon_bag.code, [this](auto&) {
             active_tab().view().get_source();
         },
         this);
     m_view_source_action->set_status_tip("View source code of the current page"_string);
 
     m_inspect_dom_tree_action = GUI::Action::create(
-        "Inspect &DOM Tree", { Mod_Ctrl | Mod_Shift, Key_I }, { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
+        "Inspect &DOM Tree", { Mod_Ctrl | Mod_Shift, GUI::Key_I }, { Mod_None, GUI::Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
@@ -386,7 +386,7 @@ void BrowserWindow::build_menus(StringView const man_file)
             active_tab().view().debug_request("dump-all-resolved-styles");
         },
         this));
-    debug_menu->add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, GUI::Key_H }, g_icon_bag.history, [this](auto&) {
         active_tab().view().debug_request("dump-session-history");
     }));
     debug_menu->add_action(GUI::Action::create("Dump C&ookies", g_icon_bag.cookie, [this](auto&) {
@@ -405,10 +405,10 @@ void BrowserWindow::build_menus(StringView const man_file)
     debug_menu->add_action(line_box_borders_action);
 
     debug_menu->add_separator();
-    debug_menu->add_action(GUI::Action::create("Collect &Garbage", { Mod_Ctrl | Mod_Shift, Key_G }, g_icon_bag.trash_can, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Collect &Garbage", { Mod_Ctrl | Mod_Shift, GUI::Key_G }, g_icon_bag.trash_can, [this](auto&) {
         active_tab().view().debug_request("collect-garbage");
     }));
-    debug_menu->add_action(GUI::Action::create("Clear &Cache", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.clear_cache, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Clear &Cache", { Mod_Ctrl | Mod_Shift, GUI::Key_C }, g_icon_bag.clear_cache, [this](auto&) {
         active_tab().view().debug_request("clear-cache");
     }));
 

@@ -189,7 +189,7 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
     auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)key, map_entry_index, modifiers, code_point, scancode);
 
     bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->on_emoji_input;
-    if (!window->blocks_emoji_input() && focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == Key_Space) {
+    if (!window->blocks_emoji_input() && focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == KeyCode::Key_Space) {
         auto emoji_input_dialog = EmojiInputDialog::construct(window);
         if (emoji_input_dialog->exec() != EmojiInputDialog::ExecResult::OK)
             return;

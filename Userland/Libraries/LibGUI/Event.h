@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
+ * Copyright (c) 2026, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,7 @@
 #include <LibCore/Event.h>
 #include <LibGUI/FocusSource.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Key.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Point.h>
@@ -389,9 +391,10 @@ AK_ENUM_BITWISE_OPERATORS(MouseButton);
 
 class KeyEvent final : public Event {
 public:
-    KeyEvent(Type type, KeyCode key, u8 map_entry_index, u8 modifiers, u32 code_point, u32 scancode)
+    KeyEvent(Type type, KeyCode key_code, u8 map_entry_index, u8 modifiers, u32 code_point, u32 scancode)
         : Event(type)
-        , m_key(key)
+        , m_key(key_from_key_event(key_code, code_point))
+        , m_key_code(key_code)
         , m_map_entry_index(map_entry_index)
         , m_modifiers(modifiers)
         , m_code_point(code_point)
@@ -399,7 +402,8 @@ public:
     {
     }
 
-    KeyCode key() const { return m_key; }
+    Key key() const { return m_key; }
+    KeyCode key_code() const { return m_key_code; }
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool altgr() const { return m_modifiers & Mod_AltGr; }
@@ -422,10 +426,10 @@ public:
     bool is_arrow_key() const
     {
         switch (m_key) {
-        case KeyCode::Key_Up:
-        case KeyCode::Key_Down:
-        case KeyCode::Key_Left:
-        case KeyCode::Key_Right:
+        case Key::Key_Up:
+        case Key::Key_Down:
+        case Key::Key_Left:
+        case Key::Key_Right:
             return true;
         default:
             return false;
@@ -434,7 +438,8 @@ public:
 
 private:
     friend class ConnectionToWindowServer;
-    KeyCode m_key { KeyCode::Key_Invalid };
+    Key m_key { Key::Key_Invalid };
+    KeyCode m_key_code { KeyCode::Key_Invalid };
     u8 m_map_entry_index { 0 };
     u8 m_modifiers { 0 };
     u32 m_code_point { 0 };

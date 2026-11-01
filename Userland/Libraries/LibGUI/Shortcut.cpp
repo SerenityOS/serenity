@@ -28,7 +28,7 @@ ByteString Shortcut::to_byte_string() const
         parts.append("Super");
 
     if (m_type == Type::Keyboard) {
-        if (auto* key_name = key_code_to_string(m_keyboard_key))
+        if (auto* key_name = key_to_string(m_keyboard_key))
             parts.append(key_name);
         else
             parts.append("(Invalid)");

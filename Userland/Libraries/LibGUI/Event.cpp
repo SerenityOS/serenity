@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2026, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,7 +45,7 @@ ByteString KeyEvent::to_byte_string() const
     if (m_modifiers & Mod_Super)
         parts.append("Super");
 
-    if (auto* key_name = key_code_to_string(static_cast<KeyCode>(m_key)))
+    if (auto* key_name = key_to_string(m_key))
         parts.append(key_name);
     else
         parts.append("(Invalid)");
