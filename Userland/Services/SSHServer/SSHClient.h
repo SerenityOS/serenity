@@ -86,6 +86,7 @@ private:
     ErrorOr<void> handle_channel_subsystem(Session&, GenericMessage&);
     ErrorOr<void> handle_channel_pseudo_terminal(Session&, GenericMessage&);
     ErrorOr<void> handle_channel_exec(NonnullRefPtr<Session> const&, GenericMessage&);
+    ErrorOr<void> handle_channel_shell(NonnullRefPtr<Session> const&);
     ErrorOr<void> send_channel_success_message(Session const&);
     ErrorOr<void> send_channel_data(Session const&, ReadonlyBytes);
     ErrorOr<void> send_channel_extended_data(Session const&, ReadonlyBytes);

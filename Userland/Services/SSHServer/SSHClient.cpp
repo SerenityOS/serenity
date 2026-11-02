@@ -23,6 +23,12 @@
 #include <LibSSH/IdentificationString.h>
 #include <Services/SSHServer/ServerConfiguration.h>
 
+#ifdef AK_OS_MACOS
+#    include <util.h>
+#else
+#    include <pty.h>
+#endif
+
 namespace SSH::Server {
 
 SSHClient::SSHClient(Core::TCPSocket& tcp_socket, Function<void()> disconnect)
@@ -613,6 +619,13 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
         return {};
     }
 
+    if (request_type == "shell"sv.bytes()) {
+        if (!want_reply)
+            return Error::from_string_literal("Client requested shell but doesn't want a reply");
+        TRY(handle_channel_shell(session));
+        return {};
+    }
+
     if (request_type == "subsystem"sv.bytes()) {
         TRY(handle_channel_subsystem(session, message));
         return {};
@@ -738,13 +751,76 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     return {};
 }
 
+// 6.5.  Starting a Shell or a Command
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
+ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& session)
+{
+    if (!session->pty_info.has_value())
+        return Error::from_string_literal("Shell requested without a pty");
+    auto pty_info = session->pty_info.release_value();
+
+    int master {};
+    winsize size {
+        .ws_row = static_cast<u16>(pty_info.height_rows),
+        .ws_col = static_cast<u16>(pty_info.width_characters),
+        .ws_xpixel = static_cast<u16>(pty_info.width_pixels),
+        .ws_ypixel = static_cast<u16>(pty_info.height_pixels),
+    };
+
+    // FIXME: Set terminal modes from pty_info.
+
+    // I'm not happy with using fork here, but using posix_spawn would
+    // requite an external helper binary.
+    pid_t pid = forkpty(&master, nullptr, nullptr, &size);
+    if (pid < 0)
+        return Error::from_errno(errno);
+
+    if (pid == 0) {
+        auto account = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
+        auto& shell = account.shell();
+
+        Vector<StringView> args;
+        args.append(shell);
+        args.append("--login"sv);
+
+        Vector<StringView> env;
+        auto term = ByteString::formatted("TERM={}", pty_info.term_environment_variable);
+        env.append(term);
+        auto home = ByteString::formatted("HOME={}", account.home_directory());
+        env.append(home);
+
+        TRY(Core::System::chdir(account.home_directory()));
+        TRY(Core::System::exec(shell, args, Core::System::SearchInPath::No, env));
+        VERIFY_NOT_REACHED();
+    }
+
+    session->system = TRY(Shell::create(pid, master));
+
+    TRY(send_channel_success_message(session));
+
+    // FIXME: Make sure to cancel this coroutine if anything goes wrong.
+    auto& shell = session->system.get<Shell>();
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *shell.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
+
+    return {};
+}
+
 template<typename F>
 Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session, Core::File& file, F sender)
 {
     auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
         while (true) {
             auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
-            auto output = CO_TRY(co_await file.async_read_some(output_buffer));
+            auto maybe_output = co_await file.async_read_some(output_buffer);
+
+            if (session->system.has<Shell>()) {
+                if (maybe_output.is_error() && maybe_output.error().code() == EIO) {
+                    // On Linux, if file is a pty, EIO is returned when we reach EOF.
+                    session->system.get<Shell>().received_io_error = true;
+                    break;
+                }
+            }
+            auto output = CO_TRY(move(maybe_output));
 
             if (output.is_empty())
                 break;

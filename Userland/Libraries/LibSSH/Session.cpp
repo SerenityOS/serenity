@@ -55,6 +55,26 @@ bool ExecData::is_ready_to_be_closed() const
     return exit_status.has_value() && stdout_->is_eof() && stderr_->is_eof();
 }
 
+ErrorOr<Shell> Shell::create(pid_t child, int fd_pty)
+{
+    Shell shell = {
+        ChildManagingSystem {
+            .stdin_ = TRY(Core::File::adopt_fd(fd_pty, Core::File::OpenMode::Write)),
+            .stdout_ = TRY(Core::File::adopt_fd(fd_pty, Core::File::OpenMode::Read, Core::File::ShouldCloseFileDescriptor::No)),
+            .child_pid = child,
+        },
+    };
+
+    TRY(shell.stdin_->set_blocking(false));
+
+    return shell;
+}
+
+bool Shell::is_ready_to_be_closed() const
+{
+    return exit_status.has_value() && (stdout_->is_eof() || received_io_error);
+}
+
 ErrorOr<NonnullRefPtr<Session>> Session::create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size)
 {
     auto session = make_ref_counted<Session>();
