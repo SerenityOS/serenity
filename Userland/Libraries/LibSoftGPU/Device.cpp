@@ -786,11 +786,11 @@ void Device::rasterize_triangle(Triangle& triangle)
             };
         },
         [&](auto& quad) {
+            // Because the Z coordinates were divided by W, we can interpolate between them
+            quad.depth = AK::SIMD::clamp(window_z_coordinates.dot(quad.barycentrics) * one_over_area, 0.f, 1.f);
+
             // Determine each edge's ratio to the total area
             quad.barycentrics = quad.barycentrics * one_over_area;
-
-            // Because the Z coordinates were divided by W, we can interpolate between them
-            quad.depth = AK::SIMD::clamp(window_z_coordinates.dot(quad.barycentrics), 0.f, 1.f);
         },
         [&](auto& quad) {
             auto const interpolated_reciprocal_w = window_w_coordinates.dot(quad.barycentrics);
