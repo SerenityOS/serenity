@@ -97,8 +97,8 @@ private:
     ErrorOr<void> send_channel_close(Session&);
     ErrorOr<NonnullRefPtr<Session>> find_session(u32 sender_channel_id);
 
-    template<typename F, typename F2>
-    Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, F file_extractor, F2 sender);
+    template<typename F>
+    Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, Core::File&, F sender);
     Coroutine<void> async_stream_data_to_subsystem(NonnullRefPtr<Session>);
 
     ErrorOr<void> manage_child_death();

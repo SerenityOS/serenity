@@ -731,19 +731,20 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     TRY(send_channel_success_message(session));
 
     // FIXME: Make sure to cancel these coroutines if anything goes wrong.
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stdout_; }, [this](auto&... args) { return send_channel_data(args...); }));
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, [](ExecData& exec_data) -> Core::File& { return *exec_data.stderr_; }, [this](auto&... args) { return send_channel_extended_data(args...); }));
+    auto const& exec_data = session->system.get<ExecData>();
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stderr_, [this](auto&... args) { return send_channel_extended_data(args...); }));
 
     return {};
 }
 
-template<typename F, typename F2>
-Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session, F file_extractor, F2 sender)
+template<typename F>
+Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session, Core::File& file, F sender)
 {
     auto maybe_error = co_await [&]() -> Coroutine<ErrorOr<void>> {
         while (true) {
             auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
-            auto output = CO_TRY(co_await file_extractor(session->system.template get<ExecData>()).async_read_some(output_buffer));
+            auto output = CO_TRY(co_await file.async_read_some(output_buffer));
 
             if (output.is_empty())
                 break;
@@ -978,9 +979,8 @@ ErrorOr<void> SSHClient::manage_child_death()
             return {};
 
         for (auto& session : m_sessions) {
-            if (session->system.has<ExecData>()) {
-                auto& exec_data = session->system.get<ExecData>();
-                if (exec_data.child.pid() == result.pid) {
+            TRY(session->system.visit([&]<DerivedFrom<ChildManagingSystem> T>(T& system) -> ErrorOr<void> {
+                if (system.child_pid == result.pid) {
                     bool exited_with_code_0 = true;
                     if (WIFEXITED(result.status)) {
                         exited_with_code_0 &= WEXITSTATUS(result.status) == 0;
@@ -989,11 +989,13 @@ ErrorOr<void> SSHClient::manage_child_death()
                     }
 
                     // FIXME: Send the actual exit status.
-                    exec_data.exit_status = exited_with_code_0 ? 0 : -1;
-
+                    system.exit_status = exited_with_code_0 ? 0 : -1;
                     TRY(close_session_if_needed(*session));
                 }
-            }
+                return {}; },
+                [](auto&) -> ErrorOr<void> {
+                    return {};
+                }));
         }
     }
 }

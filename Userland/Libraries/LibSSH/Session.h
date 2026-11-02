@@ -35,24 +35,27 @@ struct PtyInfo {
     ByteBuffer terminal_modes {};
 };
 
-struct ExecData {
-    static ErrorOr<ExecData> create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr);
-
-    Core::Process child;
-
+struct ChildManagingSystem {
     NonnullOwnPtr<Core::File> stdin_;
     NonnullOwnPtr<Core::File> stdout_;
-    NonnullOwnPtr<Core::File> stderr_;
 
+    pid_t child_pid {};
     Optional<int> exit_status {};
 
     Coroutine<ErrorOr<BehaviorControl>> handle_channel_data(Session&);
-    void handle_channel_eof(Session const&);
-
-    bool is_ready_to_be_closed() const;
+    void handle_channel_eof(Session const&) const;
 
 private:
     void close_stdin_if_required(Session const&) const;
+};
+
+struct ExecData : ChildManagingSystem {
+    static ErrorOr<ExecData> create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr);
+
+    bool is_ready_to_be_closed() const;
+
+    Core::Process child;
+    NonnullOwnPtr<Core::File> stderr_;
 };
 
 struct Session : public RefCounted<Session> {
