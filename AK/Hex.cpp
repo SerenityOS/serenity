@@ -37,7 +37,7 @@ ErrorOr<ByteBuffer> decode_hex(StringView input)
 #ifdef KERNEL
 ErrorOr<NonnullOwnPtr<Kernel::KString>> encode_hex(ReadonlyBytes const input)
 {
-    StringBuilder output(input.size() * 2);
+    auto output = TRY(StringBuilder::create(input.size() * 2));
 
     for (auto ch : input)
         TRY(output.try_appendff("{:02x}", ch));
