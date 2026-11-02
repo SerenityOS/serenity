@@ -55,10 +55,12 @@ ErrorOr<StringBuilder> StringBuilder::create(size_t initial_capacity)
     return builder;
 }
 
+#ifndef KERNEL
 StringBuilder::StringBuilder(size_t initial_capacity)
 {
     m_buffer.ensure_capacity(initial_capacity);
 }
+#endif
 
 StringBuilder::StringBuilder(UseInlineCapacityOnly use_inline_capacity_only)
     : m_use_inline_capacity_only(use_inline_capacity_only)
@@ -105,14 +107,15 @@ ErrorOr<void> StringBuilder::try_append_repeated(char ch, size_t n)
     return {};
 }
 
-void StringBuilder::append(StringView string)
-{
-    MUST(try_append(string));
-}
-
 ErrorOr<void> StringBuilder::try_append(char const* characters, size_t length)
 {
     return try_append(StringView { characters, length });
+}
+
+#ifndef KERNEL
+void StringBuilder::append(StringView string)
+{
+    MUST(try_append(string));
 }
 
 void StringBuilder::append(char const* characters, size_t length)
@@ -137,6 +140,7 @@ void StringBuilder::append_repeated(char ch, size_t n)
 {
     MUST(try_append_repeated(ch, n));
 }
+#endif
 
 ErrorOr<ByteBuffer> StringBuilder::to_byte_buffer() const
 {
@@ -203,6 +207,7 @@ ErrorOr<void> StringBuilder::try_append_code_point(u32 code_point)
     return {};
 }
 
+#ifndef KERNEL
 void StringBuilder::append_code_point(u32 code_point)
 {
     if (code_point <= 0x7f) {
@@ -230,7 +235,6 @@ void StringBuilder::append_code_point(u32 code_point)
     }
 }
 
-#ifndef KERNEL
 ErrorOr<void> StringBuilder::try_append(Utf16View const& utf16_view)
 {
     // NOTE: This may under-allocate in the presence of surrogate pairs.
@@ -269,6 +273,7 @@ ErrorOr<void> StringBuilder::try_append(Utf32View const& utf32_view)
     return {};
 }
 
+#ifndef KERNEL
 void StringBuilder::append(Utf32View const& utf32_view)
 {
     MUST(try_append(utf32_view));
@@ -286,6 +291,7 @@ void StringBuilder::append_escaped_for_json(StringView string)
 {
     MUST(try_append_escaped_for_json(string));
 }
+#endif
 
 ErrorOr<void> StringBuilder::try_append_escaped_for_json(StringView string)
 {

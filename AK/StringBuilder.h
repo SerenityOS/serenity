@@ -22,7 +22,11 @@ public:
 
     static ErrorOr<StringBuilder> create(size_t initial_capacity = inline_capacity);
 
+#ifdef KERNEL
+    StringBuilder() = default;
+#else
     explicit StringBuilder(size_t initial_capacity = inline_capacity);
+#endif
 
     enum class UseInlineCapacityOnly {
         Yes,
@@ -48,10 +52,9 @@ public:
     ErrorOr<void> try_append_repeated(char, size_t);
     ErrorOr<void> try_append_escaped_for_json(StringView);
 
-    void append(StringView);
 #ifndef KERNEL
+    void append(StringView);
     void append(Utf16View const&);
-#endif
     void append(Utf32View const&);
     void append(char);
     void append_code_point(u32);
@@ -69,7 +72,6 @@ public:
         MUST(vformat(*this, fmtstr.view(), variadic_format_params));
     }
 
-#ifndef KERNEL
     [[nodiscard]] ByteString to_byte_string() const;
 #endif
 

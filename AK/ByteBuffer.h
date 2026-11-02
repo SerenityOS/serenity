@@ -54,6 +54,7 @@ public:
         return *this;
     }
 
+#ifndef KERNEL
     ByteBuffer& operator=(ByteBuffer const& other)
     {
         if (this != &other) {
@@ -66,6 +67,7 @@ public:
         }
         return *this;
     }
+#endif
 
     [[nodiscard]] static ErrorOr<ByteBuffer> create_uninitialized(size_t size)
     {
@@ -184,16 +186,6 @@ public:
         m_size = 0;
     }
 
-    enum class ZeroFillNewElements {
-        No,
-        Yes,
-    };
-
-    ALWAYS_INLINE void resize(size_t new_size, ZeroFillNewElements zero_fill_new_elements = ZeroFillNewElements::No)
-    {
-        MUST(try_resize(new_size, zero_fill_new_elements));
-    }
-
     void trim(size_t size, bool may_discard_existing_data)
     {
         VERIFY(size <= m_size);
@@ -202,10 +194,10 @@ public:
         m_size = size;
     }
 
-    ALWAYS_INLINE void ensure_capacity(size_t new_capacity)
-    {
-        MUST(try_ensure_capacity(new_capacity));
-    }
+    enum class ZeroFillNewElements {
+        No,
+        Yes,
+    };
 
     ErrorOr<void> try_resize(size_t new_size, ZeroFillNewElements zero_fill_new_elements = ZeroFillNewElements::No)
     {
@@ -239,24 +231,6 @@ public:
         return Bytes { data() + old_size, length };
     }
 
-    /// Like get_bytes_for_writing, but crashes if allocation fails.
-    Bytes must_get_bytes_for_writing(size_t length)
-    {
-        return MUST(get_bytes_for_writing(length));
-    }
-
-    void append(u8 byte)
-    {
-        MUST(try_append(byte));
-    }
-
-    void append(ReadonlyBytes bytes)
-    {
-        MUST(try_append(bytes));
-    }
-
-    void append(void const* data, size_t data_size) { append({ data, data_size }); }
-
     ErrorOr<void> try_append(u8 byte)
     {
         auto old_size = size();
@@ -283,10 +257,42 @@ public:
         return {};
     }
 
+#ifndef KERNEL
+    ALWAYS_INLINE void resize(size_t new_size, ZeroFillNewElements zero_fill_new_elements = ZeroFillNewElements::No)
+    {
+        MUST(try_resize(new_size, zero_fill_new_elements));
+    }
+
+    ALWAYS_INLINE void ensure_capacity(size_t new_capacity)
+    {
+        MUST(try_ensure_capacity(new_capacity));
+    }
+
+    Bytes must_get_bytes_for_writing(size_t length)
+    {
+        return MUST(get_bytes_for_writing(length));
+    }
+
+    void append(u8 byte)
+    {
+        MUST(try_append(byte));
+    }
+
+    void append(ReadonlyBytes bytes)
+    {
+        MUST(try_append(bytes));
+    }
+
+    void append(void const* data, size_t data_size)
+    {
+        append({ data, data_size });
+    }
+
     void operator+=(ByteBuffer const& other)
     {
         MUST(try_append(other.data(), other.size()));
     }
+#endif
 
     void overwrite(size_t offset, void const* data, size_t data_size)
     {
