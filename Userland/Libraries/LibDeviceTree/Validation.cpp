@@ -205,9 +205,9 @@ ErrorOr<void> dump_flattened_device_tree_structure(FlattenedDeviceTreeHeader con
                     bool first_value = true;
                     while (!value_stream.is_eof()) {
                         if (first_value)
-                            property.appendff("{:#08x}", TRY(value_stream.read_value<BigEndian<u32>>()));
+                            TRY(property.try_appendff("{:#08x}", TRY(value_stream.read_value<BigEndian<u32>>())));
                         else
-                            property.appendff(" {:#08x}", TRY(value_stream.read_value<BigEndian<u32>>()));
+                            TRY(property.try_appendff(" {:#08x}", TRY(value_stream.read_value<BigEndian<u32>>())));
                         first_value = false;
                     }
                     outln("{}>;", property.string_view());
