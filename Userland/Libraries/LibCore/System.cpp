@@ -826,6 +826,31 @@ ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const& ios)
     return {};
 }
 
+ErrorOr<winsize> tcgetwinsize(int fd)
+{
+    winsize ws {};
+#ifdef AK_OS_SERENITY
+    if (::tcgetwinsize(fd, &ws) < 0)
+        return Error::from_syscall("tcgetwinsize"sv, -errno);
+#else
+    if (::ioctl(fd, TIOCGWINSZ, &ws) < 0)
+        return Error::from_syscall("ioctl"sv, -errno);
+#endif
+    return ws;
+}
+
+ErrorOr<void> tcsetwinsize(int fd, winsize const& ws)
+{
+#ifdef AK_OS_SERENITY
+    if (::tcsetwinsize(fd, &ws) < 0)
+        return Error::from_syscall("tcsetwinsize"sv, -errno);
+#else
+    if (::ioctl(fd, TIOCSWINSZ, &ws) < 0)
+        return Error::from_syscall("ioctl"sv, -errno);
+#endif
+    return {};
+}
+
 ErrorOr<int> tcsetpgrp(int fd, pid_t pgrp)
 {
     int rc = ::tcsetpgrp(fd, pgrp);
