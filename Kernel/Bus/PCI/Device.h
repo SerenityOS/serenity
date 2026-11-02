@@ -84,7 +84,7 @@ void dmesgln_pci(Device const& device, AK::CheckedFormatString<Parameters...>&& 
 {
     AK::StringBuilder builder;
 
-    builder.appendff("{}: {}: ", device.device_name(), device.device_identifier().address());
+    MUST(builder.try_appendff("{}: {}: ", device.device_name(), device.device_identifier().address()));
 
     AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
     MUST(AK::vformat(builder, fmt.view(), variadic_format_params));
