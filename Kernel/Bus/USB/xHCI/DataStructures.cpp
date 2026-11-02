@@ -171,7 +171,7 @@ void TransferRequestBlock::dump(StringView prefix) const
     auto print_line = [prefix]<typename... Parameters>(CheckedFormatString<Parameters...>&& fmt, Parameters const&... parameters) {
         AK::StringBuilder builder;
 
-        builder.append(prefix);
+        builder.try_append(prefix).release_value_but_fixme_should_propagate_errors();
 
         AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
         AK::vformat(builder, fmt.view(), variadic_format_params).release_value_but_fixme_should_propagate_errors();
