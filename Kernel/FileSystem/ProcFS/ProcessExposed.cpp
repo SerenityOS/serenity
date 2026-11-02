@@ -216,15 +216,15 @@ ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
             TRY(obj.add("path"sv, unveiled_path.path()));
             StringBuilder permissions_builder;
             if (unveiled_path.permissions() & UnveilAccess::Read)
-                permissions_builder.append('r');
+                TRY(permissions_builder.try_append('r'));
             if (unveiled_path.permissions() & UnveilAccess::Write)
-                permissions_builder.append('w');
+                TRY(permissions_builder.try_append('w'));
             if (unveiled_path.permissions() & UnveilAccess::Execute)
-                permissions_builder.append('x');
+                TRY(permissions_builder.try_append('x'));
             if (unveiled_path.permissions() & UnveilAccess::CreateOrRemove)
-                permissions_builder.append('c');
+                TRY(permissions_builder.try_append('c'));
             if (unveiled_path.permissions() & UnveilAccess::Browse)
-                permissions_builder.append('b');
+                TRY(permissions_builder.try_append('b'));
             TRY(obj.add("permissions"sv, permissions_builder.string_view()));
             TRY(obj.finish());
             return IterationDecision::Continue;
@@ -324,11 +324,11 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
             for (size_t i = 0; i < region.page_count(); ++i) {
                 auto page = region.physical_page(i);
                 if (!page)
-                    pagemap_builder.append('N');
+                    TRY(pagemap_builder.try_append('N'));
                 else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
-                    pagemap_builder.append('Z');
+                    TRY(pagemap_builder.try_append('Z'));
                 else
-                    pagemap_builder.append('P');
+                    TRY(pagemap_builder.try_append('P'));
             }
             TRY(region_object.add("pagemap"sv, pagemap_builder.string_view()));
             TRY(region_object.finish());
