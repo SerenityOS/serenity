@@ -18,6 +18,9 @@ int tcsendbreak(int fd, int duration);
 int tcflow(int fd, int action);
 int tcflush(int fd, int queue_selector);
 
+int tcgetwinsize(int fildes, struct winsize* winsize_p);
+int tcsetwinsize(int fildes, const struct winsize* winsize_p);
+
 speed_t cfgetispeed(const struct termios*);
 speed_t cfgetospeed(const struct termios*);
 int cfsetispeed(struct termios*, speed_t);

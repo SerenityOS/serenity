@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -153,5 +154,17 @@ void cfmakeraw(struct termios* tp)
     termios.c_oflag &= ~OPOST;
     termios.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
     termios.c_cflag |= CS8;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/tcgetwinsize.html
+int tcgetwinsize(int fildes, winsize* winsize_p)
+{
+    return ioctl(fildes, TIOCGWINSZ, winsize_p);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/tcsetwinsize.html
+int tcsetwinsize(int fildes, winsize const* winsize_p)
+{
+    return ioctl(fildes, TIOCSWINSZ, winsize_p);
 }
 }
