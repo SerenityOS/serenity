@@ -78,7 +78,7 @@ bool StringBuilder::is_empty() const
 void StringBuilder::trim(size_t count)
 {
     auto decrease_count = min(m_buffer.size(), count);
-    m_buffer.resize(m_buffer.size() - decrease_count);
+    m_buffer.trim(m_buffer.size() - decrease_count, true);
 }
 
 ErrorOr<void> StringBuilder::try_append(StringView string)
