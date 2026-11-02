@@ -40,13 +40,13 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     (void)s_the->panic_mode(Validate::Yes);
 }
 
-UNMAP_AFTER_INIT NonnullOwnPtr<KString> CommandLine::build_commandline(StringView cmdline_from_bootloader)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<KString>> CommandLine::build_commandline(StringView cmdline_from_bootloader)
 {
     StringBuilder builder;
-    builder.append(cmdline_from_bootloader);
+    TRY(builder.try_append(cmdline_from_bootloader));
     if constexpr (!s_embedded_cmd_line.is_empty()) {
-        builder.append(' ');
-        builder.append(s_embedded_cmd_line);
+        TRY(builder.try_append(' '));
+        TRY(builder.try_append(s_embedded_cmd_line));
     }
     return KString::must_create(builder.string_view());
 }
@@ -68,7 +68,7 @@ UNMAP_AFTER_INIT void CommandLine::add_arguments(Vector<StringView> const& args)
 }
 
 UNMAP_AFTER_INIT CommandLine::CommandLine(StringView cmdline_from_bootloader)
-    : m_string(build_commandline(cmdline_from_bootloader))
+    : m_string(MUST(build_commandline(cmdline_from_bootloader)))
 {
     s_the = this;
     auto const& args = m_string->view().split_view(' ');

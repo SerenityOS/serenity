@@ -112,7 +112,7 @@ private:
     CommandLine(StringView);
 
     void add_arguments(Vector<StringView> const& args);
-    static NonnullOwnPtr<KString> build_commandline(StringView cmdline_from_bootloader);
+    static ErrorOr<NonnullOwnPtr<KString>> build_commandline(StringView cmdline_from_bootloader);
 
     NonnullOwnPtr<KString> m_string;
     HashMap<StringView, StringView> m_params;
