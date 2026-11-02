@@ -636,6 +636,11 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
         return {};
     }
 
+    if (request_type == "window-change"sv.bytes()) {
+        TRY(handle_channel_window_change(session, message));
+        return {};
+    }
+
     return Error::from_string_literal("Unsupported channel request");
 }
 
@@ -885,6 +890,38 @@ ErrorOr<void> SSHClient::handle_channel_pseudo_terminal(Session& session, Generi
     };
 
     return TRY(send_channel_success_message(session));
+}
+
+// 6.7.  Window Dimension Change Message
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.7
+ErrorOr<void> SSHClient::handle_channel_window_change(Session& session, GenericMessage& message)
+{
+    u32 width_characters = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 height_rows = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 width_pixels = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 height_pixels = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+
+    dbgln_if(SSH_DEBUG, "PTY window change: w={}, h={}, w_px={}, h_px={}",
+        width_characters, height_rows, width_pixels, height_pixels);
+
+    if (!session.system.has<Shell>())
+        return Error::from_string_literal("Requested a window change while no shell is present");
+
+    winsize ws {
+        .ws_row = static_cast<u16>(height_rows),
+        .ws_col = static_cast<u16>(width_characters),
+        .ws_xpixel = static_cast<u16>(width_pixels),
+        .ws_ypixel = static_cast<u16>(height_pixels),
+    };
+
+    auto maybe_error = Core::System::tcsetwinsize(session.system.get<Shell>().stdin_->fd(), ws);
+
+    if (maybe_error.is_error()) {
+        dbgln("Unable to set pty dimensions: {}", maybe_error.error());
+    }
+
+    // "A response SHOULD NOT be sent to this message."
+    return {};
 }
 
 ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
