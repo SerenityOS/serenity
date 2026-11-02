@@ -635,7 +635,6 @@ UNMAP_AFTER_INIT void ProcessorBase::early_initialize(u32 cpu)
     self->m_message_queue = nullptr;
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
-    self->m_info = nullptr;
 
     m_halt_requested = false;
     if (cpu == 0) {
@@ -661,7 +660,7 @@ UNMAP_AFTER_INIT void ProcessorBase::initialize(u32 cpu)
 
     auto self = static_cast<Processor*>(this);
 
-    self->m_info = new ProcessorInfo(*self);
+    self->m_info = MUST(ProcessorInfo::create(*self));
 
     dmesgln("CPU[{}]: Supported features: {}", current_id(), self->m_info->features_string());
     if (!has_feature(CPUFeature::RDRAND))

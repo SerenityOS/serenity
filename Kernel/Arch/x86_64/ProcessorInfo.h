@@ -19,7 +19,7 @@ class Processor;
 
 class ProcessorInfo {
 public:
-    ProcessorInfo(Processor const& processor);
+    static ErrorOr<NonnullOwnPtr<ProcessorInfo>> create(Processor const& processor);
 
     struct Cache {
         u64 size;
@@ -46,10 +46,12 @@ public:
     static constexpr StringView s_intel_vendor_id = "GenuineIntel"sv;
 
 private:
-    static NonnullOwnPtr<KString> build_vendor_id_string();
-    static NonnullOwnPtr<KString> build_hypervisor_vendor_id_string(Processor const&);
-    static NonnullOwnPtr<KString> build_brand_string();
-    static NonnullOwnPtr<KString> build_features_string(Processor const&);
+    static ErrorOr<NonnullOwnPtr<KString>> build_vendor_id_string();
+    static ErrorOr<NonnullOwnPtr<KString>> build_hypervisor_vendor_id_string(Processor const&);
+    static ErrorOr<NonnullOwnPtr<KString>> build_brand_string();
+    static ErrorOr<NonnullOwnPtr<KString>> build_features_string(Processor const&);
+
+    ProcessorInfo(NonnullOwnPtr<KString> vendor_id_string, NonnullOwnPtr<KString> hypervisor_vendor_id_string, NonnullOwnPtr<KString> brand_string, NonnullOwnPtr<KString> features_string);
 
     void populate_cache_sizes_amd();
     void populate_cache_sizes_intel();

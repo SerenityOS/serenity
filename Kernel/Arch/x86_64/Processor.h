@@ -9,15 +9,18 @@
 #include <AK/Array.h>
 #include <AK/Concepts.h>
 #include <AK/Function.h>
+#include <AK/OwnPtr.h>
 #include <AK/SetOnce.h>
 #include <AK/Types.h>
 
 #include <Kernel/Arch/DeferredCallEntry.h>
 #include <Kernel/Arch/DeferredCallPool.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/x86_64/ASM_wrapper.h>
 #include <Kernel/Arch/x86_64/CPUID.h>
 #include <Kernel/Arch/x86_64/DescriptorTable.h>
+#include <Kernel/Arch/x86_64/ProcessorInfo.h>
 #include <Kernel/Arch/x86_64/SIMDState.h>
 #include <Kernel/Arch/x86_64/TSS.h>
 #include <Kernel/Forward.h>
@@ -28,7 +31,6 @@ VALIDATE_IS_X86()
 
 namespace Kernel {
 
-class ProcessorInfo;
 struct ProcessorMessage;
 struct ProcessorMessageEntry;
 
@@ -74,7 +76,7 @@ private:
     TSS m_tss;
     SetOnce m_has_qemu_hvf_quirk;
 
-    ProcessorInfo* m_info;
+    OwnPtr<ProcessorInfo> m_info;
 
     Atomic<ProcessorMessageEntry*> m_message_queue;
 
