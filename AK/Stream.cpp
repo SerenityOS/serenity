@@ -42,7 +42,7 @@ ErrorOr<ByteBuffer> Stream::read_until_eof(size_t block_size)
 ErrorOr<ByteBuffer> Stream::read_until_eof_impl(size_t block_size, size_t expected_file_size)
 {
     ByteBuffer data;
-    data.ensure_capacity(expected_file_size);
+    TRY(data.try_ensure_capacity(expected_file_size));
 
     size_t total_read = 0;
     Bytes buffer;
@@ -56,7 +56,7 @@ ErrorOr<ByteBuffer> Stream::read_until_eof_impl(size_t block_size, size_t expect
         buffer = buffer.slice(nread);
     }
 
-    data.resize(total_read);
+    TRY(data.try_resize(total_read));
     return data;
 }
 
