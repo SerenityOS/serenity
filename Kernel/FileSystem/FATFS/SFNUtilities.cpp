@@ -45,14 +45,14 @@ ErrorOr<ByteBuffer> SFN::serialize_name() const
     TRY(name.try_ensure_capacity(8));
 #ifdef KERNEL
     auto suffix = TRY(KString::formatted("~{}", m_unique));
-    name.append(suffix->bytes());
+    TRY(name.try_append(suffix->bytes()));
 #else
     auto suffix = ByteString::formatted("~{}", m_unique);
-    name.append(suffix.bytes());
+    TRY(name.try_append(suffix.bytes()));
 #endif
 
     while (name.size() < 8)
-        name.append(' ');
+        TRY(name.try_append(' '));
 
     return name;
 }
@@ -63,7 +63,7 @@ ErrorOr<ByteBuffer> SFN::serialize_extension() const
     TRY(extension.try_ensure_capacity(3));
 
     while (extension.size() < 3)
-        extension.append(' ');
+        TRY(extension.try_append(' '));
 
     return extension;
 }
