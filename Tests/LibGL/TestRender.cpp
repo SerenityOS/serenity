@@ -413,3 +413,37 @@ TEST_CASE(0013_fog_linear)
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0013_fog_linear"sv);
 }
+
+TEST_CASE(0014_depth_consistency)
+{
+    auto width = 99;
+    auto height = 99;
+
+    auto context = create_testing_context(width, height);
+
+    glClearColor(0.f, 1.f, 0.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(0.f, 0.f, 0.f);
+    glVertex3f(-.1f, 1.f, .5f);
+    glVertex3f(-1.f, -1.f, .5f);
+    glVertex3f(1.f, -1.f, .5f);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.f, 1.f, 1.f);
+    glVertex3f(.1f, 1.f, .5f);
+    glVertex3f(-1.f, -1.f, .5f);
+    glVertex3f(1.f, -1.f, .5f);
+    glEnd();
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+
+    expect_bitmap_equals_reference(context->frontbuffer(), "0014_depth_consistency"sv);
+}
