@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <termios.h>
 #include <unistd.h>
 
 int openpty(int* amaster, int* aslave, char* name, const struct termios* termp, const struct winsize* winp)
@@ -64,7 +65,7 @@ int openpty(int* amaster, int* aslave, char* name, const struct termios* termp, 
         }
     }
     if (winp) {
-        if (ioctl(*aslave, TIOCGWINSZ, winp) == -1) {
+        if (tcsetwinsize(*aslave, winp) < 0) {
             int error = errno;
             close(*aslave);
             close(*amaster);
