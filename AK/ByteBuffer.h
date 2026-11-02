@@ -300,6 +300,13 @@ public:
         __builtin_memset(data(), 0, m_size);
     }
 
+    ErrorOr<ByteBuffer> clone() const
+    {
+        auto clone = TRY(ByteBuffer::create_uninitialized(size()));
+        __builtin_memcpy(clone.data(), data(), size());
+        return clone;
+    }
+
     operator Bytes() { return bytes(); }
     operator ReadonlyBytes() const { return bytes(); }
 
