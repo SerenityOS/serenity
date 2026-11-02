@@ -24,6 +24,17 @@ struct Session;
 // 6.1.  Opening a Session
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.1
 
+struct PtyInfo {
+    ByteString term_environment_variable {};
+
+    u32 width_characters {};
+    u32 height_rows {};
+    u32 width_pixels {};
+    u32 height_pixels {};
+
+    ByteBuffer terminal_modes {};
+};
+
 struct ExecData {
     static ErrorOr<ExecData> create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr);
 
@@ -60,6 +71,7 @@ struct Session : public RefCounted<Session> {
     StreamBuffer channel_data {};
     bool has_streaming_coroutine { false };
 
+    Optional<PtyInfo> pty_info {};
     Variant<Empty, ExecData, SFTP::Server> system {};
 
     bool is_closed { false };

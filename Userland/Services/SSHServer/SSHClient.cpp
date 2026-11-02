@@ -618,6 +618,11 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
         return {};
     }
 
+    if (request_type == "pty-req"sv.bytes()) {
+        TRY(handle_channel_pseudo_terminal(session, message));
+        return {};
+    }
+
     return Error::from_string_literal("Unsupported channel request");
 }
 
@@ -776,6 +781,33 @@ ErrorOr<void> SSHClient::handle_channel_subsystem(Session& session, GenericMessa
     }
 
     return Error::from_string_literal("Unsupported subsystem");
+}
+
+// 6.2.  Requesting a Pseudo-Terminal
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.2
+ErrorOr<void> SSHClient::handle_channel_pseudo_terminal(Session& session, GenericMessage& message)
+{
+    auto term = TRY(decode_string(message.payload));
+    u32 width_characters = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 height_rows = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 width_pixels = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    u32 height_pixels = TRY(message.payload.read_value<NetworkOrdered<u32>>());
+    auto terminal_modes = TRY(decode_string(message.payload));
+
+    dbgln_if(SSH_DEBUG, "Pseudo terminal requested with: TERM={}, w={}, h={}, w_px={}, h_px={}",
+        StringView { term }, width_characters, height_rows, width_pixels, height_pixels);
+
+    VERIFY(session.system.has<Empty>());
+    session.pty_info = {
+        .term_environment_variable = StringView { term },
+        .width_characters = width_characters,
+        .height_rows = height_rows,
+        .width_pixels = width_pixels,
+        .height_pixels = height_pixels,
+        .terminal_modes = move(terminal_modes),
+    };
+
+    return TRY(send_channel_success_message(session));
 }
 
 ErrorOr<void> SSHClient::send_channel_success_message(Session const& session)
