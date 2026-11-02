@@ -61,7 +61,7 @@ ErrorOr<void> accept_connection()
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio accept inet unix rpath wpath cpath proc exec sigaction id"));
+    TRY(Core::System::pledge("stdio accept inet unix rpath wpath cpath proc exec sigaction id tty"));
 
     // FIXME: Make the server use more low-privilege processes.
     //        When receiving a connection, the main server forks and the child handles
@@ -154,6 +154,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     outln("Listening on {}:{}", g_tcp_server->local_address().value(), g_tcp_server->local_port());
 
-    TRY(Core::System::pledge("stdio accept rpath wpath cpath proc exec sigaction id"));
+    TRY(Core::System::pledge("stdio accept rpath wpath cpath proc exec sigaction id tty"));
     return loop.exec();
 }

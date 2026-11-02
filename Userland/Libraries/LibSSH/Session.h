@@ -58,6 +58,14 @@ struct ExecData : ChildManagingSystem {
     NonnullOwnPtr<Core::File> stderr_;
 };
 
+struct Shell : ChildManagingSystem {
+    static ErrorOr<Shell> create(pid_t child, int fd_pty);
+
+    bool is_ready_to_be_closed() const;
+
+    bool received_io_error { false };
+};
+
 struct Session : public RefCounted<Session> {
     static ErrorOr<NonnullRefPtr<Session>> create(u32 sender_channel_id, u32 window_size, u32 maximum_packet_size);
 
@@ -75,7 +83,7 @@ struct Session : public RefCounted<Session> {
     bool has_streaming_coroutine { false };
 
     Optional<PtyInfo> pty_info {};
-    Variant<Empty, ExecData, SFTP::Server> system {};
+    Variant<Empty, ExecData, SFTP::Server, Shell> system {};
 
     bool is_closed { false };
     bool has_received_eof { false };
