@@ -149,6 +149,8 @@ ErrorOr<ByteString> getcwd();
 ErrorOr<void> ioctl(int fd, unsigned request, ...);
 ErrorOr<struct termios> tcgetattr(int fd);
 ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
+ErrorOr<winsize> tcgetwinsize(int fd);
+ErrorOr<void> tcsetwinsize(int fd, winsize const&);
 ErrorOr<int> tcsetpgrp(int fd, pid_t pgrp);
 ErrorOr<void> chmod(StringView pathname, mode_t mode);
 ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid);
