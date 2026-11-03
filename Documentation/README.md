@@ -51,6 +51,7 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 -   [High DPI Support](HighDPI.md)
 -   [Smart Pointers](SmartPointers.md)
 -   [String Formatting](StringFormatting.md)
+-   [SSHServer](SSHServer.md)
 -   [How to Transfer Files Out of Serenity](TransferringFiles.md)
 
 ### File and Data Formats
