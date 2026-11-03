@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <Kernel/API/POSIX/winsize.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
