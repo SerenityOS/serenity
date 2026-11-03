@@ -1087,15 +1087,15 @@ ErrorOr<void> SSHClient::manage_child_death()
         for (auto& session : m_sessions) {
             TRY(session->system.visit([&]<DerivedFrom<ChildManagingSystem> T>(T& system) -> ErrorOr<void> {
                 if (system.child_pid == result.pid) {
-                    bool exited_with_code_0 = true;
                     if (WIFEXITED(result.status)) {
-                        exited_with_code_0 &= WEXITSTATUS(result.status) == 0;
-                    } else if (WIFSIGNALED(result.status)) {
-                        exited_with_code_0 = false;
+                        system.exit_status = WEXITSTATUS(result.status);
+                    }else if (WIFSIGNALED(result.status)) {
+                        system.exit_status = 128 + WTERMSIG(result.status);
+                    }
+                    else {
+                        VERIFY_NOT_REACHED();
                     }
 
-                    // FIXME: Send the actual exit status.
-                    system.exit_status = exited_with_code_0 ? 0 : -1;
                     TRY(close_session_if_needed(*session));
                 }
                 return {}; },
