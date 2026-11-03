@@ -277,10 +277,6 @@ ErrorOr<void> Server::handle_open(FixedMemoryStream& stream)
         || attrs.atim.has_value() || attrs.mtim.has_value())
         return Error::from_string_literal("Unsupported file attribute");
 
-    // FIXME: Support relative path.
-    if (filename.is_empty() || filename[0] != '/')
-        return Error::from_string_literal("Relative paths are unsupported");
-
     // SSH flags maps one-to-one to POSIX flags, so use that and call open
     // directly. This allows the SFTP server to be as transparent as possible.
     // We still need to map these flags to a  Core::File::OpenMode so we can
