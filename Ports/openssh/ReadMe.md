@@ -7,6 +7,10 @@
 -   Cannot determine compatibility flags.
     This means there may be some weird bugs when connecting to certain SSH implementations.
 
+> [!TIP]
+> Our implementation, SSHServer, already uses port 22 so we can't have openssh use the same port.
+> So you need to either run only one of them or run them on different ports.
+
 # Autostart SSHD
 
 Add something like this to your sync-local.sh
