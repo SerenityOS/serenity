@@ -93,6 +93,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto fail_message = "Can't log in: invalid username or password."sv;
 
+        if (username == "root"sv) {
+            window->set_fail_message("Can't log in: refusing to log in as root."sv);
+            dbgln("failed graphical login for user {}: refusing root login", username);
+            return;
+        }
+
         auto account = Core::Account::from_name(username);
         if (account.is_error()) {
             window->set_fail_message(fail_message);
