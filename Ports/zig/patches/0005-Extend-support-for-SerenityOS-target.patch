@@ -5,72 +5,14 @@ Subject: [PATCH] Extend support for SerenityOS target
 
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
- zig/lib/std/Io/Threaded.zig | 50 ++++++++++++++++++++++++++++++++++---
- zig/src/Compilation.zig     |  4 +--
- 2 files changed, 49 insertions(+), 5 deletions(-)
+ zig/lib/std/Io/Threaded.zig | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/zig/lib/std/Io/Threaded.zig b/zig/lib/std/Io/Threaded.zig
-index 2c7cdbc8e99e37081200900866b94edf7672e272..19f2738d54d4d5e9546b076fb9cb828cfd273c19 100644
+index 5df6c2f58541eee78fccf5d14a749f3dd933daa8..790dbeec3a5ef4c429be1fda38d8c9353d61e780 100644
 --- a/zig/lib/std/Io/Threaded.zig
 +++ b/zig/lib/std/Io/Threaded.zig
-@@ -1102,6 +1102,33 @@ const Thread = struct {
-                     else => unreachable,
-                 };
-             },
-+            .serenity => {
-+                var tm: std.c.timespec = undefined;
-+                var tm_ptr: ?*const std.c.timespec = null;
-+                if (timeout_ns) |ns| {
-+                    tm_ptr = &tm;
-+                    tm = timestampToPosix(ns);
-+                }
-+                const syscall: Syscall = if (uncancelable) .{ .thread = null } else try .start();
-+                const rc = std.c.futex(
-+                    @constCast(ptr),
-+                    std.c.FUTEX.WAIT | std.c.FUTEX.PRIVATE_FLAG,
-+                    expect,
-+                    tm_ptr,
-+                    null,
-+                    0,
-+                );
-+                syscall.finish();
-+                if (is_debug) switch (posix.errno(rc)) {
-+                    .SUCCESS => {},
-+                    .AGAIN => {}, // ptr != expect
-+                    .TIMEDOUT => {}, // timeout
-+                    .FAULT => unreachable, // ptr was invalid
-+                    .INVAL => unreachable, // ptr was misaligned
-+                    .NOMEM => {}, // OOM, treat as spurious wake
-+                    else => unreachable,
-+                };
-+            },
-             else => @compileError("unimplemented: futexWait"),
-         }
-     }
-@@ -1191,6 +1218,22 @@ const Thread = struct {
-                     @min(max_waiters, std.math.maxInt(c_int)),
-                 );
-             },
-+            .serenity => {
-+                const rc = std.c.futex(
-+                    @constCast(ptr),
-+                    std.c.FUTEX.WAKE | std.c.FUTEX.PRIVATE_FLAG,
-+                    max_waiters,
-+                    null,
-+                    null,
-+                    0,
-+                );
-+                switch (posix.errno(rc)) {
-+                    .SUCCESS => {},
-+                    .FAULT => {}, // it's ok if the ptr doesn't point to valid memory
-+                    .INVAL => unreachable, // arguments should be correct
-+                    else => unreachable,
-+                }
-+            },
-             else => @compileError("unimplemented: futexWake"),
-         }
-     }
-@@ -9824,7 +9867,8 @@ fn dirHardLink(
+@@ -9926,7 +9926,8 @@ fn dirHardLink(
      new_sub_path: []const u8,
      options: Dir.HardLinkOptions,
  ) Dir.HardLinkError!void {
@@ -80,7 +22,7 @@ index 2c7cdbc8e99e37081200900866b94edf7672e272..19f2738d54d4d5e9546b076fb9cb828c
      const t: *Threaded = @ptrCast(@alignCast(userdata));
      _ = t;
  
-@@ -14491,8 +14535,8 @@ pub fn clockToPosix(clock: Io.Clock) posix.clockid_t {
+@@ -14596,8 +14597,8 @@ pub fn clockToPosix(clock: Io.Clock) posix.clockid_t {
              // ticks while suspended.
              else => posix.CLOCK.MONOTONIC,
          },
@@ -91,19 +33,3 @@ index 2c7cdbc8e99e37081200900866b94edf7672e272..19f2738d54d4d5e9546b076fb9cb828c
      };
  }
  
-diff --git a/zig/src/Compilation.zig b/zig/src/Compilation.zig
-index 309ed5d32cd41f7da66f2b8f379ca7cbd5b568b2..cf7d046aebbc0eec0843ac186fd929128297d386 100644
---- a/zig/src/Compilation.zig
-+++ b/zig/src/Compilation.zig
-@@ -6388,9 +6388,9 @@ fn addCommonCCArgs(
-             switch (target.os.tag) {
-                 // LLVM doesn't distinguish between Solaris and illumos, but the illumos GCC fork
-                 // defines this macro.
--                .illumos => try argv.append("__illumos__"),
-+                .illumos => try argv.append("-D__illumos__"),
-                 // This macro has not yet been upstreamed by SerenityOS to Clang.
--                .serenity => try argv.append("__serenity__"),
-+                .serenity => try argv.append("-D__serenity__"),
-                 // Homebrew targets without LLVM support; use communities's preferred macros.
-                 .@"3ds" => try argv.append("-D__3DS__"),
-                 .wiiu => try argv.append("-D__WIIU__"),
