@@ -83,6 +83,7 @@ struct Session : public RefCounted<Session> {
     bool has_streaming_coroutine { false };
 
     Optional<PtyInfo> pty_info {};
+    Vector<ByteString> env {};
     Variant<Empty, ExecData, SFTP::Server, Shell> system {};
 
     bool is_closed { false };

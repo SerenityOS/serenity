@@ -13,12 +13,14 @@
 #include <AK/Random.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/Account.h>
+#include <LibCore/Environment.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Process.h>
 #include <LibCore/Socket.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/X25519.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibSSH/DataTypes.h>
 #include <LibSSH/IdentificationString.h>
 #include <Services/SSHServer/ServerConfiguration.h>
@@ -610,7 +612,7 @@ ErrorOr<void> SSHClient::handle_channel_request(GenericMessage& message)
     dbgln_if(SSH_DEBUG, "CHANNEL_REQUEST id({}): {:s}", session.local_channel_id, request_type.bytes());
 
     if (request_type == "env"sv.bytes() && !want_reply) {
-        dbgln("FIXME: Ignored channel request: {:s}", request_type.bytes());
+        TRY(handle_channel_env(session, message, want_reply));
         return {};
     }
 
@@ -708,6 +710,47 @@ Coroutine<void> SSHClient::async_stream_data_to_subsystem(NonnullRefPtr<Session>
     co_return;
 }
 
+// 6.4.  Environment Variable Passing
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.4
+ErrorOr<void> SSHClient::handle_channel_env(NonnullRefPtr<Session> const& session, GenericMessage& message, bool want_reply)
+{
+    auto variable_name = TRY(decode_string(message.payload));
+    auto variable_value = TRY(decode_string(message.payload));
+
+    session->env.append(ByteString::formatted("{:s}={:s}"sv, variable_name.bytes(), variable_value.bytes()));
+
+    if (want_reply)
+        TRY(send_channel_success_message(session));
+
+    return {};
+}
+
+static ErrorOr<Vector<ByteString>> make_env(Vector<ByteString> const& client_environment)
+{
+    Vector<ByteString> env;
+    env.extend(client_environment);
+
+    auto account = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
+
+    auto user = ByteString::formatted("USER={}", account.username());
+    env.append(user);
+
+    auto logname = ByteString::formatted("LOGNAME={}", account.username());
+    env.append(logname);
+
+    auto home = ByteString::formatted("HOME={}", account.home_directory());
+    env.append(home);
+
+    auto shell = ByteString::formatted("SHELL={}", account.shell());
+    env.append(shell);
+
+    // FIXME: DEFAULT_PATH is made for Serenity this won't work perfectly on other systems.
+    auto path = ByteString::formatted("PATH={}", DEFAULT_PATH);
+    env.append(path);
+
+    return env;
+}
+
 // 6.5.  Starting a Shell or a Command
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
 ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
@@ -728,6 +771,7 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     auto child = TRY(Core::Process::spawn({
         .executable = shell,
         .arguments = args,
+        .environment = TRY(make_env(session->env)),
         .file_actions = {
             Core::FileAction::DuplicateFile { stdin_fds[0], STDIN_FILENO },
             Core::FileAction::DuplicateFile { stdout_fds[1], STDOUT_FILENO },
@@ -783,13 +827,15 @@ ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& sess
         args.append(shell);
         args.append("--login"sv);
 
-        Vector<StringView> env;
+        auto env = TRY(make_env(session->env));
         auto term = ByteString::formatted("TERM={}", pty_info.term_environment_variable);
         env.append(term);
-        auto home = ByteString::formatted("HOME={}", account.home_directory());
-        env.append(home);
 
-        TRY(Core::System::exec(shell, args, Core::System::SearchInPath::No, env));
+        Vector<StringView> env_view;
+        for (auto const& var : env)
+            env_view.append(var);
+
+        TRY(Core::System::exec(shell, args, Core::System::SearchInPath::No, env_view));
         VERIFY_NOT_REACHED();
     }
 
