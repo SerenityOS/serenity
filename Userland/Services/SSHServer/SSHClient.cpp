@@ -712,14 +712,6 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
 {
     auto command = TRY(decode_string(message.payload));
 
-    // FIXME: We should use the user's shell rather than hardcoding it.
-
-#ifdef AK_OS_SERENITY
-    auto shell = "/bin/Shell"sv;
-#else
-    auto shell = "/bin/sh"sv;
-#endif
-
     Vector<ByteString> args;
     args.append("-c");
     args.append(ByteString(command.bytes()));
@@ -730,6 +722,7 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
 
+    auto shell = TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).shell();
     auto child = TRY(Core::Process::spawn({
         .executable = shell,
         .arguments = args,
