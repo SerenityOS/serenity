@@ -43,6 +43,7 @@ struct ProcessSpawnOptions {
     ByteString executable {};
     bool search_for_executable_in_path { false };
     Vector<ByteString> const& arguments {};
+    Optional<Span<ByteString>> environment {};
     Optional<ByteString> working_directory {};
 
     using FileActionType = Variant<FileAction::OpenFile, FileAction::CloseFile, FileAction::DuplicateFile>;

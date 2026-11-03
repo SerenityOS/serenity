@@ -122,11 +122,22 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
     for (auto const& argument : options.arguments)
         argv_list.append(argument.characters());
 
+    Optional<NullTerminatedStringArray> environment_storage;
+    char** environment = [&] {
+        if (options.environment.has_value()) {
+            environment_storage = NullTerminatedStringArray(options.environment->size());
+            for (auto const& env : *options.environment)
+                environment_storage->append(env.characters());
+            return environment_storage->get();
+        }
+        return Environment::raw_environ();
+    }();
+
     pid_t pid;
     if (options.search_for_executable_in_path) {
-        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, argv_list.get(), Core::Environment::raw_environ()));
+        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, argv_list.get(), environment));
     } else {
-        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, argv_list.get(), Core::Environment::raw_environ()));
+        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, argv_list.get(), environment));
     }
     return Process { pid };
 }
