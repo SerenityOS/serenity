@@ -28,6 +28,14 @@ struct termios {
     speed_t c_ospeed;
 };
 
+// https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/termios.h.html#tag_14_77_03_07
+struct winsize {
+    unsigned short ws_row;
+    unsigned short ws_col;
+    unsigned short ws_xpixel;
+    unsigned short ws_ypixel;
+};
+
 /* c_cc characters */
 #define VINTR 0
 #define VQUIT 1
