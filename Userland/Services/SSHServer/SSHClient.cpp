@@ -456,6 +456,8 @@ ErrorOr<void> SSHClient::handle_publickey_message(
         if (!user.is_self())
             TRY(user.login());
 
+        TRY(Core::System::chdir(user.home_directory()));
+
         outln("Successful authentication for: {:s}", user.username());
 
         // FIXME: Also send a cool banner :^)
@@ -787,7 +789,6 @@ ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& sess
         auto home = ByteString::formatted("HOME={}", account.home_directory());
         env.append(home);
 
-        TRY(Core::System::chdir(account.home_directory()));
         TRY(Core::System::exec(shell, args, Core::System::SearchInPath::No, env));
         VERIFY_NOT_REACHED();
     }
