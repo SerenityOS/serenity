@@ -56,11 +56,11 @@ struct ArgvList {
         m_argv.append(arg);
     }
 
-    Span<char const*> get()
+    char** get()
     {
         if (m_argv.is_empty() || m_argv.last() != nullptr)
             m_argv.append(nullptr);
-        return m_argv;
+        return const_cast<char**>(m_argv.span().data());
     }
 };
 
@@ -114,9 +114,9 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
 
     pid_t pid;
     if (options.search_for_executable_in_path) {
-        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
+        pid = TRY(System::posix_spawnp(options.executable.view(), &spawn_actions, nullptr, argv_list.get(), Core::Environment::raw_environ()));
     } else {
-        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
+        pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, argv_list.get(), Core::Environment::raw_environ()));
     }
     return Process { pid };
 }
