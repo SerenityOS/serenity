@@ -70,6 +70,7 @@ private:
         MDIOAccess = 1u << 0,
         HasQueueEnableBit = 1u << 1,
         HasPreconfiguredPHYAddress = 1u << 2,
+        QuirkNeedsMACReset = 1u << 3,
     };
     AK_ENUM_BITWISE_FRIEND_OPERATORS(E1000NetworkAdapter::HardwareFeatures);
 
@@ -77,6 +78,7 @@ private:
 
     ErrorOr<void> setup_interrupts();
     void setup_link();
+    ErrorOr<void> reset_mac();
 
     E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
@@ -131,7 +133,7 @@ private:
     static constexpr size_t number_of_rx_descriptors = 256;
     static constexpr size_t number_of_tx_descriptors = 256;
 
-    HardwareFeatures m_hardware_features;
+    HardwareFeatures m_hardware_features { HardwareFeatures::None };
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
