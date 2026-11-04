@@ -791,11 +791,11 @@ ErrorOr<void> SSHClient::spawn_child_with_pty(NonnullRefPtr<Session> const& sess
         VERIFY_NOT_REACHED();
     }
 
-    session->system = TRY(Shell::create(pid, master));
+    session->system = TRY(PtyChild::create(pid, master));
 
     // FIXME: Make sure to cancel this coroutine if anything goes wrong.
-    auto& shell = session->system.get<Shell>();
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *shell.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
+    auto& pty_child = session->system.get<PtyChild>();
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *pty_child.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
 
     return {};
 }
@@ -828,12 +828,12 @@ ErrorOr<void> SSHClient::spawn_child_with_pipes(NonnullRefPtr<Session> const& se
     TRY(Core::System::close(stdout_fds[1]));
     TRY(Core::System::close(stderr_fds[1]));
 
-    session->system = TRY(ExecData::create(move(child), stdin_fds[1], stdout_fds[0], stderr_fds[0]));
+    session->system = TRY(PipeChild::create(move(child), stdin_fds[1], stdout_fds[0], stderr_fds[0]));
 
     // FIXME: Make sure to cancel these coroutines if anything goes wrong.
-    auto const& exec_data = session->system.get<ExecData>();
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stderr_, [this](auto&... args) { return send_channel_extended_data(args...); }));
+    auto const& pipe_child = session->system.get<PipeChild>();
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *pipe_child.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *pipe_child.stderr_, [this](auto&... args) { return send_channel_extended_data(args...); }));
 
     return {};
 }
@@ -876,10 +876,10 @@ Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session,
             auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
             auto maybe_output = co_await file.async_read_some(output_buffer);
 
-            if (session->system.has<Shell>()) {
+            if (session->system.has<PtyChild>()) {
                 if (maybe_output.is_error() && maybe_output.error().code() == EIO) {
                     // On Linux, if file is a pty, EIO is returned when we reach EOF.
-                    session->system.get<Shell>().received_io_error = true;
+                    session->system.get<PtyChild>().received_io_error = true;
                     break;
                 }
             }
@@ -962,8 +962,8 @@ ErrorOr<void> SSHClient::handle_channel_window_change(Session& session, GenericM
     dbgln_if(SSH_DEBUG, "PTY window change: w={}, h={}, w_px={}, h_px={}",
         width_characters, height_rows, width_pixels, height_pixels);
 
-    if (!session.system.has<Shell>())
-        return Error::from_string_literal("Requested a window change while no shell is present");
+    if (!session.system.has<PtyChild>())
+        return Error::from_string_literal("Requested a window change while no pty is present");
 
     winsize ws {
         .ws_row = static_cast<u16>(height_rows),
@@ -972,7 +972,7 @@ ErrorOr<void> SSHClient::handle_channel_window_change(Session& session, GenericM
         .ws_ypixel = static_cast<u16>(height_pixels),
     };
 
-    auto maybe_error = Core::System::tcsetwinsize(session.system.get<Shell>().stdin_->fd(), ws);
+    auto maybe_error = Core::System::tcsetwinsize(session.system.get<PtyChild>().stdin_->fd(), ws);
 
     if (maybe_error.is_error()) {
         dbgln("Unable to set pty dimensions: {}", maybe_error.error());
