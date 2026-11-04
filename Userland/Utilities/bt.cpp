@@ -22,7 +22,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     pid_t pid = 0;
+    bool dont_include_source_positions = false;
     args_parser.add_positional_argument(pid, "PID", "pid");
+    args_parser.add_option(dont_include_source_positions, "Don't include source positions", "no-source-positions");
     args_parser.parse(arguments);
     Core::EventLoop loop;
 
@@ -36,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         pid_t tid = iterator.next_path().to_number<pid_t>().value();
         outln("thread: {}", tid);
         outln("frames:");
-        auto symbols = Symbolication::symbolicate_thread(pid, tid);
+        auto symbols = Symbolication::symbolicate_thread(pid, tid, dont_include_source_positions ? Symbolication::IncludeSourcePosition::No : Symbolication::IncludeSourcePosition::Yes);
         auto frame_number = symbols.size() - 1;
         for (auto& symbol : symbols) {
             // Make kernel stack frames stand out.
