@@ -97,7 +97,7 @@ int Session::exit_status() const
 {
     return system.visit(
         [](auto const&) { return 0; },
-        [](ExecData const& exec_data) { return *exec_data.exit_status; });
+        []<DerivedFrom<ChildManagingSystem> T>(T const& child) { return *child.exit_status; });
 }
 
 }
