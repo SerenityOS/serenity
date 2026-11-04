@@ -115,9 +115,10 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
 
     if (do_reboot == DoReboot::Yes) {
         dbgln("Attempting system reboot...");
-        dbgln("attempting reboot via ACPI");
-        if (ACPI::is_enabled())
+        if (ACPI::is_enabled()) {
+            dbgln("Attempting reboot via ACPI");
             ACPI::Parser::the()->try_acpi_reboot();
+        }
         arch_specific_reboot(PowerOffOrRebootReason::NoReason);
 
         dmesgln("Reboot can't be completed. It's safe to turn off the computer!");
