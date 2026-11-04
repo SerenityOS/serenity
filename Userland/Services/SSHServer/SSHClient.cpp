@@ -751,6 +751,55 @@ static ErrorOr<Vector<ByteString>> make_env(Vector<ByteString> const& client_env
     return env;
 }
 
+ErrorOr<void> SSHClient::spawn_child_with_pty(NonnullRefPtr<Session> const& session, Span<StringView> arguments)
+{
+    auto pty_info = session->pty_info.release_value();
+
+    int master {};
+    winsize size {
+        .ws_row = static_cast<u16>(pty_info.height_rows),
+        .ws_col = static_cast<u16>(pty_info.width_characters),
+        .ws_xpixel = static_cast<u16>(pty_info.width_pixels),
+        .ws_ypixel = static_cast<u16>(pty_info.height_pixels),
+    };
+
+    // FIXME: Set terminal modes from pty_info.
+
+    // I'm not happy with using fork here, but using posix_spawn would
+    // requite an external helper binary.
+    pid_t pid = forkpty(&master, nullptr, nullptr, &size);
+    if (pid < 0)
+        return Error::from_errno(errno);
+
+    if (pid == 0) {
+        auto account = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
+        auto& shell = account.shell();
+
+        Vector<StringView> args;
+        args.append(shell);
+        args.extend(arguments);
+
+        auto env = TRY(make_env(session->env));
+        auto term = ByteString::formatted("TERM={}", pty_info.term_environment_variable);
+        env.append(term);
+
+        Vector<StringView> env_view;
+        for (auto const& var : env)
+            env_view.append(var);
+
+        TRY(Core::System::exec(shell, args, Core::System::SearchInPath::No, env_view));
+        VERIFY_NOT_REACHED();
+    }
+
+    session->system = TRY(Shell::create(pid, master));
+
+    // FIXME: Make sure to cancel this coroutine if anything goes wrong.
+    auto& shell = session->system.get<Shell>();
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *shell.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
+
+    return {};
+}
+
 // 6.5.  Starting a Shell or a Command
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
 ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
@@ -801,52 +850,12 @@ ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& sess
 {
     if (!session->pty_info.has_value())
         return Error::from_string_literal("Shell requested without a pty");
-    auto pty_info = session->pty_info.release_value();
 
-    int master {};
-    winsize size {
-        .ws_row = static_cast<u16>(pty_info.height_rows),
-        .ws_col = static_cast<u16>(pty_info.width_characters),
-        .ws_xpixel = static_cast<u16>(pty_info.width_pixels),
-        .ws_ypixel = static_cast<u16>(pty_info.height_pixels),
-    };
+    Vector<StringView> args;
+    args.append("--login"sv);
 
-    // FIXME: Set terminal modes from pty_info.
-
-    // I'm not happy with using fork here, but using posix_spawn would
-    // requite an external helper binary.
-    pid_t pid = forkpty(&master, nullptr, nullptr, &size);
-    if (pid < 0)
-        return Error::from_errno(errno);
-
-    if (pid == 0) {
-        auto account = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
-        auto& shell = account.shell();
-
-        Vector<StringView> args;
-        args.append(shell);
-        args.append("--login"sv);
-
-        auto env = TRY(make_env(session->env));
-        auto term = ByteString::formatted("TERM={}", pty_info.term_environment_variable);
-        env.append(term);
-
-        Vector<StringView> env_view;
-        for (auto const& var : env)
-            env_view.append(var);
-
-        TRY(Core::System::exec(shell, args, Core::System::SearchInPath::No, env_view));
-        VERIFY_NOT_REACHED();
-    }
-
-    session->system = TRY(Shell::create(pid, master));
-
+    TRY(spawn_child_with_pty(session, args));
     TRY(send_channel_success_message(session));
-
-    // FIXME: Make sure to cancel this coroutine if anything goes wrong.
-    auto& shell = session->system.get<Shell>();
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *shell.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
-
     return {};
 }
 
