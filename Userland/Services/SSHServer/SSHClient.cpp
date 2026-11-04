@@ -838,6 +838,16 @@ ErrorOr<void> SSHClient::spawn_child_with_pipes(NonnullRefPtr<Session> const& se
     return {};
 }
 
+ErrorOr<void> SSHClient::spawn_child_for_session(NonnullRefPtr<Session> const& session, Span<StringView> args)
+{
+    if (session->pty_info.has_value())
+        TRY(spawn_child_with_pty(session, args));
+    else
+        TRY(spawn_child_with_pipes(session, args));
+    TRY(send_channel_success_message(session));
+    return {};
+}
+
 // 6.5.  Starting a Shell or a Command
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
 ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
@@ -848,24 +858,17 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
     args.append("-c"sv);
     args.append({ command.bytes() });
 
-    TRY(spawn_child_with_pipes(session, args));
-    TRY(send_channel_success_message(session));
-    return {};
+    return spawn_child_for_session(session, args);
 }
 
 // 6.5.  Starting a Shell or a Command
 // https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
 ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& session)
 {
-    if (!session->pty_info.has_value())
-        return Error::from_string_literal("Shell requested without a pty");
-
     Vector<StringView> args;
     args.append("--login"sv);
 
-    TRY(spawn_child_with_pty(session, args));
-    TRY(send_channel_success_message(session));
-    return {};
+    return spawn_child_for_session(session, args);
 }
 
 template<typename F>
