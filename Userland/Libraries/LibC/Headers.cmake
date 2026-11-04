@@ -161,6 +161,7 @@ set(HEADERS
     ../../../Kernel/API/POSIX/ucontext.h
     ../../../Kernel/API/POSIX/termios.h
     ../../../Kernel/API/POSIX/signal.h
+    ../../../Kernel/API/POSIX/winsize.h
 
     ../../../Kernel/API/serenity_limits.h
 
