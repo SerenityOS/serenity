@@ -19,6 +19,9 @@ namespace ACPI::AML {
 class Object;
 
 class String {
+    AK_MAKE_NONCOPYABLE(String);
+    AK_MAKE_DEFAULT_MOVABLE(String);
+
 public:
     String(ByteBuffer buffer)
         : m_buffer(move(buffer))
@@ -34,6 +37,9 @@ private:
 };
 
 class Buffer {
+    AK_MAKE_NONCOPYABLE(Buffer);
+    AK_MAKE_DEFAULT_MOVABLE(Buffer);
+
 public:
     Buffer(ByteBuffer buffer)
         : m_buffer(move(buffer))
@@ -49,6 +55,9 @@ private:
 };
 
 class Package {
+    AK_MAKE_NONCOPYABLE(Package);
+    AK_MAKE_DEFAULT_MOVABLE(Package);
+
 public:
     Package(Vector<Object> package)
         : m_package(move(package))
@@ -67,6 +76,9 @@ template<typename T>
 concept IsNodeData = OneOf<T, u64, String, Buffer, Package, NameString>;
 
 class Object {
+    AK_MAKE_NONCOPYABLE(Object);
+    AK_MAKE_DEFAULT_MOVABLE(Object);
+
 public:
     constexpr Object()
         : m_data(AK::Empty {})
