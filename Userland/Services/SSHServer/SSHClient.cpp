@@ -800,26 +800,22 @@ ErrorOr<void> SSHClient::spawn_child_with_pty(NonnullRefPtr<Session> const& sess
     return {};
 }
 
-// 6.5.  Starting a Shell or a Command
-// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
-ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
+ErrorOr<void> SSHClient::spawn_child_with_pipes(NonnullRefPtr<Session> const& session, Span<StringView> client_arguments)
 {
-    auto command = TRY(decode_string(message.payload));
-
-    Vector<ByteString> args;
-    args.append("-c");
-    args.append(ByteString(command.bytes()));
-
     // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
     //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
     auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
 
+    Vector<ByteString> arguments;
+    for (auto const& arg : client_arguments)
+        arguments.append(arg);
+
     auto shell = TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).shell();
     auto child = TRY(Core::Process::spawn({
         .executable = shell,
-        .arguments = args,
+        .arguments = arguments,
         .environment = TRY(make_env(session->env)),
         .file_actions = {
             Core::FileAction::DuplicateFile { stdin_fds[0], STDIN_FILENO },
@@ -834,13 +830,26 @@ ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& sessi
 
     session->system = TRY(ExecData::create(move(child), stdin_fds[1], stdout_fds[0], stderr_fds[0]));
 
-    TRY(send_channel_success_message(session));
-
     // FIXME: Make sure to cancel these coroutines if anything goes wrong.
     auto const& exec_data = session->system.get<ExecData>();
     Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
     Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stderr_, [this](auto&... args) { return send_channel_extended_data(args...); }));
 
+    return {};
+}
+
+// 6.5.  Starting a Shell or a Command
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
+ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
+{
+    auto command = TRY(decode_string(message.payload));
+
+    Vector<StringView> args;
+    args.append("-c"sv);
+    args.append({ command.bytes() });
+
+    TRY(spawn_child_with_pipes(session, args));
+    TRY(send_channel_success_message(session));
     return {};
 }
 
