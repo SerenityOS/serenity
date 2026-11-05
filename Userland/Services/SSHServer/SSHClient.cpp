@@ -199,8 +199,8 @@ ErrorOr<void> SSHClient::handle_key_exchange(ByteBuffer& data)
     auto stream = FixedMemoryStream { packet.bytes() };
 
     auto message_id = TRY(stream.read_value<u8>());
-    if (message_id != to_underlying(MessageID::KEX_ECDH_INIT))
-        return Error::from_string_literal("Expected Key ECDH exchange message");
+    if (message_id != to_underlying(MessageID::KEX_GENERIC_INIT))
+        return Error::from_string_literal("Expected Key exchange init message");
 
     auto Q_C = TRY(decode_string(stream));
 
