@@ -392,9 +392,9 @@ void Device::blit_to_depth_buffer_at_raster_position(void const*, GPU::ImageData
     dbgln("V3DGPU::Device::blit_to_depth_buffer_at_raster_position(): unimplemented");
 }
 
-void Device::set_options(GPU::RasterizerOptions const&)
+void Device::set_options(GPU::RasterizerOptions const& options)
 {
-    dbgln("V3DGPU::Device::set_options(): unimplemented");
+    m_options = options;
 }
 
 void Device::set_light_model_params(GPU::LightModelParameters const&)
@@ -404,8 +404,7 @@ void Device::set_light_model_params(GPU::LightModelParameters const&)
 
 GPU::RasterizerOptions Device::options() const
 {
-    dbgln("V3DGPU::Device::options(): unimplemented");
-    return {};
+    return m_options;
 }
 
 GPU::LightModelParameters Device::light_model() const

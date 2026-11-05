@@ -110,6 +110,8 @@ private:
             .clear_depth = m_clear_depth,
         };
     }
+
+    GPU::RasterizerOptions m_options;
 };
 
 }
