@@ -202,16 +202,23 @@ ErrorOr<void> SSHClient::handle_key_exchange(ByteBuffer& data)
     if (message_id != to_underlying(MessageID::KEX_GENERIC_INIT))
         return Error::from_string_literal("Expected Key exchange init message");
 
-    auto Q_C = TRY(decode_string(stream));
-
     // The host key type is determined, we can put it in the cryptographic data.
     m_key_exchange_data.server_public_host_key = ServerConfiguration::the().ssh_ed25519_server_public_key();
 
-    TRY(send_ecdh_reply(move(Q_C)));
+    TRY(handle_ecdh_key_exchange(stream));
 
     TRY(send_new_keys_message());
 
     m_state = State::WaitingForNewKeysMessage;
+    return {};
+}
+
+// 4.  ECDH Key Exchange
+// https://datatracker.ietf.org/doc/html/rfc5656#section-4
+ErrorOr<void> SSHClient::handle_ecdh_key_exchange(FixedMemoryStream& stream)
+{
+    auto Q_C = TRY(decode_string(stream));
+    TRY(send_ecdh_reply(move(Q_C)));
     return {};
 }
 
