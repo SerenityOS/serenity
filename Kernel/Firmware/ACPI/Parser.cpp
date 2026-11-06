@@ -195,7 +195,7 @@ void Parser::try_acpi_reboot()
     auto fadt = fadt_or_error.release_value();
 
     VERIFY(validate_reset_register(fadt));
-    if (auto maybe_error = access_generic_address(fadt->reset_reg, fadt->reset_value); maybe_error.is_error()) {
+    if (auto maybe_error = write_generic_address(fadt->reset_reg, fadt->reset_value); maybe_error.is_error()) {
         dmesgln("ACPI: Failed to write FADT reset register: {}", maybe_error.release_error());
         return;
     }

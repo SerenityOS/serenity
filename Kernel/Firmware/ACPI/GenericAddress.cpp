@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IntegralMath.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Firmware/ACPI/GenericAddress.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -13,72 +14,102 @@
 
 namespace Kernel::ACPI {
 
-ErrorOr<void> access_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u32 value)
+static ErrorOr<u8> get_bit_width(::ACPI::Structures::GenericAddressStructure const& structure)
 {
-    switch ((::ACPI::GenericAddressStructure::AddressSpace)structure.address_space) {
+    // NOTE: We need to do a more complicated algorithm because for legacy reasons there are,
+    //       two different ways of specifying the address structure, the FADT register format,
+    //       and the APEI region format. Here we follow what both uACPI and ACPICA do.
+
+    bool is_typical_bit_width = false;
+    if (structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::Byte || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::Word || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::DWord || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::QWord)
+        is_typical_bit_width = true;
+
+    u8 bit_width;
+
+    if (structure.bit_offset == 0 && is_typical_bit_width) {
+        bit_width = to_underlying(structure.bit_width);
+    } else if (structure.access_size != ::ACPI::GenericAddressStructure::AccessSize::Undefined) {
+        bit_width = 8 << (to_underlying(structure.access_size) - 1);
+    } else {
+        bit_width = 1 << AK::log2(structure.bit_offset + to_underlying(structure.bit_width));
+
+        if (bit_width <= 8) {
+            bit_width = 8;
+        } else {
+            while (structure.address % (bit_width / 8) != 0)
+                bit_width /= 2;
+        }
+    }
+
+    return AK::min(bit_width, structure.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemIO ? 32 : 64);
+}
+
+ErrorOr<void> write_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u64 value)
+{
+    auto bit_width = TRY(get_bit_width(structure));
+
+    switch (structure.address_space) {
     case ::ACPI::GenericAddressStructure::AddressSpace::SystemIO: {
 #if ARCH(X86_64)
         IOAddress address(structure.address);
-        dbgln("ACPI: Sending value {:x} to {}", value, address);
-        switch (structure.access_size) {
-        case ::ACPI::GenericAddressStructure::AccessSize::QWord: {
-            dbgln("Trying to send QWord to IO port");
+        dbgln_if(ACPI_DEBUG, "ACPI: Sending value {:x} to {}", value, address);
+
+        if (bit_width == 64) {
+            dbgln("ACPI: Tried to write a QWord to an IO port");
             return EINVAL;
         }
-        case ::ACPI::GenericAddressStructure::AccessSize::Undefined: {
-            dbgln("ACPI Warning: Unknown access size {}", to_underlying(structure.access_size));
-            if (structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::QWord || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::Undefined) {
-                return EINVAL;
-            }
 
-            dbgln("ACPI: Bit Width - {} bits", to_underlying(structure.bit_width));
-            address.out(value, to_underlying(structure.bit_width));
-            break;
-        }
-        default:
-            address.out(value, (8 << (to_underlying(structure.access_size) - 1)));
-            break;
-        }
+        address.out(value, bit_width);
+        break;
+#else
+        dbgln("ACPI: Tried to access SystemIO on a non x86 architecture");
+        return EINVAL;
 #endif
-        return {};
     }
+
     case ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory: {
-        dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
-        switch ((::ACPI::GenericAddressStructure::AccessSize)structure.access_size) {
-        case ::ACPI::GenericAddressStructure::AccessSize::Byte:
+        dbgln_if(ACPI_DEBUG, "ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
+
+        switch (bit_width) {
+        case 8:
             *TRY(Memory::map_typed<u8>(PhysicalAddress(structure.address))) = value;
             break;
-        case ::ACPI::GenericAddressStructure::AccessSize::Word:
+        case 16:
             *TRY(Memory::map_typed<u16>(PhysicalAddress(structure.address))) = value;
             break;
-        case ::ACPI::GenericAddressStructure::AccessSize::DWord:
+        case 32:
             *TRY(Memory::map_typed<u32>(PhysicalAddress(structure.address))) = value;
             break;
-        case ::ACPI::GenericAddressStructure::AccessSize::QWord: {
+        case 64:
             *TRY(Memory::map_typed<u64>(PhysicalAddress(structure.address))) = value;
             break;
-        }
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        return {};
-    }
-    case ::ACPI::GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
-        // According to https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#address-space-format,
-        // PCI addresses must be confined to devices on Segment group 0, bus 0.
-        auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
-        dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
 
-        u32 offset_in_pci_address = structure.address & 0xFFFF;
-        if (structure.access_size == ::ACPI::GenericAddressStructure::AccessSize::QWord || structure.access_size == ::ACPI::GenericAddressStructure::AccessSize::Undefined) {
-            dbgln("Trying to send QWord or Undefined to PCI configuration space");
+        default:
+            dbgln("ACPI: Tried to write an unsupported bit width to SystemMemory");
             return EINVAL;
         }
 
-        auto& pci_device_identifier = PCI::get_device_identifier(pci_address);
-        PCI::raw_access(pci_device_identifier, offset_in_pci_address, (1 << (to_underlying(structure.access_size) - 1)), value);
         return {};
     }
+
+    case ::ACPI::GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
+        // According to https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#address-space-format,
+        // PCI addresses must be confined to devices on Segment group 0, bus 0.
+        auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
+        dbgln_if(ACPI_DEBUG, "ACPI: Sending value {:x} to {}", value, pci_address);
+
+        if (bit_width == 64) {
+            dbgln("ACPI: Trying to send QWord to PCI configuration space");
+            return EINVAL;
+        }
+
+        u32 offset_in_pci_address = structure.address & 0xFFFF;
+
+        auto const& pci_device_identifier = PCI::get_device_identifier(pci_address);
+        PCI::raw_access(pci_device_identifier, offset_in_pci_address, bit_width, value);
+        return {};
+    }
+
     default:
         dbgln("ACPI: Tried to access an unsupported address space");
         return EINVAL;
