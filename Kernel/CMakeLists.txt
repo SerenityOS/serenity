@@ -238,6 +238,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Configuration/UBSANDeadly.cpp
     FileSystem/VFSRootContext.cpp
     FileSystem/VirtualFileSystem.cpp
+    Firmware/ACPI/GenericAddress.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/SysFSComponent.cpp
@@ -639,7 +640,14 @@ set(AK_SOURCES
 )
 
 set(ACPI_SOURCES
+    ../Userland/Libraries/LibACPI/Interpreter.cpp
+    ../Userland/Libraries/LibACPI/NameString.cpp
+    ../Userland/Libraries/LibACPI/Node.cpp
+    ../Userland/Libraries/LibACPI/Object.cpp
+    ../Userland/Libraries/LibACPI/OpcodeFilters.cpp
+    ../Userland/Libraries/LibACPI/OpcodeFrame.cpp
     ../Userland/Libraries/LibACPI/Table.cpp
+    ../Userland/Libraries/LibACPI/TableStream.cpp
 )
 
 set(DT_SOURCES

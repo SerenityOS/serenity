@@ -223,9 +223,9 @@ ErrorOr<void> OpcodeFrame::finish_operand(size_t current_offset)
     return {};
 }
 
-ErrorOr<void> OpcodeFrame::finish_operand(Object const& operand, size_t current_offset)
+ErrorOr<void> OpcodeFrame::finish_operand(Object&& operand, size_t current_offset)
 {
-    TRY(m_operands.try_append(operand));
+    TRY(m_operands.try_append(move(operand)));
     return finish_operand(current_offset);
 }
 

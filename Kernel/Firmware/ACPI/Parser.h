@@ -16,6 +16,7 @@
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <LibACPI/Definitions.h>
+#include <LibACPI/Interpreter.h>
 
 namespace Kernel::ACPI {
 
@@ -30,10 +31,7 @@ public:
 
     void try_acpi_reboot();
     bool can_reboot();
-    void try_acpi_shutdown();
-    bool can_shutdown() { return false; }
-
-    void enable_aml_parsing();
+    ErrorOr<void> try_acpi_shutdown();
 
     PhysicalAddress rsdp() const { return m_rsdp; }
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
@@ -88,7 +86,15 @@ private:
     ErrorOr<void> process_dsdt();
 
     bool validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FADT> const&);
-    ErrorOr<void> access_generic_address(::ACPI::Structures::GenericAddressStructure const&, u32 value);
+
+    struct S5Values {
+        u16 SLP_TYPa;
+        u16 SLP_TYPb;
+    };
+
+    ErrorOr<S5Values> extract_s5_values();
+    ErrorOr<Optional<::ACPI::Structures::GenericAddressStructure>> get_pm1a_control();
+    ErrorOr<Optional<::ACPI::Structures::GenericAddressStructure>> get_pm1b_control();
 
     OwnPtr<InterruptHandler> m_interrupt_handler;
 
@@ -99,9 +105,10 @@ private:
     PhysicalAddress m_fadt;
 
     bool m_xsdt_supported { false };
-    bool m_can_process_bytecode { false };
     ::ACPI::FADTFlags::HardwareFeatures m_hardware_flags;
     ::ACPI::FADTFlags::x86_Specific_Flags m_x86_specific_flags;
+
+    OwnPtr<::ACPI::AML::Interpreter> m_aml_interpreter;
 };
 
 }

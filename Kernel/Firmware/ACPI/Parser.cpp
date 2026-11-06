@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2026, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,14 +13,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
-#include <Kernel/Interrupts/InterruptDisabler.h>
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
-#    include <Kernel/Arch/x86_64/IO.h>
-#endif
-#include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Firmware/ACPI/GenericAddress.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
@@ -95,12 +92,6 @@ bool Parser::handle_interrupt()
     TODO();
 }
 
-UNMAP_AFTER_INIT void Parser::enable_aml_parsing()
-{
-    // FIXME: When enabled, do other things to "parse AML".
-    m_can_process_bytecode = true;
-}
-
 UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");
@@ -161,12 +152,21 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_dsdt()
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
     TRY(m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)));
 
-    auto dsdt_or_error = Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
-    if (dsdt_or_error.is_error()) {
-        dmesgln("ACPI: DSDT is unmappable");
-        return {};
+    if (kernel_command_line().acpi_feature_level() == AcpiFeatureLevel::Enabled) {
+        m_aml_interpreter = TRY(::ACPI::AML::Interpreter::create());
+        ArmedScopeGuard guard = [&]() {
+            // Ensure the AML interpreter is cleaned up if an error occurs.
+            m_aml_interpreter = nullptr;
+        };
+
+        auto dsdt = TRY(Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr)));
+        dsdt = TRY(Memory::map_typed<::ACPI::Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr), dsdt->h.length));
+
+        dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt->h.length);
+
+        TRY(m_aml_interpreter->load(ReadonlyBytes { dsdt.ptr(), dsdt->h.length }));
+        guard.disarm();
     }
-    dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt_or_error.value()->h.length);
 
     return {};
 }
@@ -179,80 +179,6 @@ bool Parser::can_reboot()
     if (fadt_or_error.value()->h.revision < 2)
         return false;
     return m_hardware_flags.reset_register_supported;
-}
-
-ErrorOr<void> Parser::access_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u32 value)
-{
-    switch ((::ACPI::GenericAddressStructure::AddressSpace)structure.address_space) {
-    case ::ACPI::GenericAddressStructure::AddressSpace::SystemIO: {
-#if ARCH(X86_64)
-        IOAddress address(structure.address);
-        dbgln("ACPI: Sending value {:x} to {}", value, address);
-        switch (structure.access_size) {
-        case ::ACPI::GenericAddressStructure::AccessSize::QWord: {
-            dbgln("Trying to send QWord to IO port");
-            return EINVAL;
-        }
-        case ::ACPI::GenericAddressStructure::AccessSize::Undefined: {
-            dbgln("ACPI Warning: Unknown access size {}", to_underlying(structure.access_size));
-            if (structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::QWord || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::Undefined) {
-                return EINVAL;
-            }
-
-            dbgln("ACPI: Bit Width - {} bits", to_underlying(structure.bit_width));
-            address.out(value, to_underlying(structure.bit_width));
-            break;
-        }
-        default:
-            address.out(value, (8 << (to_underlying(structure.access_size) - 1)));
-            break;
-        }
-#endif
-        return {};
-    }
-    case ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory: {
-        dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
-        switch ((::ACPI::GenericAddressStructure::AccessSize)structure.access_size) {
-        case ::ACPI::GenericAddressStructure::AccessSize::Byte:
-            *TRY(Memory::map_typed<u8>(PhysicalAddress(structure.address))) = value;
-            break;
-        case ::ACPI::GenericAddressStructure::AccessSize::Word:
-            *TRY(Memory::map_typed<u16>(PhysicalAddress(structure.address))) = value;
-            break;
-        case ::ACPI::GenericAddressStructure::AccessSize::DWord:
-            *TRY(Memory::map_typed<u32>(PhysicalAddress(structure.address))) = value;
-            break;
-        case ::ACPI::GenericAddressStructure::AccessSize::QWord: {
-            *TRY(Memory::map_typed<u64>(PhysicalAddress(structure.address))) = value;
-            break;
-        }
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        return {};
-    }
-    case ::ACPI::GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
-        // According to https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#address-space-format,
-        // PCI addresses must be confined to devices on Segment group 0, bus 0.
-        auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
-        dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
-
-        u32 offset_in_pci_address = structure.address & 0xFFFF;
-        if (structure.access_size == ::ACPI::GenericAddressStructure::AccessSize::QWord || structure.access_size == ::ACPI::GenericAddressStructure::AccessSize::Undefined) {
-            dbgln("Trying to send QWord or Undefined to PCI configuration space");
-            return EINVAL;
-        }
-
-        auto& pci_device_identifier = PCI::get_device_identifier(pci_address);
-        PCI::raw_access(pci_device_identifier, offset_in_pci_address, (1 << (to_underlying(structure.access_size) - 1)), value);
-        return {};
-    }
-    default:
-        dbgln("ACPI: Tried to access an unsupported address space");
-        return EINVAL;
-    }
-
-    VERIFY_NOT_REACHED();
 }
 
 bool Parser::validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FADT> const& fadt)
@@ -279,7 +205,7 @@ void Parser::try_acpi_reboot()
     auto fadt = fadt_or_error.release_value();
 
     VERIFY(validate_reset_register(fadt));
-    if (auto maybe_error = access_generic_address(fadt->reset_reg, fadt->reset_value); maybe_error.is_error()) {
+    if (auto maybe_error = write_generic_address(fadt->reset_reg, fadt->reset_value); maybe_error.is_error()) {
         dmesgln("ACPI: Failed to write FADT reset register: {}", maybe_error.release_error());
         return;
     }
@@ -287,9 +213,109 @@ void Parser::try_acpi_reboot()
     Processor::halt();
 }
 
-void Parser::try_acpi_shutdown()
+// https://uefi.org/specs/ACPI/6.6/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-soft-off-state
+ErrorOr<void> Parser::try_acpi_shutdown()
 {
-    dmesgln("ACPI: Shutdown is not supported with the current configuration, aborting!");
+    if (!m_aml_interpreter) {
+        dmesgln("ACPI: AML interpreter not available");
+        return Error::from_errno(ENOTSUP);
+    }
+
+    auto fadt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
+
+    // NOTE: We need to check the length, because older ACPI revision might not have those fields
+    auto pm1a_control = TRY(get_pm1a_control());
+    auto pm1b_control = TRY(get_pm1b_control());
+    bool sleep_control_available = fadt->h.length >= offsetof(::ACPI::Structures::FADT, sleep_control) + sizeof(fadt->sleep_control) && !fadt->sleep_control.is_null();
+
+    auto s5_values = TRY(extract_s5_values());
+
+    // FIXME: 1. OSPM executes the _PTS control method, passing the argument 5.
+
+    // 2. OSPM prepares its components to shut down (flushing disk caches).
+    // NOTE: This step is done ahead of this function call
+
+    // 3. If not a HW-reduced ACPI platform, OSPM writes SLP_TYPa (from the \_S5 object) with the SLP_ENa bit set to the PM1a_CNT register.
+    if (!m_hardware_flags.hardware_reduced_acpi) {
+        if (!pm1a_control.has_value()) {
+            dmesgln("ACPI: PM1a control register not available");
+            return Error::from_errno(ENOTSUP);
+        }
+
+        ::ACPI::Structures::PM1ControlRegister shutdown_value = bit_cast<::ACPI::Structures::PM1ControlRegister>(static_cast<u16>(TRY(read_generic_address(*pm1a_control))));
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPa;
+
+        TRY(write_generic_address(*pm1a_control, bit_cast<u16>(shutdown_value)));
+    }
+
+    // 4. OSPM writes SLP_TYPb (from the \_S5 object) with the SLP_ENb bit set to the PM1b_CNT register, or writes the HW-reduced ACPI Sleep
+    //    Type value for S5 and the SLP_EN bit to the Sleep Control Register.
+    if (m_hardware_flags.hardware_reduced_acpi) {
+        if (!sleep_control_available) {
+            dmesgln("ACPI: Sleep control register not available");
+            return Error::from_errno(ENOTSUP);
+        }
+
+        auto shutdown_value = bit_cast<::ACPI::Structures::SleepControlRegister>(static_cast<u8>(TRY(read_generic_address(fadt->sleep_control))));
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPa;
+
+        TRY(write_generic_address(fadt->sleep_control, bit_cast<u8>(shutdown_value)));
+    } else if (pm1b_control.has_value()) {
+        // PM1b control register is optional, and doesn't need to be present for the system to support S5 sleep state.
+        auto shutdown_value = bit_cast<::ACPI::Structures::PM1ControlRegister>(static_cast<u16>(TRY(read_generic_address(*pm1b_control))));
+        shutdown_value.SLP_EN = true;
+        shutdown_value.SLP_TYPx = s5_values.SLP_TYPb;
+
+        TRY(write_generic_address(*pm1b_control, bit_cast<u16>(shutdown_value)));
+    }
+
+    // 5. The system enters the Soft Off state.
+    Processor::halt();
+}
+
+ErrorOr<Parser::S5Values> Parser::extract_s5_values()
+{
+    auto s5_node = TRY(m_aml_interpreter->evaluate("\\_S5_"sv));
+    auto s5_package = TRY(s5_node.release_as<::ACPI::AML::Package>());
+    if (s5_package.package().size() < 2)
+        return Error::from_errno(EINVAL);
+
+    u16 SLP_TYPa = TRY(s5_package.package()[0].as<u64>());
+    u16 SLP_TYPb = TRY(s5_package.package()[1].as<u64>());
+
+    return Parser::S5Values { SLP_TYPa, SLP_TYPb };
+}
+
+ErrorOr<Optional<::ACPI::Structures::GenericAddressStructure>> Parser::get_pm1a_control()
+{
+    auto fadt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
+
+    if (fadt->h.length >= offsetof(::ACPI::Structures::FADT, x_pm1a_cnt_blk) + sizeof(fadt->x_pm1a_cnt_blk) && !fadt->x_pm1a_cnt_blk.is_null())
+        return fadt->x_pm1a_cnt_blk;
+
+#if ARCH(X86_64)
+    if (fadt->PM1a_CNT_BLK != 0)
+        return make_generic_address_from_io_port(fadt->PM1a_CNT_BLK);
+#endif
+
+    return OptionalNone {};
+}
+
+ErrorOr<Optional<::ACPI::Structures::GenericAddressStructure>> Parser::get_pm1b_control()
+{
+    auto fadt = TRY(Memory::map_typed<::ACPI::Structures::FADT>(m_fadt));
+
+    if (fadt->h.length >= offsetof(::ACPI::Structures::FADT, x_pm1b_cnt_blk) + sizeof(fadt->x_pm1b_cnt_blk) && !fadt->x_pm1b_cnt_blk.is_null())
+        return fadt->x_pm1b_cnt_blk;
+
+#if ARCH(X86_64)
+    if (fadt->PM1b_CNT_BLK != 0)
+        return make_generic_address_from_io_port(fadt->PM1b_CNT_BLK);
+#endif
+
+    return OptionalNone {};
 }
 
 ErrorOr<size_t> Parser::get_table_size(PhysicalAddress table_header)
