@@ -49,8 +49,8 @@ private:
     void close_stdin_if_required(Session const&) const;
 };
 
-struct ExecData : ChildManagingSystem {
-    static ErrorOr<ExecData> create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr);
+struct PipeChild : ChildManagingSystem {
+    static ErrorOr<PipeChild> create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr);
 
     bool is_ready_to_be_closed() const;
 
@@ -58,8 +58,8 @@ struct ExecData : ChildManagingSystem {
     NonnullOwnPtr<Core::File> stderr_;
 };
 
-struct Shell : ChildManagingSystem {
-    static ErrorOr<Shell> create(pid_t child, int fd_pty);
+struct PtyChild : ChildManagingSystem {
+    static ErrorOr<PtyChild> create(pid_t child, int fd_pty);
 
     bool is_ready_to_be_closed() const;
 
@@ -84,7 +84,7 @@ struct Session : public RefCounted<Session> {
 
     Optional<PtyInfo> pty_info {};
     Vector<ByteString> env {};
-    Variant<Empty, ExecData, SFTP::Server, Shell> system {};
+    Variant<Empty, PipeChild, SFTP::Server, PtyChild> system {};
 
     bool is_closed { false };
     bool has_received_eof { false };

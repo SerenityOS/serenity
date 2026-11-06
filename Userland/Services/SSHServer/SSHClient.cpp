@@ -751,56 +751,8 @@ static ErrorOr<Vector<ByteString>> make_env(Vector<ByteString> const& client_env
     return env;
 }
 
-// 6.5.  Starting a Shell or a Command
-// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
-ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
+ErrorOr<void> SSHClient::spawn_child_with_pty(NonnullRefPtr<Session> const& session, Span<StringView> arguments)
 {
-    auto command = TRY(decode_string(message.payload));
-
-    Vector<ByteString> args;
-    args.append("-c");
-    args.append(ByteString(command.bytes()));
-
-    // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
-    //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
-    auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
-    auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
-    auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
-
-    auto shell = TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).shell();
-    auto child = TRY(Core::Process::spawn({
-        .executable = shell,
-        .arguments = args,
-        .environment = TRY(make_env(session->env)),
-        .file_actions = {
-            Core::FileAction::DuplicateFile { stdin_fds[0], STDIN_FILENO },
-            Core::FileAction::DuplicateFile { stdout_fds[1], STDOUT_FILENO },
-            Core::FileAction::DuplicateFile { stderr_fds[1], STDERR_FILENO },
-        },
-    }));
-
-    TRY(Core::System::close(stdin_fds[0]));
-    TRY(Core::System::close(stdout_fds[1]));
-    TRY(Core::System::close(stderr_fds[1]));
-
-    session->system = TRY(ExecData::create(move(child), stdin_fds[1], stdout_fds[0], stderr_fds[0]));
-
-    TRY(send_channel_success_message(session));
-
-    // FIXME: Make sure to cancel these coroutines if anything goes wrong.
-    auto const& exec_data = session->system.get<ExecData>();
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *exec_data.stderr_, [this](auto&... args) { return send_channel_extended_data(args...); }));
-
-    return {};
-}
-
-// 6.5.  Starting a Shell or a Command
-// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
-ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& session)
-{
-    if (!session->pty_info.has_value())
-        return Error::from_string_literal("Shell requested without a pty");
     auto pty_info = session->pty_info.release_value();
 
     int master {};
@@ -825,7 +777,7 @@ ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& sess
 
         Vector<StringView> args;
         args.append(shell);
-        args.append("--login"sv);
+        args.extend(arguments);
 
         auto env = TRY(make_env(session->env));
         auto term = ByteString::formatted("TERM={}", pty_info.term_environment_variable);
@@ -839,15 +791,84 @@ ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& sess
         VERIFY_NOT_REACHED();
     }
 
-    session->system = TRY(Shell::create(pid, master));
-
-    TRY(send_channel_success_message(session));
+    session->system = TRY(PtyChild::create(pid, master));
 
     // FIXME: Make sure to cancel this coroutine if anything goes wrong.
-    auto& shell = session->system.get<Shell>();
-    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *shell.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
+    auto& pty_child = session->system.get<PtyChild>();
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *pty_child.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
 
     return {};
+}
+
+ErrorOr<void> SSHClient::spawn_child_with_pipes(NonnullRefPtr<Session> const& session, Span<StringView> client_arguments)
+{
+    // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
+    //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
+    auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+    auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+
+    Vector<ByteString> arguments;
+    for (auto const& arg : client_arguments)
+        arguments.append(arg);
+
+    auto shell = TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).shell();
+    auto child = TRY(Core::Process::spawn({
+        .executable = shell,
+        .arguments = arguments,
+        .environment = TRY(make_env(session->env)),
+        .file_actions = {
+            Core::FileAction::DuplicateFile { stdin_fds[0], STDIN_FILENO },
+            Core::FileAction::DuplicateFile { stdout_fds[1], STDOUT_FILENO },
+            Core::FileAction::DuplicateFile { stderr_fds[1], STDERR_FILENO },
+        },
+    }));
+
+    TRY(Core::System::close(stdin_fds[0]));
+    TRY(Core::System::close(stdout_fds[1]));
+    TRY(Core::System::close(stderr_fds[1]));
+
+    session->system = TRY(PipeChild::create(move(child), stdin_fds[1], stdout_fds[0], stderr_fds[0]));
+
+    // FIXME: Make sure to cancel these coroutines if anything goes wrong.
+    auto const& pipe_child = session->system.get<PipeChild>();
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *pipe_child.stdout_, [this](auto&... args) { return send_channel_data(args...); }));
+    Core::EventLoop::adopt_coroutine(async_stream_std_data(session, *pipe_child.stderr_, [this](auto&... args) { return send_channel_extended_data(args...); }));
+
+    return {};
+}
+
+ErrorOr<void> SSHClient::spawn_child_for_session(NonnullRefPtr<Session> const& session, Span<StringView> args)
+{
+    if (session->pty_info.has_value())
+        TRY(spawn_child_with_pty(session, args));
+    else
+        TRY(spawn_child_with_pipes(session, args));
+    TRY(send_channel_success_message(session));
+    return {};
+}
+
+// 6.5.  Starting a Shell or a Command
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
+ErrorOr<void> SSHClient::handle_channel_exec(NonnullRefPtr<Session> const& session, GenericMessage& message)
+{
+    auto command = TRY(decode_string(message.payload));
+
+    Vector<StringView> args;
+    args.append("-c"sv);
+    args.append({ command.bytes() });
+
+    return spawn_child_for_session(session, args);
+}
+
+// 6.5.  Starting a Shell or a Command
+// https://datatracker.ietf.org/doc/html/rfc4254#section-6.5
+ErrorOr<void> SSHClient::handle_channel_shell(NonnullRefPtr<Session> const& session)
+{
+    Vector<StringView> args;
+    args.append("--login"sv);
+
+    return spawn_child_for_session(session, args);
 }
 
 template<typename F>
@@ -858,10 +879,10 @@ Coroutine<void> SSHClient::async_stream_std_data(NonnullRefPtr<Session> session,
             auto output_buffer = CO_TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
             auto maybe_output = co_await file.async_read_some(output_buffer);
 
-            if (session->system.has<Shell>()) {
+            if (session->system.has<PtyChild>()) {
                 if (maybe_output.is_error() && maybe_output.error().code() == EIO) {
                     // On Linux, if file is a pty, EIO is returned when we reach EOF.
-                    session->system.get<Shell>().received_io_error = true;
+                    session->system.get<PtyChild>().received_io_error = true;
                     break;
                 }
             }
@@ -944,8 +965,8 @@ ErrorOr<void> SSHClient::handle_channel_window_change(Session& session, GenericM
     dbgln_if(SSH_DEBUG, "PTY window change: w={}, h={}, w_px={}, h_px={}",
         width_characters, height_rows, width_pixels, height_pixels);
 
-    if (!session.system.has<Shell>())
-        return Error::from_string_literal("Requested a window change while no shell is present");
+    if (!session.system.has<PtyChild>())
+        return Error::from_string_literal("Requested a window change while no pty is present");
 
     winsize ws {
         .ws_row = static_cast<u16>(height_rows),
@@ -954,7 +975,7 @@ ErrorOr<void> SSHClient::handle_channel_window_change(Session& session, GenericM
         .ws_ypixel = static_cast<u16>(height_pixels),
     };
 
-    auto maybe_error = Core::System::tcsetwinsize(session.system.get<Shell>().stdin_->fd(), ws);
+    auto maybe_error = Core::System::tcsetwinsize(session.system.get<PtyChild>().stdin_->fd(), ws);
 
     if (maybe_error.is_error()) {
         dbgln("Unable to set pty dimensions: {}", maybe_error.error());
