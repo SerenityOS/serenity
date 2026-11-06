@@ -7,6 +7,8 @@
 #include <AK/Base64.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Socket.h>
+#include <LibCore/System.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibFileSystem/FileSystem.h>
@@ -81,4 +83,72 @@ TEST_CASE(test_TLS_hello_handshake)
     }
 
     loop.exec();
+}
+
+// A self-signed certificate for "localhost". The server side of the test below never uses its private key.
+constexpr auto localhost_certificate = "MIIByzCCATSgAwIBAgIJAJN0Qh82eru3MA0GCSqGSIb3DQEBCwUAMBQxEjAQBgNV"
+                                       "BAMMCWxvY2FsaG9zdDAgFw0yNjExMDYxMzI0NDVaGA8yMTI2MTAxMzEzMjQ0NVow"
+                                       "FDESMBAGA1UEAwwJbG9jYWxob3N0MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKB"
+                                       "gQC+36a0UHSQ5UJEDOHXhps+YR4hqJJrGlPN14yOr5j/AQFAKyyQioa3B4tUbZl2"
+                                       "1Jhn95K1qEz+cgBPmoaUMBmSaigfqfQxjwJ6EcafzmUKCRXWxRwHYvWy7fg9bdxM"
+                                       "liF+6xEcuOlWOLD8SxlAQUArS5/fKQF89eBb+GBO9Q2m3wIDAQABoyMwITAPBgNV"
+                                       "HRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwICpDANBgkqhkiG9w0BAQsFAAOBgQAJ"
+                                       "sWX4BuofEKi6H98EQLtGdHWGsLmHkxfAIzNgCEzzlNVx/BNrUfef7oClNMAzsZvQ"
+                                       "gKWbaOHk0BMdtfDLsrcIb+BVsI3mkojDGy17aVuwD8/V1sKIuacElBmOPLF3d1YG"
+                                       "xFJdYKQIQYcdhfsw+wkW8bBcMdSgKnWPeMcNlO7KQw=="sv;
+
+TEST_CASE(test_TLS_finished_without_change_cipher_spec)
+{
+    Core::EventLoop loop;
+
+    auto certificate_der = TRY_OR_FAIL(decode_base64(localhost_certificate));
+    auto certificate = TRY_OR_FAIL(TLS::Certificate::parse_certificate(certificate_der));
+
+    int fds[2];
+    TRY_OR_FAIL(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fds));
+    auto client_socket = TRY_OR_FAIL(Core::LocalSocket::adopt_fd(fds[0]));
+    auto server_socket = TRY_OR_FAIL(Core::LocalSocket::adopt_fd(fds[1]));
+
+    ByteBuffer server_flight;
+    auto append_handshake_record = [&](TLS::HandshakeType type, ReadonlyBytes body) {
+        size_t record_length = body.size() + 4;
+        u8 header[] = {
+            to_underlying(TLS::ContentType::HANDSHAKE), 0x03, 0x03,
+            static_cast<u8>(record_length >> 8), static_cast<u8>(record_length),
+            to_underlying(type),
+            static_cast<u8>(body.size() >> 16), static_cast<u8>(body.size() >> 8), static_cast<u8>(body.size())
+        };
+        server_flight.append(header, sizeof(header));
+        server_flight.append(body);
+    };
+
+    // Version, an all-zero random, no session id, TLS_RSA_WITH_AES_128_GCM_SHA256 and no compression.
+    Array<u8, 38> server_hello {};
+    server_hello[0] = 0x03;
+    server_hello[1] = 0x03;
+    server_hello[35] = to_underlying(TLS::CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256) >> 8;
+    server_hello[36] = to_underlying(TLS::CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256) & 0xff;
+    append_handshake_record(TLS::HandshakeType::SERVER_HELLO, server_hello);
+
+    ByteBuffer certificate_list;
+    for (size_t length : { certificate_der.size() + 3, certificate_der.size() }) {
+        certificate_list.append(static_cast<u8>(length >> 16));
+        certificate_list.append(static_cast<u8>(length >> 8));
+        certificate_list.append(static_cast<u8>(length));
+    }
+    certificate_list.append(certificate_der);
+    append_handshake_record(TLS::HandshakeType::CERTIFICATE, certificate_list);
+
+    append_handshake_record(TLS::HandshakeType::SERVER_HELLO_DONE_RESERVED, {});
+
+    // A Finished message that is not preceded by a ChangeCipherSpec, and so arrives in plaintext.
+    Array<u8, 12> verify_data {};
+    append_handshake_record(TLS::HandshakeType::FINISHED, verify_data);
+
+    TRY_OR_FAIL(server_socket->write_until_depleted(server_flight));
+
+    TLS::Options options;
+    options.set_root_certificates(Vector { certificate });
+    auto tls = TLS::TLSv12::connect("localhost"sv, *client_socket, move(options));
+    EXPECT(tls.is_error() || !tls.value()->is_established());
 }
