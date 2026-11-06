@@ -178,13 +178,14 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
 
 ErrorOr<Loca> Loca::from_slice(ReadonlyBytes slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
 {
+    // The loca table holds numGlyphs + 1 offsets; get_glyph_offset() reads the trailing one.
     switch (index_to_loc_format) {
     case IndexToLocFormat::Offset16:
-        if (slice.size() < num_glyphs * 2)
+        if (slice.size() < (num_glyphs + 1) * 2)
             return Error::from_string_literal("Could not load Loca: Not enough data");
         break;
     case IndexToLocFormat::Offset32:
-        if (slice.size() < num_glyphs * 4)
+        if (slice.size() < (num_glyphs + 1) * 4)
             return Error::from_string_literal("Could not load Loca: Not enough data");
         break;
     }
