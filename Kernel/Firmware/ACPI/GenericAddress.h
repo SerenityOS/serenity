@@ -11,6 +11,7 @@
 
 namespace Kernel::ACPI {
 
+ErrorOr<u64> read_generic_address(::ACPI::Structures::GenericAddressStructure const& structure);
 ErrorOr<void> write_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u64 value);
 
 }

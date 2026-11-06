@@ -44,6 +44,60 @@ static ErrorOr<u8> get_bit_width(::ACPI::Structures::GenericAddressStructure con
     return AK::min(bit_width, structure.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemIO ? 32 : 64);
 }
 
+ErrorOr<u64> read_generic_address(::ACPI::Structures::GenericAddressStructure const& structure)
+{
+    auto bit_width = TRY(get_bit_width(structure));
+
+    switch (structure.address_space) {
+    case ::ACPI::GenericAddressStructure::AddressSpace::SystemIO: {
+#if ARCH(X86_64)
+        IOAddress address(structure.address);
+        dbgln_if(ACPI_DEBUG, "ACPI: Reading from {}", address);
+
+        switch (bit_width) {
+        case 8:
+            return address.in<u8>();
+        case 16:
+            return address.in<u16>();
+        case 32:
+            return address.in<u32>();
+        default:
+            dbgln("ACPI: Tried to read an unsupported bit width from an IO port");
+            return EINVAL;
+        }
+#else
+        dbgln("ACPI: Tried to access SystemIO on a non x86 architecture");
+        return EINVAL;
+#endif
+    }
+
+    case ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory: {
+        dbgln_if(ACPI_DEBUG, "ACPI: Reading from {}", PhysicalAddress(structure.address));
+
+        switch (bit_width) {
+        case 8:
+            return *TRY(Memory::map_typed<u8>(PhysicalAddress(structure.address)));
+        case 16:
+            return *TRY(Memory::map_typed<u16>(PhysicalAddress(structure.address)));
+        case 32:
+            return *TRY(Memory::map_typed<u32>(PhysicalAddress(structure.address)));
+        case 64:
+            return *TRY(Memory::map_typed<u64>(PhysicalAddress(structure.address)));
+
+        default:
+            dbgln("ACPI: Tried to read an unsupported bit width from SystemMemory");
+            return EINVAL;
+        }
+    }
+
+    default:
+        dbgln("ACPI: Tried to access an unsupported address space");
+        return EINVAL;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<void> write_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u64 value)
 {
     auto bit_width = TRY(get_bit_width(structure));
