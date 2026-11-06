@@ -65,6 +65,14 @@ private:
 
     ErrorOr<ControlList> generate_initial_binner_control_list();
 
+    struct ShaderStateRecord {
+        ControlList control_list;
+        ControlList uniforms_list;
+        Buffer vertex_data_buffer;
+        Buffer shaders_buffer;
+    };
+    ErrorOr<ShaderStateRecord> generate_shader_state_record(Vector<VertexData> const& vertex_array);
+
     struct RenderControlList {
         ControlList control_list;
         ControlList tile_list;
@@ -83,6 +91,8 @@ private:
 
     ControlList m_binner_control_list;
     RenderControlList m_render_control_list;
+
+    Vector<ShaderStateRecord> m_shader_state_records;
 
     Optional<Buffer> m_tile_alloc_memory_buffer;
     Optional<Buffer> m_tile_state_data_array_buffer;
@@ -110,6 +120,8 @@ private:
             .clear_depth = m_clear_depth,
         };
     }
+
+    GPU::RasterizerOptions m_options;
 };
 
 }
