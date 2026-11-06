@@ -35,6 +35,8 @@ public:
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
+    virtual ErrorOr<void> increment_link_count() override;
+    virtual ErrorOr<void> decrement_link_count() override;
 
 private:
     RAMFSInode(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);

@@ -58,6 +58,7 @@ set(LIBTEST_BASED_SOURCES
     TestMunMap.cpp
     TestProcFS.cpp
     TestProcFSWrite.cpp
+    TestRAMFS.cpp
     TestSigAltStack.cpp
     TestSigHandler.cpp
     TestSignalDispatch.cpp
