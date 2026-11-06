@@ -35,6 +35,11 @@ static ErrorOr<void> adjust_modification_time(Archive::ZipMember const& zip_memb
 
 static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 {
+    LexicalPath path { zip_member.name.to_byte_string() };
+    if (path.is_absolute() || path.parts_view().contains_slow(".."sv)) {
+        warnln("Refusing to extract '{}' outside of the output directory", zip_member.name);
+        return false;
+    }
     if (zip_member.is_directory) {
         if (auto maybe_error = Core::System::mkdir(zip_member.name, 0755); maybe_error.is_error()) {
             warnln("Failed to create directory '{}': {}", zip_member.name, maybe_error.error());
