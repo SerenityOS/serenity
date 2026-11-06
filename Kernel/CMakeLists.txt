@@ -238,6 +238,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Configuration/UBSANDeadly.cpp
     FileSystem/VFSRootContext.cpp
     FileSystem/VirtualFileSystem.cpp
+    Firmware/ACPI/GenericAddress.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/SysFSComponent.cpp

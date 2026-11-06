@@ -85,7 +85,6 @@ private:
     ErrorOr<void> process_dsdt();
 
     bool validate_reset_register(Memory::TypedMapping<::ACPI::Structures::FADT> const&);
-    ErrorOr<void> access_generic_address(::ACPI::Structures::GenericAddressStructure const&, u32 value);
 
     OwnPtr<InterruptHandler> m_interrupt_handler;
 
