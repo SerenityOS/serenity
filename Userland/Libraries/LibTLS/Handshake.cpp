@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/Memory.h>
 #include <AK/Random.h>
 
 #include <LibCore/Timer.h>
@@ -187,8 +188,10 @@ ByteBuffer TLSv12::build_handshake_finished()
     auto outbuffer = Bytes { out, verify_data_length };
     ByteBuffer dummy;
 
-    auto digest = m_context.handshake_hash.digest();
-    auto hashbuf = ReadonlyBytes { digest.immutable_data(), m_context.handshake_hash.digest_size() };
+    // Hash a copy, the server's Finished is computed over a transcript that includes this message.
+    auto handshake_hash_copy = m_context.handshake_hash.copy();
+    auto digest = handshake_hash_copy.digest();
+    auto hashbuf = ReadonlyBytes { digest.immutable_data(), handshake_hash_copy.digest_size() };
     pseudorandom_function(outbuffer, m_context.master_key, (u8 const*)"client finished", 15, hashbuf, dummy);
 
     builder.append(outbuffer);
@@ -225,8 +228,31 @@ ssize_t TLSv12::handle_handshake_finished(ReadonlyBytes buffer, WritePacketStage
         return (i8)Error::NeedMoreData;
     }
 
-    // TODO: Compare Hashes
-    dbgln_if(TLS_DEBUG, "FIXME: handle_handshake_finished :: Check message validity");
+    // RFC 5246 section 7.4.9: "A Finished message is always sent immediately after a change cipher spec message"
+    if (!m_context.cipher_spec_set) {
+        dbgln("finished message received before change cipher spec");
+        return (i8)Error::UnexpectedMessage;
+    }
+
+    constexpr u32 verify_data_length = 12;
+    if (size != verify_data_length) {
+        dbgln_if(TLS_DEBUG, "finished packet has unexpected size: {}", size);
+        return (i8)Error::BrokenPacket;
+    }
+
+    // "Recipients of Finished messages MUST verify that the contents are correct."
+    u8 expected_verify_data[verify_data_length];
+    ByteBuffer dummy;
+    auto handshake_hash_copy = m_context.handshake_hash.copy();
+    auto digest = handshake_hash_copy.digest();
+    auto hashbuf = ReadonlyBytes { digest.immutable_data(), handshake_hash_copy.digest_size() };
+    pseudorandom_function(Bytes { expected_verify_data, verify_data_length }, m_context.master_key, (u8 const*)"server finished", 15, hashbuf, dummy);
+
+    if (!timing_safe_compare(expected_verify_data, buffer.offset_pointer(index), verify_data_length)) {
+        dbgln("finished message has invalid verify_data");
+        return (i8)Error::NotSafe;
+    }
+
     m_context.connection_status = ConnectionStatus::Established;
 
     if (m_handshake_timeout_timer) {
