@@ -1460,49 +1460,49 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     auto emit_application_code = [this](KeyCode key) {
         // The table providing mapping from numeric keys to application keys can be found at https://vt100.net/docs/vt100-ug/chapter3.html#T3-7
         StringBuilder builder;
-        builder.append("\x1bO"sv);
+        builder.try_append("\x1bO"sv).release_value_but_fixme_should_propagate_errors();
         switch (key) {
         case KeyCode::Key_0:
-            builder.append('p');
+            builder.try_append('p').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_1:
-            builder.append('q');
+            builder.try_append('q').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_2:
-            builder.append('r');
+            builder.try_append('r').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_3:
-            builder.append('s');
+            builder.try_append('s').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_4:
-            builder.append('t');
+            builder.try_append('t').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_5:
-            builder.append('u');
+            builder.try_append('u').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_6:
-            builder.append('v');
+            builder.try_append('v').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_7:
-            builder.append('w');
+            builder.try_append('w').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_8:
-            builder.append('x');
+            builder.try_append('x').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_9:
-            builder.append('y');
+            builder.try_append('y').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_Minus:
-            builder.append('m');
+            builder.try_append('m').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_Comma:
-            builder.append('l');
+            builder.try_append('l').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_Period:
-            builder.append('n');
+            builder.try_append('n').release_value_but_fixme_should_propagate_errors();
             break;
         case KeyCode::Key_Return:
-            builder.append('M');
+            builder.try_append('M').release_value_but_fixme_should_propagate_errors();
             break;
         default:
             break;
@@ -1605,7 +1605,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         emit_string("\033"sv);
 
     StringBuilder sb;
-    sb.append_code_point(code_point);
+    sb.try_append_code_point(code_point).release_value_but_fixme_should_propagate_errors();
     emit_string(sb.string_view());
 }
 
@@ -1617,11 +1617,11 @@ void Terminal::unimplemented_control_code(u8 code)
 void Terminal::unimplemented_escape_sequence(Intermediates intermediates, u8 last_byte)
 {
     StringBuilder builder;
-    builder.appendff("Unimplemented escape sequence {:c}", last_byte);
+    builder.try_appendff("Unimplemented escape sequence {:c}", last_byte).release_value_but_fixme_should_propagate_errors();
     if (!intermediates.is_empty()) {
-        builder.append(", intermediates: "sv);
+        builder.try_append(", intermediates: "sv).release_value_but_fixme_should_propagate_errors();
         for (size_t i = 0; i < intermediates.size(); ++i)
-            builder.append((char)intermediates[i]);
+            builder.try_append((char)intermediates[i]).release_value_but_fixme_should_propagate_errors();
     }
     dbgln("{}", builder.string_view());
 }
@@ -1629,17 +1629,17 @@ void Terminal::unimplemented_escape_sequence(Intermediates intermediates, u8 las
 void Terminal::unimplemented_csi_sequence(Parameters parameters, Intermediates intermediates, u8 last_byte)
 {
     StringBuilder builder;
-    builder.appendff("Unimplemented CSI sequence: {:c}", last_byte);
+    builder.try_appendff("Unimplemented CSI sequence: {:c}", last_byte).release_value_but_fixme_should_propagate_errors();
     if (!parameters.is_empty()) {
-        builder.append(", parameters: ["sv);
+        builder.try_append(", parameters: ["sv).release_value_but_fixme_should_propagate_errors();
         for (size_t i = 0; i < parameters.size(); ++i)
-            builder.appendff("{}{}", (i == 0) ? "" : ", ", parameters[i]);
-        builder.append("]"sv);
+            builder.try_appendff("{}{}", (i == 0) ? "" : ", ", parameters[i]).release_value_but_fixme_should_propagate_errors();
+        builder.try_append("]"sv).release_value_but_fixme_should_propagate_errors();
     }
     if (!intermediates.is_empty()) {
-        builder.append(", intermediates:"sv);
+        builder.try_append(", intermediates:"sv).release_value_but_fixme_should_propagate_errors();
         for (size_t i = 0; i < intermediates.size(); ++i)
-            builder.append((char)intermediates[i]);
+            builder.try_append((char)intermediates[i]).release_value_but_fixme_should_propagate_errors();
     }
     dbgln("{}", builder.string_view());
 }
@@ -1647,19 +1647,19 @@ void Terminal::unimplemented_csi_sequence(Parameters parameters, Intermediates i
 void Terminal::unimplemented_osc_sequence(OscParameters parameters, u8 last_byte)
 {
     StringBuilder builder;
-    builder.appendff("Unimplemented OSC sequence parameters: (bel_terminated={}) [ ", last_byte == '\a');
+    builder.try_appendff("Unimplemented OSC sequence parameters: (bel_terminated={}) [ ", last_byte == '\a').release_value_but_fixme_should_propagate_errors();
     bool first = true;
     for (auto parameter : parameters) {
         if (!first)
-            builder.append(", "sv);
-        builder.append('[');
+            builder.try_append(", "sv).release_value_but_fixme_should_propagate_errors();
+        builder.try_append('[').release_value_but_fixme_should_propagate_errors();
         for (auto character : parameter)
-            builder.append((char)character);
-        builder.append(']');
+            builder.try_append((char)character).release_value_but_fixme_should_propagate_errors();
+        builder.try_append(']').release_value_but_fixme_should_propagate_errors();
         first = false;
     }
 
-    builder.append(" ]"sv);
+    builder.try_append(" ]"sv).release_value_but_fixme_should_propagate_errors();
     dbgln("{}", builder.string_view());
 }
 
