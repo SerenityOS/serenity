@@ -11,6 +11,8 @@
 
 namespace Kernel::ACPI {
 
+::ACPI::Structures::GenericAddressStructure make_generic_address_from_io_port(u32 io_port);
+
 ErrorOr<u64> read_generic_address(::ACPI::Structures::GenericAddressStructure const& structure);
 ErrorOr<void> write_generic_address(::ACPI::Structures::GenericAddressStructure const& structure, u64 value);
 

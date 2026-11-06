@@ -14,6 +14,17 @@
 
 namespace Kernel::ACPI {
 
+::ACPI::Structures::GenericAddressStructure make_generic_address_from_io_port(u32 io_port)
+{
+    return ::ACPI::Structures::GenericAddressStructure {
+        .address_space = ::ACPI::GenericAddressStructure::AddressSpace::SystemIO,
+        .bit_width = ::ACPI::GenericAddressStructure::BitWidth::Word,
+        .bit_offset = 0,
+        .access_size = ::ACPI::GenericAddressStructure::AccessSize::Word,
+        .address = io_port,
+    };
+}
+
 static ErrorOr<u8> get_bit_width(::ACPI::Structures::GenericAddressStructure const& structure)
 {
     // NOTE: We need to do a more complicated algorithm because for legacy reasons there are,
