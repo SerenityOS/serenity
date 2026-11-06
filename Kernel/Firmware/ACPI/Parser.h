@@ -31,7 +31,6 @@ public:
     void try_acpi_reboot();
     bool can_reboot();
     void try_acpi_shutdown();
-    bool can_shutdown() { return false; }
 
     PhysicalAddress rsdp() const { return m_rsdp; }
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
