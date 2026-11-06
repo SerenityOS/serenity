@@ -423,7 +423,7 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
         if (auto formatted_length = (formatted_string.length() - point_index - 1); formatted_length > fraction_max_width) {
             formatted_string = formatted_string.substring_view(0, 1 + point_index + fraction_max_width);
         } else {
-            string_builder.append_repeated('0', fraction_max_width - formatted_length);
+            TRY(string_builder.try_append_repeated('0', fraction_max_width - formatted_length));
             formatted_string = string_builder.string_view();
         }
 
@@ -968,7 +968,7 @@ ErrorOr<void> Formatter<wchar_t>::format(FormatBuilder& builder, wchar_t value)
         return formatter.format(builder, static_cast<u32>(value));
     } else {
         StringBuilder codepoint;
-        codepoint.append_code_point(value);
+        TRY(codepoint.try_append_code_point(value));
 
         Formatter<StringView> formatter { *this };
         return formatter.format(builder, codepoint.string_view());
@@ -1159,13 +1159,13 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
             if (Kernel::Thread::current()) {
                 auto& thread = *Kernel::Thread::current();
                 thread.process().name().with([&](auto& process_name) {
-                    builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id(), process_name.representable_view(), thread.pid().value(), thread.tid().value());
+                    MUST(builder.try_appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id(), process_name.representable_view(), thread.pid().value(), thread.tid().value()));
                 });
             } else {
-                builder.appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id());
+                MUST(builder.try_appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id()));
             }
         } else {
-            builder.appendff("\033[34;1m[Kernel]\033[0m: ");
+            MUST(builder.try_appendff("\033[34;1m[Kernel]\033[0m: "));
         }
 #elif !defined(AK_OS_WINDOWS)
         auto process_name = process_name_for_logging();
@@ -1192,7 +1192,7 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
 
     MUST(vformat(builder, fmtstr, params));
     if (newline)
-        builder.append('\n');
+        MUST(builder.try_append('\n'));
     auto const string = builder.string_view();
 
 #ifdef AK_OS_SERENITY
@@ -1218,18 +1218,18 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
         if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
             thread.process().name().with([&](auto& process_name) {
-                builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, process_name.representable_view(), thread.pid().value(), thread.tid().value());
+                MUST(builder.try_appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, process_name.representable_view(), thread.pid().value(), thread.tid().value()));
             });
         } else {
-            builder.appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000);
+            MUST(builder.try_appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000));
         }
     } else {
-        builder.appendff("\033[34;1m[Kernel]\033[0m: ");
+        MUST(builder.try_appendff("\033[34;1m[Kernel]\033[0m: "));
     }
 #    endif
 
     MUST(vformat(builder, fmtstr, params));
-    builder.append('\n');
+    MUST(builder.try_append('\n'));
 
     auto const string = builder.string_view();
     kernelputstr(string.characters_without_null_termination(), string.length());
@@ -1245,15 +1245,15 @@ void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams& params)
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
         auto& thread = *Kernel::Thread::current();
         thread.process().name().with([&](auto& process_name) {
-            builder.appendff("[{}({}:{})]: ", process_name.representable_view(), thread.pid().value(), thread.tid().value());
+            MUST(builder.try_appendff("[{}({}:{})]: ", process_name.representable_view(), thread.pid().value(), thread.tid().value()));
         });
     } else {
-        builder.appendff("[Kernel]: ");
+        MUST(builder.try_appendff("[Kernel]: "));
     }
 #    endif
 
     MUST(vformat(builder, fmtstr, params));
-    builder.append('\n');
+    MUST(builder.try_append('\n'));
 
     auto const string = builder.string_view();
     kernelcriticalputstr(string.characters_without_null_termination(), string.length());
