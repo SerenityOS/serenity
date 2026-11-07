@@ -32,12 +32,14 @@ public:
         clear();
     }
 
+#ifndef KERNEL
     ByteBuffer(ByteBuffer const& other)
     {
         MUST(try_resize(other.size()));
         VERIFY(m_size == other.size());
         __builtin_memcpy(data(), other.data(), other.size());
     }
+#endif
 
     ByteBuffer(ByteBuffer&& other)
     {
