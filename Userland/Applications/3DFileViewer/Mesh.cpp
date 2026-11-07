@@ -33,6 +33,8 @@ Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Vertex> 
 
 void Mesh::draw(float uv_scale)
 {
+    glBegin(GL_TRIANGLES);
+
     for (u32 i = 0; i < m_triangle_list.size(); i++) {
         auto const& triangle = m_triangle_list[i];
 
@@ -77,8 +79,6 @@ void Mesh::draw(float uv_scale)
             normal_c = normal_a;
         }
 
-        glBegin(GL_TRIANGLES);
-
         if (is_textured())
             glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index0).v) * uv_scale);
 
@@ -108,7 +108,7 @@ void Mesh::draw(float uv_scale)
             m_vertex_list.at(triangle.c).x,
             m_vertex_list.at(triangle.c).y,
             m_vertex_list.at(triangle.c).z);
-
-        glEnd();
     }
+
+    glEnd();
 }
