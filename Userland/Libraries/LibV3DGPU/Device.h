@@ -71,7 +71,7 @@ private:
         Buffer vertex_data_buffer;
         Buffer shaders_buffer;
     };
-    ErrorOr<ShaderStateRecord> generate_shader_state_record(Vector<VertexData> const& vertex_array);
+    ErrorOr<ShaderStateRecord> generate_shader_state_record(Vector<VertexData> const& vertex_array, FloatMatrix4x4 const& model_view_projection_matrix);
 
     struct RenderControlList {
         ControlList control_list;
@@ -120,6 +120,9 @@ private:
             .clear_depth = m_clear_depth,
         };
     }
+
+    FloatMatrix4x4 m_model_view_matrix;
+    FloatMatrix4x4 m_projection_matrix;
 
     GPU::RasterizerOptions m_options;
 };

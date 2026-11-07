@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Types.h>
+#include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Size.h>
 #include <LibV3DGPU/ControlList.h>
 
@@ -22,10 +23,12 @@ namespace V3DGPU {
 //   layout(location = 0) in vec4 a_position;
 //   layout(location = 1) in vec4 a_color;
 //
+//   uniform mat4 u_model_view_projection;
+//
 //   out vec4 v_color;
 //
 //   void main() {
-//       gl_Position = a_position;
+//       gl_Position = u_model_view_projection * a_position;
 //       v_color = a_color;
 //   }
 
@@ -42,46 +45,80 @@ namespace V3DGPU {
 //   }
 
 static constexpr auto COORDINATE_SHADER = to_array<u64>({
-    0x39813186bb03f000, // nop                           ; nop                         ; ldunifrf.rf4 (vp_x_scale)
-    0x39817186bb03f000, // nop                           ; nop                         ; ldunifrf.rf5 (0x00000000 / 0.000000)
-    0x3981e186bc03f140, // ldvpmv_in rf6, rf5            ; nop                         ; ldunifrf.rf7 (0x00000001 / 0.000000)
-    0x55824348bc1841c0, // ldvpmv_in rf8, rf7            ; fmul rf13, rf6, rf4         ; ldunifrf.rf9 (0x00000002 / 0.000000)
-    0x3982e18abc03f240, // ldvpmv_in rf10, rf9           ; nop                         ; ldunifrf.rf11 (0x00000003 / 0.000000)
-    0x3840218cbc03f2c0, // ldvpmv_in rf12, rf11          ; nop                         ; ldunif (vp_y_scale)
-    0x544003cebc200320, // recip rf14, rf12              ; fmul rf15, rf8, rf0         ; ldunif (0x00000004 / 0.000000)
-    0x38002180be03f146, // stvpmv rf5, rf6               ; nop
-    0x54000400be34e1c8, // stvpmv rf7, rf8               ; fmul rf16, rf13, rf14
-    0x54000440be3ce24a, // stvpmv rf9, rf10              ; fmul rf17, rf15, rf14
-    0x38002192f503f407, // ftoin rf18, rf16              ; nop
-    0x38002180be03f2cc, // stvpmv rf11, rf12             ; nop
-    0x38602180be03f012, // stvpmv rf0, rf18              ; nop                         ; thrsw; ldunif (0x00000005 / 0.000000)
-    0x38002193f503f447, // ftoin rf19, rf17              ; nop
-    0x38002180be03f013, // stvpmv rf0, rf19              ; nop
+    0x38403186bb03f000, // nop                           ; nop                         ; ldunif (0x00000000 / 0.000000)
+    0x38402184bc03f000, // ldvpmv_in rf4, rf0            ; nop                         ; ldunif (0x00000001 / 0.000000)
+    0x38402185bc03f000, // ldvpmv_in rf5, rf0            ; nop                         ; ldunif (0x00000002 / 0.000000)
+    0x3981e186bc03f000, // ldvpmv_in rf6, rf0            ; nop                         ; ldunifrf.rf7 (push[0])
+    0x55821286bb1c4000, // nop                           ; fmul rf10, rf7, rf4         ; ldunifrf.rf8 (push[1])
+    0x55825486bb204000, // nop                           ; fmul rf18, rf8, rf4         ; ldunifrf.rf9 (push[2])
+    0x54401586bb244000, // nop                           ; fmul rf22, rf9, rf4         ; ldunif (push[3])
+    0x558312c6bb004000, // nop                           ; fmul rf11, rf0, rf4         ; ldunifrf.rf12 (push[4])
+    0x558353c6bb305000, // nop                           ; fmul rf15, rf12, rf5        ; ldunifrf.rf13 (push[5])
+    0x558384d40534528f, // fadd rf20, rf10, rf15         ; fmul rf19, rf13, rf5        ; ldunifrf.rf14 (push[6])
+    0x5440071e05385493, // fadd rf30, rf18, rf19         ; fmul rf28, rf14, rf5        ; ldunif (push[7])
+    0x54401406bb005000, // nop                           ; fmul rf16, rf0, rf5         ; ldunif (0x00000003 / 0.000000)
+    0x3985e191bc03f000, // ldvpmv_in rf17, rf0           ; nop                         ; ldunifrf.rf23 (push[8])
+    0x55860695055c62d0, // fadd rf21, rf11, rf16         ; fmul rf26, rf23, rf6        ; ldunifrf.rf24 (push[9])
+    0x558647450560651a, // fadd rf5, rf20, rf26          ; fmul rf29, rf24, rf6        ; ldunifrf.rf25 (push[10])
+    0x5440024c0564675e, // fadd rf12, rf29, rf30         ; fmul rf9, rf25, rf6         ; ldunif (push[11])
+    0x5587c6cb0500659c, // fadd rf11, rf22, rf28         ; fmul rf27, rf0, rf6         ; ldunifrf.rf31 (push[12])
+    0x558040c7057d155b, // fadd rf7, rf21, rf27          ; fmul rf3, rf31, rf17        ; ldunifrf.rf1 (push[13])
+    0x5580828d050510c5, // fadd rf13, rf3, rf5           ; fmul rf10, rf1, rf17        ; ldunifrf.rf2 (push[14])
+    0x544003d20509128c, // fadd rf18, rf10, rf12         ; fmul rf15, rf2, rf17        ; ldunif (push[15])
+    0x558201110501124b, // fadd rf17, rf9, rf11          ; fmul rf4, rf0, rf17         ; ldunifrf.rf8 (vp_x_scale)
+    0x558404ce05348107, // fadd rf14, rf4, rf7           ; fmul rf19, rf13, rf8        ; ldunifrf.rf16 (vp_y_scale)
+    0x54400595054903d1, // fadd rf21, rf15, rf17         ; fmul rf22, rf18, rf16       ; ldunif (0x00000000 / 0.000000)
+    0x38402180be03f00d, // stvpmv rf0, rf13              ; nop                         ; ldunif (0x00000001 / 0.000000)
+    0x38402180be03f012, // stvpmv rf0, rf18              ; nop                         ; ldunif (0x00000002 / 0.000000)
+    0x38002194bc03f3a0, // recip rf20, rf14              ; nop
+    0x38402180be03f015, // stvpmv rf0, rf21              ; nop                         ; ldunif (0x00000003 / 0.000000)
+    0x544005c0be4d400e, // stvpmv rf0, rf14              ; fmul rf23, rf19, rf20       ; ldunif (0x00000004 / 0.000000)
+    0x54000619f55945c7, // ftoin rf25, rf23              ; fmul rf24, rf22, rf20
+    0x38602180be03f019, // stvpmv rf0, rf25              ; nop                         ; thrsw; ldunif (0x00000005 / 0.000000)
+    0x3800219af503f607, // ftoin rf26, rf24              ; nop
+    0x38002180be03f01a, // stvpmv rf0, rf26              ; nop
 });
 
 static constexpr auto VERTEX_SHADER = to_array<u64>({
-    0x39813186bb03f000, // nop                           ; nop                         ; ldunifrf.rf4 (vp_x_scale)
     0x38403186bb03f000, // nop                           ; nop                         ; ldunif (0x00000000 / 0.000000)
-    0x38402185bc03f000, // ldvpmv_in rf5, rf0            ; nop                         ; ldunif (0x00000001 / 0.000000)
-    0x54400446bc144000, // ldvpmv_in rf6, rf0            ; fmul rf17, rf5, rf4         ; ldunif (0x00000002 / 0.000000)
-    0x38402187bc03f000, // ldvpmv_in rf7, rf0            ; nop                         ; ldunif (0x00000003 / 0.000000)
-    0x39826188bc03f000, // ldvpmv_in rf8, rf0            ; nop                         ; ldunifrf.rf9 (0x00000004 / 0.000000)
-    0x3982e18abc03f240, // ldvpmv_in rf10, rf9           ; nop                         ; ldunifrf.rf11 (0x00000005 / 0.000000)
-    0x3983618cbc03f2c0, // ldvpmv_in rf12, rf11          ; nop                         ; ldunifrf.rf13 (0x00000006 / 0.000000)
-    0x3983e18ebc03f340, // ldvpmv_in rf14, rf13          ; nop                         ; ldunifrf.rf15 (0x00000007 / 0.000000)
-    0x38402190bc03f3c0, // ldvpmv_in rf16, rf15          ; nop                         ; ldunif (vp_y_scale)
-    0x544004d2bc180220, // recip rf18, rf8               ; fmul rf19, rf6, rf0         ; ldunif (vp_z_scale)
-    0x55860580be1c024a, // stvpmv rf9, rf10              ; fmul rf22, rf7, rf0         ; ldunifrf.rf24 (vp_z_offset)
-    0x54400500be4522cc, // stvpmv rf11, rf12             ; fmul rf20, rf17, rf18       ; ldunif (0x00000000 / 0.000000)
-    0x54000540be4d234e, // stvpmv rf13, rf14             ; fmul rf21, rf19, rf18
-    0x54000657f5592507, // ftoin rf23, rf20              ; fmul rf25, rf22, rf18
-    0x38002180be03f3d0, // stvpmv rf15, rf16             ; nop
-    0x38402180be03f017, // stvpmv rf0, rf23              ; nop                         ; ldunif (0x00000001 / 0.000000)
-    0x3800219af503f547, // ftoin rf26, rf21              ; nop
-    0x38402180be03f01a, // stvpmv rf0, rf26              ; nop                         ; ldunif (0x00000002 / 0.000000)
-    0x3800219b0503f619, // fadd rf27, rf24, rf25         ; nop
-    0x38602180be03f01b, // stvpmv rf0, rf27              ; nop                         ; thrsw; ldunif (0x00000003 / 0.000000)
-    0x38002180be03f012, // stvpmv rf0, rf18              ; nop
+    0x38402184bc03f000, // ldvpmv_in rf4, rf0            ; nop                         ; ldunif (0x00000001 / 0.000000)
+    0x38402185bc03f000, // ldvpmv_in rf5, rf0            ; nop                         ; ldunif (0x00000002 / 0.000000)
+    0x3981e186bc03f000, // ldvpmv_in rf6, rf0            ; nop                         ; ldunifrf.rf7 (push[0])
+    0x55821286bb1c4000, // nop                           ; fmul rf10, rf7, rf4         ; ldunifrf.rf8 (push[1])
+    0x55825486bb204000, // nop                           ; fmul rf18, rf8, rf4         ; ldunifrf.rf9 (push[2])
+    0x544015c6bb244000, // nop                           ; fmul rf23, rf9, rf4         ; ldunif (push[3])
+    0x558312c6bb004000, // nop                           ; fmul rf11, rf0, rf4         ; ldunifrf.rf12 (push[4])
+    0x558353c6bb305000, // nop                           ; fmul rf15, rf12, rf5        ; ldunifrf.rf13 (push[5])
+    0x558384d40534528f, // fadd rf20, rf10, rf15         ; fmul rf19, rf13, rf5        ; ldunifrf.rf14 (push[6])
+    0x5440025605385493, // fadd rf22, rf18, rf19         ; fmul rf9, rf14, rf5         ; ldunif (push[7])
+    0x54401406bb005000, // nop                           ; fmul rf16, rf0, rf5         ; ldunif (0x00000003 / 0.000000)
+    0x39862191bc03f000, // ldvpmv_in rf17, rf0           ; nop                         ; ldunifrf.rf24 (push[8])
+    0x558646d5056062d0, // fadd rf21, rf11, rf16         ; fmul rf27, rf24, rf6        ; ldunifrf.rf25 (push[9])
+    0x558687430564651b, // fadd rf3, rf20, rf27          ; fmul rf29, rf25, rf6        ; ldunifrf.rf26 (push[10])
+    0x384021900503f59d, // fadd rf16, rf22, rf29         ; nop                         ; ldunif (push[11])
+    0x5587871605006257, // fadd rf22, rf9, rf23          ; fmul rf28, rf0, rf6         ; ldunifrf.rf30 (push[12])
+    0x5587c0870579155c, // fadd rf7, rf21, rf28          ; fmul rf2, rf30, rf17        ; ldunifrf.rf31 (push[13])
+    0x55804493057d1083, // fadd rf19, rf2, rf3           ; fmul rf18, rf31, rf17       ; ldunifrf.rf1 (push[14])
+    0x5440055705686412, // fadd rf23, rf16, rf18         ; fmul rf21, rf26, rf6        ; ldunif (push[15])
+    0x5582011b05011556, // fadd rf27, rf21, rf22         ; fmul rf4, rf0, rf17         ; ldunifrf.rf8 (vp_x_scale)
+    0x55828614054c8107, // fadd rf20, rf4, rf7           ; fmul rf24, rf19, rf8        ; ldunifrf.rf10 (0x00000004 / 0.000000)
+    0x5583068bbc051280, // ldvpmv_in rf11, rf10          ; fmul rf26, rf1, rf17        ; ldunifrf.rf12 (0x00000005 / 0.000000)
+    0x3840218dbc03f300, // ldvpmv_in rf13, rf12          ; nop                         ; ldunif (0x00000006 / 0.000000)
+    0x3840218ebc03f000, // ldvpmv_in rf14, rf0           ; nop                         ; ldunif (0x00000007 / 0.000000)
+    0x3840218fbc03f000, // ldvpmv_in rf15, rf0           ; nop                         ; ldunif (vp_y_scale)
+    0x55878700be5c028b, // stvpmv rf10, rf11             ; fmul rf28, rf23, rf0        ; ldunifrf.rf30 (vp_z_scale)
+    0x38402180be03f30d, // stvpmv rf12, rf13             ; nop                         ; ldunif (0x00000006 / 0.000000)
+    0x38002199bc03f520, // recip rf25, rf20              ; nop
+    0x38402180be03f00e, // stvpmv rf0, rf14              ; nop                         ; ldunif (0x00000007 / 0.000000)
+    0x55810740be61900f, // stvpmv rf0, rf15              ; fmul rf29, rf24, rf25       ; ldunifrf.rf4 (vp_z_offset)
+    0x54400043f5719747, // ftoin rf3, rf29               ; fmul rf1, rf28, rf25        ; ldunif (0x00000000 / 0.000000)
+    0x3800219f0503f69b, // fadd rf31, rf26, rf27         ; nop
+    0x54400080be7de003, // stvpmv rf0, rf3               ; fmul rf2, rf31, rf30        ; ldunif (0x00000001 / 0.000000)
+    0x54000146f5099047, // ftoin rf6, rf1                ; fmul rf5, rf2, rf25
+    0x38402180be03f006, // stvpmv rf0, rf6               ; nop                         ; ldunif (0x00000002 / 0.000000)
+    0x380021870503f105, // fadd rf7, rf4, rf5            ; nop
+    0x38602180be03f007, // stvpmv rf0, rf7               ; nop                         ; thrsw; ldunif (0x00000003 / 0.000000)
+    0x38002180be03f019, // stvpmv rf0, rf25              ; nop
     0x38003186bb03f000, // nop                           ; nop
 });
 
@@ -106,7 +143,7 @@ struct Uniforms {
     u32 fragment_shader_uniforms_address { 0 };
 };
 
-inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size)
+inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatMatrix4x4 const& model_view_projection_matrix)
 {
     ControlList list;
 
@@ -118,29 +155,82 @@ inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size)
     // Coordinate shader uniforms
     u32 coordinate_shader_uniforms_offset = list.data().size();
 
+    list.append<u32>(0);
+    list.append<u32>(1);
+    list.append<u32>(2);
+
+    list.append<f32>(model_view_projection_matrix(0, 0));
+    list.append<f32>(model_view_projection_matrix(1, 0));
+    list.append<f32>(model_view_projection_matrix(2, 0));
+    list.append<f32>(model_view_projection_matrix(3, 0));
+
+    list.append<f32>(model_view_projection_matrix(0, 1));
+    list.append<f32>(model_view_projection_matrix(1, 1));
+    list.append<f32>(model_view_projection_matrix(2, 1));
+    list.append<f32>(model_view_projection_matrix(3, 1));
+
+    list.append<u32>(3);
+
+    list.append<f32>(model_view_projection_matrix(0, 2));
+    list.append<f32>(model_view_projection_matrix(1, 2));
+    list.append<f32>(model_view_projection_matrix(2, 2));
+    list.append<f32>(model_view_projection_matrix(3, 2));
+
+    list.append<f32>(model_view_projection_matrix(0, 3));
+    list.append<f32>(model_view_projection_matrix(1, 3));
+    list.append<f32>(model_view_projection_matrix(2, 3));
+    list.append<f32>(model_view_projection_matrix(3, 3));
+
     list.append<f32>(viewport_half_x_scale);
+    list.append<f32>(viewport_half_y_scale);
+
     list.append<u32>(0);
     list.append<u32>(1);
     list.append<u32>(2);
     list.append<u32>(3);
-    list.append<f32>(viewport_half_y_scale);
     list.append<u32>(4);
     list.append<u32>(5);
 
     // Vertex shader uniforms
     u32 vertex_shader_uniforms_offset = list.data().size();
 
-    list.append<f32>(viewport_half_x_scale);
     list.append<u32>(0);
     list.append<u32>(1);
     list.append<u32>(2);
+
+    list.append<f32>(model_view_projection_matrix(0, 0));
+    list.append<f32>(model_view_projection_matrix(1, 0));
+    list.append<f32>(model_view_projection_matrix(2, 0));
+    list.append<f32>(model_view_projection_matrix(3, 0));
+
+    list.append<f32>(model_view_projection_matrix(0, 1));
+    list.append<f32>(model_view_projection_matrix(1, 1));
+    list.append<f32>(model_view_projection_matrix(2, 1));
+    list.append<f32>(model_view_projection_matrix(3, 1));
+
     list.append<u32>(3);
+
+    list.append<f32>(model_view_projection_matrix(0, 2));
+    list.append<f32>(model_view_projection_matrix(1, 2));
+    list.append<f32>(model_view_projection_matrix(2, 2));
+    list.append<f32>(model_view_projection_matrix(3, 2));
+
+    list.append<f32>(model_view_projection_matrix(0, 3));
+    list.append<f32>(model_view_projection_matrix(1, 3));
+    list.append<f32>(model_view_projection_matrix(2, 3));
+    list.append<f32>(model_view_projection_matrix(3, 3));
+
+    list.append<f32>(viewport_half_x_scale);
+
     list.append<u32>(4);
     list.append<u32>(5);
     list.append<u32>(6);
     list.append<u32>(7);
+
     list.append<f32>(viewport_half_y_scale);
     list.append<f32>(viewport_z_scale);
+    list.append<u32>(6);
+    list.append<u32>(7);
     list.append<f32>(viewport_z_offset);
     list.append<u32>(0);
     list.append<u32>(1);
