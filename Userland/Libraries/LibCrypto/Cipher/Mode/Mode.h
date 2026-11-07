@@ -96,8 +96,8 @@ protected:
 
     // FIXME: Somehow add a reference version of this
     template<typename... Args>
-    Mode(Args... args)
-        : m_cipher(args...)
+    Mode(Args&&... args)
+        : m_cipher(forward<Args>(args)...)
     {
     }
 
