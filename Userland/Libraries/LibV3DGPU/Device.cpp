@@ -103,12 +103,12 @@ ErrorOr<ControlList> Device::generate_initial_binner_control_list()
     return control_list;
 }
 
-ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<VertexData> const& vertex_array)
+ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<VertexData> const& vertex_array, Gfx::FloatMatrix4x4 const& model_view_projection_matrix)
 {
     ControlList control_list;
 
     // Uniforms
-    auto uniforms = TRY(generate_uniforms(m_framebuffer_size));
+    auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix));
 
     // Vertex data
     auto const vertex_data_size_in_bytes = vertex_array.size() * sizeof(vertex_array[0]);
@@ -533,7 +533,9 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vert
         }
     }
 
-    auto shader_state_record = generate_shader_state_record(vertex_array).release_value_but_fixme_should_propagate_errors();
+    auto model_view_projection_matrix = m_projection_matrix * m_model_view_matrix;
+
+    auto shader_state_record = generate_shader_state_record(vertex_array, model_view_projection_matrix).release_value_but_fixme_should_propagate_errors();
 
     auto determine_depth_test_function = [this] {
         if (!m_options.enable_depth_test)
@@ -723,14 +725,14 @@ ErrorOr<NonnullRefPtr<GPU::Shader>> Device::create_shader(GPU::IR::Shader const&
     return adopt_ref(*new Shader(this));
 }
 
-void Device::set_model_view_transform(Gfx::FloatMatrix4x4 const&)
+void Device::set_model_view_transform(Gfx::FloatMatrix4x4 const& model_view_transform)
 {
-    dbgln("V3DGPU::Device::set_model_view_transform(): unimplemented");
+    m_model_view_matrix = model_view_transform;
 }
 
-void Device::set_projection_transform(Gfx::FloatMatrix4x4 const&)
+void Device::set_projection_transform(Gfx::FloatMatrix4x4 const& projection_transform)
 {
-    dbgln("V3DGPU::Device::set_projection_transform(): unimplemented");
+    m_projection_matrix = projection_transform;
 }
 
 void Device::set_sampler_config(unsigned, GPU::SamplerConfig const&)
