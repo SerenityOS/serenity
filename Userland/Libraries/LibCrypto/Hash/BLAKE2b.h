@@ -30,7 +30,6 @@ public:
     }
 
     virtual void update(u8 const*, size_t) override;
-    virtual DigestType digest() override;
     virtual DigestType peek() override;
 
     static DigestType hash(u8 const* data, size_t length)

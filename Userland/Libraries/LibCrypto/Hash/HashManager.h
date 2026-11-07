@@ -181,13 +181,6 @@ public:
             [&](auto& hash) -> DigestType { return hash.peek(); });
     }
 
-    virtual DigestType digest() override
-    {
-        auto digest = peek();
-        reset();
-        return digest;
-    }
-
     virtual void reset() override
     {
         m_pre_init_buffer.clear();

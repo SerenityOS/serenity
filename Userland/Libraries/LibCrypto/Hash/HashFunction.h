@@ -50,7 +50,12 @@ public:
     void update(StringView string) { update((u8 const*)string.characters_without_null_termination(), string.length()); }
 
     virtual DigestType peek() = 0;
-    virtual DigestType digest() = 0;
+    DigestType digest()
+    {
+        auto digest = peek();
+        reset();
+        return digest;
+    }
 
     virtual void reset() = 0;
 

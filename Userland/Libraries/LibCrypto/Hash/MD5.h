@@ -52,7 +52,6 @@ public:
     using HashFunction::update;
 
     virtual void update(u8 const*, size_t) override;
-    virtual DigestType digest() override;
     virtual DigestType peek() override;
 
 #ifndef KERNEL
