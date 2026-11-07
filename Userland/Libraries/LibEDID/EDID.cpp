@@ -250,7 +250,7 @@ Parser::Parser(ByteBuffer&& bytes)
 }
 
 Parser::Parser(Parser const& other)
-    : m_bytes_buffer(other.m_bytes_buffer)
+    : m_bytes_buffer(other.m_bytes_buffer.clone().release_value_but_fixme_should_propagate_errors())
     , m_revision(other.m_revision)
 {
     if (m_bytes_buffer.is_empty())
