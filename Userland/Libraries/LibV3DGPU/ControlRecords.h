@@ -226,6 +226,37 @@ struct [[gnu::packed]] StoreTileBufferGeneral {
 };
 static_assert(AssertSize<StoreTileBufferGeneral, 1 + 12>());
 
+// <packet code="30" shortname="load" name="Load Tile Buffer General" cl="R">
+struct [[gnu::packed]] LoadTileBufferGeneral {
+    // <field name="Buffer to Load" size="4" start="0" type="uint">
+    enum class BufferToLoad : u32 {
+        RenderTarget0 = 0,
+        RenderTarget1 = 1,
+        RenderTarget2 = 2,
+        RenderTarget3 = 3,
+        None = 8,
+        Z = 9,
+        Stencil = 10,
+        ZAndStencil = 11,
+    };
+
+    Opcode opcode = 30;
+    BufferToLoad buffer_to_load : 4;
+    MemoryFormat memory_format : 3;
+    bool flip_y : 1;
+    u8 _reserved0 : 2;
+    DecimateMode decimate_mode : 2;
+    OutputImageFormat input_image_format : 6;
+    bool force_alpha_1 : 1;
+    bool channel_reverse : 1;
+    bool r_b_swap : 1;
+    u32 _reserved1 : 7;
+    u32 height_in_ub_or_stride : 20;
+    u16 height;
+    Address address;
+};
+static_assert(AssertSize<LoadTileBufferGeneral, 1 + 12>());
+
 // <packet code="36" name="Vertex Array Prims" cl="B">
 struct [[gnu::packed]] VertexArrayPrims {
     Opcode opcode = 36;

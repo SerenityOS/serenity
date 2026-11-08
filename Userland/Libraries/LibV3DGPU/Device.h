@@ -100,12 +100,15 @@ private:
     u32 m_clear_color { 0x00'00'00'00 };
     f32 m_clear_depth { 1.0f };
 
+    bool m_color_buffer_clear_requested_this_frame { false };
+
     struct RenderControlListState {
         // This struct contains all of the state that is "baked" into the render control list.
         // If any of these members change, the render control list needs to be regenerated.
 
         u32 clear_color { 0x00'00'00'00 };
         f32 clear_depth { 1.0f };
+        bool load_previous_frame { true };
 
         bool operator==(RenderControlListState const&) const = default;
     };
@@ -118,6 +121,7 @@ private:
         return {
             .clear_color = m_clear_color,
             .clear_depth = m_clear_depth,
+            .load_previous_frame = !m_color_buffer_clear_requested_this_frame,
         };
     }
 
