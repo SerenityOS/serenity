@@ -9,12 +9,18 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/Noncopyable.h>
 #include <AK/StringView.h>
 #include <stdarg.h>
 
 namespace AK {
 
 class StringBuilder {
+#ifdef KERNEL
+    AK_MAKE_NONCOPYABLE(StringBuilder);
+    AK_MAKE_DEFAULT_MOVABLE(StringBuilder);
+#endif
+
 public:
     static constexpr size_t inline_capacity = 256;
 
