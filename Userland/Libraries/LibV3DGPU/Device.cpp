@@ -241,6 +241,24 @@ ErrorOr<ControlList> Device::generate_tile_list(u32 target_buffer_pitch, u32 tar
     ControlRecord::TileCoordinatesImplicit tile_coordinates_implicit {};
     control_list.append(tile_coordinates_implicit);
 
+    if (!m_color_buffer_clear_requested_this_frame) {
+        // Load the previous target buffer contents if no color buffer clear was requested.
+        // Otherwise the buffer contents will get initialized with the specified clear color.
+        ControlRecord::LoadTileBufferGeneral load_tile_buffer_general {};
+        load_tile_buffer_general.buffer_to_load = ControlRecord::LoadTileBufferGeneral::BufferToLoad::RenderTarget0;
+        load_tile_buffer_general.memory_format = ControlRecord::MemoryFormat::Raster;
+        load_tile_buffer_general.flip_y = false;
+        load_tile_buffer_general.decimate_mode = ControlRecord::DecimateMode::Sample0;
+        load_tile_buffer_general.input_image_format = ControlRecord::OutputImageFormat::RGBA8;
+        load_tile_buffer_general.force_alpha_1 = false;
+        load_tile_buffer_general.channel_reverse = false;
+        load_tile_buffer_general.r_b_swap = true;
+        load_tile_buffer_general.height_in_ub_or_stride = target_buffer_pitch;
+        load_tile_buffer_general.height = 0;
+        load_tile_buffer_general.address = target_buffer_address;
+        control_list.append(load_tile_buffer_general);
+    }
+
     ControlRecord::EndOfLoads end_of_loads {};
     control_list.append(end_of_loads);
 
@@ -604,6 +622,8 @@ void Device::resize(Gfx::IntSize)
 
 void Device::clear_color(FloatVector4 const& color)
 {
+    m_color_buffer_clear_requested_this_frame = true;
+
     auto clamped = color.clamped(0.0f, 1.0f);
     auto r = static_cast<u8>(clamped.x() * 255u);
     auto g = static_cast<u8>(clamped.y() * 255u);
@@ -660,6 +680,8 @@ void Device::blit_from_color_buffer(Gfx::Bitmap& target)
 
     m_binner_control_list = generate_initial_binner_control_list().release_value_but_fixme_should_propagate_errors();
     m_shader_state_records.clear();
+
+    m_color_buffer_clear_requested_this_frame = false;
 }
 
 void Device::blit_from_color_buffer(NonnullRefPtr<GPU::Image>, u32, Vector2<u32>, Vector2<i32>, Vector3<i32>)
