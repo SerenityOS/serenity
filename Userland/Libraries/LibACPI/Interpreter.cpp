@@ -264,6 +264,12 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::Arg0Op... Opcode::Arg6Op:
         return ArgumentReference(to_underlying(frame.opcode()) - to_underlying(Opcode::Arg0Op));
 
+    case Opcode::StoreOp: {
+        auto value = move(frame.operand(0));
+        TRY(store(frame.operand(1), TRY(value.clone())));
+        return value;
+    }
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented value opcode {}!", frame.opcode());
     }
@@ -662,6 +668,8 @@ ErrorOr<Object*> Interpreter::resolve_references(Object& reference)
 ErrorOr<void> Interpreter::store(Object const& target, Object value)
 {
     // FIXME: Handle multilevel references for the target object.
+    // FIXME: Handle buffer size immutability.
+
     if (target.is_empty())
         return {};
 

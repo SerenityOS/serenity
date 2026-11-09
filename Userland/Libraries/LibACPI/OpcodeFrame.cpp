@@ -96,6 +96,12 @@ constexpr static Array<OperandType, 4> TARGET_BINARY_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 3> STORE_OPERANDS = {
+    OperandType::TermArg,
+    OperandType::SuperName,
+    OperandType::End,
+};
+
 static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opcode)
 {
     switch (opcode) {
@@ -142,6 +148,9 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
     case Opcode::NorOp:
     case Opcode::XorOp:
         return TARGET_BINARY_OPERANDS.span();
+
+    case Opcode::StoreOp:
+        return STORE_OPERANDS.span();
 
     case Opcode::ZeroOp:
     case Opcode::OneOp:
