@@ -271,7 +271,7 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     }
 
     default:
-        INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented value opcode {}!", frame.opcode());
+        INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented opcode {}!", frame.opcode());
     }
 
     VERIFY_NOT_REACHED();
@@ -364,7 +364,8 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     }
 
     default:
-        INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented term opcode {}!", frame.opcode());
+        TRY(finalize_value_opcode(frame));
+        return {};
     }
 
     VERIFY_NOT_REACHED();
