@@ -19,6 +19,9 @@
 namespace ACPI::AML {
 
 class ScopeFrame {
+    AK_MAKE_NONCOPYABLE(ScopeFrame);
+    AK_MAKE_DEFAULT_MOVABLE(ScopeFrame);
+
 public:
     ScopeFrame(NonnullRefPtr<Node> root, NonnullRefPtr<Node> scope, size_t start, size_t end, size_t table_index, u64 number_mask)
         : m_root(move(root))
