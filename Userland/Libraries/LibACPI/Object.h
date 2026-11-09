@@ -132,6 +132,11 @@ public:
     {
     }
 
+    constexpr bool is_empty() const
+    {
+        return m_data.has<AK::Empty>();
+    }
+
     template<IsNodeData T>
     constexpr bool is() const
     {
