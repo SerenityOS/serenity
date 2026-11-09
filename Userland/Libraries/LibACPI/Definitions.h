@@ -117,13 +117,6 @@ enum class AccessSize : u8 {
     QWord = 4
 };
 
-enum class BitWidth : u8 {
-    Undefined = 0,
-    Byte = 8,
-    Word = 16,
-    DWord = 32,
-    QWord = 64
-};
 }
 
 namespace Structures {
@@ -173,14 +166,14 @@ struct [[gnu::packed]] XSDT {
 // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#generic-address-structure
 struct [[gnu::packed]] GenericAddressStructure {
     ::ACPI::GenericAddressStructure::AddressSpace address_space;
-    ::ACPI::GenericAddressStructure::BitWidth bit_width;
+    u8 bit_width;
     u8 bit_offset;
     ::ACPI::GenericAddressStructure::AccessSize access_size;
     u64 address;
 
     [[nodiscard]] bool is_null() const
     {
-        return to_underlying(address_space) == 0 && to_underlying(bit_width) == 0 && bit_offset == 0 && to_underlying(access_size) == 0 && address == 0;
+        return to_underlying(address_space) == 0 && bit_width == 0 && bit_offset == 0 && to_underlying(access_size) == 0 && address == 0;
     }
 };
 
