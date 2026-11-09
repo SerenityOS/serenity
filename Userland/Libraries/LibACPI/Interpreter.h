@@ -20,12 +20,13 @@ namespace ACPI::AML {
 
 class ScopeFrame {
 public:
-    ScopeFrame(NonnullRefPtr<Node> root, NonnullRefPtr<Node> scope, size_t start, size_t end, size_t table_index)
+    ScopeFrame(NonnullRefPtr<Node> root, NonnullRefPtr<Node> scope, size_t start, size_t end, size_t table_index, u64 number_mask)
         : m_root(move(root))
         , m_scope(move(scope))
         , m_start(start)
         , m_end(end)
         , m_table_index(table_index)
+        , m_number_mask(number_mask)
     {
     }
 
@@ -36,6 +37,7 @@ public:
     size_t start() const { return m_start; }
     size_t end() const { return m_end; }
     size_t size() const { return m_end - m_start; }
+    u64 number_mask() const { return m_number_mask; }
 
 private:
     NonnullRefPtr<Node> m_root;
@@ -44,6 +46,7 @@ private:
     size_t m_start { 0 };
     size_t m_end { 0 };
     size_t m_table_index { 0 };
+    u64 m_number_mask { 0 };
 };
 
 class Interpreter {
