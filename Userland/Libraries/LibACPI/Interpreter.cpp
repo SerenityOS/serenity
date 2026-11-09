@@ -584,6 +584,34 @@ ErrorOr<Object> Interpreter::evaluate(NonnullRefPtr<Node> node)
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<Object*> Interpreter::resolve_reference(Object& reference)
+{
+    auto& top_scope_frame = m_scope_frames.last();
+
+    if (reference.is<ArgumentReference>()) {
+        auto argument_index = MUST(reference.as<ArgumentReference>()).index();
+        return &top_scope_frame.argument(argument_index);
+    }
+
+    if (reference.is<LocalReference>()) {
+        auto local_index = MUST(reference.as<LocalReference>()).index();
+        return &top_scope_frame.local(local_index);
+    }
+
+    if (reference.is<NodeReference>())
+        INTERPRETER_ERROR("Resolving node references is not supported!", EINVAL, "Resolving node references is not supported yet!");
+
+    return &reference;
+}
+
+ErrorOr<Object*> Interpreter::resolve_references(Object& reference)
+{
+    auto* object = &reference;
+    while (object->is_reference())
+        object = TRY(resolve_reference(*object));
+    return object;
+}
+
 ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
 {
     auto namespace_root = TRY(try_make_ref_counted<ScopeNode>());

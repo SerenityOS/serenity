@@ -42,6 +42,9 @@ public:
     size_t size() const { return m_end - m_start; }
     u64 number_mask() const { return m_number_mask; }
 
+    Object& local(size_t i) { return m_locals[i]; }
+    Object& argument(size_t i) { return m_arguments[i]; }
+
 private:
     NonnullRefPtr<Node> m_root;
     NonnullRefPtr<Node> m_scope;
@@ -50,6 +53,10 @@ private:
     size_t m_end { 0 };
     size_t m_table_index { 0 };
     u64 m_number_mask { 0 };
+
+    // FIXME: Ensure locals and arguments live as long as any reference to them exists.
+    Array<Object, 8> m_locals;
+    Array<Object, 7> m_arguments;
 };
 
 class Interpreter {
@@ -80,6 +87,9 @@ private:
     ErrorOr<void> walk_tree(NonnullRefPtr<Node> tree_root, Function<ErrorOr<void>(NonnullRefPtr<Node>, u32)> callback) const;
 
     ErrorOr<Object> evaluate(NonnullRefPtr<Node> node);
+
+    ErrorOr<Object*> resolve_reference(Object& reference);
+    ErrorOr<Object*> resolve_references(Object& reference);
 
     ErrorOr<IterationDecision> cycle(TableStream& stream);
     ErrorOr<IterationDecision> read_operand(TableStream& stream, OperandType operand);
