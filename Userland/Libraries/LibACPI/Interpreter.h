@@ -66,8 +66,8 @@ public:
     ErrorOr<void> load(ReadonlyBytes bytes);
     ErrorOr<void> print_namespace() const;
 
-    ErrorOr<Object> evaluate(StringView path);
-    ErrorOr<Object> evaluate(NameString const& path);
+    ErrorOr<Object> evaluate(StringView path, ReadonlySpan<Object> arguments = {});
+    ErrorOr<Object> evaluate(NameString const& path, ReadonlySpan<Object> arguments = {});
 
 private:
     enum class State : u8 {
@@ -86,7 +86,8 @@ private:
     ErrorOr<NonnullRefPtr<Node>> find_node(NameString const& path, NonnullRefPtr<Node> scope) const;
     ErrorOr<void> walk_tree(NonnullRefPtr<Node> tree_root, Function<ErrorOr<void>(NonnullRefPtr<Node>, u32)> callback) const;
 
-    ErrorOr<Object> evaluate(NonnullRefPtr<Node> node);
+    ErrorOr<Object> evaluate(NonnullRefPtr<Node> node, ReadonlySpan<Object> arguments = {});
+    ErrorOr<Object> call_method(NonnullRefPtr<MethodNode> node, ReadonlySpan<Object> arguments);
 
     ErrorOr<Object*> resolve_reference(Object& reference);
     ErrorOr<Object*> resolve_references(Object& reference);

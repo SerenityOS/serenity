@@ -609,19 +609,22 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<Object> Interpreter::evaluate(StringView path)
+ErrorOr<Object> Interpreter::evaluate(StringView path, ReadonlySpan<Object> arguments)
 {
-    return evaluate(TRY(NameString::from_string_view(path)));
+    return evaluate(TRY(NameString::from_string_view(path)), arguments);
 }
 
-ErrorOr<Object> Interpreter::evaluate(NameString const& path)
+ErrorOr<Object> Interpreter::evaluate(NameString const& path, ReadonlySpan<Object> arguments)
 {
     auto node = TRY(find_node(path, m_namespace_root));
-    return evaluate(node);
+    return evaluate(node, arguments);
 }
 
-ErrorOr<Object> Interpreter::evaluate(NonnullRefPtr<Node> node)
+ErrorOr<Object> Interpreter::evaluate(NonnullRefPtr<Node> node, ReadonlySpan<Object> arguments)
 {
+    if (node->type() != NodeType::Method && !arguments.is_empty())
+        INTERPRETER_ERROR("Cannot pass arguments to non-method node!", EINVAL, "Node type {} does not accept arguments!", node->kind());
+
     switch (node->type()) {
     case NodeType::Name: {
         auto name_node = static_ptr_cast<NameNode>(node);
@@ -631,11 +634,53 @@ ErrorOr<Object> Interpreter::evaluate(NonnullRefPtr<Node> node)
     case NodeType::Field:
         INTERPRETER_ERROR("Field evaluation not supported!", EINVAL, "Evaluating fields is not supported yet!");
 
+    case NodeType::Method:
+        return call_method(static_ptr_cast<MethodNode>(node), arguments);
+
     default:
         INTERPRETER_ERROR("Cannot evaluate node type!", EINVAL, "Node type {} not supported for evaluation!", node->kind());
     }
 
     VERIFY_NOT_REACHED();
+}
+
+ErrorOr<Object> Interpreter::call_method(NonnullRefPtr<MethodNode> node, ReadonlySpan<Object> arguments)
+{
+    dbgln_if(AML_DEBUG, "ACPI: Calling method {}", node->name().to_string_view());
+
+    if (node->table_index() == PREDEFINED_METHOD_TABLE_INDEX)
+        INTERPRETER_ERROR("Running predefined methods is not implemented", ENOTSUP, "Running predefined methods is not implemented");
+
+    if (arguments.size() != node->argument_count())
+        INTERPRETER_ERROR("Argument count mismatch!", EINVAL, "Expected {} arguments, got {}", node->argument_count(), arguments.size());
+
+    auto parent_scope = node->parent().strong_ref();
+    if (!parent_scope)
+        INTERPRETER_ERROR("Method has no parent!", EINVAL, "Method node at {} has no parent!", node->start());
+
+    auto root_scope_frame = ScopeFrame(m_namespace_root, parent_scope.release_nonnull(), node->start(), node->end(), node->table_index(), node->number_mask());
+    for (size_t i = 0; i < arguments.size(); ++i)
+        root_scope_frame.argument(i) = TRY(arguments[i].clone());
+    TRY(m_scope_frames.try_append(move(root_scope_frame)));
+
+    auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
+    TRY(m_opcode_frames.try_append(move(root_opcode_frame)));
+
+    auto& buffer = m_loaded_tables[node->table_index()];
+    TableStream stream(buffer);
+
+    TRY(stream.seek(node->start()));
+
+    while (m_opcode_frames.size() > 0 && m_scope_frames.size() > 0) {
+        if (TRY(cycle(stream)) == IterationDecision::Break)
+            break;
+    }
+
+    if (m_scope_frames.size() != 0 || m_opcode_frames.size() != 1)
+        INTERPRETER_ERROR("Unbalanced scope or opcode frames!", EINVAL, "Unbalanced scope or opcode frames!");
+
+    m_opcode_frames.take_last();
+    return Object();
 }
 
 ErrorOr<Object*> Interpreter::resolve_reference(Object& reference)
