@@ -28,7 +28,7 @@ struct Digest {
     [[nodiscard]] bool operator!=(Digest const& other) const = default;
 };
 
-template<size_t BlockS, size_t DigestS, typename DigestT = Digest<DigestS>>
+template<size_t BlockS, size_t DigestS, typename Derived, typename DigestT = Digest<DigestS>>
 class HashFunction {
 public:
     static_assert(BlockS % 8 == 0);
@@ -48,6 +48,15 @@ public:
     void update(ReadonlyBytes buffer) { update(buffer.data(), buffer.size()); }
     void update(ByteBuffer const& buffer) { update(buffer.data(), buffer.size()); }
     void update(StringView string) { update((u8 const*)string.characters_without_null_termination(), string.length()); }
+
+    static DigestType hash(ReadonlyBytes bytes)
+    {
+        Derived hash_function;
+        hash_function.update(bytes);
+        return hash_function.digest();
+    }
+    static DigestType hash(StringView sv) { return hash(sv.bytes()); }
+    static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.bytes()); }
 
     virtual DigestType peek() = 0;
     DigestType digest()

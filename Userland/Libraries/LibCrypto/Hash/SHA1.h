@@ -28,7 +28,7 @@ constexpr static u32 RoundConstants[4] {
 
 }
 
-class SHA1 final : public HashFunction<512, 160> {
+class SHA1 final : public HashFunction<512, 160, SHA1> {
 public:
     using HashFunction::update;
 
@@ -40,16 +40,6 @@ public:
     virtual void update(u8 const*, size_t) override;
 
     virtual DigestType peek() override;
-
-    static DigestType hash(u8 const* data, size_t length)
-    {
-        SHA1 sha;
-        sha.update(data, length);
-        return sha.digest();
-    }
-
-    static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
-    static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual ByteString class_name() const override
