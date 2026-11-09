@@ -41,11 +41,12 @@ protected:
 
 class MethodNode : public Node {
 public:
-    MethodNode(size_t start, size_t end, size_t table_index, MethodFlags flags)
+    MethodNode(size_t start, size_t end, size_t table_index, MethodFlags flags, u64 number_mask)
         : m_start(start)
         , m_end(end)
         , m_table_index(table_index)
         , m_flags(flags)
+        , m_number_mask(number_mask)
     {
     }
 
@@ -62,12 +63,15 @@ public:
     MethodFlags flags() const { return m_flags; }
     u8 argument_count() const { return m_flags.argument_count; }
 
+    u64 number_mask() const { return m_number_mask; }
+
 private:
     size_t m_start { 0 };
     size_t m_end { 0 };
     size_t m_table_index { 0 };
 
     MethodFlags m_flags {};
+    u64 m_number_mask { 0 };
 };
 
 class MutexNode : public Node {
