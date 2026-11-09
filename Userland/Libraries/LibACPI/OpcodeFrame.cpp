@@ -126,6 +126,7 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
 
     case Opcode::ZeroOp:
     case Opcode::OneOp:
+    case Opcode::OnesOp:
     case Opcode::Local0Op... Opcode::Local7Op:
     case Opcode::Arg0Op... Opcode::Arg6Op:
         return EMPTY_OPERANDS.span();

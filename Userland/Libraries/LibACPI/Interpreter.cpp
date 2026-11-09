@@ -193,6 +193,8 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
         return Object(u64(0));
     case Opcode::OneOp:
         return Object(u64(1));
+    case Opcode::OnesOp:
+        return Object(m_scope_frames.last().number_mask());
 
     case Opcode::BytePrefix:
     case Opcode::WordPrefix:
