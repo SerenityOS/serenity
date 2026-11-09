@@ -28,6 +28,8 @@ enum class OperandType : u8 {
 
     DataRefObject,
     PackageElement,
+    SuperName,
+    Target,
 
     MarkAsCount,
     RepeatNextBytes,

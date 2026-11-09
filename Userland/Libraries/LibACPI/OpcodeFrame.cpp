@@ -179,6 +179,10 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
         return data_ref_object_filter(opcode);
     case OperandType::PackageElement:
         return package_element_filter(opcode);
+    case OperandType::SuperName:
+        return super_name_filter(opcode);
+    case OperandType::Target:
+        return target_filter(opcode);
 
     case OperandType::End:
         return term_filter(opcode);

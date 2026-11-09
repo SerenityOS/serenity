@@ -443,6 +443,22 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         m_state = State::ReadingOpcode;
         return IterationDecision::Continue;
 
+    case OperandType::SuperName:
+    case OperandType::Target:
+        DEBUG_LOG("Reading target...");
+
+        if (is_namestring_start(TRY(stream.peek_byte())))
+            INTERPRETER_ERROR("Unsupported target!", ENOTSUP, "Reading name strings as targets is not yet supported!");
+
+        if (operand == OperandType::Target && TRY(stream.peek_byte()) == 0x00) {
+            TRY(stream.read_value<u8>());
+            TRY(top_opcode_frame.finish_operand(Object(), stream.offset()));
+            return IterationDecision::Continue;
+        }
+
+        m_state = State::ReadingOpcode;
+        return IterationDecision::Continue;
+
     default:
         DEBUG_LOG("Failure!");
         INTERPRETER_ERROR("Unimplemented operand type!", EINVAL, "Operand type {} unimplemented!", to_underlying(operand));
