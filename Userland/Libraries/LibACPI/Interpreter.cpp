@@ -363,6 +363,11 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         return {};
     }
 
+    case Opcode::ReturnOp:
+        // FIXME: We shouldn't resolve the references here
+        m_scope_frames.last().return_value() = move(*TRY(resolve_references(frame.operand(0))));
+        return {};
+
     default:
         TRY(finalize_value_opcode(frame));
         return {};
@@ -602,6 +607,9 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             m_state = State::ReadingOpcode;
         }
 
+        if (!m_scope_frames.last().return_value().is_empty())
+            return IterationDecision::Break;
+
         return IterationDecision::Continue;
     }
     }
@@ -671,16 +679,23 @@ ErrorOr<Object> Interpreter::call_method(NonnullRefPtr<MethodNode> node, Readonl
 
     TRY(stream.seek(node->start()));
 
+    auto return_value = Object();
+
     while (m_opcode_frames.size() > 0 && m_scope_frames.size() > 0) {
         if (TRY(cycle(stream)) == IterationDecision::Break)
             break;
+    }
+
+    if (!m_scope_frames.is_empty() && !m_scope_frames.last().return_value().is_empty()) {
+        return_value = move(m_scope_frames.last().return_value());
+        m_scope_frames.take_last();
     }
 
     if (m_scope_frames.size() != 0 || m_opcode_frames.size() != 1)
         INTERPRETER_ERROR("Unbalanced scope or opcode frames!", EINVAL, "Unbalanced scope or opcode frames!");
 
     m_opcode_frames.take_last();
-    return Object();
+    return return_value;
 }
 
 ErrorOr<Object*> Interpreter::resolve_reference(Object& reference)

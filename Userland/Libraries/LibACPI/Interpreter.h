@@ -45,6 +45,8 @@ public:
     Object& local(size_t i) { return m_locals[i]; }
     Object& argument(size_t i) { return m_arguments[i]; }
 
+    Object& return_value() { return m_return_value; }
+
 private:
     NonnullRefPtr<Node> m_root;
     NonnullRefPtr<Node> m_scope;
@@ -57,6 +59,8 @@ private:
     // FIXME: Ensure locals and arguments live as long as any reference to them exists.
     Array<Object, 8> m_locals;
     Array<Object, 7> m_arguments;
+
+    Object m_return_value;
 };
 
 class Interpreter {
