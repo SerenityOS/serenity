@@ -17,6 +17,9 @@ namespace V3DGPU {
 
 struct VertexData;
 
+// FIXME: Support multiple texture units.
+static constexpr size_t NUMBER_OF_TEXTURE_UNITS = 1;
+
 class Device final : public GPU::Device {
 public:
     Device(NonnullOwnPtr<Core::File>);
@@ -68,6 +71,7 @@ private:
     struct ShaderStateRecord {
         ControlList control_list;
         ControlList uniforms_list;
+        ControlList texture_list;
         Buffer vertex_data_buffer;
         Buffer shaders_buffer;
     };
@@ -129,6 +133,10 @@ private:
     FloatMatrix4x4 m_projection_matrix;
 
     GPU::RasterizerOptions m_options;
+
+    Array<GPU::TextureUnitConfiguration, NUMBER_OF_TEXTURE_UNITS> m_texture_unit_configuration;
+    Array<GPU::SamplerConfig, NUMBER_OF_TEXTURE_UNITS> m_sampler_configuration;
+    GPU::SamplerConfig m_placeholder_sampler_configuration;
 };
 
 }

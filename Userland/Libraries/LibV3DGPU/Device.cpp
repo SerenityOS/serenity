@@ -29,11 +29,12 @@ static constexpr size_t TILE_STATE_DATA_ARRAY_ELEMENT_SIZE = 256;
 static constexpr size_t TILE_WIDTH = 64;
 static constexpr size_t TILE_HEIGHT = 64;
 
-static constexpr size_t NUMBER_OF_ATTRIBUTE_ARRAYS = 2;
+static constexpr size_t NUMBER_OF_ATTRIBUTE_ARRAYS = 3;
 
 struct VertexData {
     Array<f32, 4> position;
     Array<f32, 4> color;
+    Array<f32, 2> texture_coordinate;
 };
 
 ErrorOr<ControlList> Device::generate_initial_binner_control_list()
@@ -108,7 +109,9 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
     ControlList control_list;
 
     // Uniforms
-    auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix));
+    auto const& sampler_configuration = m_sampler_configuration[0].bound_image ? m_sampler_configuration[0] : m_placeholder_sampler_configuration;
+
+    auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix, sampler_configuration));
 
     // Vertex data
     auto const vertex_data_size_in_bytes = vertex_array.size() * sizeof(vertex_array[0]);
@@ -164,7 +167,7 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
         .min_coord_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size = 0,
         .coordinate_shader_input_vpm_segment_size = 0,
         .min_coord_shader_input_segments_required_in_play_minus_one = 1,
-        .vertex_shader_output_vpm_segment_size = 1,
+        .vertex_shader_output_vpm_segment_size = 2,
         .min_vertex_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size = 0,
         .vertex_shader_input_vpm_segment_size = 0,
         .min_vertex_shader_input_segments_required_in_play_minus_one = 1,
@@ -189,6 +192,7 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
     // Attributes
     u32 position_attribute_offset = offsetof(VertexData, position);
     u32 color_attribute_offset = offsetof(VertexData, color);
+    u32 texture_coordinate_attribute_offset = offsetof(VertexData, texture_coordinate);
     u32 attribute_stride = sizeof(VertexData);
 
     ControlRecord::GLShaderStateAttributeRecord pos_attribute_record = {
@@ -221,14 +225,30 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
     };
     control_list.append(color_attribute_record);
 
+    ControlRecord::GLShaderStateAttributeRecord texture_coordinate_attribute_record = {
+        .address = vertex_data_buffer.gpu_virtual_address() + texture_coordinate_attribute_offset,
+        .vec_size = 2,
+        .type = ControlRecord::GLShaderStateAttributeRecord::Type::AttributeFloat,
+        .signed_int_type = false,
+        .normalized_int_type = false,
+        .read_as_int_uint = false,
+        .number_of_values_read_by_coordinate_shader = 0,
+        .number_of_values_read_by_vertex_shader = 2,
+        .instance_divisor = 0,
+        .stride = attribute_stride,
+        .maximum_index = 0xffff'ffff,
+    };
+    control_list.append(texture_coordinate_attribute_record);
+
     // NOTE: If you add another attribute record here, this variable needs to be modified.
-    static_assert(NUMBER_OF_ATTRIBUTE_ARRAYS == 2);
+    static_assert(NUMBER_OF_ATTRIBUTE_ARRAYS == 3);
 
     TRY(control_list.copy_to_gpu_buffer());
 
     return ShaderStateRecord {
         .control_list = move(control_list),
         .uniforms_list = move(uniforms.list),
+        .texture_list = move(uniforms.texture_list),
         .vertex_data_buffer = move(vertex_data_buffer),
         .shaders_buffer = move(shaders_buffer),
     };
@@ -468,6 +488,33 @@ ErrorOr<void> Device::initialize_context(Gfx::IntSize min_size)
     auto tile_state_data_array_memory_size = align_up_to(tile_count * TILE_STATE_DATA_ARRAY_ELEMENT_SIZE, V3D_PAGE_SIZE);
     m_tile_state_data_array_buffer = TRY(Buffer::create(tile_state_data_array_memory_size, "LibV3DGPU: Tile State Data Array"sv));
 
+    m_placeholder_sampler_configuration.bound_image = create_image(GPU::PixelFormat::RGBA, 1, 1, 1, 1);
+
+    GPU::ImageDataLayout placeholder_layout = {
+        .pixel_type = { GPU::PixelFormat::RGBA, GPU::PixelComponentBits::AllBits, GPU::PixelDataType::Byte, GPU::ComponentsOrder::Normal },
+        .packing = {
+            .depth_stride = 1,
+            .row_stride = 1,
+            .skip_rows = 0,
+            .skip_pixels = 0,
+            .byte_alignment = 4,
+            .component_bytes_order = GPU::ComponentBytesOrder::Normal,
+        },
+        .dimensions = {
+            .width = 1,
+            .height = 1,
+            .depth = 1,
+        },
+        .selection = {
+            .width = 1,
+            .height = 1,
+            .depth = 1,
+        },
+    };
+
+    u32 placeholder_texture[1] = { 0xff'ff'ff'ff };
+    m_placeholder_sampler_configuration.bound_image->write_texels(0, { 0, 0, 0 }, &placeholder_texture, placeholder_layout);
+
     return {};
 }
 
@@ -476,13 +523,13 @@ GPU::DeviceInfo Device::info() const
     return {
         .vendor_name = "SerenityOS",
         .device_name = "VideoCore VII 3D",
-        .num_texture_units = 1,
+        .num_texture_units = NUMBER_OF_TEXTURE_UNITS,
         .num_lights = 8,
         .max_clip_planes = 0,
-        .max_texture_size = 0,
+        .max_texture_size = 4096,
         .max_texture_lod_bias = 0.f,
         .stencil_bits = 0,
-        .supports_npot_textures = false,
+        .supports_npot_textures = true,
         .supports_texture_clamp_to_edge = false,
         .supports_texture_env_add = false,
     };
@@ -523,6 +570,7 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vert
         return VertexData {
             .position = vertex.position.data(),
             .color = vertex.color.data(),
+            .texture_coordinate = { vertex.tex_coords[0].x(), vertex.tex_coords[0].y() },
         };
     };
 
@@ -737,7 +785,11 @@ GPU::LightModelParameters Device::light_model() const
 
 NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 max_levels)
 {
-    dbgln("V3DGPU::Device::create_image(): unimplemented");
+    VERIFY(width > 0);
+    VERIFY(height > 0);
+    VERIFY(depth > 0);
+    VERIFY(max_levels > 0);
+
     return adopt_ref(*new Image(this, pixel_format, width, height, depth, max_levels));
 }
 
@@ -757,9 +809,11 @@ void Device::set_projection_transform(Gfx::FloatMatrix4x4 const& projection_tran
     m_projection_matrix = projection_transform;
 }
 
-void Device::set_sampler_config(unsigned, GPU::SamplerConfig const&)
+void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)
 {
-    dbgln("V3DGPU::Device::set_sampler_config(): unimplemented");
+    VERIFY(config.bound_image.is_null() || config.bound_image->ownership_token() == this);
+
+    m_sampler_configuration[sampler] = config;
 }
 
 void Device::set_light_state(unsigned, GPU::Light const&)
@@ -777,9 +831,9 @@ void Device::set_stencil_configuration(GPU::Face, GPU::StencilConfiguration cons
     dbgln("V3DGPU::Device::set_stencil_configuration(): unimplemented");
 }
 
-void Device::set_texture_unit_configuration(GPU::TextureUnitIndex, GPU::TextureUnitConfiguration const&)
+void Device::set_texture_unit_configuration(GPU::TextureUnitIndex index, GPU::TextureUnitConfiguration const& configuration)
 {
-    dbgln("V3DGPU::Device::set_texture_unit_configuration(): unimplemented");
+    m_texture_unit_configuration[index] = configuration;
 }
 
 void Device::set_clip_planes(Vector<FloatVector4> const&)
