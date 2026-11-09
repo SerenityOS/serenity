@@ -89,6 +89,13 @@ constexpr static Array<OperandType, 6> PROCESSOR_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 4> TARGET_BINARY_OPERANDS = {
+    OperandType::TermArg,
+    OperandType::TermArg,
+    OperandType::Target,
+    OperandType::End,
+};
+
 static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opcode)
 {
     switch (opcode) {
@@ -123,6 +130,18 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return DEVICE_OPERANDS.span();
     case Opcode::ProcessorOp:
         return PROCESSOR_OPERANDS.span();
+
+    case Opcode::AddOp:
+    case Opcode::SubtractOp:
+    case Opcode::MultiplyOp:
+    case Opcode::ShiftLeftOp:
+    case Opcode::ShiftRightOp:
+    case Opcode::AndOp:
+    case Opcode::NandOp:
+    case Opcode::OrOp:
+    case Opcode::NorOp:
+    case Opcode::XorOp:
+        return TARGET_BINARY_OPERANDS.span();
 
     case Opcode::ZeroOp:
     case Opcode::OneOp:
