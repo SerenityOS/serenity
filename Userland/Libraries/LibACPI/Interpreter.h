@@ -91,6 +91,8 @@ private:
     ErrorOr<Object*> resolve_reference(Object& reference);
     ErrorOr<Object*> resolve_references(Object& reference);
 
+    ErrorOr<void> store(Object const& target, Object value);
+
     ErrorOr<IterationDecision> cycle(TableStream& stream);
     ErrorOr<IterationDecision> read_operand(TableStream& stream, OperandType operand);
 
