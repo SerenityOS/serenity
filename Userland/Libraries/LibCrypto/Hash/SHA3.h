@@ -23,6 +23,8 @@ enum class Variation : u8 {
     SHA3_256,
     SHA3_384,
     SHA3_512,
+    SHAKE128,
+    SHAKE256,
 };
 
 consteval size_t block_size_from_variation(Variation variation)
@@ -37,6 +39,9 @@ consteval size_t block_size_from_variation(Variation variation)
         return 104;
     case Variation::SHA3_512:
         return 72;
+    case Variation::SHAKE128:
+    case Variation::SHAKE256:
+        return 0;
     }
 
     VERIFY_NOT_REACHED();
@@ -54,6 +59,10 @@ constexpr size_t hash_size_from_variation(Variation variation)
         return 384;
     case Variation::SHA3_512:
         return 512;
+    case Variation::SHAKE128:
+        return 128;
+    case Variation::SHAKE256:
+        return 256;
     }
 
     VERIFY_NOT_REACHED();
@@ -100,5 +109,22 @@ class SHA3_224 : public SHA3::SHA3Impl<SHA3::Variation::SHA3_224> { };
 class SHA3_256 : public SHA3::SHA3Impl<SHA3::Variation::SHA3_256> { };
 class SHA3_384 : public SHA3::SHA3Impl<SHA3::Variation::SHA3_384> { };
 class SHA3_512 : public SHA3::SHA3Impl<SHA3::Variation::SHA3_512> { };
+
+// FIXME: Both SHAKE128 and SHAKE256 inherits from HashFunction but
+//        the API doesn't work really well for XOFs. Once we have
+//        more users, find a better API to suite them all.
+class SHAKE128 : public SHA3::SHA3Impl<SHA3::Variation::SHAKE128> {
+public:
+    virtual ByteString class_name() const override { return "SHAKE128"sv; }
+
+    auto peek_with_size(u32 d) const { return peek_impl(d); }
+};
+
+class SHAKE256 : public SHA3::SHA3Impl<SHA3::Variation::SHAKE256> {
+public:
+    virtual ByteString class_name() const override { return "SHAKE256"sv; }
+
+    auto peek_with_size(u32 d) const { return peek_impl(d); }
+};
 
 } // Crypto::Hash

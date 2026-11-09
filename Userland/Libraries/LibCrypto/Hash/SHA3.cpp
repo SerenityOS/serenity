@@ -239,16 +239,24 @@ constexpr void update_state(Variation variation, State& state, ReadonlyBytes byt
     state = keccak_p(state);
 }
 
+constexpr bool is_shake_function(Variation variation)
+{
+    return variation == Variation::SHAKE128 || variation == Variation::SHAKE256;
+}
+
 constexpr void update_state_with_padding(Variation variation, State& state, auto input_buffer)
 {
     auto r = rate_from_variation(variation);
     VERIFY(input_buffer.size() < r);
 
     // NOTE: The padding added here covers both the padding from Algorithm 8 (pad10*1) and the one
-    //       inherent to the function, specified in 6.1 SHA-3 Hash Functions.
+    //       inherent to the function, specified in 6.1 SHA-3 Hash Functions and 6.2 SHA-3 Extendable-Output Functions.
 
     // 1. Let P = N || pad(r, len(N)).
-    input_buffer.append(0b00000110u);
+    if (is_shake_function(variation))
+        input_buffer.append(0b00011111u);
+    else
+        input_buffer.append(0b00000110u);
     input_buffer.resize(r);
     input_buffer.last() |= 0b10000000u;
 
@@ -323,5 +331,8 @@ template class SHA3Impl<Variation::SHA3_224>;
 template class SHA3Impl<Variation::SHA3_256>;
 template class SHA3Impl<Variation::SHA3_384>;
 template class SHA3Impl<Variation::SHA3_512>;
+
+template class SHA3Impl<Variation::SHAKE128>;
+template class SHA3Impl<Variation::SHAKE256>;
 
 } // Crypto::Hash::SHA3
