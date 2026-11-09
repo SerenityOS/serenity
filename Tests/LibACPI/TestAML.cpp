@@ -88,3 +88,18 @@ TEST_CASE(predefined_objects)
     auto os_name_data = MUST(os_name.release_as<ACPI::AML::String>());
     EXPECT_EQ(StringView(os_name_data.buffer()), "Microsoft Windows NT"sv);
 }
+
+TEST_CASE(methods)
+{
+    auto interpreter = TRY_OR_FAIL(load_test_table("methods.aml"sv));
+
+    Vector<ACPI::AML::Object> call_arguments;
+    MUST(call_arguments.try_append(ACPI::AML::Object(u64(2))));
+    MUST(call_arguments.try_append(ACPI::AML::Object(u64(3))));
+
+    auto result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.ADD2"sv, call_arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 5ul);
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.CALC"sv, call_arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 15ul);
+}
