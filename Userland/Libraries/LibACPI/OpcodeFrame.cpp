@@ -165,10 +165,13 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
     }
 }
 
-ErrorOr<OpcodeFrame> OpcodeFrame::from_opcode(Opcode opcode, size_t start)
+ErrorOr<OpcodeFrame> OpcodeFrame::from_opcode(Opcode opcode, size_t start, Optional<ReadonlySpan<OperandType>> operand_template)
 {
-    auto operand_template = TRY(get_opcode_operand_template(opcode));
-    return OpcodeFrame(opcode, TRY(Vector<OperandType>::from_span(operand_template)), start);
+    if (!operand_template.has_value())
+        operand_template = TRY(get_opcode_operand_template(opcode));
+
+    auto frame = OpcodeFrame(opcode, TRY(Vector<OperandType>::from_span(*operand_template)), start);
+    return frame;
 }
 
 ErrorOr<OpcodeFrame> OpcodeFrame::root_frame()
