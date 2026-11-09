@@ -5,6 +5,7 @@ set(SOURCES
     Shader.cpp
 
     ../LibGPU/Image.cpp
+    ../LibGPU/PixelConverter.cpp
 )
 
 serenity_lib(LibV3DGPU v3dgpu)

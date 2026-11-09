@@ -8,9 +8,12 @@
 
 #include <AK/Array.h>
 #include <AK/Types.h>
+#include <LibGPU/SamplerConfig.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Size.h>
 #include <LibV3DGPU/ControlList.h>
+#include <LibV3DGPU/ControlRecords.h>
+#include <LibV3DGPU/Image.h>
 
 namespace V3DGPU {
 
@@ -22,14 +25,17 @@ namespace V3DGPU {
 //
 //   layout(location = 0) in vec4 a_position;
 //   layout(location = 1) in vec4 a_color;
+//   layout(location = 2) in vec2 a_texture_coordinate;
 //
 //   uniform mat4 u_model_view_projection;
 //
 //   out vec4 v_color;
+//   out vec2 v_texture_coordinate;
 //
 //   void main() {
 //       gl_Position = u_model_view_projection * a_position;
 //       v_color = a_color;
+//       v_texture_coordinate = a_texture_coordinate;
 //   }
 
 // Source fragment shader:
@@ -37,11 +43,14 @@ namespace V3DGPU {
 //   precision highp float;
 //
 //   in vec4 v_color;
+//   in vec2 v_texture_coordinate;
 //
 //   out vec4 f_color;
 //
+//   uniform sampler2D sampler;
+//
 //   void main() {
-//       f_color = v_color;
+//       f_color = texture(sampler, v_texture_coordinate) * v_color;
 //   }
 
 static constexpr auto COORDINATE_SHADER = to_array<u64>({
@@ -85,65 +94,79 @@ static constexpr auto VERTEX_SHADER = to_array<u64>({
     0x38402185bc03f000, // ldvpmv_in rf5, rf0            ; nop                         ; ldunif (0x00000002 / 0.000000)
     0x3981e186bc03f000, // ldvpmv_in rf6, rf0            ; nop                         ; ldunifrf.rf7 (push[0])
     0x55821286bb1c4000, // nop                           ; fmul rf10, rf7, rf4         ; ldunifrf.rf8 (push[1])
-    0x55825486bb204000, // nop                           ; fmul rf18, rf8, rf4         ; ldunifrf.rf9 (push[2])
-    0x544015c6bb244000, // nop                           ; fmul rf23, rf9, rf4         ; ldunif (push[3])
+    0x55825646bb204000, // nop                           ; fmul rf25, rf8, rf4         ; ldunifrf.rf9 (push[2])
+    0x54401686bb244000, // nop                           ; fmul rf26, rf9, rf4         ; ldunif (push[3])
     0x558312c6bb004000, // nop                           ; fmul rf11, rf0, rf4         ; ldunifrf.rf12 (push[4])
     0x558353c6bb305000, // nop                           ; fmul rf15, rf12, rf5        ; ldunifrf.rf13 (push[5])
-    0x558384d40534528f, // fadd rf20, rf10, rf15         ; fmul rf19, rf13, rf5        ; ldunifrf.rf14 (push[6])
-    0x5440025605385493, // fadd rf22, rf18, rf19         ; fmul rf9, rf14, rf5         ; ldunif (push[7])
+    0x558387550534528f, // fadd rf21, rf10, rf15         ; fmul rf29, rf13, rf5        ; ldunifrf.rf14 (push[6])
+    0x544007de0538565d, // fadd rf30, rf25, rf29         ; fmul rf31, rf14, rf5        ; ldunif (push[7])
     0x54401406bb005000, // nop                           ; fmul rf16, rf0, rf5         ; ldunif (0x00000003 / 0.000000)
-    0x39862191bc03f000, // ldvpmv_in rf17, rf0           ; nop                         ; ldunifrf.rf24 (push[8])
-    0x558646d5056062d0, // fadd rf21, rf11, rf16         ; fmul rf27, rf24, rf6        ; ldunifrf.rf25 (push[9])
-    0x558687430564651b, // fadd rf3, rf20, rf27          ; fmul rf29, rf25, rf6        ; ldunifrf.rf26 (push[10])
-    0x384021900503f59d, // fadd rf16, rf22, rf29         ; nop                         ; ldunif (push[11])
-    0x5587871605006257, // fadd rf22, rf9, rf23          ; fmul rf28, rf0, rf6         ; ldunifrf.rf30 (push[12])
-    0x5587c0870579155c, // fadd rf7, rf21, rf28          ; fmul rf2, rf30, rf17        ; ldunifrf.rf31 (push[13])
-    0x55804493057d1083, // fadd rf19, rf2, rf3           ; fmul rf18, rf31, rf17       ; ldunifrf.rf1 (push[14])
-    0x5440055705686412, // fadd rf23, rf16, rf18         ; fmul rf21, rf26, rf6        ; ldunif (push[15])
-    0x5582011b05011556, // fadd rf27, rf21, rf22         ; fmul rf4, rf0, rf17         ; ldunifrf.rf8 (vp_x_scale)
-    0x55828614054c8107, // fadd rf20, rf4, rf7           ; fmul rf24, rf19, rf8        ; ldunifrf.rf10 (0x00000004 / 0.000000)
-    0x5583068bbc051280, // ldvpmv_in rf11, rf10          ; fmul rf26, rf1, rf17        ; ldunifrf.rf12 (0x00000005 / 0.000000)
-    0x3840218dbc03f300, // ldvpmv_in rf13, rf12          ; nop                         ; ldunif (0x00000006 / 0.000000)
-    0x3840218ebc03f000, // ldvpmv_in rf14, rf0           ; nop                         ; ldunif (0x00000007 / 0.000000)
-    0x3840218fbc03f000, // ldvpmv_in rf15, rf0           ; nop                         ; ldunif (vp_y_scale)
-    0x55878700be5c028b, // stvpmv rf10, rf11             ; fmul rf28, rf23, rf0        ; ldunifrf.rf30 (vp_z_scale)
-    0x38402180be03f30d, // stvpmv rf12, rf13             ; nop                         ; ldunif (0x00000006 / 0.000000)
-    0x38002199bc03f520, // recip rf25, rf20              ; nop
-    0x38402180be03f00e, // stvpmv rf0, rf14              ; nop                         ; ldunif (0x00000007 / 0.000000)
-    0x55810740be61900f, // stvpmv rf0, rf15              ; fmul rf29, rf24, rf25       ; ldunifrf.rf4 (vp_z_offset)
-    0x54400043f5719747, // ftoin rf3, rf29               ; fmul rf1, rf28, rf25        ; ldunif (0x00000000 / 0.000000)
-    0x3800219f0503f69b, // fadd rf31, rf26, rf27         ; nop
-    0x54400080be7de003, // stvpmv rf0, rf3               ; fmul rf2, rf31, rf30        ; ldunif (0x00000001 / 0.000000)
-    0x54000146f5099047, // ftoin rf6, rf1                ; fmul rf5, rf2, rf25
-    0x38402180be03f006, // stvpmv rf0, rf6               ; nop                         ; ldunif (0x00000002 / 0.000000)
-    0x380021870503f105, // fadd rf7, rf4, rf5            ; nop
-    0x38602180be03f007, // stvpmv rf0, rf7               ; nop                         ; thrsw; ldunif (0x00000003 / 0.000000)
-    0x38002180be03f019, // stvpmv rf0, rf25              ; nop
+    0x3984a191bc03f000, // ldvpmv_in rf17, rf0           ; nop                         ; ldunifrf.rf18 (0x00000004 / 0.000000)
+    0x38402193bc03f480, // ldvpmv_in rf19, rf18          ; nop                         ; ldunif (0x00000005 / 0.000000)
+    0x38402194bc03f000, // ldvpmv_in rf20, rf0           ; nop                         ; ldunif (0x00000006 / 0.000000)
+    0x38402196bc03f000, // ldvpmv_in rf22, rf0           ; nop                         ; ldunif (0x00000007 / 0.000000)
+    0x38402198bc03f000, // ldvpmv_in rf24, rf0           ; nop                         ; ldunif (0x00000008 / 0.000000)
+    0x3840219bbc03f000, // ldvpmv_in rf27, rf0           ; nop                         ; ldunif (0x00000009 / 0.000000)
+    0x3980619cbc03f000, // ldvpmv_in rf28, rf0           ; nop                         ; ldunifrf.rf1 (push[8])
+    0x55808117050462d0, // fadd rf23, rf11, rf16         ; fmul rf4, rf1, rf6          ; ldunifrf.rf2 (push[9])
+    0x5580c1c0be086493, // stvpmv rf18, rf19             ; fmul rf7, rf2, rf6          ; ldunifrf.rf3 (push[10])
+    0x54400548050c6115, // fadd rf8, rf4, rf21           ; fmul rf21, rf3, rf6         ; ldunif (push[11])
+    0x55824150050061de, // fadd rf16, rf7, rf30          ; fmul rf5, rf0, rf6          ; ldunifrf.rf9 (push[12])
+    0x5582830d05251157, // fadd rf13, rf5, rf23          ; fmul rf12, rf9, rf17        ; ldunifrf.rf10 (push[13])
+    0x5582c4930529120c, // fadd rf19, rf8, rf12          ; fmul rf18, rf10, rf17       ; ldunifrf.rf11 (push[14])
+    0x544007d7052d169f, // fadd rf23, rf26, rf31         ; fmul rf31, rf11, rf17       ; ldunif (push[15])
+    0x5440039a05011412, // fadd rf26, rf16, rf18         ; fmul rf14, rf0, rf17        ; ldunif (0x00000005 / 0.000000)
+    0x3983e180be03f014, // stvpmv rf0, rf20              ; nop                         ; ldunifrf.rf15 (vp_x_scale)
+    0x54400754054cf34e, // fadd rf20, rf13, rf14         ; fmul rf29, rf19, rf15       ; ldunif (0x00000006 / 0.000000)
+    0x39866180be03f016, // stvpmv rf0, rf22              ; nop                         ; ldunifrf.rf25 (vp_y_scale)
+    0x5440009ebc699520, // recip rf30, rf20              ; fmul rf2, rf26, rf25        ; ldunif (0x00000007 / 0.000000)
+    0x39812180be03f018, // stvpmv rf0, rf24              ; nop                         ; ldunifrf.rf4 (vp_z_scale)
+    0x544000c10575e557, // fadd rf1, rf21, rf23          ; fmul rf3, rf29, rf30        ; ldunif (0x00000008 / 0.000000)
+    0x54400180be09e01b, // stvpmv rf0, rf27              ; fmul rf6, rf2, rf30         ; ldunif (0x00000009 / 0.000000)
+    0x39826180be03f01c, // stvpmv rf0, rf28              ; nop                         ; ldunifrf.rf9 (vp_z_offset)
+    0x38402188f503f0c7, // ftoin rf8, rf3                ; nop                         ; ldunif (0x00000000 / 0.000000)
+    0x380021850503f05f, // fadd rf5, rf1, rf31           ; nop
+    0x544001c0be144008, // stvpmv rf0, rf8               ; fmul rf7, rf5, rf4          ; ldunif (0x00000001 / 0.000000)
+    0x5400028bf51de187, // ftoin rf11, rf6               ; fmul rf10, rf7, rf30
+    0x38402180be03f00b, // stvpmv rf0, rf11              ; nop                         ; ldunif (0x00000002 / 0.000000)
+    0x3800218c0503f24a, // fadd rf12, rf9, rf10          ; nop
+    0x38602180be03f00c, // stvpmv rf0, rf12              ; nop                         ; thrsw; ldunif (0x00000003 / 0.000000)
+    0x38002180be03f01e, // stvpmv rf0, rf30              ; nop
     0x38003186bb03f000, // nop                           ; nop
 });
 
 static constexpr auto FRAGMENT_SHADER = to_array<u64>({
-    0x39013186bb03f000, // nop                           ; nop                         ; ldvary.rf4
-    0x5501d146bb103000, // nop                           ; fmul rf5, rf4, rf3          ; ldvary.rf7
-    0x55228206051c3005, // fadd rf6, rf0, rf5            ; fmul rf8, rf7, rf3          ; thrsw; ldvary.rf10
-    0x552342c905283008, // fadd rf9, rf0, rf8            ; fmul rf11, rf10, rf3        ; thrsw; ldvary.rf13
-    0x5400038c0534300b, // fadd rf12, rf0, rf11          ; fmul rf14, rf13, rf3
-    0x3800218f0503f00e, // fadd rf15, rf0, rf14          ; nop
-    0x382031873503f189, // vfpack tlb, rf6, rf9          ; nop                         ; thrsw
-    0x380031873503f30f, // vfpack tlb, rf12, rf15        ; nop
+    0x3a813186bb03f000, // nop                           ; nop                         ; ldvary.rf4; wrtmuc (tex[0].p0 | 0x3)
+    0x5681d146bb103000, // nop                           ; fmul rf5, rf4, rf3          ; ldvary.rf7; wrtmuc (tex[0].p1 | 0x4)
+    0x55028206051c3005, // fadd rf6, rf0, rf5            ; fmul rf8, rf7, rf3          ; ldvary.rf10
+    0x550342c905283008, // fadd rf9, rf0, rf8            ; fmul rf11, rf10, rf3        ; ldvary.rf13
+    0x5504038c0534300b, // fadd rf12, rf0, rf11          ; fmul rf14, rf13, rf3        ; ldvary.rf16
+    0x5504c44f0540300e, // fadd rf15, rf0, rf14          ; fmul rf17, rf16, rf3        ; ldvary.rf19
+    0x54000512054c3011, // fadd rf18, rf0, rf17          ; fmul rf20, rf19, rf3
+    0x382021950503f014, // fadd rf21, rf0, rf20          ; nop                         ; thrsw
+    0x38203886bb543000, // nop                           ; mov tmut, rf21              ; thrsw
+    0x38003846bb483000, // nop                           ; mov tmus, rf18
+    0x3885b186bb03f000, // nop                           ; nop                         ; ldtmu.rf22
+    0x6485d646bb586000, // nop                           ; fmul rf25, rf22.l, rf6      ; ldtmu.rf23
+    0x74001686bb589000, // nop                           ; fmul rf26, rf22.h, rf9
+    0x64001607355cc65a, // vfpack tlb, rf25, rf26        ; fmul rf24, rf23.l, rf12
+    0x740016c6bb5cf000, // nop                           ; fmul rf27, rf23.h, rf15
+    0x382031873503f61b, // vfpack tlb, rf24, rf27        ; nop                         ; thrsw
+    0x38003186bb03f000, // nop                           ; nop
     0x38003186bb03f000, // nop                           ; nop
 });
 
-static constexpr u8 NUMBER_OF_VARYINGS_IN_FRAGMENT_SHADER = 4;
+static constexpr u8 NUMBER_OF_VARYINGS_IN_FRAGMENT_SHADER = 6;
 
 struct Uniforms {
     ControlList list;
+    ControlList texture_list;
     u32 coordinate_shader_uniforms_address { 0 };
     u32 vertex_shader_uniforms_address { 0 };
     u32 fragment_shader_uniforms_address { 0 };
 };
 
-inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatMatrix4x4 const& model_view_projection_matrix)
+inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatMatrix4x4 const& model_view_projection_matrix, GPU::SamplerConfig const& sampler_configuration)
 {
     ControlList list;
 
@@ -209,6 +232,12 @@ inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatM
     list.append<f32>(model_view_projection_matrix(3, 1));
 
     list.append<u32>(3);
+    list.append<u32>(4);
+    list.append<u32>(5);
+    list.append<u32>(6);
+    list.append<u32>(7);
+    list.append<u32>(8);
+    list.append<u32>(9);
 
     list.append<f32>(model_view_projection_matrix(0, 2));
     list.append<f32>(model_view_projection_matrix(1, 2));
@@ -220,25 +249,122 @@ inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatM
     list.append<f32>(model_view_projection_matrix(2, 3));
     list.append<f32>(model_view_projection_matrix(3, 3));
 
-    list.append<f32>(viewport_half_x_scale);
-
-    list.append<u32>(4);
     list.append<u32>(5);
+    list.append<f32>(viewport_half_x_scale);
     list.append<u32>(6);
-    list.append<u32>(7);
-
     list.append<f32>(viewport_half_y_scale);
-    list.append<f32>(viewport_z_scale);
-    list.append<u32>(6);
     list.append<u32>(7);
+    list.append<f32>(viewport_z_scale);
+    list.append<u32>(8);
+    list.append<u32>(9);
     list.append<f32>(viewport_z_offset);
     list.append<u32>(0);
     list.append<u32>(1);
     list.append<u32>(2);
     list.append<u32>(3);
 
-    // Fragment shader uniforms (none at the moment)
-    u32 fragment_shader_uniforms_offset = 0;
+    // Fragment shader uniforms
+    u32 fragment_shader_uniforms_offset = list.data().size();
+
+    ControlList texture_list;
+
+    u32 texture_gpu_virtual_address = static_cast<V3DGPU::Image*>(sampler_configuration.bound_image.ptr())->buffer().gpu_virtual_address();
+    u16 texture_width = sampler_configuration.bound_image->width_at_level(0);
+    u16 texture_height = sampler_configuration.bound_image->height_at_level(0);
+
+    auto texture_shader_state_offset = texture_list.data().size();
+    ControlRecord::TextureShaderState texture_shader_state {
+        .flip_texture_x_axis = false,
+        .flip_texture_y_axis = false,
+        .transfer_func = ControlRecord::TextureShaderState::TransferFunc::None,
+        .reverse = 0,
+        .texture_base_pointer = texture_gpu_virtual_address >> 6u,
+        .r_b_swap = false,
+        .array_stride_64_byte_aligned = 0,
+        ._reserved0 = 0,
+        .image_width = texture_width,
+        .image_height = texture_height,
+        .image_depth = 1,
+        .texture_type = to_underlying(ControlRecord::TextureDataFormat::RGBA8),
+        .extended = true,
+        .swizzle_r = 2,
+        .swizzle_g = 3,
+        .swizzle_b = 4,
+        .swizzle_a = ControlRecord::TextureShaderState::SwizzleA::Alpha,
+        .max_level = 0,
+        .base_level = 0,
+        .level_0_ub_pad = 0,
+        .level_0_xor_enable = false,
+        ._reserved1 = 0,
+        .level_0_is_strictly_uif = false,
+        .uif_xor_disable = true,
+        .chroma_offset_x = 1,
+        .chroma_offset_y = 1,
+        .texture_base_pointer_cb = texture_gpu_virtual_address >> 6u,
+        .texture_base_pointer_cr = texture_gpu_virtual_address >> 6u,
+        .pad = 0,
+    };
+    texture_list.append(texture_shader_state);
+
+    auto map_wrap_mode = [](GPU::TextureWrapMode wrap_mode) {
+        switch (wrap_mode) {
+        case GPU::TextureWrapMode::Repeat:
+            return ControlRecord::WrapMode::Repeat;
+        case GPU::TextureWrapMode::MirroredRepeat:
+            return ControlRecord::WrapMode::Mirror;
+        case GPU::TextureWrapMode::Clamp:
+            return ControlRecord::WrapMode::Clamp;
+        case GPU::TextureWrapMode::ClampToBorder:
+            return ControlRecord::WrapMode::Border;
+        case GPU::TextureWrapMode::ClampToEdge:
+            return ControlRecord::WrapMode::Clamp;
+        }
+
+        VERIFY_NOT_REACHED();
+    };
+
+    auto sampler_state_offset = texture_list.data().size();
+    ControlRecord::SamplerState sampler_state {
+        .mag_filter_nearest = sampler_configuration.texture_mag_filter == GPU::TextureFilter::Nearest,
+        .min_filter_nearest = sampler_configuration.texture_min_filter == GPU::TextureFilter::Nearest,
+        .mip_filter_nearest = false,
+        .anisotropy_enable = false,
+        .depth_compare_function = ControlRecord::CompareFunction::Never,
+        .srgb_disable = false,
+        .min_level_of_detail = ControlRecord::to_u4p8(0, 0),
+        .max_level_of_detail = ControlRecord::to_u4p8(0xf, 0),
+        .fixed_bias = ControlRecord::to_s8p8(0, 0),
+        .wrap_s = map_wrap_mode(sampler_configuration.texture_wrap_u),
+        .wrap_t = map_wrap_mode(sampler_configuration.texture_wrap_v),
+        .wrap_r = map_wrap_mode(sampler_configuration.texture_wrap_w),
+        .wrap_i_border = false,
+        .border_color_mode = ControlRecord::BorderColorMode::Mode0000,
+        .maximum_anisotropy = 0,
+        .border_color_word_0 = 0,
+        .border_color_word_1 = 0,
+        .border_color_word_2 = 0,
+        .border_color_word_3 = 0,
+    };
+    texture_list.append(sampler_state);
+
+    TRY(texture_list.copy_to_gpu_buffer());
+
+    u32 texture_shader_state_address = texture_list.buffer()->gpu_virtual_address() + texture_shader_state_offset;
+    u32 sampler_state_address = texture_list.buffer()->gpu_virtual_address() + sampler_state_offset;
+
+    ControlRecord::TMUConfigParameter0 tmu_config_parameter_0 {
+        .return_words_of_texture_data = 3,
+        .texture_state_address = texture_shader_state_address >> 4u,
+    };
+    list.append(tmu_config_parameter_0);
+
+    ControlRecord::TMUConfigParameter1 tmu_config_parameter_1 {
+        .output_type_32_bit = false,
+        .unnormalized_coordinates = false,
+        .per_pixel_mask_enable = false,
+        .sampler_state_address = sampler_state_address >> 3u,
+    };
+    list.append(tmu_config_parameter_1);
 
     TRY(list.copy_to_gpu_buffer());
 
@@ -248,6 +374,7 @@ inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatM
 
     return Uniforms {
         .list = move(list),
+        .texture_list = move(texture_list),
         .coordinate_shader_uniforms_address = coordinate_shader_uniforms_address,
         .vertex_shader_uniforms_address = vertex_shader_uniforms_address,
         .fragment_shader_uniforms_address = fragment_shader_uniforms_address,
