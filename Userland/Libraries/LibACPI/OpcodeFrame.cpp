@@ -167,6 +167,9 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
     case Opcode::Arg0Op... Opcode::Arg6Op:
         return EMPTY_OPERANDS.span();
 
+    case Opcode::NodeEvaluation:
+        VERIFY_NOT_REACHED();
+
     default:
         warnln("ACPI: get_opcode_operand_template: Unknown opcode template: {}!", opcode);
         return Error::from_string_view_or_print_error_and_return_errno("Unknown opcode template!"sv, EINVAL);

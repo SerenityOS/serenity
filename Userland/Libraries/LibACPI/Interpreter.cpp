@@ -270,6 +270,16 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
         return value;
     }
 
+    case Opcode::NodeEvaluation: {
+        auto name = TRY(frame.operand(0).release_as<NameString>());
+        auto node = TRY(find_node(name, m_scope_frames.last().scope()));
+
+        auto arguments = frame.release_operands();
+        arguments.remove(0, 1);
+
+        return evaluate(node, move(arguments));
+    }
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented opcode {}!", frame.opcode());
     }
@@ -556,8 +566,25 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             auto name = TRY(stream.read_name_string());
             DEBUG_LOG("{}", name.to_string());
 
-            warnln("ACPI: Reading name string as value is not yet supported");
-            return Error::from_errno(ENOTSUP);
+            auto node = TRY(find_node(name, m_scope_frames.last().scope()));
+            size_t argument_count = node->type() == NodeType::Method ? static_ptr_cast<MethodNode>(node)->argument_count() : 0;
+
+            if (node->type() == NodeType::Method)
+                INTERPRETER_ERROR("Unsupported method!", ENOTSUP, "Calling methods is not yet supported!");
+
+            Vector<OperandType> operand_template;
+            TRY(operand_template.try_ensure_capacity(argument_count + 2));
+            TRY(operand_template.try_append(OperandType::NameString));
+            for (size_t i = 0; i < argument_count; ++i)
+                TRY(operand_template.try_append(OperandType::TermArg));
+            TRY(operand_template.try_append(OperandType::End));
+
+            auto opcode_frame = TRY(OpcodeFrame::from_opcode(Opcode::NodeEvaluation, stream.offset(), operand_template));
+            TRY(opcode_frame.finish_operand(Object(move(name)), 0));
+
+            TRY(m_opcode_frames.try_append(move(opcode_frame)));
+            m_state = State::ReadingOperand;
+            return IterationDecision::Continue;
         }
 
         auto opcode = TRY(stream.read_opcode());
