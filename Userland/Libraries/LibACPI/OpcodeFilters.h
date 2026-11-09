@@ -25,6 +25,10 @@ bool term_filter(Opcode opcode);
 bool term_arg_filter(Opcode opcode);
 bool arg_obj_filter(Opcode opcode);
 bool local_obj_filter(Opcode opcode);
+bool simple_name_filter(Opcode opcode);
+bool reference_type_opcode_filter(Opcode opcode);
+bool super_name_filter(Opcode opcode);
+bool target_filter(Opcode opcode);
 
 bool is_namestring_start(u8 c);
 bool is_lead_name_char(u8 c);
