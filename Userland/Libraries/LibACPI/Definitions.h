@@ -509,6 +509,13 @@ enum class Opcode : u16 {
     Arg6Op = 0x6E,
 };
 
+struct MethodFlags {
+    u8 argument_count : 3;
+    u8 serialized : 1;
+    u8 sync_level : 4;
+};
+static_assert(sizeof(MethodFlags) == 1);
+
 }
 
 }

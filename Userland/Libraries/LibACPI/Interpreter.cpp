@@ -243,7 +243,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto path = TRY(frame.operand(1).release_as<NameString>());
         auto flags = TRY(frame.operand(2).release_as<u64>());
 
-        auto node = TRY(try_make_ref_counted<MethodNode>(frame.start(), frame.start() + length, m_loaded_tables.size() - 1, flags));
+        auto node = TRY(try_make_ref_counted<MethodNode>(frame.start(), frame.start() + length, m_loaded_tables.size() - 1, bit_cast<MethodFlags>(static_cast<u8>(flags))));
         TRY(m_scope_frames.last().insert_node(path, node));
 
         TRY(stream.seek(frame.start() + length));
@@ -574,7 +574,10 @@ ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
     // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#predefined-objects
     TRY(namespace_root->insert_child("_GL_"sv, TRY(try_make_ref_counted<MutexNode>(0))));
     TRY(namespace_root->insert_child("_REV"sv, TRY(try_make_ref_counted<NameNode>(Object(u64(2))))));
-    TRY(namespace_root->insert_child("_OSI"sv, TRY(try_make_ref_counted<MethodNode>(0, 0, PREDEFINED_METHOD_TABLE_INDEX, 1))));
+
+    MethodFlags flags {};
+    flags.argument_count = 1;
+    TRY(namespace_root->insert_child("_OSI"sv, TRY(try_make_ref_counted<MethodNode>(0, 0, PREDEFINED_METHOD_TABLE_INDEX, flags))));
 
     // NOTE: We need to pretend to be Windows to ensure compatibility with a wide range of BIOSes.
     //       See https://docs.kernel.org/firmware-guide/acpi/osi.html.
