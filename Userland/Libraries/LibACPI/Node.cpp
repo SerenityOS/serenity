@@ -67,7 +67,7 @@ ErrorOr<void> NameNode::write_description(StringBuilder& builder)
 
 ErrorOr<void> MethodNode::write_description(StringBuilder& builder)
 {
-    TRY(builder.try_appendff("Method(Table: {}, Arguments: {}, Start: {}, End: {}, Flags: {})", m_table_index, argument_count(), m_start, m_end, m_flags));
+    TRY(builder.try_appendff("Method(Table: {}, Arguments: {}, Start: {}, End: {}, Flags: {})", m_table_index, argument_count(), m_start, m_end, bit_cast<u8>(m_flags)));
     return {};
 }
 
