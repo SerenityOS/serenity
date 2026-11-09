@@ -59,28 +59,4 @@ ErrorOr<void> Node::write_description(StringBuilder& builder)
     return {};
 }
 
-ErrorOr<void> NameNode::write_description(StringBuilder& builder)
-{
-    TRY(builder.try_appendff("{}"sv, m_data));
-    return {};
-}
-
-ErrorOr<void> MethodNode::write_description(StringBuilder& builder)
-{
-    TRY(builder.try_appendff("Method(Table: {}, Arguments: {}, Start: {}, End: {}, Flags: {})", m_table_index, argument_count(), m_start, m_end, bit_cast<u8>(m_flags)));
-    return {};
-}
-
-ErrorOr<void> OperationRegionNode::write_description(StringBuilder& builder)
-{
-    TRY(builder.try_appendff("OperationRegion(Space: {}, Offset: {}, Length: {})", m_space_raw, m_offset, m_length));
-    return {};
-}
-
-ErrorOr<void> FieldNode::write_description(StringBuilder& builder)
-{
-    TRY(builder.try_appendff("Field(Flags: {}, Offset: {}, Length: {})", m_flags, m_offset, m_length));
-    return {};
-}
-
 }

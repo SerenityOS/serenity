@@ -643,6 +643,7 @@ set(ACPI_SOURCES
     ../Userland/Libraries/LibACPI/Interpreter.cpp
     ../Userland/Libraries/LibACPI/NameString.cpp
     ../Userland/Libraries/LibACPI/Node.cpp
+    ../Userland/Libraries/LibACPI/Nodes.cpp
     ../Userland/Libraries/LibACPI/Object.cpp
     ../Userland/Libraries/LibACPI/OpcodeFilters.cpp
     ../Userland/Libraries/LibACPI/OpcodeFrame.cpp
