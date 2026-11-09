@@ -31,6 +31,7 @@ set(SOURCES
     Hash/MD5.cpp
     Hash/SHA1.cpp
     Hash/SHA2.cpp
+    Hash/SHA3.cpp
     NumberTheory/ModularFunctions.cpp
     PK/RSA.cpp
 )
