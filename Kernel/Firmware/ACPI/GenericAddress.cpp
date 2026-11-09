@@ -18,7 +18,7 @@ namespace Kernel::ACPI {
 {
     return ::ACPI::Structures::GenericAddressStructure {
         .address_space = ::ACPI::GenericAddressStructure::AddressSpace::SystemIO,
-        .bit_width = ::ACPI::GenericAddressStructure::BitWidth::Word,
+        .bit_width = 16,
         .bit_offset = 0,
         .access_size = ::ACPI::GenericAddressStructure::AccessSize::Word,
         .address = io_port,
@@ -32,17 +32,17 @@ static ErrorOr<u8> get_bit_width(::ACPI::Structures::GenericAddressStructure con
     //       and the APEI region format. Here we follow what both uACPI and ACPICA do.
 
     bool is_typical_bit_width = false;
-    if (structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::Byte || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::Word || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::DWord || structure.bit_width == ::ACPI::GenericAddressStructure::BitWidth::QWord)
+    if (structure.bit_width == 8 || structure.bit_width == 16 || structure.bit_width == 32 || structure.bit_width == 64)
         is_typical_bit_width = true;
 
     u8 bit_width;
 
     if (structure.bit_offset == 0 && is_typical_bit_width) {
-        bit_width = to_underlying(structure.bit_width);
+        bit_width = structure.bit_width;
     } else if (structure.access_size != ::ACPI::GenericAddressStructure::AccessSize::Undefined) {
         bit_width = 8 << (to_underlying(structure.access_size) - 1);
     } else {
-        bit_width = 1 << AK::ceil_log2(structure.bit_offset + to_underlying(structure.bit_width));
+        bit_width = 1 << AK::ceil_log2(structure.bit_offset + structure.bit_width);
 
         if (bit_width <= 8) {
             bit_width = 8;
