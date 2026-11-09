@@ -612,6 +612,30 @@ ErrorOr<Object*> Interpreter::resolve_references(Object& reference)
     return object;
 }
 
+ErrorOr<void> Interpreter::store(Object const& target, Object value)
+{
+    // FIXME: Handle multilevel references for the target object.
+    if (target.is_empty())
+        return {};
+
+    if (target.is<ArgumentReference>()) {
+        auto argument_index = MUST(target.as<ArgumentReference>()).index();
+        m_scope_frames.last().argument(argument_index) = move(value);
+        return {};
+    }
+
+    if (target.is<LocalReference>()) {
+        auto local_index = MUST(target.as<LocalReference>()).index();
+        m_scope_frames.last().local(local_index) = move(value);
+        return {};
+    }
+
+    if (target.is<NodeReference>())
+        INTERPRETER_ERROR("Setting node values is not supported!", EINVAL, "Setting node values is not supported yet!");
+
+    INTERPRETER_ERROR("Unsupported target type!", EINVAL, "Unsupported target type!");
+}
+
 ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
 {
     auto namespace_root = TRY(try_make_ref_counted<ScopeNode>());
