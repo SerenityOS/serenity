@@ -39,7 +39,7 @@ enum class OperandType : u8 {
 
 class OpcodeFrame {
 public:
-    static ErrorOr<OpcodeFrame> from_opcode(Opcode opcode, size_t start);
+    static ErrorOr<OpcodeFrame> from_opcode(Opcode opcode, size_t start, Optional<ReadonlySpan<OperandType>> operand_template = {});
     static ErrorOr<OpcodeFrame> root_frame();
 
     bool filter_opcode_for_next_operand(Opcode opcode);
