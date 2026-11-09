@@ -7,6 +7,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
+#include <AK/NumericLimits.h>
 #include <LibACPI/Definitions.h>
 #include <LibACPI/Interpreter.h>
 #include <LibACPI/Node.h>
@@ -229,7 +230,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto path = TRY(frame.operand(1).release_as<NameString>());
         auto scope = TRY(find_node(path, m_scope_frames.last().scope()));
 
-        auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
+        auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, m_scope_frames.last().number_mask());
         TRY(m_scope_frames.try_append(move(scope_frame)));
         return {};
     }
@@ -287,7 +288,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto node = TRY(try_make_ref_counted<DeviceNode>());
         TRY(m_scope_frames.last().insert_node(path, node));
 
-        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, m_scope_frames.last().number_mask());
         TRY(m_scope_frames.try_append(move(scope_frame)));
         return {};
     }
@@ -302,7 +303,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto node = TRY(try_make_ref_counted<ProcessorNode>(id, processor_register_block_address, processor_register_block_length));
         TRY(m_scope_frames.last().insert_node(path, node));
 
-        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, m_scope_frames.last().number_mask());
         TRY(m_scope_frames.try_append(move(scope_frame)));
         return {};
     }
@@ -352,7 +353,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
     case OperandType::QWordData: {
         auto value = TRY(stream.read_value<u64>());
         DEBUG_LOG("Reading qword... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value) & m_scope_frames.last().number_mask(), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::String: {
@@ -624,7 +625,10 @@ ErrorOr<void> Interpreter::load(ReadonlyBytes bytes)
     auto block_header = TRY(stream.read_sdt_header());
     outln("ACPI: Interpreter::load[{}]: Loading table '{}' by OEM '{}'", m_loaded_tables.size() - 1, StringView(block_header.oem_table_id, 8), StringView(block_header.oem_id, 6));
 
-    auto root_scope_frame = ScopeFrame(m_namespace_root, m_namespace_root, stream.offset(), TRY(stream.size()), m_loaded_tables.size() - 1);
+    u64 number_mask = block_header.revision < 2 ? NumericLimits<u32>::max() : NumericLimits<u64>::max();
+    dbgln_if(AML_DEBUG, "ACPI: Interpreter::load: Number mask: {:x}", number_mask);
+
+    auto root_scope_frame = ScopeFrame(m_namespace_root, m_namespace_root, stream.offset(), TRY(stream.size()), m_loaded_tables.size() - 1, number_mask);
     TRY(m_scope_frames.try_append(move(root_scope_frame)));
 
     auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
