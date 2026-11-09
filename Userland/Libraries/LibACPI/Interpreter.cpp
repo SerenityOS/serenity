@@ -209,6 +209,11 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
         return Package(move(operands));
     }
 
+    case Opcode::Local0Op... Opcode::Local7Op:
+        return LocalReference(to_underlying(frame.opcode()) - to_underlying(Opcode::Local0Op));
+    case Opcode::Arg0Op... Opcode::Arg6Op:
+        return ArgumentReference(to_underlying(frame.opcode()) - to_underlying(Opcode::Arg0Op));
+
     default:
         INTERPRETER_ERROR("Unimplemented!", EINVAL, "Unimplemented value opcode {}!", frame.opcode());
     }
