@@ -12,6 +12,7 @@
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibACPI/Node.h>
+#include <LibACPI/Nodes.h>
 #include <LibACPI/OpcodeFrame.h>
 #include <LibACPI/TableStream.h>
 

@@ -2,6 +2,7 @@ set(SOURCES
     Interpreter.cpp
     NameString.cpp
     Node.cpp
+    Nodes.cpp
     Object.cpp
     OpcodeFilters.cpp
     OpcodeFrame.cpp
