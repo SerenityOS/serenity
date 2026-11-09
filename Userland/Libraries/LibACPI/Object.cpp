@@ -36,7 +36,10 @@ ErrorOr<Object> Object::clone() const
         [](String const& value) -> ErrorOr<Object> { return TRY(value.clone()); },
         [](Buffer const& value) -> ErrorOr<Object> { return TRY(value.clone()); },
         [](Package const& value) -> ErrorOr<Object> { return TRY(value.clone()); },
-        [](NameString const& value) -> ErrorOr<Object> { return TRY(value.clone()); });
+        [](NameString const& value) -> ErrorOr<Object> { return TRY(value.clone()); },
+        [](ArgumentReference const& value) -> ErrorOr<Object> { return ArgumentReference(value); },
+        [](LocalReference const& value) -> ErrorOr<Object> { return LocalReference(value); },
+        [](NodeReference const& value) -> ErrorOr<Object> { return NodeReference(value); });
 }
 
 }

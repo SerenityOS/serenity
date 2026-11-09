@@ -8,11 +8,13 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/RefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibACPI/NameString.h>
+#include <LibACPI/Node.h>
 
 namespace ACPI::AML {
 
@@ -72,8 +74,47 @@ private:
     Vector<Object> m_package;
 };
 
+class ArgumentReference {
+public:
+    ArgumentReference(size_t index)
+        : m_index(index)
+    {
+    }
+
+    size_t index() const { return m_index; }
+
+private:
+    size_t m_index { 0 };
+};
+
+class LocalReference {
+public:
+    LocalReference(size_t index)
+        : m_index(index)
+    {
+    }
+
+    size_t index() const { return m_index; }
+
+private:
+    size_t m_index { 0 };
+};
+
+class NodeReference {
+public:
+    NodeReference(RefPtr<Node> node)
+        : m_node(move(node))
+    {
+    }
+
+    RefPtr<Node> const& node() const { return m_node; }
+
+private:
+    RefPtr<Node> m_node;
+};
+
 template<typename T>
-concept IsNodeData = OneOf<T, u64, String, Buffer, Package, NameString>;
+concept IsNodeData = OneOf<T, u64, String, Buffer, Package, NameString, ArgumentReference, LocalReference, NodeReference>;
 
 class Object {
     AK_MAKE_NONCOPYABLE(Object);
@@ -95,6 +136,11 @@ public:
     constexpr bool is() const
     {
         return m_data.has<T>();
+    }
+
+    constexpr bool is_reference() const
+    {
+        return is<ArgumentReference>() || is<LocalReference>() || is<NodeReference>();
     }
 
     template<IsNodeData T>
@@ -128,7 +174,7 @@ public:
     ErrorOr<Object> clone() const;
 
 protected:
-    Variant<AK::Empty, u64, String, Buffer, Package, NameString> m_data;
+    Variant<AK::Empty, u64, String, Buffer, Package, NameString, ArgumentReference, LocalReference, NodeReference> m_data;
 };
 
 }
@@ -153,6 +199,15 @@ struct AK::Formatter<::ACPI::AML::Object> : AK::Formatter<FormatString> {
 
         if (object.is<::ACPI::AML::NameString>())
             return AK::Formatter<FormatString>::format(builder, "{}"sv, TRY(MUST(object.as_pointer<::ACPI::AML::NameString>())->to_string()));
+
+        if (object.is<::ACPI::AML::ArgumentReference>())
+            return AK::Formatter<FormatString>::format(builder, "Argument {}"sv, MUST(object.as_pointer<::ACPI::AML::ArgumentReference>())->index());
+
+        if (object.is<::ACPI::AML::LocalReference>())
+            return AK::Formatter<FormatString>::format(builder, "Local {}"sv, MUST(object.as_pointer<::ACPI::AML::LocalReference>())->index());
+
+        if (object.is<::ACPI::AML::NodeReference>())
+            return AK::Formatter<FormatString>::format(builder, "{} Reference"sv, MUST(object.as_pointer<::ACPI::AML::NodeReference>())->node()->kind());
 
         VERIFY_NOT_REACHED();
     }
