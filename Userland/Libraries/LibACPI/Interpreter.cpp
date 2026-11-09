@@ -225,7 +225,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto scope = TRY(find_node(path, m_scope_frames.last().scope()));
 
         auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
-        TRY(m_scope_frames.try_append(scope_frame));
+        TRY(m_scope_frames.try_append(move(scope_frame)));
         return {};
     }
 
@@ -283,7 +283,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         TRY(m_scope_frames.last().insert_node(path, node));
 
         auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
-        TRY(m_scope_frames.try_append(scope_frame));
+        TRY(m_scope_frames.try_append(move(scope_frame)));
         return {};
     }
 
@@ -298,7 +298,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         TRY(m_scope_frames.last().insert_node(path, node));
 
         auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1);
-        TRY(m_scope_frames.try_append(scope_frame));
+        TRY(m_scope_frames.try_append(move(scope_frame)));
         return {};
     }
 
