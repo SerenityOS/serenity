@@ -589,8 +589,10 @@ ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
 
 ErrorOr<void> Interpreter::load(ReadonlyBytes bytes)
 {
-    TRY(m_loaded_tables.try_append(TableStream(bytes)));
-    auto& stream = m_loaded_tables.last();
+    TRY(m_loaded_tables.try_append(TRY(ByteBuffer::copy(bytes))));
+
+    auto& buffer = m_loaded_tables.last();
+    TableStream stream(buffer);
 
     if (!validate_table(*reinterpret_cast<Structures::SDTHeader const*>(bytes.data())))
         INTERPRETER_ERROR("Incorrect checksum!", EINVAL, "Table checksum incorrect!");
