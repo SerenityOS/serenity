@@ -304,7 +304,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto path = TRY(frame.operand(1).release_as<NameString>());
         auto flags = TRY(frame.operand(2).release_as<u64>());
 
-        auto node = TRY(try_make_ref_counted<MethodNode>(frame.start(), frame.start() + length, m_loaded_tables.size() - 1, bit_cast<MethodFlags>(static_cast<u8>(flags)), m_scope_frames.last().number_mask()));
+        auto node = TRY(try_make_ref_counted<MethodNode>(stream.offset(), frame.start() + length, m_loaded_tables.size() - 1, bit_cast<MethodFlags>(static_cast<u8>(flags)), m_scope_frames.last().number_mask()));
         TRY(m_scope_frames.last().insert_node(path, node));
 
         TRY(stream.seek(frame.start() + length));
