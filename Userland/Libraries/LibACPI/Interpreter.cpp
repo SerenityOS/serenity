@@ -212,6 +212,53 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
         return Package(move(operands));
     }
 
+    case Opcode::AddOp:
+    case Opcode::SubtractOp:
+    case Opcode::MultiplyOp:
+    case Opcode::ShiftLeftOp:
+    case Opcode::ShiftRightOp:
+    case Opcode::AndOp:
+    case Opcode::NandOp:
+    case Opcode::OrOp:
+    case Opcode::NorOp:
+    case Opcode::XorOp: {
+        auto const calculate = [](Opcode opcode, u64 left, u64 right) -> u64 {
+            switch (opcode) {
+            case Opcode::AddOp:
+                return left + right;
+            case Opcode::SubtractOp:
+                return left - right;
+            case Opcode::MultiplyOp:
+                return left * right;
+            case Opcode::ShiftLeftOp:
+                return left << right;
+            case Opcode::ShiftRightOp:
+                return left >> right;
+            case Opcode::AndOp:
+                return left & right;
+            case Opcode::NandOp:
+                return ~(left & right);
+            case Opcode::OrOp:
+                return left | right;
+            case Opcode::NorOp:
+                return ~(left | right);
+            case Opcode::XorOp:
+                return left ^ right;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        };
+
+        auto left = TRY(TRY(resolve_references(frame.operand(0)))->as<u64>());
+        auto right = TRY(TRY(resolve_references(frame.operand(1)))->as<u64>());
+        auto& target = frame.operand(2);
+
+        auto result = Object(calculate(frame.opcode(), left, right) & m_scope_frames.last().number_mask());
+
+        TRY(store(target, TRY(result.clone())));
+        return result;
+    }
+
     case Opcode::Local0Op... Opcode::Local7Op:
         return LocalReference(to_underlying(frame.opcode()) - to_underlying(Opcode::Local0Op));
     case Opcode::Arg0Op... Opcode::Arg6Op:
