@@ -918,10 +918,10 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto sender_pid = m_signal_senders[signal];
     auto sender = Process::from_pid_ignoring_process_lists(sender_pid);
 
-    if (!current_trap() && !action.handler_or_sigaction.is_null()) {
+    if (get_register_dump_from_stack().previous_mode() != ExecutionMode::User) {
         // We're trying dispatch a handled signal to a user process that was scheduled
         // after a yielding/blocking kernel thread, we don't have a register capture of
-        // the thread, so just defer processing the signal to later.
+        // the user thread, so just defer processing the signal to later.
         return DispatchSignalResult::Deferred;
     }
 
