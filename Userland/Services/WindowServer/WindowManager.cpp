@@ -80,6 +80,8 @@ void WindowManager::reload_config()
     }
     apply_workspace_settings(workspace_rows, workspace_columns, false);
 
+    m_key_initial_delay_ms = g_config->read_num_entry("Input", "KeyInitialDelay", 600);
+    m_key_repeat_delay_ms = g_config->read_num_entry("Input", "KeyRepeatDelay", 30);
     m_double_click_speed = g_config->read_num_entry("Input", "DoubleClickSpeed", 250);
     m_mouse_buttons_switched = g_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
     m_natural_scroll = g_config->read_bool_entry("Mouse", "NaturalScroll", false);
@@ -262,6 +264,32 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
         return !g_config->sync().is_error();
     }
     return true;
+}
+
+void WindowManager::set_key_initial_delay(int ms)
+{
+    m_key_initial_delay_ms = ms;
+    dbgln("Saving key initial delay {} to config file at {}", ms, g_config->filename());
+    g_config->write_entry("Input", "KeyInitialDelay", ByteString::formatted("{}", ms));
+    sync_config_to_disk();
+}
+
+void WindowManager::set_key_repeat_delay(int ms)
+{
+    m_key_repeat_delay_ms = ms;
+    dbgln("Saving key repeat delay {} to config file at {}", ms, g_config->filename());
+    g_config->write_entry("Input", "KeyRepeatDelay", ByteString::formatted("{}", ms));
+    sync_config_to_disk();
+}
+
+int WindowManager::key_initial_delay() const
+{
+    return m_key_initial_delay_ms;
+}
+
+int WindowManager::key_repeat_delay() const
+{
+    return m_key_repeat_delay_ms;
 }
 
 void WindowManager::set_acceleration_factor(double factor)
