@@ -96,7 +96,7 @@ int pthread_cond_init(pthread_cond_t*, pthread_condattr_t const*);
 int pthread_cond_signal(pthread_cond_t*);
 int pthread_cond_wait(pthread_cond_t*, pthread_mutex_t*);
 int pthread_condattr_init(pthread_condattr_t*);
-int pthread_condattr_getclock(pthread_condattr_t* attr, clockid_t* clock);
+int pthread_condattr_getclock(pthread_condattr_t const* attr, clockid_t* clock);
 int pthread_condattr_setclock(pthread_condattr_t*, clockid_t);
 int pthread_condattr_destroy(pthread_condattr_t*);
 int pthread_cond_destroy(pthread_cond_t*);
@@ -123,7 +123,7 @@ int pthread_detach(pthread_t);
 int pthread_equal(pthread_t, pthread_t);
 int pthread_mutexattr_init(pthread_mutexattr_t*);
 int pthread_mutexattr_settype(pthread_mutexattr_t*, int);
-int pthread_mutexattr_gettype(pthread_mutexattr_t*, int*);
+int pthread_mutexattr_gettype(pthread_mutexattr_t const*, int*);
 int pthread_mutexattr_destroy(pthread_mutexattr_t*);
 
 int pthread_setname_np(pthread_t, char const*);

@@ -31,7 +31,7 @@ int pthread_condattr_destroy(pthread_condattr_t*)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_condattr_getclock.html
-int pthread_condattr_getclock(pthread_condattr_t* attr, clockid_t* clock)
+int pthread_condattr_getclock(pthread_condattr_t const* attr, clockid_t* clock)
 {
     *clock = attr->clockid;
     return 0;
