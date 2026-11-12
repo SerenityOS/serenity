@@ -37,7 +37,6 @@ if (ENABLE_JAKT)
         message(WARNING "Jakt compiler not found at ${JAKT_COMPILER}, disabling jakt")
         set(ENABLE_JAKT OFF CACHE BOOL "Enable jakt" FORCE)
     else()
-        find_package(Python3 COMPONENTS Interpreter REQUIRED)
         file(WRITE ${CMAKE_BINARY_DIR}/jakt_test.cpp "#include <new>")
         execute_process(
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/get_cxx_includes.py
