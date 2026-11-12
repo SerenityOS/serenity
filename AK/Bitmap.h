@@ -111,10 +111,11 @@ public:
             return;
 
         u8* first = &m_data[start / 8];
-        u8* last = &m_data[(start + len) / 8];
+        auto const end = range_end(start + len);
+        u8* last = &m_data[end.byte_index];
         u8 byte_mask = bitmask_first_byte[start % 8];
         if (first == last) {
-            byte_mask &= bitmask_last_byte[(start + len) % 8];
+            byte_mask &= end.mask;
             if constexpr (verify_that_all_bits_flip) {
                 if constexpr (VALUE) {
                     VERIFY((*first & byte_mask) == 0);
@@ -138,7 +139,7 @@ public:
                 *first |= byte_mask;
             else
                 *first &= ~byte_mask;
-            byte_mask = bitmask_last_byte[(start + len) % 8];
+            byte_mask = end.mask;
             if constexpr (verify_that_all_bits_flip) {
                 if constexpr (VALUE) {
                     VERIFY((*last & byte_mask) == 0);

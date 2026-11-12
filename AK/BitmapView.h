@@ -15,7 +15,8 @@
 namespace AK {
 
 static constexpr Array bitmask_first_byte = { 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80 };
-static constexpr Array bitmask_last_byte = { 0x00, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F };
+// Indexed by the index of the last bit within the byte; index 7 covers all bits.
+static constexpr Array bitmask_last_byte = { 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F, 0xFF };
 
 class BitmapView {
 public:
@@ -49,20 +50,16 @@ public:
 
         size_t count;
         u8 const* first = &m_data[start / 8];
-        u8 const* last = &m_data[(start + len) / 8];
+        auto const end = range_end(start + len);
+        u8 const* last = &m_data[end.byte_index];
         u8 byte = *first;
         byte &= bitmask_first_byte[start % 8];
         if (first == last) {
-            byte &= bitmask_last_byte[(start + len) % 8];
+            byte &= end.mask;
             count = popcount(byte);
         } else {
             count = popcount(byte);
-            // Don't access *last if it's out of bounds
-            if (last < &m_data[size_in_bytes()]) {
-                byte = *last;
-                byte &= bitmask_last_byte[(start + len) % 8];
-                count += popcount(byte);
-            }
+            count += popcount(static_cast<u8>(*last & end.mask));
             if (++first < last) {
                 size_t const* ptr_large = reinterpret_cast<size_t const*>((reinterpret_cast<FlatPtr>(first) + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1));
                 if (reinterpret_cast<u8 const*>(ptr_large) > last)
@@ -363,6 +360,18 @@ public:
     static constexpr size_t max_size = 0xffffffff;
 
 protected:
+    struct RangeEnd {
+        size_t byte_index;
+        u8 mask;
+    };
+
+    // `end` is exclusive. Always point at the byte containing the final bit
+    // so that no pointer past the end of the bitmap is ever formed.
+    static constexpr RangeEnd range_end(size_t end)
+    {
+        return { (end - 1) / 8, static_cast<u8>(bitmask_last_byte[(end - 1) % 8]) };
+    }
+
     u8* m_data { nullptr };
     size_t m_size { 0 };
 };
