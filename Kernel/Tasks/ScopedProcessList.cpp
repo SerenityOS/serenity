@@ -23,7 +23,7 @@ ErrorOr<NonnullRefPtr<ScopedProcessList>> ScopedProcessList::scoped_process_list
             if (scoped_process_list.id() == index)
                 return scoped_process_list;
         }
-        return Error::from_errno(ESRCNOTFOUND);
+        return Error::from_errno(ENOENT);
     });
 }
 

@@ -38,7 +38,7 @@ ErrorOr<NonnullRefPtr<HostnameContext>> HostnameContext::hostname_context_for_id
             if (hostname_context.id() == index)
                 return hostname_context;
         }
-        return Error::from_errno(ESRCNOTFOUND);
+        return Error::from_errno(ENOENT);
     });
 }
 
