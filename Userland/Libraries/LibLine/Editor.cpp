@@ -9,8 +9,10 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
+#include <AK/HashTable.h>
 #include <AK/JsonObject.h>
 #include <AK/MemoryStream.h>
+#include <AK/QuickSort.h>
 #include <AK/RedBlackTree.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -21,13 +23,13 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
-#include <LibFileSystem/FileSystem.h>
-#include <LibFileSystem/TempFile.h>
+#include <LibCore/System.h>
 #include <LibUnicode/Segmentation.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/time.h>
@@ -280,96 +282,81 @@ bool Editor::load_history(ByteString const& path)
     auto history_or_error = try_load_history(path);
     if (history_or_error.is_error())
         return false;
-    auto maybe_error = m_history.try_extend(history_or_error.release_value());
-    auto okay = !maybe_error.is_error();
-    return okay;
-}
-
-template<typename It0, typename It1, typename OutputT, typename LessThan>
-static void merge(It0&& begin0, It0 const& end0, It1&& begin1, It1 const& end1, OutputT& output, LessThan less_than)
-{
-    for (;;) {
-        if (begin0 == end0 && begin1 == end1)
-            return;
-
-        if (begin0 == end0) {
-            auto&& right = *begin1;
-            if (output.last().entry != right.entry)
-                output.append(right);
-            ++begin1;
-            continue;
-        }
-
-        auto&& left = *begin0;
-        if (left.entry.is_whitespace()) {
-            ++begin0;
-            continue;
-        }
-        if (begin1 == end1) {
-            if (output.last().entry != left.entry)
-                output.append(left);
-            ++begin0;
-            continue;
-        }
-
-        auto&& right = *begin1;
-        if (less_than(left, right)) {
-            if (output.last().entry != left.entry)
-                output.append(left);
-            ++begin0;
-        } else {
-            if (output.last().entry != right.entry)
-                output.append(right);
-            ++begin1;
-            if (right.entry == left.entry)
-                ++begin0;
-        }
-    }
+    if (m_history.try_extend(history_or_error.release_value()).is_error())
+        return false;
+    if (m_history.size() > m_history_capacity)
+        m_history.remove(0, m_history.size() - m_history_capacity);
+    return true;
 }
 
 bool Editor::save_history(ByteString const& path)
 {
-    // Note: Use a dummy entry to simplify merging.
-    Vector<HistoryEntry> final_history { { "", 0 } };
-    {
-        auto history_or_error = try_load_history(path);
-        if (history_or_error.is_error())
-            return false;
-        Vector<HistoryEntry> old_history = history_or_error.release_value();
-        merge(
-            old_history.begin(), old_history.end(),
-            m_history.begin(), m_history.end(),
-            final_history,
-            [](HistoryEntry const& left, HistoryEntry const& right) { return left.timestamp < right.timestamp; });
+    return !try_save_history(path).is_error();
+}
+
+ErrorOr<void> Editor::try_save_history(ByteString const& path)
+{
+    auto lock_fd = TRY(Core::System::open(ByteString::formatted("{}.lock", path), O_RDWR | O_CREAT | O_CLOEXEC, 0600));
+    ScopeGuard close_lock_fd = [&] { (void)Core::System::close(lock_fd); };
+    if (flock(lock_fd, LOCK_EX) < 0)
+        return AK::Error::from_syscall("flock"sv, -errno);
+
+    auto combined_history = TRY(try_load_history(path));
+    TRY(combined_history.try_extend(m_history));
+
+    // Sort everything and drop duplicates.
+    Vector<size_t> order;
+    TRY(order.try_resize(combined_history.size()));
+    for (size_t i = 0; i < order.size(); ++i)
+        order[i] = i;
+    quick_sort(order, [&](size_t a, size_t b) {
+        if (combined_history[a].timestamp != combined_history[b].timestamp)
+            return combined_history[a].timestamp < combined_history[b].timestamp;
+        return a < b;
+    });
+
+    Vector<HistoryEntry const*> final_history;
+    HashTable<StringView> entries_with_current_timestamp;
+    for (auto index : order) {
+        auto const& entry = combined_history[index];
+        if (entry.entry.is_whitespace())
+            continue;
+        if (final_history.is_empty() || final_history.last()->timestamp != entry.timestamp)
+            entries_with_current_timestamp.clear_with_capacity();
+        if (entries_with_current_timestamp.set(entry.entry.view(), AK::HashSetExistingEntryBehavior::Keep) == HashSetResult::KeptExistingEntry)
+            continue;
+        TRY(final_history.try_append(&entry));
     }
 
-    auto temp_or_error = FileSystem::TempFile::create_temp_file();
-    if (temp_or_error.is_error())
-        return false;
+    auto temp_path_template = ByteString::formatted("{}.XXXXXX", path);
+    Vector<char> temp_path;
+    TRY(temp_path.try_append(temp_path_template.characters(), temp_path_template.length() + 1));
+    auto temp_fd = TRY(Core::System::mkstemp(temp_path));
 
-    auto temp_file = temp_or_error.release_value();
+    bool renamed = false;
+    ScopeGuard remove_temp_file = [&] {
+        if (!renamed)
+            (void)Core::System::unlink({ temp_path.data(), temp_path_template.length() });
+    };
 
     {
-        auto file_or_error = Core::File::open(temp_file->path(), Core::File::OpenMode::Write, 0600);
-        if (file_or_error.is_error())
-            return false;
+        auto file_or_error = Core::File::adopt_fd(temp_fd, Core::File::OpenMode::Write);
+        if (file_or_error.is_error()) {
+            (void)Core::System::close(temp_fd);
+            return file_or_error.release_error();
+        }
         auto file = file_or_error.release_value();
-        // Skip the dummy entry:
-        for (auto iter = final_history.begin() + 1; iter != final_history.end(); ++iter) {
-            auto const& entry = *iter;
-            auto buffer = ByteString::formatted("{}::{}\n\n", entry.timestamp, entry.entry);
-            auto maybe_error = file->write_until_depleted(buffer.bytes());
-            if (maybe_error.is_error())
-                return false;
+        for (auto const* entry : final_history) {
+            auto buffer = ByteString::formatted("{}::{}\n\n", entry->timestamp, entry->entry);
+            TRY(file->write_until_depleted(buffer.bytes()));
         }
     }
 
-    auto result = FileSystem::copy_file_or_directory(path, temp_file->path(), FileSystem::RecursionMode::Disallowed, FileSystem::LinkMode::Disallowed, FileSystem::AddDuplicateFileMarker::No);
-    if (result.is_error())
-        return false;
+    TRY(Core::System::rename({ temp_path.data(), temp_path_template.length() }, path));
+    renamed = true;
 
     m_history_dirty = false;
-    return true;
+    return {};
 }
 
 void Editor::clear_line()
