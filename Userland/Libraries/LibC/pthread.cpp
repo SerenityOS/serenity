@@ -269,7 +269,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t* attr, int type)
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutexattr_gettype.html
-int pthread_mutexattr_gettype(pthread_mutexattr_t* attr, int* type)
+int pthread_mutexattr_gettype(pthread_mutexattr_t const* attr, int* type)
 {
     *type = attr->type;
     return 0;
