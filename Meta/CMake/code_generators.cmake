@@ -2,8 +2,6 @@
 # Functions for generating sources using host tools
 #
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
 function(embed_as_string name source_file output source_variable_name)
     cmake_parse_arguments(PARSE_ARGV 4 EMBED_STRING_VIEW "" "NAMESPACE" "")
     set(namespace_arg "")

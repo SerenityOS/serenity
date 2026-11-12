@@ -115,8 +115,6 @@ target_link_libraries(LibGfx PRIVATE LibCompress LibCore LibCrypto LibFileSystem
 set(generated_sources TIFFMetadata.h TIFFTagHandler.cpp)
 list(TRANSFORM generated_sources PREPEND "ImageFormats/")
 
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
-
 add_custom_command(
         OUTPUT  ${generated_sources}
         COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/TIFFGenerator.py" -o "${CMAKE_CURRENT_BINARY_DIR}/ImageFormats"
