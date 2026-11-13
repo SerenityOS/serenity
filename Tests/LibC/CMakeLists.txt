@@ -38,6 +38,7 @@ set(TEST_SOURCES
     TestStrftime.cpp
     TestStrlcpy.cpp
     TestStrtodAccuracy.cpp
+    TestStrtol.cpp
     TestTruncate.cpp
     TestWchar.cpp
     TestWctype.cpp
