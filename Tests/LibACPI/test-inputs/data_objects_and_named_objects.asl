@@ -28,4 +28,25 @@ DefinitionBlock ("", "DSDT", 2, "BUGGIE", "SERENITY", 0x00000001)
     {
         Name (VAL1, 0x5678)
     }
+
+    PowerResource (PWR0, 0, 0)
+    {
+    }
+
+    OperationRegion (IOPR, SystemIO, 0x1000, 0x10)
+    Field (IOPR, ByteAcc, NoLock, Preserve)
+    {
+        IDX, 8,
+        DAT, 8
+    }
+
+    IndexField (IDX, DAT, ByteAcc, NoLock, Preserve)
+    {
+        IFR0, 8,
+        IFR1, 8,
+        IFR2, 16,
+        IFR3, 32,
+        Offset (0x10),
+        IFR4, 8
+    }
 }
