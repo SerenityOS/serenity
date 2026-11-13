@@ -15,6 +15,22 @@
 
 namespace ACPI::AML {
 
+class AliasNode : public Node {
+public:
+    AliasNode(NonnullRefPtr<Node> target)
+        : m_target(target)
+    {
+    }
+
+    virtual NodeType type() const override { return NodeType::Alias; }
+    virtual StringView kind() const override { return "Alias"sv; }
+
+    NonnullRefPtr<Node> const& target() const { return m_target; }
+
+private:
+    NonnullRefPtr<Node> m_target;
+};
+
 class ScopeNode : public Node {
 public:
     virtual NodeType type() const override { return NodeType::Scope; }

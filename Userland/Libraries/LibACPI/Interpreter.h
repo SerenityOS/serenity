@@ -96,6 +96,8 @@ private:
     ErrorOr<Object*> resolve_reference(Object& reference);
     ErrorOr<Object*> resolve_references(Object& reference);
 
+    NonnullRefPtr<Node> resolve_alias(NonnullRefPtr<Node> alias_node) const;
+
     ErrorOr<void> store(Object const& target, Object value);
 
     ErrorOr<void> cycle(TableStream& stream);

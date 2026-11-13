@@ -43,6 +43,12 @@ constexpr static Array<OperandType, 6> PACKAGE_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 5> ALIAS_OPERANDS = {
+    OperandType::NameString,
+    OperandType::NameString,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 4> METHOD_OPERANDS = {
     OperandType::PackageLength,
     OperandType::NameString,
@@ -133,6 +139,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
     case Opcode::PackageOp:
         return PACKAGE_OPERANDS.span();
 
+    case Opcode::AliasOp:
+        return ALIAS_OPERANDS.span();
     case Opcode::ScopeOp:
         return SCOPE_OPERANDS.span();
     case Opcode::NameOp:
