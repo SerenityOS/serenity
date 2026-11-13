@@ -705,8 +705,10 @@ ErrorOr<Object> Interpreter::call_method(MethodNode& node, ReadonlySpan<Object> 
         INTERPRETER_ERROR("Method has no parent!", EINVAL, "Method node at {} has no parent!", node.start());
 
     auto root_scope_frame = ScopeFrame(m_namespace_root, parent_scope.release_nonnull(), node.start(), node.end(), node.table_index(), node.number_mask());
-    for (size_t i = 0; i < arguments.size(); ++i)
-        root_scope_frame.argument(i) = TRY(arguments[i].clone());
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        auto argument = TRY(arguments[i].clone());
+        root_scope_frame.argument(i) = move(*TRY(resolve_references(argument)));
+    }
 
     TableStream stream(m_loaded_tables[node.table_index()]);
     TRY(stream.seek(node.start()));
