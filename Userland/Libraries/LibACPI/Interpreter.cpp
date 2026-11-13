@@ -582,9 +582,6 @@ ErrorOr<void> Interpreter::cycle(TableStream& stream)
             auto node = TRY(find_node(name, top_frame.scope_frames.last().scope()));
             size_t argument_count = node->type() == NodeType::Method ? static_ptr_cast<MethodNode>(node)->argument_count() : 0;
 
-            if (node->type() == NodeType::Method)
-                INTERPRETER_ERROR("Unsupported method!", ENOTSUP, "Calling methods is not yet supported!");
-
             Vector<OperandType> operand_template;
             TRY(operand_template.try_ensure_capacity(argument_count + 2));
             TRY(operand_template.try_append(OperandType::NameString));
@@ -633,19 +630,43 @@ ErrorOr<void> Interpreter::cycle(TableStream& stream)
         debug_print_header(stream);
 
         auto top_frame_value = top_frame.opcode_frames.take_last();
+        // If we receive an EAGAIN we should continue the execution loop because another method has started execution.
         if (top_frame.opcode_frames.size() > 1) {
             DEBUG_LOG("Finalizing argument {}", top_frame_value.opcode());
 
-            auto value = TRY(finalize_value_opcode(top_frame_value));
-            TRY(top_frame.opcode_frames.last().finish_operand(move(value), stream.offset()));
+            auto maybe_value = finalize_value_opcode(top_frame_value);
+            if (maybe_value.is_error()) {
+                if (maybe_value.error().code() == EAGAIN)
+                    return {};
+                return maybe_value.release_error();
+            }
+            TRY(top_frame.opcode_frames.last().finish_operand(maybe_value.release_value(), stream.offset()));
 
             top_frame.state = State::ReadingOperand;
         } else {
             DEBUG_LOG("Finalizing term {}", top_frame_value.opcode());
 
-            TRY(finalize_term_opcode(top_frame_value, stream));
+            auto maybe_error = finalize_term_opcode(top_frame_value, stream);
+            if (maybe_error.is_error()) {
+                if (maybe_error.error().code() == EAGAIN)
+                    return {};
+                return maybe_error.release_error();
+            }
 
             top_frame.state = State::ReadingOpcode;
+        }
+
+        if (!m_frame_stack.last().scope_frames.last().return_value().is_empty() && m_frame_stack.size() > 1) {
+            auto return_value = move(m_frame_stack.last().scope_frames.last().return_value());
+            m_frame_stack.take_last();
+
+            Vector<OperandType> operand_template;
+            TRY(operand_template.try_append(OperandType::TermArg));
+            TRY(operand_template.try_append(OperandType::End));
+
+            auto opcode_frame = TRY(OpcodeFrame::from_opcode(Opcode::EvaluatedValue, stream.offset(), operand_template));
+            TRY(opcode_frame.finish_operand(move(return_value), 0));
+            TRY(m_frame_stack.last().opcode_frames.try_append(move(opcode_frame)));
         }
 
         return {};
@@ -714,6 +735,11 @@ ErrorOr<Object> Interpreter::call_method(MethodNode& node, ReadonlySpan<Object> 
     TRY(stream.seek(node.start()));
 
     TRY(allocate_frame(move(stream), move(root_scope_frame)));
+
+    // If there were already frames on the stack, something is already running the cycle loop.
+    // We need to inform the caller that it should continue executing the cycle loop to get the value.
+    if (m_frame_stack.size() > 1)
+        return Error::from_errno(EAGAIN);
 
     while (!m_frame_stack.is_empty()) {
         TRY(cycle(m_frame_stack.last().stream));
