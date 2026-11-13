@@ -95,7 +95,7 @@ ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node, 
         if (should_probe_immediately == ShouldProbeImmediately::Yes)
             probe_drivers_for_device(*device, {});
 
-        if (child.is_compatible_with("simple-bus"sv)) {
+        if (child.is_compatible_with("simple-bus"sv) || child.is_compatible_with("simple-mfd"sv)) {
             TRY(scan_node_for_devices(child, should_probe_immediately));
             continue;
         }
