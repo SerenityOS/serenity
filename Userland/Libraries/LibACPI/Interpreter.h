@@ -106,6 +106,8 @@ private:
 
     void debug_print_header(TableStream& stream, size_t operand_index = 0);
 
+    ErrorOr<void> allocate_frame(TableStream stream, ScopeFrame root_scope_frame);
+
     struct Frame {
         TableStream stream;
         State state { State::ReadingOpcode };

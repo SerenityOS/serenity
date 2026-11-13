@@ -708,13 +708,7 @@ ErrorOr<Object> Interpreter::call_method(MethodNode& node, ReadonlySpan<Object> 
     TableStream stream(m_loaded_tables[node.table_index()]);
     TRY(stream.seek(node.start()));
 
-    Frame frame(move(stream));
-
-    auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
-    TRY(frame.opcode_frames.try_append(move(root_opcode_frame)));
-    TRY(frame.scope_frames.try_append(move(root_scope_frame)));
-
-    TRY(m_frame_stack.try_append(move(frame)));
+    TRY(allocate_frame(move(stream), move(root_scope_frame)));
 
     auto& top_frame = m_frame_stack.last();
     auto return_value = Object();
@@ -790,6 +784,18 @@ ErrorOr<void> Interpreter::store(Object const& target, Object value)
     INTERPRETER_ERROR("Unsupported target type!", EINVAL, "Unsupported target type!");
 }
 
+ErrorOr<void> Interpreter::allocate_frame(TableStream stream, ScopeFrame root_scope_frame)
+{
+    Frame frame(move(stream));
+
+    auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
+    TRY(frame.opcode_frames.try_append(move(root_opcode_frame)));
+    TRY(frame.scope_frames.try_append(move(root_scope_frame)));
+
+    TRY(m_frame_stack.try_append(move(frame)));
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<Node>> Interpreter::create_root_namespace()
 {
     auto namespace_root = TRY(try_make_ref_counted<ScopeNode>());
@@ -837,14 +843,8 @@ ErrorOr<void> Interpreter::load(ReadonlyBytes bytes)
     dbgln_if(AML_DEBUG, "ACPI: Interpreter::load: Number mask: {:x}", number_mask);
 
     auto root_scope_frame = ScopeFrame(m_namespace_root, m_namespace_root, stream.offset(), TRY(stream.size()), m_loaded_tables.size() - 1, number_mask);
+    TRY(allocate_frame(move(stream), move(root_scope_frame)));
 
-    Frame frame(move(stream));
-
-    auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
-    TRY(frame.opcode_frames.try_append(move(root_opcode_frame)));
-    TRY(frame.scope_frames.try_append(move(root_scope_frame)));
-
-    TRY(m_frame_stack.try_append(move(frame)));
     auto& top_frame = m_frame_stack.last();
 
     while (top_frame.opcode_frames.size() > 0 && top_frame.scope_frames.size() > 0) {
