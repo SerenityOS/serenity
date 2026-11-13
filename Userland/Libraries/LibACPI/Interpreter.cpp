@@ -161,13 +161,15 @@ ErrorOr<void> Interpreter::print_namespace() const
 void Interpreter::debug_print_header(TableStream& stream, size_t operand_index)
 {
 #ifndef KERNEL
+    auto& top_frame = m_frame_stack.last();
+
     if constexpr (AML_DEBUG) {
         warn("ACPI: {:08X} ", stream.offset());
-        for (size_t i = 0; i < (m_opcode_frames.size() - 1) - (m_state == State::FinalizingOpcode ? 1 : 0); i++) {
+        for (size_t i = 0; i < (top_frame.opcode_frames.size() - 1) - (top_frame.state == State::FinalizingOpcode ? 1 : 0); i++) {
             warn("|   ");
         }
 
-        switch (m_state) {
+        switch (top_frame.state) {
         case State::ReadingOpcode:
             warn("ini");
             break;
@@ -188,13 +190,15 @@ void Interpreter::debug_print_header(TableStream& stream, size_t operand_index)
 
 ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
 {
+    auto& top_scope_frame = m_frame_stack.last().scope_frames.last();
+
     switch (frame.opcode()) {
     case Opcode::ZeroOp:
         return Object(u64(0));
     case Opcode::OneOp:
         return Object(u64(1));
     case Opcode::OnesOp:
-        return Object(m_scope_frames.last().number_mask());
+        return Object(top_scope_frame.number_mask());
 
     case Opcode::BytePrefix:
     case Opcode::WordPrefix:
@@ -253,7 +257,7 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
         auto right = TRY(TRY(resolve_references(frame.operand(1)))->as<u64>());
         auto& target = frame.operand(2);
 
-        auto result = Object(calculate(frame.opcode(), left, right) & m_scope_frames.last().number_mask());
+        auto result = Object(calculate(frame.opcode(), left, right) & top_scope_frame.number_mask());
 
         TRY(store(target, TRY(result.clone())));
         return result;
@@ -272,7 +276,7 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
 
     case Opcode::NodeEvaluation: {
         auto name = TRY(frame.operand(0).release_as<NameString>());
-        auto node = TRY(find_node(name, m_scope_frames.last().scope()));
+        auto node = TRY(find_node(name, top_scope_frame.scope()));
 
         auto arguments = frame.release_operands();
         arguments.remove(0, 1);
@@ -289,14 +293,17 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
 
 ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream& stream)
 {
+    auto& top_frame = m_frame_stack.last();
+    auto& top_scope_frame = top_frame.scope_frames.last();
+
     switch (frame.opcode()) {
     case Opcode::ScopeOp: {
         auto length = TRY(frame.operand(0).release_as<u64>());
         auto path = TRY(frame.operand(1).release_as<NameString>());
-        auto scope = TRY(find_node(path, m_scope_frames.last().scope()));
+        auto scope = TRY(find_node(path, top_scope_frame.scope()));
 
-        auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, m_scope_frames.last().number_mask());
-        TRY(m_scope_frames.try_append(move(scope_frame)));
+        auto scope_frame = ScopeFrame(m_namespace_root, scope, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, top_scope_frame.number_mask());
+        TRY(top_frame.scope_frames.try_append(move(scope_frame)));
         return {};
     }
 
@@ -305,7 +312,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto data = move(frame.operand(1));
 
         auto node = TRY(try_make_ref_counted<NameNode>(move(data)));
-        TRY(m_scope_frames.last().insert_node(path, node));
+        TRY(top_scope_frame.insert_node(path, node));
         return {};
     }
 
@@ -314,8 +321,8 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto path = TRY(frame.operand(1).release_as<NameString>());
         auto flags = TRY(frame.operand(2).release_as<u64>());
 
-        auto node = TRY(try_make_ref_counted<MethodNode>(stream.offset(), frame.start() + length, m_loaded_tables.size() - 1, bit_cast<MethodFlags>(static_cast<u8>(flags)), m_scope_frames.last().number_mask()));
-        TRY(m_scope_frames.last().insert_node(path, node));
+        auto node = TRY(try_make_ref_counted<MethodNode>(stream.offset(), frame.start() + length, m_loaded_tables.size() - 1, bit_cast<MethodFlags>(static_cast<u8>(flags)), top_scope_frame.number_mask()));
+        TRY(top_scope_frame.insert_node(path, node));
 
         TRY(stream.seek(frame.start() + length));
         return {};
@@ -326,7 +333,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto sync_flags = TRY(frame.operand(1).release_as<u64>());
 
         auto node = TRY(try_make_ref_counted<MutexNode>(sync_flags));
-        TRY(m_scope_frames.last().insert_node(path, node));
+        TRY(top_scope_frame.insert_node(path, node));
         return {};
     }
 
@@ -337,13 +344,13 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto region_length = TRY(frame.operand(3).release_as<u64>());
 
         auto node = TRY(try_make_ref_counted<OperationRegionNode>(region_space, region_offset, region_length));
-        TRY(m_scope_frames.last().insert_node(path, node));
+        TRY(top_scope_frame.insert_node(path, node));
         return {};
     }
 
     case Opcode::FieldOp:
         // NOTE: All the field elements are read as operands, so all we need to do is reset the field offset.
-        m_current_field_offset = 0;
+        top_frame.current_field_offset = 0;
         return {};
 
     case Opcode::DeviceOp: {
@@ -351,10 +358,10 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto path = TRY(frame.operand(1).release_as<NameString>());
 
         auto node = TRY(try_make_ref_counted<DeviceNode>());
-        TRY(m_scope_frames.last().insert_node(path, node));
+        TRY(top_scope_frame.insert_node(path, node));
 
-        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, m_scope_frames.last().number_mask());
-        TRY(m_scope_frames.try_append(move(scope_frame)));
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, top_scope_frame.number_mask());
+        TRY(top_frame.scope_frames.try_append(move(scope_frame)));
         return {};
     }
 
@@ -366,16 +373,16 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         auto processor_register_block_length = TRY(frame.operand(4).release_as<u64>());
 
         auto node = TRY(try_make_ref_counted<ProcessorNode>(id, processor_register_block_address, processor_register_block_length));
-        TRY(m_scope_frames.last().insert_node(path, node));
+        TRY(top_scope_frame.insert_node(path, node));
 
-        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, m_scope_frames.last().number_mask());
-        TRY(m_scope_frames.try_append(move(scope_frame)));
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, top_scope_frame.number_mask());
+        TRY(top_frame.scope_frames.try_append(move(scope_frame)));
         return {};
     }
 
     case Opcode::ReturnOp:
         // FIXME: We shouldn't resolve the references here
-        m_scope_frames.last().return_value() = move(*TRY(resolve_references(frame.operand(0))));
+        top_scope_frame.return_value() = move(*TRY(resolve_references(frame.operand(0))));
         return {};
 
     default:
@@ -388,7 +395,9 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
 
 ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, OperandType operand)
 {
-    auto& top_opcode_frame = m_opcode_frames.last();
+    auto& top_frame = m_frame_stack.last();
+    auto& top_scope_frame = top_frame.scope_frames.last();
+    auto& top_opcode_frame = top_frame.opcode_frames.last();
 
     switch (operand) {
     case OperandType::NameString: {
@@ -424,7 +433,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
     case OperandType::QWordData: {
         auto value = TRY(stream.read_value<u64>());
         DEBUG_LOG("Reading qword... ({})", value);
-        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value) & m_scope_frames.last().number_mask(), stream.offset()));
+        TRY(top_opcode_frame.finish_operand(static_cast<u64>(value) & top_scope_frame.number_mask(), stream.offset()));
         return IterationDecision::Continue;
     }
     case OperandType::String: {
@@ -447,7 +456,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
 
             auto package_length = TRY(stream.read_package_length());
 
-            auto operation_region_node = TRY(find_node(*TRY(top_opcode_frame.operand(1).as_pointer<NameString>()), m_scope_frames.last().scope()));
+            auto operation_region_node = TRY(find_node(*TRY(top_opcode_frame.operand(1).as_pointer<NameString>()), top_scope_frame.scope()));
             if (operation_region_node->type() != NodeType::OperationRegion)
                 INTERPRETER_ERROR("Expected operation region node!", EINVAL, "Expected operation region node, got {}", operation_region_node->kind());
 
@@ -455,10 +464,10 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
 
             DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
 
-            auto node = TRY(try_make_ref_counted<FieldNode>(static_ptr_cast<OperationRegionNode>(operation_region_node), flags, m_current_field_offset, package_length));
-            TRY(m_scope_frames.last().scope()->insert_child(name_segment, node));
+            auto node = TRY(try_make_ref_counted<FieldNode>(static_ptr_cast<OperationRegionNode>(operation_region_node), flags, top_frame.current_field_offset, package_length));
+            TRY(top_scope_frame.scope()->insert_child(name_segment, node));
 
-            m_current_field_offset += package_length;
+            top_frame.current_field_offset += package_length;
 
             TRY(top_opcode_frame.finish_operand(stream.offset()));
             return IterationDecision::Continue;
@@ -469,7 +478,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         switch (type) {
         case 0x00: {
             // ReservedField := 0x00 PkgLength
-            m_current_field_offset += TRY(stream.read_package_length());
+            top_frame.current_field_offset += TRY(stream.read_package_length());
 
             TRY(top_opcode_frame.finish_operand(stream.offset()));
             return IterationDecision::Continue;
@@ -504,7 +513,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         if (is_namestring_start(initial))
             INTERPRETER_ERROR("Unsupported name string!", ENOTSUP, "Reading name strings in package elements is not yet supported!");
 
-        m_state = State::ReadingOpcode;
+        top_frame.state = State::ReadingOpcode;
         return IterationDecision::Continue;
     }
 
@@ -512,7 +521,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
     case OperandType::DataRefObject:
         DEBUG_LOG("Reading complex object {}...", to_underlying(operand));
 
-        m_state = State::ReadingOpcode;
+        top_frame.state = State::ReadingOpcode;
         return IterationDecision::Continue;
 
     case OperandType::SuperName:
@@ -528,7 +537,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
             return IterationDecision::Continue;
         }
 
-        m_state = State::ReadingOpcode;
+        top_frame.state = State::ReadingOpcode;
         return IterationDecision::Continue;
 
     default:
@@ -541,20 +550,19 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
 
 ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
 {
-    // Stacks have already been initialized.
-    auto& top_opcode_frame = m_opcode_frames.last();
+    auto& top_frame = m_frame_stack.last();
 
-    switch (m_state) {
+    switch (top_frame.state) {
     case Interpreter::State::ReadingOpcode: {
         // Pop all scope frames that we've exited.
         // Do it here in case any pending opcodes need to be finalized at EOF.
-        while (m_scope_frames.size() != 0) {
-            auto& scope_frame = m_scope_frames.last();
+        while (top_frame.scope_frames.size() != 0) {
+            auto& scope_frame = top_frame.scope_frames.last();
             if (stream.offset() < scope_frame.end()) {
                 break;
             }
 
-            m_scope_frames.take_last();
+            top_frame.scope_frames.take_last();
         }
 
         if (stream.is_eof())
@@ -566,7 +574,7 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             auto name = TRY(stream.read_name_string());
             DEBUG_LOG("{}", name.to_string());
 
-            auto node = TRY(find_node(name, m_scope_frames.last().scope()));
+            auto node = TRY(find_node(name, top_frame.scope_frames.last().scope()));
             size_t argument_count = node->type() == NodeType::Method ? static_ptr_cast<MethodNode>(node)->argument_count() : 0;
 
             if (node->type() == NodeType::Method)
@@ -582,59 +590,59 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             auto opcode_frame = TRY(OpcodeFrame::from_opcode(Opcode::NodeEvaluation, stream.offset(), operand_template));
             TRY(opcode_frame.finish_operand(Object(move(name)), 0));
 
-            TRY(m_opcode_frames.try_append(move(opcode_frame)));
-            m_state = State::ReadingOperand;
+            TRY(top_frame.opcode_frames.try_append(move(opcode_frame)));
+            top_frame.state = State::ReadingOperand;
             return IterationDecision::Continue;
         }
 
         auto opcode = TRY(stream.read_opcode());
-        if (!top_opcode_frame.filter_opcode_for_next_operand(opcode)) {
+        if (!top_frame.opcode_frames.last().filter_opcode_for_next_operand(opcode)) {
             DEBUG_LOG("Failure!");
-            if (m_opcode_frames.size() == 1)
+            if (top_frame.opcode_frames.size() == 1)
                 INTERPRETER_ERROR("Filtered opcode!", EINVAL, "Argument opcode {} filtered at root!", opcode);
 
-            INTERPRETER_ERROR("Filtered opcode!", EINVAL, "Argument opcode {} filtered by opcode {}!", opcode, top_opcode_frame.opcode());
+            INTERPRETER_ERROR("Filtered opcode!", EINVAL, "Argument opcode {} filtered by opcode {}!", opcode, top_frame.opcode_frames.last().opcode());
         }
 
         DEBUG_LOG("Opcode: {}", opcode);
 
         auto opcode_frame = TRY(OpcodeFrame::from_opcode(static_cast<Opcode>(opcode), stream.offset()));
-        TRY(m_opcode_frames.try_append(move(opcode_frame)));
-        m_state = State::ReadingOperand;
+        TRY(top_frame.opcode_frames.try_append(move(opcode_frame)));
+        top_frame.state = State::ReadingOperand;
         return IterationDecision::Continue;
     }
 
     case Interpreter::State::ReadingOperand: {
-        auto operand = TRY(top_opcode_frame.begin_operand(stream.offset()));
+        auto operand = TRY(top_frame.opcode_frames.last().begin_operand(stream.offset()));
         if (operand == OperandType::End) {
-            m_state = State::FinalizingOpcode;
+            top_frame.state = State::FinalizingOpcode;
             return IterationDecision::Continue;
         }
 
-        debug_print_header(stream, top_opcode_frame.operand_count());
+        debug_print_header(stream, top_frame.opcode_frames.last().operand_count());
         return read_operand(stream, operand);
     }
 
     case Interpreter::State::FinalizingOpcode: {
         debug_print_header(stream);
 
-        auto top_frame_value = m_opcode_frames.take_last();
-        if (m_opcode_frames.size() > 1) {
+        auto top_frame_value = top_frame.opcode_frames.take_last();
+        if (top_frame.opcode_frames.size() > 1) {
             DEBUG_LOG("Finalizing argument {}", top_frame_value.opcode());
 
             auto value = TRY(finalize_value_opcode(top_frame_value));
-            TRY(m_opcode_frames.last().finish_operand(move(value), stream.offset()));
+            TRY(top_frame.opcode_frames.last().finish_operand(move(value), stream.offset()));
 
-            m_state = State::ReadingOperand;
+            top_frame.state = State::ReadingOperand;
         } else {
             DEBUG_LOG("Finalizing term {}", top_frame_value.opcode());
 
             TRY(finalize_term_opcode(top_frame_value, stream));
 
-            m_state = State::ReadingOpcode;
+            top_frame.state = State::ReadingOpcode;
         }
 
-        if (!m_scope_frames.last().return_value().is_empty())
+        if (!top_frame.scope_frames.last().return_value().is_empty())
             return IterationDecision::Break;
 
         return IterationDecision::Continue;
@@ -696,38 +704,41 @@ ErrorOr<Object> Interpreter::call_method(MethodNode& node, ReadonlySpan<Object> 
     auto root_scope_frame = ScopeFrame(m_namespace_root, parent_scope.release_nonnull(), node.start(), node.end(), node.table_index(), node.number_mask());
     for (size_t i = 0; i < arguments.size(); ++i)
         root_scope_frame.argument(i) = TRY(arguments[i].clone());
-    TRY(m_scope_frames.try_append(move(root_scope_frame)));
 
-    auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
-    TRY(m_opcode_frames.try_append(move(root_opcode_frame)));
-
-    auto& buffer = m_loaded_tables[node.table_index()];
-    TableStream stream(buffer);
-
+    TableStream stream(m_loaded_tables[node.table_index()]);
     TRY(stream.seek(node.start()));
 
+    Frame frame(move(stream));
+
+    auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
+    TRY(frame.opcode_frames.try_append(move(root_opcode_frame)));
+    TRY(frame.scope_frames.try_append(move(root_scope_frame)));
+
+    TRY(m_frame_stack.try_append(move(frame)));
+
+    auto& top_frame = m_frame_stack.last();
     auto return_value = Object();
 
-    while (m_opcode_frames.size() > 0 && m_scope_frames.size() > 0) {
-        if (TRY(cycle(stream)) == IterationDecision::Break)
+    while (top_frame.opcode_frames.size() > 0 && top_frame.scope_frames.size() > 0) {
+        if (TRY(cycle(top_frame.stream)) == IterationDecision::Break)
             break;
     }
 
-    if (!m_scope_frames.is_empty() && !m_scope_frames.last().return_value().is_empty()) {
-        return_value = move(m_scope_frames.last().return_value());
-        m_scope_frames.take_last();
+    if (!top_frame.scope_frames.is_empty() && !top_frame.scope_frames.last().return_value().is_empty()) {
+        return_value = move(top_frame.scope_frames.last().return_value());
+        top_frame.scope_frames.take_last();
     }
 
-    if (m_scope_frames.size() != 0 || m_opcode_frames.size() != 1)
+    if (top_frame.scope_frames.size() != 0 || top_frame.opcode_frames.size() != 1)
         INTERPRETER_ERROR("Unbalanced scope or opcode frames!", EINVAL, "Unbalanced scope or opcode frames!");
 
-    m_opcode_frames.take_last();
+    m_frame_stack.take_last();
     return return_value;
 }
 
 ErrorOr<Object*> Interpreter::resolve_reference(Object& reference)
 {
-    auto& top_scope_frame = m_scope_frames.last();
+    auto& top_scope_frame = m_frame_stack.last().scope_frames.last();
 
     if (reference.is<ArgumentReference>()) {
         auto argument_index = MUST(reference.as<ArgumentReference>()).index();
@@ -763,13 +774,13 @@ ErrorOr<void> Interpreter::store(Object const& target, Object value)
 
     if (target.is<ArgumentReference>()) {
         auto argument_index = MUST(target.as<ArgumentReference>()).index();
-        m_scope_frames.last().argument(argument_index) = move(value);
+        m_frame_stack.last().scope_frames.last().argument(argument_index) = move(value);
         return {};
     }
 
     if (target.is<LocalReference>()) {
         auto local_index = MUST(target.as<LocalReference>()).index();
-        m_scope_frames.last().local(local_index) = move(value);
+        m_frame_stack.last().scope_frames.last().local(local_index) = move(value);
         return {};
     }
 
@@ -826,21 +837,26 @@ ErrorOr<void> Interpreter::load(ReadonlyBytes bytes)
     dbgln_if(AML_DEBUG, "ACPI: Interpreter::load: Number mask: {:x}", number_mask);
 
     auto root_scope_frame = ScopeFrame(m_namespace_root, m_namespace_root, stream.offset(), TRY(stream.size()), m_loaded_tables.size() - 1, number_mask);
-    TRY(m_scope_frames.try_append(move(root_scope_frame)));
+
+    Frame frame(move(stream));
 
     auto root_opcode_frame = TRY(OpcodeFrame::root_frame());
-    TRY(m_opcode_frames.try_append(move(root_opcode_frame)));
+    TRY(frame.opcode_frames.try_append(move(root_opcode_frame)));
+    TRY(frame.scope_frames.try_append(move(root_scope_frame)));
 
-    while (m_opcode_frames.size() > 0 && m_scope_frames.size() > 0) {
-        if (TRY(cycle(stream)) == IterationDecision::Break) {
+    TRY(m_frame_stack.try_append(move(frame)));
+    auto& top_frame = m_frame_stack.last();
+
+    while (top_frame.opcode_frames.size() > 0 && top_frame.scope_frames.size() > 0) {
+        if (TRY(cycle(top_frame.stream)) == IterationDecision::Break) {
             break;
         }
     }
 
-    if (m_scope_frames.size() != 0 || m_opcode_frames.size() != 1)
+    if (top_frame.scope_frames.size() != 0 || top_frame.opcode_frames.size() != 1)
         return Error::from_string_view_or_print_error_and_return_errno("ACPI: Interpreter::load: Unbalanced scope or opcode frames!"sv, EINVAL);
 
-    m_opcode_frames.take_last();
+    m_frame_stack.take_last();
     return {};
 }
 
