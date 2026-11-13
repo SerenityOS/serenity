@@ -489,7 +489,7 @@ ErrorOr<void> Interpreter::read_operand(TableStream& stream, OperandType operand
 
             DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
 
-            auto node = TRY(try_make_ref_counted<FieldNode>(static_ptr_cast<OperationRegionNode>(operation_region_node), flags, top_frame.current_field_offset, package_length));
+            auto node = TRY(try_make_ref_counted<FieldNode>(static_ptr_cast<OperationRegionNode>(operation_region_node), bit_cast<FieldFlags>(static_cast<u8>(flags)), top_frame.current_field_offset, package_length));
             TRY(top_scope_frame.scope()->insert_child(name_segment, node));
 
             top_frame.current_field_offset += package_length;

@@ -513,6 +513,34 @@ struct MethodFlags {
 };
 static_assert(sizeof(MethodFlags) == 1);
 
+enum class FieldAccess : u8 {
+    AnyAccess = 0,
+    ByteAccess = 1,
+    WordAccess = 2,
+    DWordAccess = 3,
+    QWordAccess = 4,
+    BufferAccess = 5,
+};
+
+enum class FieldLock : u8 {
+    NoLock = 0,
+    Lock = 1,
+};
+
+enum class FieldUpdate : u8 {
+    Preserve = 0,
+    WriteAsOnes = 1,
+    WriteAsZeros = 2,
+};
+
+struct FieldFlags {
+    FieldAccess access : 4;
+    FieldLock lock : 1;
+    FieldUpdate update : 2;
+    u8 : 1;
+};
+static_assert(sizeof(FieldFlags) == 1);
+
 }
 
 }
