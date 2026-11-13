@@ -134,3 +134,15 @@ TEST_CASE(empty_methods)
 
     TRY_OR_FAIL(interpreter->evaluate("\\_SB_.EMPT"sv));
 }
+
+TEST_CASE(method_call)
+{
+    auto interpreter = TRY_OR_FAIL(load_test_table("method_call.aml"sv));
+
+    Vector<ACPI::AML::Object> arguments;
+    MUST(arguments.try_append(ACPI::AML::Object(u64(1000))));
+    MUST(arguments.try_append(ACPI::AML::Object(u64(337))));
+
+    auto result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.CALC"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 1337ul);
+}
