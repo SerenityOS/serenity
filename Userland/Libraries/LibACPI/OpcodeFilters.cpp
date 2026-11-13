@@ -46,6 +46,7 @@ bool named_object_filter(Opcode opcode)
     case Opcode::DeviceOp:
     case Opcode::ExternalOp:
     case Opcode::FieldOp:
+    case Opcode::IndexFieldOp:
     case Opcode::MethodOp:
     case Opcode::MutexOp:
     case Opcode::OpRegionOp:
