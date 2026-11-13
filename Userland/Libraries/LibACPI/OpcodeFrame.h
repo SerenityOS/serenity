@@ -24,6 +24,7 @@ enum class OperandType : u8 {
     ByteBuffer,
 
     FieldElement,
+    IndexFieldElement,
     TermArg,
 
     DataRefObject,

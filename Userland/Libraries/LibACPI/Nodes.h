@@ -166,6 +166,38 @@ private:
     u64 m_length;
 };
 
+class IndexFieldNode : public Node {
+public:
+    IndexFieldNode(NonnullRefPtr<FieldNode> index_field, NonnullRefPtr<FieldNode> data_field, FieldFlags flags, size_t offset, size_t size)
+        : m_index_field(index_field)
+        , m_data_field(data_field)
+        , m_flags(flags)
+        , m_offset(offset)
+        , m_length(size)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::IndexField; }
+    virtual StringView kind() const override { return "Index Field"sv; }
+
+    NonnullRefPtr<FieldNode> const& index_field() const { return m_index_field; }
+    NonnullRefPtr<FieldNode> const& data_field() const { return m_data_field; }
+
+    FieldFlags flags() const { return m_flags; }
+    u64 offset() const { return m_offset; }
+    u64 length() const { return m_length; }
+
+private:
+    NonnullRefPtr<FieldNode> m_index_field;
+    NonnullRefPtr<FieldNode> m_data_field;
+
+    FieldFlags m_flags;
+    u64 m_offset;
+    u64 m_length;
+};
+
 class DeviceNode : public Node {
 public:
     virtual NodeType type() const override { return NodeType::Device; }

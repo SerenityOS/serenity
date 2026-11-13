@@ -28,6 +28,7 @@ enum class NodeType : u8 {
     Mutex,
     OperationRegion,
     Field,
+    IndexField,
     Device,
     Processor,
     PowerResource,
