@@ -63,6 +63,8 @@ public:
 
     ErrorOr<NameSegment> basename() const;
 
+    ErrorOr<ByteBuffer> to_bytes() const;
+
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const;
 #else
