@@ -20,8 +20,8 @@ namespace Symbolication {
 
 struct CachedELF {
     NonnullOwnPtr<Core::MappedFile> mapped_file;
-    NonnullOwnPtr<Debug::DebugInfo> debug_info;
     NonnullOwnPtr<ELF::Image> image;
+    OwnPtr<Debug::DebugInfo> debug_info;
 };
 
 static HashMap<ByteString, OwnPtr<CachedELF>> s_cache;
@@ -97,7 +97,7 @@ Optional<Symbol> symbolicate(ByteString const& path, FlatPtr address, IncludeSou
             s_cache.set(full_path, {});
             return {};
         }
-        auto cached_elf = make<CachedELF>(mapped_file.release_value(), make<Debug::DebugInfo>(*elf), move(elf));
+        auto cached_elf = make<CachedELF>(mapped_file.release_value(), move(elf), nullptr);
         s_cache.set(full_path, move(cached_elf));
     }
 
@@ -109,10 +109,13 @@ Optional<Symbol> symbolicate(ByteString const& path, FlatPtr address, IncludeSou
         return {};
 
     u32 offset = 0;
-    auto symbol = cached_elf->debug_info->elf().symbolicate(address, &offset);
+    auto symbol = cached_elf->image->symbolicate(address, &offset);
 
     Vector<Debug::DebugInfo::SourcePosition> positions;
     if (include_source_positions == IncludeSourcePosition::Yes) {
+        if (!cached_elf->debug_info)
+            cached_elf->debug_info = make<Debug::DebugInfo>(*cached_elf->image);
+
         auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address).release_value_but_fixme_should_propagate_errors();
 
         for (auto& position : source_position_with_inlines.inline_chain) {
