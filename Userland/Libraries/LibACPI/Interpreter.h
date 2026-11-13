@@ -10,6 +10,7 @@
 #include <AK/Debug.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibACPI/Node.h>
 #include <LibACPI/Nodes.h>
@@ -116,6 +117,7 @@ private:
 
         Vector<ScopeFrame> scope_frames;
         Vector<OpcodeFrame> opcode_frames;
+        HashMap<size_t, bool> should_take_else;
 
         u64 current_field_offset { 0 };
 
