@@ -554,8 +554,12 @@ ErrorOr<void> Interpreter::read_operand(TableStream& stream, OperandType operand
         DEBUG_LOG("Reading package element...");
 
         auto initial = TRY(stream.peek_byte());
-        if (is_namestring_start(initial))
-            INTERPRETER_ERROR("Unsupported name string!", ENOTSUP, "Reading name strings in package elements is not yet supported!");
+        if (is_namestring_start(initial)) {
+            auto name_string = TRY(stream.read_name_string());
+            auto buffer = TRY(name_string.to_bytes());
+            TRY(top_opcode_frame.finish_operand(Object(Buffer(move(buffer))), stream.offset()));
+            return {};
+        }
 
         top_frame.state = State::ReadingOpcode;
         return {};
