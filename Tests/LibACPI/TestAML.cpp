@@ -147,3 +147,42 @@ TEST_CASE(method_call)
     auto result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.CALC"sv, arguments));
     EXPECT_EQ(MUST(result.as<u64>()), 1337ul);
 }
+
+TEST_CASE(if_else)
+{
+    auto interpreter = TRY_OR_FAIL(load_test_table("if_else.aml"sv));
+
+    Vector<ACPI::AML::Object> arguments;
+    MUST(arguments.try_append(ACPI::AML::Object(u64(1))));
+
+    auto result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF1"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x1ul);
+
+    arguments.clear();
+    MUST(arguments.try_append(ACPI::AML::Object(u64(2))));
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF1"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x2ul);
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF2"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x1ul);
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF3"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x2ul);
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF4"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x2ul);
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF5"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x1ul);
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF6"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x2ul);
+
+    arguments.clear();
+    MUST(arguments.try_append(ACPI::AML::Object(u64(1))));
+    MUST(arguments.try_append(ACPI::AML::Object(u64(0))));
+
+    result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF7"sv, arguments));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x1ul);
+}
