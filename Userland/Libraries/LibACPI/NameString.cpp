@@ -104,11 +104,7 @@ ErrorOr<NameSegment> NameString::basename() const
     return segment(m_segments.size() - 1);
 }
 
-#ifdef KERNEL
-ErrorOr<NonnullOwnPtr<Kernel::KString>> NameString::to_string() const
-#else
-ErrorOr<String> NameString::to_string() const
-#endif
+ErrorOr<ByteBuffer> NameString::to_bytes() const
 {
     StringBuilder builder;
     if (m_type == NameString::Type::Absolute) {
@@ -125,10 +121,22 @@ ErrorOr<String> NameString::to_string() const
         }
     }
 
+    return builder.to_byte_buffer();
+}
+
 #ifdef KERNEL
-    return Kernel::KString::try_create(builder.string_view());
+ErrorOr<NonnullOwnPtr<Kernel::KString>> NameString::to_string() const
 #else
-    return builder.to_string();
+ErrorOr<String> NameString::to_string() const
+#endif
+{
+    auto buffer = TRY(to_bytes());
+    auto view = StringView(buffer);
+
+#ifdef KERNEL
+    return Kernel::KString::try_create(view);
+#else
+    return String::from_utf8(view);
 #endif
 }
 
