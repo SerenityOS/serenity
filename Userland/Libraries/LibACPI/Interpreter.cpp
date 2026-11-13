@@ -264,6 +264,39 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
         return result;
     }
 
+    case Opcode::LAndOp:
+    case Opcode::LOrOp:
+    case Opcode::LEqualOp:
+    case Opcode::LGreaterOp:
+    case Opcode::LLessOp: {
+        auto const calculate = [](Opcode opcode, u64 left, u64 right) -> u64 {
+            switch (opcode) {
+            case Opcode::LAndOp:
+                return left && right;
+            case Opcode::LOrOp:
+                return left || right;
+            case Opcode::LEqualOp:
+                return left == right;
+            case Opcode::LGreaterOp:
+                return left > right;
+            case Opcode::LLessOp:
+                return left < right;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        };
+
+        auto left = TRY(TRY(resolve_references(frame.operand(0)))->as<u64>());
+        auto right = TRY(TRY(resolve_references(frame.operand(1)))->as<u64>());
+
+        return Object(calculate(frame.opcode(), left, right));
+    }
+
+    case Opcode::LNotOp: {
+        auto operand = TRY(TRY(resolve_references(frame.operand(0)))->as<u64>());
+        return Object(static_cast<u64>(!operand));
+    }
+
     case Opcode::Local0Op... Opcode::Local7Op:
         return LocalReference(to_underlying(frame.opcode()) - to_underlying(Opcode::Local0Op));
     case Opcode::Arg0Op... Opcode::Arg6Op:
