@@ -393,7 +393,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, OperandType operand)
+ErrorOr<void> Interpreter::read_operand(TableStream& stream, OperandType operand)
 {
     auto& top_frame = m_frame_stack.last();
     auto& top_scope_frame = top_frame.scope_frames.last();
@@ -404,43 +404,43 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         auto value = TRY(stream.read_name_string());
         DEBUG_LOG("Reading namestring... ({})", value.to_string());
         TRY(top_opcode_frame.finish_operand(move(value), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
     case OperandType::PackageLength: {
         auto length = TRY(stream.read_package_length());
         DEBUG_LOG("Reading package length... ({:#X})", length);
         TRY(top_opcode_frame.finish_operand(static_cast<u64>(length), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
     case OperandType::ByteData: {
         auto value = TRY(stream.read_value<u8>());
         DEBUG_LOG("Reading byte... ({})", value);
         TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
     case OperandType::WordData: {
         auto value = TRY(stream.read_value<u16>());
         DEBUG_LOG("Reading word... ({})", value);
         TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
     case OperandType::DWordData: {
         auto value = TRY(stream.read_value<u32>());
         DEBUG_LOG("Reading dword... ({})", value);
         TRY(top_opcode_frame.finish_operand(static_cast<u64>(value), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
     case OperandType::QWordData: {
         auto value = TRY(stream.read_value<u64>());
         DEBUG_LOG("Reading qword... ({})", value);
         TRY(top_opcode_frame.finish_operand(static_cast<u64>(value) & top_scope_frame.number_mask(), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
     case OperandType::String: {
         DEBUG_LOG("Reading string...");
         auto value = TRY(stream.read_string());
         TRY(top_opcode_frame.finish_operand(String(move(value)), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
 
     // https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#fieldelement
@@ -470,7 +470,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
             top_frame.current_field_offset += package_length;
 
             TRY(top_opcode_frame.finish_operand(stream.offset()));
-            return IterationDecision::Continue;
+            return {};
         }
 
         auto type = TRY(stream.read_value<u8>());
@@ -481,7 +481,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
             top_frame.current_field_offset += TRY(stream.read_package_length());
 
             TRY(top_opcode_frame.finish_operand(stream.offset()));
-            return IterationDecision::Continue;
+            return {};
         }
 
         default:
@@ -503,7 +503,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
             buffer[i] = TRY(stream.read_value<u8>());
 
         TRY(top_opcode_frame.finish_operand(Object(Buffer(move(buffer))), stream.offset()));
-        return IterationDecision::Continue;
+        return {};
     }
 
     case OperandType::PackageElement: {
@@ -514,7 +514,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
             INTERPRETER_ERROR("Unsupported name string!", ENOTSUP, "Reading name strings in package elements is not yet supported!");
 
         top_frame.state = State::ReadingOpcode;
-        return IterationDecision::Continue;
+        return {};
     }
 
     case OperandType::TermArg:
@@ -522,7 +522,7 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         DEBUG_LOG("Reading complex object {}...", to_underlying(operand));
 
         top_frame.state = State::ReadingOpcode;
-        return IterationDecision::Continue;
+        return {};
 
     case OperandType::SuperName:
     case OperandType::Target:
@@ -534,11 +534,11 @@ ErrorOr<IterationDecision> Interpreter::read_operand(TableStream& stream, Operan
         if (operand == OperandType::Target && TRY(stream.peek_byte()) == 0x00) {
             TRY(stream.read_value<u8>());
             TRY(top_opcode_frame.finish_operand(Object(), stream.offset()));
-            return IterationDecision::Continue;
+            return {};
         }
 
         top_frame.state = State::ReadingOpcode;
-        return IterationDecision::Continue;
+        return {};
 
     default:
         DEBUG_LOG("Failure!");
@@ -620,7 +620,8 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
         }
 
         debug_print_header(stream, top_frame.opcode_frames.last().operand_count());
-        return read_operand(stream, operand);
+        TRY(read_operand(stream, operand));
+        return IterationDecision::Continue;
     }
 
     case Interpreter::State::FinalizingOpcode: {
