@@ -406,6 +406,25 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         return {};
     }
 
+    case Opcode::IfOp: {
+        auto length = TRY(frame.operand(0).release_as<u64>()) - (stream.offset() - frame.start());
+        auto condition = TRY(frame.operand(1).release_as<u64>());
+
+        top_frame.last_if_condition = condition;
+        if (!condition)
+            TRY(stream.seek(length, SeekMode::FromCurrentPosition));
+
+        return {};
+    }
+    case Opcode::ElseOp: {
+        auto length = TRY(frame.operand(0).release_as<u64>()) - (stream.offset() - frame.start());
+
+        if (top_frame.last_if_condition)
+            TRY(stream.seek(length, SeekMode::FromCurrentPosition));
+
+        return {};
+    }
+
     case Opcode::ReturnOp:
         // FIXME: We shouldn't resolve the references here
         top_scope_frame.return_value() = move(*TRY(resolve_references(frame.operand(0))));

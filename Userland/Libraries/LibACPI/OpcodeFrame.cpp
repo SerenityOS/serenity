@@ -127,6 +127,17 @@ constexpr static Array<OperandType, 3> STORE_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 3> IF_OPERANDS = {
+    OperandType::PackageLength,
+    OperandType::TermArg,
+    OperandType::End,
+};
+
+constexpr static Array<OperandType, 2> ELSE_OPERANDS = {
+    OperandType::PackageLength,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 2> RETURN_OPERANDS = {
     OperandType::TermArg,
     OperandType::End,
@@ -188,6 +199,10 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
     case Opcode::StoreOp:
         return STORE_OPERANDS.span();
 
+    case Opcode::IfOp:
+        return IF_OPERANDS.span();
+    case Opcode::ElseOp:
+        return ELSE_OPERANDS.span();
     case Opcode::ReturnOp:
         return RETURN_OPERANDS.span();
 

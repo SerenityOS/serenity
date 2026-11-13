@@ -118,6 +118,7 @@ private:
         Vector<OpcodeFrame> opcode_frames;
 
         u64 current_field_offset { 0 };
+        bool last_if_condition { false };
 
         Frame(TableStream stream)
             : stream(move(stream))
