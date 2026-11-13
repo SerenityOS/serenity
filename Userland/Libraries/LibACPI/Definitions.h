@@ -501,8 +501,9 @@ enum class Opcode : u16 {
     Arg5Op = 0x6D,
     Arg6Op = 0x6E,
 
-    // NOTE: This is not a real opcode, but it's used internally to represent name string evaluation
-    NodeEvaluation = 0xFFFF,
+    // NOTE: Those are not real opcodes, but they're used internally
+    NodeEvaluation = 0xFF00, // Generated for name string evaluation
+    EvaluatedValue = 0xFF01, // Generated to inject a value into the interpreter
 };
 
 struct MethodFlags {
@@ -511,6 +512,34 @@ struct MethodFlags {
     u8 sync_level : 4;
 };
 static_assert(sizeof(MethodFlags) == 1);
+
+enum class FieldAccess : u8 {
+    AnyAccess = 0,
+    ByteAccess = 1,
+    WordAccess = 2,
+    DWordAccess = 3,
+    QWordAccess = 4,
+    BufferAccess = 5,
+};
+
+enum class FieldLock : u8 {
+    NoLock = 0,
+    Lock = 1,
+};
+
+enum class FieldUpdate : u8 {
+    Preserve = 0,
+    WriteAsOnes = 1,
+    WriteAsZeros = 2,
+};
+
+struct FieldFlags {
+    FieldAccess access : 4;
+    FieldLock lock : 1;
+    FieldUpdate update : 2;
+    u8 : 1;
+};
+static_assert(sizeof(FieldFlags) == 1);
 
 }
 

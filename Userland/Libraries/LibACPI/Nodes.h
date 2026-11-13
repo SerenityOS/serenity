@@ -15,6 +15,22 @@
 
 namespace ACPI::AML {
 
+class AliasNode : public Node {
+public:
+    AliasNode(NonnullRefPtr<Node> target)
+        : m_target(target)
+    {
+    }
+
+    virtual NodeType type() const override { return NodeType::Alias; }
+    virtual StringView kind() const override { return "Alias"sv; }
+
+    NonnullRefPtr<Node> const& target() const { return m_target; }
+
+private:
+    NonnullRefPtr<Node> m_target;
+};
+
 class ScopeNode : public Node {
 public:
     virtual NodeType type() const override { return NodeType::Scope; }
@@ -123,7 +139,7 @@ private:
 
 class FieldNode : public Node {
 public:
-    FieldNode(NonnullRefPtr<OperationRegionNode> const& operation_region, u8 flags, size_t offset, size_t size)
+    FieldNode(NonnullRefPtr<OperationRegionNode> const& operation_region, FieldFlags flags, size_t offset, size_t size)
         : m_operation_region(operation_region)
         , m_flags(flags)
         , m_offset(offset)
@@ -138,14 +154,46 @@ public:
 
     NonnullRefPtr<OperationRegionNode> const& operation_region() const { return m_operation_region; }
 
-    u8 flags() const { return m_flags; }
+    FieldFlags flags() const { return m_flags; }
     u64 offset() const { return m_offset; }
     u64 length() const { return m_length; }
 
 private:
     NonnullRefPtr<OperationRegionNode> m_operation_region;
 
-    u8 m_flags;
+    FieldFlags m_flags;
+    u64 m_offset;
+    u64 m_length;
+};
+
+class IndexFieldNode : public Node {
+public:
+    IndexFieldNode(NonnullRefPtr<FieldNode> index_field, NonnullRefPtr<FieldNode> data_field, FieldFlags flags, size_t offset, size_t size)
+        : m_index_field(index_field)
+        , m_data_field(data_field)
+        , m_flags(flags)
+        , m_offset(offset)
+        , m_length(size)
+    {
+    }
+
+    virtual ErrorOr<void> write_description(StringBuilder& builder) override;
+
+    virtual NodeType type() const override { return NodeType::IndexField; }
+    virtual StringView kind() const override { return "Index Field"sv; }
+
+    NonnullRefPtr<FieldNode> const& index_field() const { return m_index_field; }
+    NonnullRefPtr<FieldNode> const& data_field() const { return m_data_field; }
+
+    FieldFlags flags() const { return m_flags; }
+    u64 offset() const { return m_offset; }
+    u64 length() const { return m_length; }
+
+private:
+    NonnullRefPtr<FieldNode> m_index_field;
+    NonnullRefPtr<FieldNode> m_data_field;
+
+    FieldFlags m_flags;
     u64 m_offset;
     u64 m_length;
 };
@@ -172,6 +220,22 @@ private:
     u8 m_id { 0 };
     u32 m_processor_register_block_address { 0 };
     u8 m_processor_register_block_length { 0 };
+};
+
+class PowerResourceNode : public Node {
+public:
+    PowerResourceNode(u8 system_level, u16 resource_order)
+        : m_system_level(system_level)
+        , m_resource_order(resource_order)
+    {
+    }
+
+    virtual NodeType type() const override { return NodeType::PowerResource; }
+    virtual StringView kind() const override { return "Power Resource"sv; }
+
+private:
+    u8 m_system_level { 0 };
+    u16 m_resource_order { 0 };
 };
 
 }

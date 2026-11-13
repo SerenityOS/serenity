@@ -21,14 +21,17 @@ namespace ACPI::AML {
 
 enum class NodeType : u8 {
     Untyped,
+    Alias,
     Scope,
     Name,
     Method,
     Mutex,
     OperationRegion,
     Field,
+    IndexField,
     Device,
     Processor,
+    PowerResource,
 };
 
 class Node : public AtomicRefCounted<Node>

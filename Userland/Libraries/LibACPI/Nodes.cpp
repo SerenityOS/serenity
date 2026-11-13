@@ -29,7 +29,13 @@ ErrorOr<void> OperationRegionNode::write_description(StringBuilder& builder)
 
 ErrorOr<void> FieldNode::write_description(StringBuilder& builder)
 {
-    TRY(builder.try_appendff("Field(Flags: {}, Offset: {}, Length: {})", m_flags, m_offset, m_length));
+    TRY(builder.try_appendff("Field(Flags: {}, Offset: {}, Length: {})", bit_cast<u8>(m_flags), m_offset, m_length));
+    return {};
+}
+
+ErrorOr<void> IndexFieldNode::write_description(StringBuilder& builder)
+{
+    TRY(builder.try_appendff("IndexField(Flags: {}, Offset: {}, Length: {})", bit_cast<u8>(m_flags), m_offset, m_length));
     return {};
 }
 

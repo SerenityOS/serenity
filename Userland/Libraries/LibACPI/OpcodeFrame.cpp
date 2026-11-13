@@ -43,6 +43,12 @@ constexpr static Array<OperandType, 6> PACKAGE_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 5> ALIAS_OPERANDS = {
+    OperandType::NameString,
+    OperandType::NameString,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 4> METHOD_OPERANDS = {
     OperandType::PackageLength,
     OperandType::NameString,
@@ -89,6 +95,25 @@ constexpr static Array<OperandType, 6> PROCESSOR_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 5> POWER_RESOURCE_OPERANDS = {
+    OperandType::PackageLength,
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::WordData,
+    OperandType::End,
+};
+
+constexpr static Array<OperandType, 8> INDEX_FIELD_OPERANDS = {
+    OperandType::MarkAsCount,
+    OperandType::PackageLength,
+    OperandType::NameString,
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::RepeatNextBytes,
+    OperandType::IndexFieldElement,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 4> TARGET_BINARY_OPERANDS = {
     OperandType::TermArg,
     OperandType::TermArg,
@@ -96,9 +121,32 @@ constexpr static Array<OperandType, 4> TARGET_BINARY_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 4> BINARY_OPERANDS = {
+    OperandType::TermArg,
+    OperandType::TermArg,
+    OperandType::End,
+};
+
+constexpr static Array<OperandType, 4> UNARY_OPERANDS = {
+    OperandType::TermArg,
+    OperandType::TermArg,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 3> STORE_OPERANDS = {
     OperandType::TermArg,
     OperandType::SuperName,
+    OperandType::End,
+};
+
+constexpr static Array<OperandType, 3> IF_OPERANDS = {
+    OperandType::PackageLength,
+    OperandType::TermArg,
+    OperandType::End,
+};
+
+constexpr static Array<OperandType, 2> ELSE_OPERANDS = {
+    OperandType::PackageLength,
     OperandType::End,
 };
 
@@ -125,6 +173,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
     case Opcode::PackageOp:
         return PACKAGE_OPERANDS.span();
 
+    case Opcode::AliasOp:
+        return ALIAS_OPERANDS.span();
     case Opcode::ScopeOp:
         return SCOPE_OPERANDS.span();
     case Opcode::NameOp:
@@ -141,6 +191,10 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return DEVICE_OPERANDS.span();
     case Opcode::ProcessorOp:
         return PROCESSOR_OPERANDS.span();
+    case Opcode::PowerResOp:
+        return POWER_RESOURCE_OPERANDS.span();
+    case Opcode::IndexFieldOp:
+        return INDEX_FIELD_OPERANDS.span();
 
     case Opcode::AddOp:
     case Opcode::SubtractOp:
@@ -154,9 +208,23 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
     case Opcode::XorOp:
         return TARGET_BINARY_OPERANDS.span();
 
+    case Opcode::LAndOp:
+    case Opcode::LOrOp:
+    case Opcode::LEqualOp:
+    case Opcode::LGreaterOp:
+    case Opcode::LLessOp:
+        return BINARY_OPERANDS.span();
+
+    case Opcode::LNotOp:
+        return UNARY_OPERANDS.span();
+
     case Opcode::StoreOp:
         return STORE_OPERANDS.span();
 
+    case Opcode::IfOp:
+        return IF_OPERANDS.span();
+    case Opcode::ElseOp:
+        return ELSE_OPERANDS.span();
     case Opcode::ReturnOp:
         return RETURN_OPERANDS.span();
 
@@ -168,6 +236,7 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return EMPTY_OPERANDS.span();
 
     case Opcode::NodeEvaluation:
+    case Opcode::EvaluatedValue:
         VERIFY_NOT_REACHED();
 
     default:
@@ -213,6 +282,7 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
     case OperandType::String:
     case OperandType::ByteBuffer:
     case OperandType::FieldElement:
+    case OperandType::IndexFieldElement:
         return false;
 
     case OperandType::TermArg:
