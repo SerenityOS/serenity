@@ -89,6 +89,14 @@ constexpr static Array<OperandType, 6> PROCESSOR_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 5> POWER_RESOURCE_OPERANDS = {
+    OperandType::PackageLength,
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::WordData,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 4> TARGET_BINARY_OPERANDS = {
     OperandType::TermArg,
     OperandType::TermArg,
@@ -141,6 +149,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return DEVICE_OPERANDS.span();
     case Opcode::ProcessorOp:
         return PROCESSOR_OPERANDS.span();
+    case Opcode::PowerResOp:
+        return POWER_RESOURCE_OPERANDS.span();
 
     case Opcode::AddOp:
     case Opcode::SubtractOp:

@@ -381,6 +381,20 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         return {};
     }
 
+    case Opcode::PowerResOp: {
+        auto length = TRY(frame.operand(0).release_as<u64>());
+        auto path = TRY(frame.operand(1).release_as<NameString>());
+        auto system_level = TRY(frame.operand(2).release_as<u64>());
+        auto resource_order = TRY(frame.operand(3).release_as<u64>());
+
+        auto node = TRY(try_make_ref_counted<PowerResourceNode>(system_level, resource_order));
+        TRY(top_scope_frame.insert_node(path, node));
+
+        auto scope_frame = ScopeFrame(m_namespace_root, node, frame.start(), frame.start() + length, m_loaded_tables.size() - 1, top_scope_frame.number_mask());
+        TRY(top_frame.scope_frames.try_append(move(scope_frame)));
+        return {};
+    }
+
     case Opcode::ReturnOp:
         // FIXME: We shouldn't resolve the references here
         top_scope_frame.return_value() = move(*TRY(resolve_references(frame.operand(0))));
