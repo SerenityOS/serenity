@@ -548,7 +548,7 @@ ErrorOr<void> Interpreter::read_operand(TableStream& stream, OperandType operand
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
+ErrorOr<void> Interpreter::cycle(TableStream& stream)
 {
     auto& top_frame = m_frame_stack.last();
 
@@ -565,8 +565,12 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             top_frame.scope_frames.take_last();
         }
 
-        if (stream.is_eof())
-            return IterationDecision::Break;
+        if (top_frame.scope_frames.is_empty()) {
+            if (top_frame.opcode_frames.size() > 1)
+                INTERPRETER_ERROR("Unexpected EOF!", EINVAL, "Reached EOF with unclosed opcode frames!");
+            m_frame_stack.take_last();
+            return {};
+        }
 
         debug_print_header(stream);
 
@@ -592,7 +596,7 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
 
             TRY(top_frame.opcode_frames.try_append(move(opcode_frame)));
             top_frame.state = State::ReadingOperand;
-            return IterationDecision::Continue;
+            return {};
         }
 
         auto opcode = TRY(stream.read_opcode());
@@ -609,19 +613,19 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
         auto opcode_frame = TRY(OpcodeFrame::from_opcode(static_cast<Opcode>(opcode), stream.offset()));
         TRY(top_frame.opcode_frames.try_append(move(opcode_frame)));
         top_frame.state = State::ReadingOperand;
-        return IterationDecision::Continue;
+        return {};
     }
 
     case Interpreter::State::ReadingOperand: {
         auto operand = TRY(top_frame.opcode_frames.last().begin_operand(stream.offset()));
         if (operand == OperandType::End) {
             top_frame.state = State::FinalizingOpcode;
-            return IterationDecision::Continue;
+            return {};
         }
 
         debug_print_header(stream, top_frame.opcode_frames.last().operand_count());
         TRY(read_operand(stream, operand));
-        return IterationDecision::Continue;
+        return {};
     }
 
     case Interpreter::State::FinalizingOpcode: {
@@ -643,10 +647,7 @@ ErrorOr<IterationDecision> Interpreter::cycle(TableStream& stream)
             top_frame.state = State::ReadingOpcode;
         }
 
-        if (!top_frame.scope_frames.last().return_value().is_empty())
-            return IterationDecision::Break;
-
-        return IterationDecision::Continue;
+        return {};
     }
     }
 
@@ -711,24 +712,21 @@ ErrorOr<Object> Interpreter::call_method(MethodNode& node, ReadonlySpan<Object> 
 
     TRY(allocate_frame(move(stream), move(root_scope_frame)));
 
-    auto& top_frame = m_frame_stack.last();
-    auto return_value = Object();
+    while (!m_frame_stack.is_empty()) {
+        TRY(cycle(m_frame_stack.last().stream));
 
-    while (top_frame.opcode_frames.size() > 0 && top_frame.scope_frames.size() > 0) {
-        if (TRY(cycle(top_frame.stream)) == IterationDecision::Break)
+        if (!m_frame_stack.is_empty() && !m_frame_stack.last().scope_frames.last().return_value().is_empty())
             break;
     }
 
-    if (!top_frame.scope_frames.is_empty() && !top_frame.scope_frames.last().return_value().is_empty()) {
-        return_value = move(top_frame.scope_frames.last().return_value());
-        top_frame.scope_frames.take_last();
+    if (!m_frame_stack.is_empty() && !m_frame_stack.last().scope_frames.is_empty() && !m_frame_stack.last().scope_frames.last().return_value().is_empty()) {
+        VERIFY(m_frame_stack.size() == 1);
+        auto return_value = move(m_frame_stack.last().scope_frames.last().return_value());
+        m_frame_stack.take_last();
+        return return_value;
     }
 
-    if (top_frame.scope_frames.size() != 0 || top_frame.opcode_frames.size() != 1)
-        INTERPRETER_ERROR("Unbalanced scope or opcode frames!", EINVAL, "Unbalanced scope or opcode frames!");
-
-    m_frame_stack.take_last();
-    return return_value;
+    return Object();
 }
 
 ErrorOr<Object*> Interpreter::resolve_reference(Object& reference)
@@ -846,18 +844,9 @@ ErrorOr<void> Interpreter::load(ReadonlyBytes bytes)
     auto root_scope_frame = ScopeFrame(m_namespace_root, m_namespace_root, stream.offset(), TRY(stream.size()), m_loaded_tables.size() - 1, number_mask);
     TRY(allocate_frame(move(stream), move(root_scope_frame)));
 
-    auto& top_frame = m_frame_stack.last();
+    while (!m_frame_stack.is_empty())
+        TRY(cycle(m_frame_stack.last().stream));
 
-    while (top_frame.opcode_frames.size() > 0 && top_frame.scope_frames.size() > 0) {
-        if (TRY(cycle(top_frame.stream)) == IterationDecision::Break) {
-            break;
-        }
-    }
-
-    if (top_frame.scope_frames.size() != 0 || top_frame.opcode_frames.size() != 1)
-        return Error::from_string_view_or_print_error_and_return_errno("ACPI: Interpreter::load: Unbalanced scope or opcode frames!"sv, EINVAL);
-
-    m_frame_stack.take_last();
     return {};
 }
 
