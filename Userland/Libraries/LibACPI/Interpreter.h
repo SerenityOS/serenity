@@ -99,7 +99,7 @@ private:
     ErrorOr<void> store(Object const& target, Object value);
 
     ErrorOr<IterationDecision> cycle(TableStream& stream);
-    ErrorOr<IterationDecision> read_operand(TableStream& stream, OperandType operand);
+    ErrorOr<void> read_operand(TableStream& stream, OperandType operand);
 
     ErrorOr<Object> finalize_value_opcode(OpcodeFrame& frame);
     ErrorOr<void> finalize_term_opcode(OpcodeFrame& frame, TableStream& stream);
