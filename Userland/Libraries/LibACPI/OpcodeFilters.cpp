@@ -31,7 +31,7 @@ bool named_object_filter(Opcode opcode)
 
     // FieldOp missing from 6.6 docs, but given the presence of the DefXYZField
     // opcodes here, I'm adding it in here.
-    // DeviceOp, MethodOp and MutexOp are also missing. Adding them here too because they also create an object.
+    // DeviceOp, MethodOp MutexOp, FieldOp and IndexFieldOp are also missing. Adding them here too because they also create an object.
 
     // ProcessorOp found here in 6.3 docs.
     switch (opcode) {
@@ -46,6 +46,7 @@ bool named_object_filter(Opcode opcode)
     case Opcode::DeviceOp:
     case Opcode::ExternalOp:
     case Opcode::FieldOp:
+    case Opcode::IndexFieldOp:
     case Opcode::MethodOp:
     case Opcode::MutexOp:
     case Opcode::OpRegionOp:
