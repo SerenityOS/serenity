@@ -406,6 +406,38 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
         return {};
     }
 
+    case Opcode::IfOp: {
+        auto body_end = frame.start() + TRY(frame.operand(0).release_as<u64>());
+        auto condition = TRY(TRY(resolve_references(frame.operand(1)))->release_as<u64>());
+
+        auto current_offset = stream.offset();
+        TRY(stream.seek(body_end, SeekMode::SetPosition));
+        auto maybe_else = stream.read_opcode();
+        if (!maybe_else.is_error() && maybe_else.value() == Opcode::ElseOp && !top_frame.should_take_else.contains(stream.offset()))
+            TRY(top_frame.should_take_else.try_set(stream.offset(), !condition));
+
+        TRY(stream.seek(current_offset, SeekMode::SetPosition));
+
+        if (!condition)
+            TRY(stream.seek(body_end, SeekMode::SetPosition));
+
+        return {};
+    }
+
+    case Opcode::ElseOp: {
+        auto package_length = TRY(frame.operand(0).release_as<u64>());
+        auto length = package_length - (stream.offset() - frame.start());
+
+        auto should_take = top_frame.should_take_else.take(frame.start());
+        if (!should_take.has_value())
+            INTERPRETER_ERROR("Unexpected Else!", EINVAL, "Found an Else opcode without a matching If!");
+
+        if (!should_take.value())
+            TRY(stream.seek(length, SeekMode::FromCurrentPosition));
+
+        return {};
+    }
+
     case Opcode::ReturnOp:
         // FIXME: We shouldn't resolve the references here
         top_scope_frame.return_value() = move(*TRY(resolve_references(frame.operand(0))));
