@@ -139,7 +139,7 @@ private:
 
 class FieldNode : public Node {
 public:
-    FieldNode(NonnullRefPtr<OperationRegionNode> const& operation_region, u8 flags, size_t offset, size_t size)
+    FieldNode(NonnullRefPtr<OperationRegionNode> const& operation_region, FieldFlags flags, size_t offset, size_t size)
         : m_operation_region(operation_region)
         , m_flags(flags)
         , m_offset(offset)
@@ -154,14 +154,14 @@ public:
 
     NonnullRefPtr<OperationRegionNode> const& operation_region() const { return m_operation_region; }
 
-    u8 flags() const { return m_flags; }
+    FieldFlags flags() const { return m_flags; }
     u64 offset() const { return m_offset; }
     u64 length() const { return m_length; }
 
 private:
     NonnullRefPtr<OperationRegionNode> m_operation_region;
 
-    u8 m_flags;
+    FieldFlags m_flags;
     u64 m_offset;
     u64 m_length;
 };
