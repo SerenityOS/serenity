@@ -106,15 +106,25 @@ private:
 
     void debug_print_header(TableStream& stream, size_t operand_index = 0);
 
-    State m_state { State::ReadingOpcode };
+    struct Frame {
+        TableStream stream;
+        State state { State::ReadingOpcode };
 
-    u64 m_current_field_offset { 0 };
+        Vector<ScopeFrame> scope_frames;
+        Vector<OpcodeFrame> opcode_frames;
+
+        u64 current_field_offset { 0 };
+
+        Frame(TableStream stream)
+            : stream(move(stream))
+        {
+        }
+    };
 
     AK::Vector<ByteBuffer> m_loaded_tables;
-    Vector<ScopeFrame> m_scope_frames;
-    Vector<OpcodeFrame> m_opcode_frames;
-
     NonnullRefPtr<Node> m_namespace_root;
+
+    Vector<Frame> m_frame_stack;
 };
 
 }
