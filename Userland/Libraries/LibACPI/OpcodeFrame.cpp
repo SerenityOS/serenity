@@ -168,6 +168,7 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return EMPTY_OPERANDS.span();
 
     case Opcode::NodeEvaluation:
+    case Opcode::EvaluatedValue:
         VERIFY_NOT_REACHED();
 
     default:

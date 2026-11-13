@@ -205,6 +205,7 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::DWordPrefix:
     case Opcode::QWordPrefix:
     case Opcode::StringPrefix:
+    case Opcode::EvaluatedValue:
         return move(frame.operand(0));
 
     case Opcode::BufferOp:
