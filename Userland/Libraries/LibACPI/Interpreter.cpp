@@ -360,6 +360,7 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     }
 
     case Opcode::FieldOp:
+    case Opcode::IndexFieldOp:
         // NOTE: All the field elements are read as operands, so all we need to do is reset the field offset.
         top_frame.current_field_offset = 0;
         return {};
@@ -469,7 +470,8 @@ ErrorOr<void> Interpreter::read_operand(TableStream& stream, OperandType operand
     }
 
     // https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#fieldelement
-    case OperandType::FieldElement: {
+    case OperandType::FieldElement:
+    case OperandType::IndexFieldElement: {
 #ifndef KERNEL
         if constexpr (AML_DEBUG)
             warn("Reading field element...");
@@ -481,16 +483,33 @@ ErrorOr<void> Interpreter::read_operand(TableStream& stream, OperandType operand
 
             auto package_length = TRY(stream.read_package_length());
 
-            auto operation_region_node = TRY(find_node(*TRY(top_opcode_frame.operand(1).as_pointer<NameString>()), top_scope_frame.scope()));
-            if (operation_region_node->type() != NodeType::OperationRegion)
-                INTERPRETER_ERROR("Expected operation region node!", EINVAL, "Expected operation region node, got {}", operation_region_node->kind());
+            if (operand == OperandType::FieldElement) {
+                auto operation_region_node = TRY(find_node(*TRY(top_opcode_frame.operand(1).as_pointer<NameString>()), top_scope_frame.scope()));
+                if (operation_region_node->type() != NodeType::OperationRegion)
+                    INTERPRETER_ERROR("Expected operation region node!", EINVAL, "Expected operation region node, got {}", operation_region_node->kind());
 
-            auto flags = TRY(top_opcode_frame.operand(2).release_as<u64>());
+                auto flags = TRY(top_opcode_frame.operand(2).release_as<u64>());
 
-            DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
+                DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
 
-            auto node = TRY(try_make_ref_counted<FieldNode>(static_ptr_cast<OperationRegionNode>(operation_region_node), bit_cast<FieldFlags>(static_cast<u8>(flags)), top_frame.current_field_offset, package_length));
-            TRY(top_scope_frame.scope()->insert_child(name_segment, node));
+                auto node = TRY(try_make_ref_counted<FieldNode>(static_ptr_cast<OperationRegionNode>(operation_region_node), bit_cast<FieldFlags>(static_cast<u8>(flags)), top_frame.current_field_offset, package_length));
+                TRY(top_scope_frame.scope()->insert_child(name_segment, node));
+            } else if (operand == OperandType::IndexFieldElement) {
+                auto index_node = TRY(find_node(*TRY(top_opcode_frame.operand(1).as_pointer<NameString>()), top_scope_frame.scope()));
+                if (index_node->type() != NodeType::Field)
+                    INTERPRETER_ERROR("Expected field node!", EINVAL, "Expected field node, got {}", index_node->kind());
+
+                auto data_node = TRY(find_node(*TRY(top_opcode_frame.operand(2).as_pointer<NameString>()), top_scope_frame.scope()));
+                if (data_node->type() != NodeType::Field)
+                    INTERPRETER_ERROR("Expected field node!", EINVAL, "Expected field node, got {}", data_node->kind());
+
+                auto flags = TRY(top_opcode_frame.operand(3).release_as<u64>());
+
+                DEBUG_LOG(" ({}, {})", name_segment.to_string_view(), package_length);
+
+                auto node = TRY(try_make_ref_counted<IndexFieldNode>(static_ptr_cast<FieldNode>(index_node), static_ptr_cast<FieldNode>(data_node), bit_cast<FieldFlags>(static_cast<u8>(flags)), top_frame.current_field_offset, package_length));
+                TRY(top_scope_frame.scope()->insert_child(name_segment, node));
+            }
 
             top_frame.current_field_offset += package_length;
 
@@ -724,6 +743,8 @@ ErrorOr<Object> Interpreter::evaluate(Node& node, ReadonlySpan<Object> arguments
 
     case NodeType::Field:
         INTERPRETER_ERROR("Field evaluation not supported!", EINVAL, "Evaluating fields is not supported yet!");
+    case NodeType::IndexField:
+        INTERPRETER_ERROR("IndexField evaluation not supported!", EINVAL, "Evaluating index fields is not supported yet!");
 
     case NodeType::Method:
         return call_method(static_cast<MethodNode&>(node), arguments);

@@ -103,6 +103,17 @@ constexpr static Array<OperandType, 5> POWER_RESOURCE_OPERANDS = {
     OperandType::End,
 };
 
+constexpr static Array<OperandType, 8> INDEX_FIELD_OPERANDS = {
+    OperandType::MarkAsCount,
+    OperandType::PackageLength,
+    OperandType::NameString,
+    OperandType::NameString,
+    OperandType::ByteData,
+    OperandType::RepeatNextBytes,
+    OperandType::IndexFieldElement,
+    OperandType::End,
+};
+
 constexpr static Array<OperandType, 4> TARGET_BINARY_OPERANDS = {
     OperandType::TermArg,
     OperandType::TermArg,
@@ -159,6 +170,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return PROCESSOR_OPERANDS.span();
     case Opcode::PowerResOp:
         return POWER_RESOURCE_OPERANDS.span();
+    case Opcode::IndexFieldOp:
+        return INDEX_FIELD_OPERANDS.span();
 
     case Opcode::AddOp:
     case Opcode::SubtractOp:
@@ -232,6 +245,7 @@ bool OpcodeFrame::filter_opcode_for_next_operand(Opcode opcode)
     case OperandType::String:
     case OperandType::ByteBuffer:
     case OperandType::FieldElement:
+    case OperandType::IndexFieldElement:
         return false;
 
     case OperandType::TermArg:
