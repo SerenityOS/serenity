@@ -188,6 +188,9 @@ template<>
 struct AK::Formatter<::ACPI::AML::Object> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, ::ACPI::AML::Object const& object)
     {
+        if (object.is_empty())
+            return AK::Formatter<FormatString>::format(builder, "Empty"sv);
+
         if (object.is<u64>()) {
             auto value = MUST(object.as<u64>());
             return AK::Formatter<FormatString>::format(builder, "(Decimal: {}, Hexadecimal: {:X})"sv, value, value);
