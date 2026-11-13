@@ -29,6 +29,7 @@ enum class NodeType : u8 {
     Field,
     Device,
     Processor,
+    PowerResource,
 };
 
 class Node : public AtomicRefCounted<Node>

@@ -174,4 +174,20 @@ private:
     u8 m_processor_register_block_length { 0 };
 };
 
+class PowerResourceNode : public Node {
+public:
+    PowerResourceNode(u8 system_level, u16 resource_order)
+        : m_system_level(system_level)
+        , m_resource_order(resource_order)
+    {
+    }
+
+    virtual NodeType type() const override { return NodeType::PowerResource; }
+    virtual StringView kind() const override { return "Power Resource"sv; }
+
+private:
+    u8 m_system_level { 0 };
+    u16 m_resource_order { 0 };
+};
+
 }
