@@ -501,8 +501,9 @@ enum class Opcode : u16 {
     Arg5Op = 0x6D,
     Arg6Op = 0x6E,
 
-    // NOTE: This is not a real opcode, but it's used internally to represent name string evaluation
-    NodeEvaluation = 0xFF00,
+    // NOTE: Those are not real opcodes, but they're used internally
+    NodeEvaluation = 0xFF00, // Generated for name string evaluation
+    EvaluatedValue = 0xFF01, // Generated to inject a value into the interpreter
 };
 
 struct MethodFlags {
