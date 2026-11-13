@@ -127,3 +127,11 @@ TEST_CASE(binary_operations)
     test_function("\\TNOR"sv, 0xF0F0, 0x0FF0, 0xFFFF000F);
     test_function("\\TXOR"sv, 0xF0F0, 0x0FF0, 0xFF00);
 }
+
+TEST_CASE(empty_methods)
+{
+    auto interpreter = TRY_OR_FAIL(load_test_table("empty_method.aml"sv));
+
+    auto result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.EMPT"sv));
+    EXPECT(result.is_empty());
+}
