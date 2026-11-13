@@ -21,6 +21,7 @@ namespace ACPI::AML {
 
 enum class NodeType : u8 {
     Untyped,
+    Alias,
     Scope,
     Name,
     Method,

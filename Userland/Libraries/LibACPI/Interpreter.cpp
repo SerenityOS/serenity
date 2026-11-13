@@ -85,7 +85,7 @@ ErrorOr<NonnullRefPtr<Node>> Interpreter::find_node(NameString const& path, Nonn
         while (!current_scope.is_null()) {
             auto found = current_scope->find_child(node_name);
             if (!found.is_error())
-                return found.release_value();
+                return resolve_alias(found.release_value());
 
             if (current_scope == m_namespace_root) {
                 warnln("ACPI: Could not find node with name {}!", node_name.to_string_view());
@@ -114,7 +114,7 @@ ErrorOr<NonnullRefPtr<Node>> Interpreter::find_node(NameString const& path, Nonn
         current_scope = found.release_value();
     }
 
-    return current_scope.release_nonnull();
+    return resolve_alias(current_scope.release_nonnull());
 }
 
 ErrorOr<void> Interpreter::walk_tree(NonnullRefPtr<Node> tree_root, Function<ErrorOr<void>(NonnullRefPtr<Node>, u32)> callback) const
@@ -298,6 +298,16 @@ ErrorOr<void> Interpreter::finalize_term_opcode(OpcodeFrame& frame, TableStream&
     auto& top_scope_frame = top_frame.scope_frames.last();
 
     switch (frame.opcode()) {
+    case Opcode::AliasOp: {
+        auto target = TRY(frame.operand(0).release_as<NameString>());
+        auto path = TRY(frame.operand(1).release_as<NameString>());
+
+        auto target_node = TRY(find_node(target, top_scope_frame.scope()));
+        auto node = TRY(try_make_ref_counted<AliasNode>(target_node));
+        TRY(top_scope_frame.insert_node(path, node));
+        return {};
+    }
+
     case Opcode::ScopeOp: {
         auto length = TRY(frame.operand(0).release_as<u64>());
         auto path = TRY(frame.operand(1).release_as<NameString>());
@@ -798,6 +808,16 @@ ErrorOr<Object*> Interpreter::resolve_references(Object& reference)
     while (object->is_reference())
         object = TRY(resolve_reference(*object));
     return object;
+}
+
+NonnullRefPtr<Node> Interpreter::resolve_alias(NonnullRefPtr<Node> alias_node) const
+{
+    auto node = alias_node;
+    while (node->type() == NodeType::Alias) {
+        auto& alias_node = static_cast<AliasNode&>(*node);
+        node = alias_node.target();
+    }
+    return node;
 }
 
 ErrorOr<void> Interpreter::store(Object const& target, Object value)
