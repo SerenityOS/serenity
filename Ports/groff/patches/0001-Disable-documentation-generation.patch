@@ -5,13 +5,22 @@ Subject: [PATCH] Disable documentation generation
 
 It attempts to run the cross-compiled binary on the host.
 ---
- Makefile.in | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ Makefile.in | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
 diff --git a/Makefile.in b/Makefile.in
-index 9a9e767f4d3d9b0a4d88bcfa6120947d74139e58..676e5cb74597d3b0fba886a143fda67595ddc8ad 100644
+index 9d49796d5d78153c497050322ea000850cc043e1..2a8e7cdee34d1f59fdee18c45ffd8b1d1637fe80 100644
 --- a/Makefile.in
 +++ b/Makefile.in
+@@ -5486,7 +5486,7 @@ man5_MANS = man/groff_font.5 man/groff_out.5 man/groff_tmac.5
+ man7_MANS = contrib/hdtbl/groff_hdtbl.7 contrib/mm/groff_mm.7 \
+ 	contrib/mm/groff_mmse.7 contrib/mom/groff_mom.7 \
+ 	contrib/rfc1345/groff_rfc1345.7 man/groff_char.7 \
+-	man/groff_diff.7 man/groff.7 man/roff.7 tmac/groff_ms.7 \
++	man/groff_diff.7 man/roff.7 tmac/groff_ms.7 \
+ 	tmac/groff_man.7 tmac/groff_man_style.7 tmac/groff_me.7 \
+ 	tmac/groff_mdoc.7 tmac/groff_trace.7 tmac/groff_www.7
+ 
 @@ -5804,10 +5804,7 @@ HDTBLPROCESSEDEXAMPLEFILES = \
  
  hdtblexampledir = $(exampledir)/hdtbl
@@ -24,7 +33,7 @@ index 9a9e767f4d3d9b0a4d88bcfa6120947d74139e58..676e5cb74597d3b0fba886a143fda675
  
  hdtbl_TESTS = contrib/hdtbl/examples/test-hdtbl.sh
  installfontexamplesdir = $(exampledir)
-@@ -5954,14 +5951,14 @@ MOMPROCESSEDEXAMPLEFILES = \
+@@ -5958,14 +5955,14 @@ MOMPROCESSEDEXAMPLEFILES = \
    contrib/mom/examples/typesetting.pdf
  
  momprocessedexampledir = $(exampledir)/mom
@@ -41,7 +50,7 @@ index 9a9e767f4d3d9b0a4d88bcfa6120947d74139e58..676e5cb74597d3b0fba886a143fda675
  
  # Define convenience macro for in-tree documents to depend on.  Don't
  # use this above.
-@@ -5982,9 +5979,9 @@ sboxestmacdir = $(tmacdir)
+@@ -5986,9 +5983,9 @@ sboxestmacdir = $(tmacdir)
  dist_sboxestmac_DATA = contrib/sboxes/sboxes.tmac
  SBOXES_EXAMPLEFILES = $(sboxes_srcdir)/msboxes.ms.in
  sboxesotherdocdir = $(docdir)
@@ -53,7 +62,7 @@ index 9a9e767f4d3d9b0a4d88bcfa6120947d74139e58..676e5cb74597d3b0fba886a143fda675
  doc_srcdir = $(abs_top_srcdir)/doc
  doc_builddir = doc
  
-@@ -6094,9 +6091,9 @@ PROCESSEDFILES_DEPS_TXT = groff troff grotty tmac/tty.tmac \
+@@ -6119,9 +6116,9 @@ PROCESSEDFILES_DEPS_TXT = groff troff grotty tmac/tty.tmac \
  
  otherdocdir = $(docdir)
  dist_otherdoc_DATA = $(DOCFILES_INST)
@@ -65,7 +74,7 @@ index 9a9e767f4d3d9b0a4d88bcfa6120947d74139e58..676e5cb74597d3b0fba886a143fda675
  
  # GNU PIC html documentation, installed in $(htmldocdir)
  # Other pic*.html files are installed by the local rule
-@@ -6128,7 +6125,7 @@ PROCESSEDEXAMPLEFILES = \
+@@ -6153,7 +6150,7 @@ PROCESSEDEXAMPLEFILES = \
  
  docexamplesdir = $(exampledir)
  dist_docexamples_DATA = $(EXAMPLEFILES)
