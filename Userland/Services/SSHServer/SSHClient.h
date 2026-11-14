@@ -66,6 +66,7 @@ private:
     ErrorOr<void> handle_key_exchange(ByteBuffer& data);
     ErrorOr<void> handle_ecdh_key_exchange(FixedMemoryStream&);
     ErrorOr<void> send_ecdh_reply(ByteBuffer&& client_public_key);
+    ErrorOr<void> write_keylog_file(ReadonlyBytes shared_secret) const;
 
     ErrorOr<GenericMessage> unpack_generic_message(ByteBuffer& data);
 

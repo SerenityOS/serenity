@@ -206,6 +206,7 @@ ErrorOr<void> SSHClient::handle_key_exchange(ByteBuffer& data)
     m_key_exchange_data.server_public_host_key = ServerConfiguration::the().ssh_ed25519_server_public_key();
 
     TRY(handle_ecdh_key_exchange(stream));
+    m_cookie = {};
 
     TRY(send_new_keys_message());
 
@@ -219,6 +220,17 @@ ErrorOr<void> SSHClient::handle_ecdh_key_exchange(FixedMemoryStream& stream)
 {
     auto Q_C = TRY(decode_string(stream));
     TRY(send_ecdh_reply(move(Q_C)));
+    return {};
+}
+
+ErrorOr<void> SSHClient::write_keylog_file(ReadonlyBytes shared_secret) const
+{
+    if (auto keylog_file = ServerConfiguration::the().keylog_file(); keylog_file.has_value()) {
+        auto file = TRY(Core::File::open(*keylog_file, Core::File::OpenMode::Write | Core::File::OpenMode::Append));
+        TRY(file->write_until_depleted(ByteString::formatted("{:hex-dump}"sv, m_cookie.bytes())));
+        TRY(file->write_until_depleted(" SHARED_SECRET "sv));
+        TRY(file->write_until_depleted(ByteString::formatted("{:hex-dump}\n"sv, shared_secret)));
+    }
     return {};
 }
 
@@ -241,13 +253,7 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
     auto shared_secret = TRY(curve.compute_coordinate(private_key, client_public_key));
     m_key_exchange_data.shared_secret = shared_secret;
 
-    if (auto keylog_file = ServerConfiguration::the().keylog_file(); keylog_file.has_value()) {
-        auto file = TRY(Core::File::open(*keylog_file, Core::File::OpenMode::Write | Core::File::OpenMode::Append));
-        TRY(file->write_until_depleted(ByteString::formatted("{:hex-dump}"sv, m_cookie.bytes())));
-        TRY(file->write_until_depleted(" SHARED_SECRET "sv));
-        TRY(file->write_until_depleted(ByteString::formatted("{:hex-dump}\n"sv, shared_secret.bytes())));
-    }
-    m_cookie = {};
+    TRY(write_keylog_file(shared_secret));
 
     set_shared_secret(move(shared_secret));
 
