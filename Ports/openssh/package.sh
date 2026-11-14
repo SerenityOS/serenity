@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openssh'
-version='10.6p1'
+version='10.6p2'
 files=(
-    "https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${version}.tar.gz#a9dc9565dffe8640f64d863cd29a32bc4a3dbdec0566a7fc44c5d6ee767d5f39"
+    "https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${version}.tar.gz#9ae44872090cf2f06b3cf9ff147e7f16f309671340763ed2f99248398ae29d5b"
 )
 depends=(
     'openssl'

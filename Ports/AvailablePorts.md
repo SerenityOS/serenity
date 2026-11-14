@@ -254,7 +254,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`OpenJDK`](OpenJDK/)                           | OpenJDK                                                       | 17.0.6                | https://openjdk.java.net/                                            |
 | [`openjpeg`](openjpeg/)                         | OpenJPEG                                                      | 2.5.4                 | https://www.openjpeg.org/                                            |
 | [`openrct2`](openrct2/)                         | OpenRCT2                                                      | 0.5.7                 | https://openrct2.org/                                                |
-| [`openssh`](openssh/)                           | OpenSSH                                                       | 10.6p1                | https://github.com/openssh/openssh-portable                          |
+| [`openssh`](openssh/)                           | OpenSSH                                                       | 10.6p2                | https://github.com/openssh/openssh-portable                          |
 | [`openssl`](openssl/)                           | OpenSSL                                                       | 4.1.0                 | https://www.openssl.org/                                             |
 | [`openttd`](openttd/)                           | OpenTTD                                                       | 15.3                  | https://www.openttd.org/                                             |
 | [`openttd-opengfx`](openttd-opengfx/)           | OpenGFX graphics for OpenTTD                                  | 8.0                   | https://www.openttd.org/                                             |
