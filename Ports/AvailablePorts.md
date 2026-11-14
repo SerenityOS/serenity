@@ -300,7 +300,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`ruby`](ruby/)                                 | Ruby                                                          | 3.2.2                 | https://www.ruby-lang.org/                                           |
 | [`rvvm`](rvvm/)                                 | RVVM - The RISC-V Virtual Machine                             | 0.6                   | https://github.com/LekKit/RVVM                                       |
 | [`sam`](sam/)                                   | Software Automatic Mouth (SAM)                                | c86ea39               | https://github.com/vidarh/SAM                                        |
-| [`schismtracker`](schismtracker/)               | Schism Tracker                                                | 20260524              | https://schismtracker.org/                                           |
+| [`schismtracker`](schismtracker/)               | Schism Tracker                                                | 20261102              | https://schismtracker.org/                                           |
 | [`scummvm`](scummvm/)                           | ScummVM                                                       | 2026.4.0              | https://www.scummvm.org/                                             |
 | [`sdl12-compat`](sdl12-compat/)                 | SDL2 compatibility layer for SDL 1.2 games                    | 1.2.78                | https://github.com/libsdl-org/sdl12-compat/                          |
 | [`SDL2`](SDL2/)                                 | Simple DirectMedia Layer (SDL2)                               | 2.32.10               | https://github.com/libsdl-org/SDL                                    |
