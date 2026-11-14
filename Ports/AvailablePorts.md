@@ -162,7 +162,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`libicu`](libicu/)                             | ICU                                                           | 79.1                  | http://site.icu-project.org/                                         |
 | [`libjodycode`](libjodycode/)                   | libjodycode                                                   | 4.2                   | https://codeberg.org/jbruchon/libjodycode                            |
 | [`libjpeg`](libjpeg/)                           | libjpeg                                                       | 10                    | https://ijg.org/                                                     |
-| [`libjxl`](libjxl/)                             | libjxl                                                        | 0.12.0                | https://github.com/libjxl/libjxl                                     |
+| [`libjxl`](libjxl/)                             | libjxl                                                        | 0.13.0                | https://github.com/libjxl/libjxl                                     |
 | [`libksba`](libksba/)                           | libksba                                                       | 1.8.1                 | https://gnupg.org/software/libksba/index.html                        |
 | [`liblzf`](liblzf/)                             | LibLZF is a very small data compression library               | 3.6                   | http://software.schmorp.de/pkg/liblzf.html                           |
 | [`libmad`](libmad/)                             | libmad                                                        | 0.16.5                | https://codeberg.org/tenacityteam/libmad                             |
