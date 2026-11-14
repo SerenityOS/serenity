@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='groff'
-version='1.24.2'
+version='1.25.0'
 useconfigure='true'
 files=(
-    "mirror://gnu/groff/groff-${version}.tar.gz#f9c1efd5bebbe37fc6e1063db7473ce8df1e3e0be4ff0f43ce04fce57e9c5dd9"
+    "mirror://gnu/groff/groff-${version}.tar.gz#24d103a07eb79e418963bce206c8771b649871f83bda2fd4c2e65529c1c56921"
 )
 depends=(
     'libiconv'
