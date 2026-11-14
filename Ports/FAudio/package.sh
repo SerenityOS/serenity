@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='FAudio'
-version='26.10'
+version='26.11'
 files=(
-    "https://github.com/FNA-XNA/FAudio/archive/refs/tags/${version}.tar.gz#c508f297ec8d065b456b2d9d74bab89ffc84ac3afbcb428bd54e40f09f8b901e"
+    "https://github.com/FNA-XNA/FAudio/archive/refs/tags/${version}.tar.gz#8fcd197678ad1ab5c95f0901c3770d8d76c1d8b1da819f6873db599807ad7d03"
 )
 useconfigure='true'
 depends=(
