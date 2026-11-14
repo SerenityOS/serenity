@@ -234,6 +234,22 @@ ErrorOr<void> SSHClient::write_keylog_file(ReadonlyBytes shared_secret) const
     return {};
 }
 
+ErrorOr<void> SSHClient::add_ed25519_hash_signature(AllocatingMemoryStream& stream, ReadonlyBytes hash)
+{
+    auto signature = TRY(Crypto::Curves::Ed25519::sign(
+        ServerConfiguration::the().ssh_ed25519_server_public_key().key,
+        ServerConfiguration::the().ssh_ed25519_server_private_key().key,
+        hash));
+
+    TypedBlob signature_and_type {
+        .type = TypedBlob::Type::SSH_ED25519,
+        .key = move(signature),
+    };
+
+    TRY(signature_and_type.encode(stream));
+    return {};
+}
+
 ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
 {
     // "Verify received key is valid."
@@ -274,18 +290,7 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
     TRY(stream.write_value(to_underlying(MessageID::KEX_ECDH_REPLY)));
     TRY(m_key_exchange_data.server_public_host_key.encode(stream));
     TRY(encode_string(stream, m_key_exchange_data.server_ephemeral_publickey));
-
-    auto signature = TRY(Crypto::Curves::Ed25519::sign(
-        ServerConfiguration::the().ssh_ed25519_server_public_key().key,
-        ServerConfiguration::the().ssh_ed25519_server_private_key().key,
-        hash.bytes()));
-
-    TypedBlob signature_and_type {
-        .type = TypedBlob::Type::SSH_ED25519,
-        .key = move(signature),
-    };
-
-    TRY(signature_and_type.encode(stream));
+    TRY(add_ed25519_hash_signature(stream, hash.bytes()));
 
     TRY(write_packet(TRY(stream.read_until_eof())));
 
