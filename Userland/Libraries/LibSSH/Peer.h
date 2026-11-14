@@ -105,6 +105,10 @@ enum class MessageID : u8 {
     KEX_ECDH_INIT = KEX_GENERIC_INIT,
     KEX_ECDH_REPLY = KEX_GENERIC_REPLY,
 
+    // https://datatracker.ietf.org/doc/html/rfc10042#section-2.2
+    KEX_HYBRID_INIT = KEX_GENERIC_INIT,
+    KEX_HYBRID_REPLY = KEX_GENERIC_REPLY,
+
     // https://datatracker.ietf.org/doc/html/rfc4252#section-7
     USERAUTH_PK_OK = 60,
 };
