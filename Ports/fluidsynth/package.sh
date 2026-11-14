@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='fluidsynth'
-version='2.6.1'
+version='2.6.2'
 useconfigure='true'
 configopts=(
     '-G Ninja'
@@ -8,7 +8,7 @@ configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/FluidSynth/fluidsynth/archive/refs/tags/v${version}.tar.gz#3d258a3bf97cc20c59eeebfe62c2432fae88adda74d3ad098681c76e0ebf446b"
+    "https://github.com/FluidSynth/fluidsynth/archive/refs/tags/v${version}.tar.gz#ca376b42a3c1b186a4c8c248931789a455ac94a89b777394969d678010c2f91f"
 )
 depends=(
     'glib'
