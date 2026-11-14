@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='zlib'
-version='1.3.2'
+version='1.4'
 useconfigure='true'
 files=(
-    "https://github.com/madler/zlib/releases/download/v${version}/zlib-${version}.tar.gz#bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
+    "https://github.com/madler/zlib/releases/download/v${version}/zlib-${version}.tar.gz#02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584"
 )
 
 configure() {
