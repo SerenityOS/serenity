@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='libjxl'
-version='0.12.0'
+version='0.13.0'
 files=(
-    "https://github.com/libjxl/libjxl/archive/refs/tags/v${version}.tar.gz#03e9be69a30be4011f559da75328b6d7cea8ad921fabfbd551ce10bf45cdc992"
+    "https://github.com/libjxl/libjxl/archive/refs/tags/v${version}.tar.gz#24d18c9af2d1f5a17730b3f8d3f70a5c16e5ac303f5d9d5fe9dc00cf7ca82af2"
 )
 depends=(
     'brotli'
