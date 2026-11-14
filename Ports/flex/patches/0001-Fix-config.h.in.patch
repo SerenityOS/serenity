@@ -9,17 +9,17 @@ FIXME: This patch does not have any accompanying information.
  1 file changed, 6 deletions(-)
 
 diff --git a/src/config.h.in b/src/config.h.in
-index 4756505..96fba7b 100644
+index 6d17a4964bfaa5514295c863845b08458462aaaa..269015374b42a52bbd815394c8c16d0fe056f822 100644
 --- a/src/config.h.in
 +++ b/src/config.h.in
-@@ -249,15 +249,9 @@
+@@ -298,15 +298,9 @@
  /* Define to empty if `const' does not conform to ANSI C. */
  #undef const
  
 -/* Define to rpl_malloc if the replacement function should be used. */
 -#undef malloc
 -
- /* Define to `int' if <sys/types.h> does not define. */
+ /* Define as a signed integer type capable of holding a process identifier. */
  #undef pid_t
  
 -/* Define to rpl_realloc if the replacement function should be used. */

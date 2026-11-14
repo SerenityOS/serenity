@@ -8,10 +8,10 @@ Subject: [PATCH] Hardcode the m4 include path
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/Makefile.in b/src/Makefile.in
-index 1f8a305..a5dd2e2 100644
+index 9c199292a1f1400936b6763dd096e34829db3acd..700967a07cfba8800d38c17ec57ef672bb94bd7e 100644
 --- a/src/Makefile.in
 +++ b/src/Makefile.in
-@@ -350,7 +350,7 @@ LTLIBICONV = @LTLIBICONV@
+@@ -393,7 +393,7 @@ LTLIBICONV = @LTLIBICONV@
  LTLIBINTL = @LTLIBINTL@
  LTLIBOBJS = @LTLIBOBJS@
  LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
@@ -20,12 +20,12 @@ index 1f8a305..a5dd2e2 100644
  MAKEINFO = @MAKEINFO@
  MANIFEST_TOOL = @MANIFEST_TOOL@
  MKDIR_P = @MKDIR_P@
-@@ -444,7 +444,7 @@ top_builddir = @top_builddir@
- top_srcdir = @top_srcdir@
+@@ -491,7 +491,7 @@ top_srcdir = @top_srcdir@
  AM_YFLAGS = -d
  AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\"
+ AM_CFLAGS = $(WARNINGFLAGS)
 -m4 = @M4@
-+m4 = /usr/local/bin/m4
++m4 = m4
+ @CROSS_FALSE@@ENABLE_BOOTSTRAP_TRUE@noinst_DATA = stage2compare
  @ENABLE_LIBFL_TRUE@lib_LTLIBRARIES = libfl.la
- libfl_la_SOURCES = \
- 	libmain.c \
+ @ENABLE_LIBFL_TRUE@pkgconfig_DATA = libfl.pc

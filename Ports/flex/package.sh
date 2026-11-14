@@ -1,12 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=flex
-version=2.6.4
+port='flex'
+version='2.6.11'
 files=(
-    "https://github.com/westes/flex/releases/download/v${version}/flex-${version}.tar.gz#e87aae032bf07c26f85ac0ed3250998c37621d95f8bd748b31f15b33c45ee995"
+    "https://github.com/westes/flex/releases/download/v${version}/flex-${version}.tar.gz#188e9c96b8fc032b2a0bdd24d4f0b692480c1854511c2fcc3034946f14fdf49a"
 )
-useconfigure=true
-use_fresh_config_sub=true
-config_sub_paths=('build-aux/config.sub')
+useconfigure='true'
 configopts=(
     '--disable-bootstrap'
     'CFLAGS=-std=c17'

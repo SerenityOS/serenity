@@ -8,10 +8,10 @@ Subject: [PATCH] Link with pcre2
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/Makefile.in b/src/Makefile.in
-index e570b87..1f8a305 100644
+index a489c397ee298160359bc0646e1137f609053ca6..9c199292a1f1400936b6763dd096e34829db3acd 100644
 --- a/src/Makefile.in
 +++ b/src/Makefile.in
-@@ -342,7 +342,7 @@ LIBICONV = @LIBICONV@
+@@ -385,7 +385,7 @@ LIBICONV = @LIBICONV@
  LIBINTL = @LIBINTL@
  LIBOBJS = @LIBOBJS@
  LIBPTHREAD = @LIBPTHREAD@
