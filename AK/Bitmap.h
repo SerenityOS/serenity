@@ -139,17 +139,22 @@ public:
             else
                 *first &= ~byte_mask;
             byte_mask = bitmask_last_byte[(start + len) % 8];
-            if constexpr (verify_that_all_bits_flip) {
-                if constexpr (VALUE) {
-                    VERIFY((*last & byte_mask) == 0);
-                } else {
-                    VERIFY((*last & byte_mask) == byte_mask);
+            // When (start + len) % 8 == 0, `last` points one byte past the last
+            // in-range byte, so it must not be dereferenced (would be an
+            // out-of-bounds write). Mirror the guard used in count_in_range().
+            if (last < &m_data[size_in_bytes()]) {
+                if constexpr (verify_that_all_bits_flip) {
+                    if constexpr (VALUE) {
+                        VERIFY((*last & byte_mask) == 0);
+                    } else {
+                        VERIFY((*last & byte_mask) == byte_mask);
+                    }
                 }
+                if constexpr (VALUE)
+                    *last |= byte_mask;
+                else
+                    *last &= ~byte_mask;
             }
-            if constexpr (VALUE)
-                *last |= byte_mask;
-            else
-                *last &= ~byte_mask;
             if (++first < last) {
                 if constexpr (VALUE)
                     __builtin_memset(first, 0xFF, last - first);

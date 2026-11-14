@@ -173,7 +173,7 @@ We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of r
 2. The family name string is not already taken for any block or character devices.
 3. The family name string is informative and short.
 4. The family name string is written in CamelCase name when inserted to the appropriate
-   enum (either CharacterDeviceFamily or BlockDeviceNumber).
+   enum (either CharacterDeviceFamily or BlockDeviceFamily).
 5. The family name string is written in snake_case name when inserted to the appropriate
    to-StringView function (`character_device_family_to_string_view` or `block_device_family_to_string_view`) with the actual allocation, for example:
     ```c++
