@@ -27,6 +27,10 @@ public:
     // ^Stream
     virtual ErrorOr<Bytes> read_some(Bytes bytes) override
     {
+        // Reading zero bytes is a no-op. Bail out early so we never index or
+        // slice an empty span below (which would be an out-of-bounds access).
+        if (bytes.empty())
+            return bytes;
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();
             auto freshly_read_bytes = TRY(m_stream->read_some(bytes.slice(1)));

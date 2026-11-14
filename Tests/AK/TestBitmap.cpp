@@ -151,6 +151,40 @@ TEST_CASE(set_range)
     }
 }
 
+TEST_CASE(set_range_byte_boundary)
+{
+    // These exercise set_range() where (start + len) lands exactly on a byte
+    // boundary, i.e. the case that used to dereference one byte past the end of
+    // m_data (off-by-one heap overflow). Run with a sanitizer to catch the OOB.
+    for (size_t size : { 8u, 16u, 24u, 32u, 64u, 128u }) {
+        // Whole-bitmap, byte-aligned set.
+        auto bitmap = MUST(Bitmap::create(size, false));
+        bitmap.set_range(0, size, true);
+        EXPECT_EQ(bitmap.count_slow(true), size);
+        for (size_t i = 0; i < size; i++)
+            EXPECT_EQ(bitmap.get(i), true);
+
+        // Whole-bitmap, byte-aligned clear.
+        auto cleared = MUST(Bitmap::create(size, true));
+        cleared.set_range(0, size, false);
+        EXPECT_EQ(cleared.count_slow(false), size);
+        for (size_t i = 0; i < size; i++)
+            EXPECT_EQ(cleared.get(i), false);
+    }
+
+    // Partial range that ends exactly on a byte boundary (leaves the trailing
+    // bits untouched), e.g. size 24 with set_range(0, 16).
+    {
+        auto bitmap = MUST(Bitmap::create(24, false));
+        bitmap.set_range(0, 16, true);
+        EXPECT_EQ(bitmap.count_slow(true), 16u);
+        for (size_t i = 0; i < 16; i++)
+            EXPECT_EQ(bitmap.get(i), true);
+        for (size_t i = 16; i < 24; i++)
+            EXPECT_EQ(bitmap.get(i), false);
+    }
+}
+
 TEST_CASE(find_first_fit)
 {
     {
