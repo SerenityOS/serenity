@@ -104,6 +104,10 @@ private:
     Coroutine<void> async_stream_std_data(NonnullRefPtr<Session>, Core::File&, F sender);
     Coroutine<void> async_stream_data_to_subsystem(NonnullRefPtr<Session>);
 
+    ErrorOr<void> spawn_child_for_session(NonnullRefPtr<Session> const&, Span<StringView> arguments);
+    ErrorOr<void> spawn_child_with_pipes(NonnullRefPtr<Session> const&, Span<StringView> arguments);
+    ErrorOr<void> spawn_child_with_pty(NonnullRefPtr<Session> const&, Span<StringView> arguments);
+
     ErrorOr<void> manage_child_death();
     ErrorOr<void> close_session_if_needed(Session&);
 

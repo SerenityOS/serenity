@@ -31,9 +31,9 @@ void ChildManagingSystem::close_stdin_if_required(Session const& session) const
         stdin_->close();
 }
 
-ErrorOr<ExecData> ExecData::create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr)
+ErrorOr<PipeChild> PipeChild::create(Core::Process&& process, int fd_stdin, int fd_stdout, int fd_stderr)
 {
-    ExecData exec_data = {
+    PipeChild child = {
         ChildManagingSystem {
             .stdin_ = TRY(Core::File::adopt_fd(fd_stdin, Core::File::OpenMode::Write)),
             .stdout_ = TRY(Core::File::adopt_fd(fd_stdout, Core::File::OpenMode::Read)),
@@ -43,34 +43,34 @@ ErrorOr<ExecData> ExecData::create(Core::Process&& process, int fd_stdin, int fd
         TRY(Core::File::adopt_fd(fd_stderr, Core::File::OpenMode::Read)),
     };
 
-    TRY(exec_data.stdin_->set_blocking(false));
-    TRY(exec_data.stdout_->set_blocking(false));
-    TRY(exec_data.stderr_->set_blocking(false));
+    TRY(child.stdin_->set_blocking(false));
+    TRY(child.stdout_->set_blocking(false));
+    TRY(child.stderr_->set_blocking(false));
 
-    return exec_data;
+    return child;
 }
 
-bool ExecData::is_ready_to_be_closed() const
+bool PipeChild::is_ready_to_be_closed() const
 {
     return exit_status.has_value() && stdout_->is_eof() && stderr_->is_eof();
 }
 
-ErrorOr<Shell> Shell::create(pid_t child, int fd_pty)
+ErrorOr<PtyChild> PtyChild::create(pid_t child_pid, int fd_pty)
 {
-    Shell shell = {
+    PtyChild child = {
         ChildManagingSystem {
             .stdin_ = TRY(Core::File::adopt_fd(fd_pty, Core::File::OpenMode::Write)),
             .stdout_ = TRY(Core::File::adopt_fd(fd_pty, Core::File::OpenMode::Read, Core::File::ShouldCloseFileDescriptor::No)),
-            .child_pid = child,
+            .child_pid = child_pid,
         },
     };
 
-    TRY(shell.stdin_->set_blocking(false));
+    TRY(child.stdin_->set_blocking(false));
 
-    return shell;
+    return child;
 }
 
-bool Shell::is_ready_to_be_closed() const
+bool PtyChild::is_ready_to_be_closed() const
 {
     return exit_status.has_value() && (stdout_->is_eof() || received_io_error);
 }
@@ -97,7 +97,7 @@ int Session::exit_status() const
 {
     return system.visit(
         [](auto const&) { return 0; },
-        [](ExecData const& exec_data) { return *exec_data.exit_status; });
+        []<DerivedFrom<ChildManagingSystem> T>(T const& child) { return *child.exit_status; });
 }
 
 }
