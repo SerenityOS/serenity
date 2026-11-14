@@ -210,7 +210,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`luv`](luv/)                                   | Bare libuv bindings for lua                                   | 1.53.0-1              | https://github.com/luvit/luv                                         |
 | [`lxt`](lxt/)                                   | linuXtree - an XTree Gold clone                               | 1.3c                  | http://stahlke.org/dan/lxt/                                          |
 | [`lynx`](lynx/)                                 | Lynx web browser                                              | 2.9.3                 | https://lynx.invisible-island.net/                                   |
-| [`lz4`](lz4/)                                   | lz4 - Extremely Fast Compression algorithm                    | 1.10.0                | https://github.com/lz4/lz4                                           |
+| [`lz4`](lz4/)                                   | lz4 - Extremely Fast Compression algorithm                    | 1.11.1                | https://github.com/lz4/lz4                                           |
 | [`lzo`](lzo/)                                   | LZO lossless data compression algorithm                       | 2.10                  | https://www.oberhumer.com/opensource/lzo/                            |
 | [`lzop`](lzop/)                                 | LZO lossless data compression utility                         | 1.04                  | https://www.lzop.org/                                                |
 | [`m4`](m4/)                                     | GNU M4                                                        | 1.4.21                | https://www.gnu.org/software/m4/                                     |
