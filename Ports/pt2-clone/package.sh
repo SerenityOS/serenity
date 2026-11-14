@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='pt2-clone'
-version='1.92'
+version='1.93'
 files=(
-    "https://github.com/8bitbubsy/pt2-clone/archive/v${version}.tar.gz#21a27f87f44aef6421f7cfa6fc9925e783dba88c6c2270c1170360639ed8d620"
+    "https://github.com/8bitbubsy/pt2-clone/archive/v${version}.tar.gz#e5e5b9f2836f0482be3aef12d65229159e8024dc61e0339749e79f5641d3b0b8"
 )
 useconfigure='true'
 depends=(
