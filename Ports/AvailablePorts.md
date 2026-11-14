@@ -295,7 +295,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`RetroArch`](RetroArch/)                       | RetroArch                                                     | 1.22.2                | https://www.retroarch.com                                            |
 | [`RISCVEmu`](RISCVEmu/)                         | A Basic C++ RISC-V Emulator                                   | ad8ad6a               | https://github.com/IdanHo/RISCVEmu                                   |
 | [`rizin`](rizin/)                               | Rizin                                                         | 0.9.1                 | https://rizin.re/                                                    |
-| [`rsync`](rsync/)                               | rsync                                                         | 3.5.1                 | https://rsync.samba.org/                                             |
+| [`rsync`](rsync/)                               | rsync                                                         | 3.5.2                 | https://rsync.samba.org/                                             |
 | [`rubberband`](rubberband/)                     | Rubberband                                                    | 4.0.0                 | https://breakfastquay.com/rubberband/                                |
 | [`ruby`](ruby/)                                 | Ruby                                                          | 3.2.2                 | https://www.ruby-lang.org/                                           |
 | [`rvvm`](rvvm/)                                 | RVVM - The RISC-V Virtual Machine                             | 0.6                   | https://github.com/LekKit/RVVM                                       |
