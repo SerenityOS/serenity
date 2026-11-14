@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='tree-sitter'
-version='0.27.1'
+version='0.27.2'
 useconfigure='true'
 files=(
-    "https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v${version}.tar.gz#982cd3d4d9eb7be18c243240a622423fd2e4ecb4bec2cd98832c2f3fa1f0f333"
+    "https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v${version}.tar.gz#356528363bf7fbad12a2cfeb5a2678c0118ef886a4d69ad9a379db5fdef0735f"
 )
 
 configopts=(
