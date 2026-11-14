@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='harfbuzz'
-version='15.0.0'
+version='15.1.0'
 files=(
-    "https://github.com/harfbuzz/harfbuzz/releases/download/${version}/harfbuzz-${version}.tar.xz#968536e9abd782f07f7954044c0c4020199fcdd39b41d221ec42d2a3be4a44df"
+    "https://github.com/harfbuzz/harfbuzz/releases/download/${version}/harfbuzz-${version}.tar.xz#0fc7c565443a5f4be7da65ac5ee5bd737d9b158dc908708b7689a0a5796b0c8d"
 )
 useconfigure='true'
 depends=("freetype" "libicu")
