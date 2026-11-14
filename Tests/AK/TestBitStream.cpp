@@ -132,6 +132,26 @@ TEST_CASE(big_endian_bit_stream_input_output_match)
     }
 }
 
+TEST_CASE(big_endian_read_some_empty_buffer_with_pending_byte)
+{
+    // Reading zero bytes must not index/slice an empty span, even when a
+    // byte-aligned pending byte is buffered from a prior bit read.
+    Array<u8, 1> const test_data { 0xA5 };
+    auto memory_stream = make<FixedMemoryStream>(test_data);
+    auto bit_stream = make<BigEndianInputBitStream>(move(memory_stream));
+
+    // Leave a byte-aligned pending byte in the buffer.
+    MUST(bit_stream->read_bits<u8>(3));
+
+    Array<u8, 1> buffer {};
+    auto result = MUST(bit_stream->read_some({ buffer.data(), 0 }));
+    EXPECT_EQ(result.size(), 0u);
+
+    // Sanity check that the pending byte is still intact afterwards.
+    auto value = MUST(bit_stream->read_bits<u8>(5));
+    EXPECT_EQ(value, 0b00101u);
+}
+
 TEST_CASE(big_endian_bits_until_next_byte_boundary)
 {
     auto memory_stream = make<AllocatingMemoryStream>();
