@@ -257,13 +257,13 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
     if (client_public_key.size() != 32)
         return Error::from_string_literal("Expected 32 byte ECDH public key");
 
-    m_key_exchange_data.client_ephemeral_publickey = client_public_key;
+    m_key_exchange_data.client_exchange_blob = client_public_key;
 
     // "Generate ephemeral key pair."
     Crypto::Curves::X25519 curve;
     auto private_key = TRY(curve.generate_private_key());
     auto public_key = TRY(curve.generate_public_key(private_key));
-    m_key_exchange_data.server_ephemeral_publickey = public_key;
+    m_key_exchange_data.server_exchange_blob = public_key;
 
     // "Compute shared secret."
     auto shared_secret = TRY(curve.compute_coordinate(private_key, client_public_key));
@@ -289,7 +289,7 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
 
     TRY(stream.write_value(to_underlying(MessageID::KEX_ECDH_REPLY)));
     TRY(m_key_exchange_data.server_public_host_key.encode(stream));
-    TRY(encode_string(stream, m_key_exchange_data.server_ephemeral_publickey));
+    TRY(encode_string(stream, m_key_exchange_data.server_exchange_blob));
     TRY(add_ed25519_hash_signature(stream, hash.bytes()));
 
     TRY(write_packet(TRY(stream.read_until_eof())));
