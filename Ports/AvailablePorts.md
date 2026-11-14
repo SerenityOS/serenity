@@ -87,7 +87,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`fluidsynth`](fluidsynth/)                     | fluidsynth                                                    | 2.6.2                 | https://www.fluidsynth.org/                                          |
 | [`fontconfig`](fontconfig/)                     | Fontconfig                                                    | 2.18.3                | https://www.freedesktop.org/wiki/Software/fontconfig/                |
 | [`fotaq`](fotaq/)                               | Flight of the Amazon Queen                                    | 1.0                   | https://www.scummvm.org/games/#games-queen                           |
-| [`freeciv`](freeciv/)                           | Freeciv                                                       | 3.2.6                 | http://freeciv.org/                                                  |
+| [`freeciv`](freeciv/)                           | Freeciv                                                       | 3.2.7                 | http://freeciv.org/                                                  |
 | [`freedink`](freedink/)                         | FreeDink                                                      | 109.6                 | https://www.gnu.org/software/freedink/                               |
 | [`freetype`](freetype/)                         | FreeType                                                      | 2.15.0                | https://www.freetype.org/                                            |
 | [`fribidi`](fribidi/)                           | GNU FriBidi                                                   | 1.0.18                | https://github.com/fribidi/fribidi                                   |
