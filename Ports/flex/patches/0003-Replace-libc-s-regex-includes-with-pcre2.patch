@@ -8,11 +8,11 @@ Subject: [PATCH] Replace libc's regex includes with pcre2
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/flexdef.h b/src/flexdef.h
-index 9dac654..2bdf9fb 100644
+index b2ec41d610ce4542188f708db4b6e47ac3675efc..1bfa7bd152dfb7bd59e68562493a17846f3bebc7 100644
 --- a/src/flexdef.h
 +++ b/src/flexdef.h
-@@ -72,7 +72,7 @@
- #include <stdbool.h>
+@@ -84,7 +84,7 @@
+ #endif
  #include <stdarg.h>
  /* Required: regcomp(), regexec() and regerror() in <regex.h> */
 -#include <regex.h>

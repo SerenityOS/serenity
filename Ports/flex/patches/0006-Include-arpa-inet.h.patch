@@ -9,10 +9,10 @@ FIXME: This patch does not have any accompanying information.
  1 file changed, 2 insertions(+)
 
 diff --git a/src/tables.c b/src/tables.c
-index 980d2e9..0824a7f 100644
+index 43f100f3880c2bbded054a30689ed5a84f06abf1..72e7c4e160b1d6145c04f9e295ce0ab6a4e6ae49 100644
 --- a/src/tables.c
 +++ b/src/tables.c
-@@ -33,6 +33,8 @@
+@@ -35,6 +35,8 @@
   */
  
  

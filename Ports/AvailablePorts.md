@@ -83,7 +83,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`flare-engine`](flare-engine/)                 | Flare (engine)                                                | 1.15                  | https://flarerpg.org/                                                |
 | [`flare-game`](flare-game/)                     | Flare (game)                                                  | 1.15                  | https://flarerpg.org/                                                |
 | [`flatbuffers`](flatbuffers/)                   | Flatbuffers                                                   | 25.12.19              | https://github.com/google/flatbuffers                                |
-| [`flex`](flex/)                                 | flex                                                          | 2.6.4                 | https://github.com/westes/flex                                       |
+| [`flex`](flex/)                                 | flex                                                          | 2.6.11                | https://github.com/westes/flex                                       |
 | [`fluidsynth`](fluidsynth/)                     | fluidsynth                                                    | 2.6.1                 | https://www.fluidsynth.org/                                          |
 | [`fontconfig`](fontconfig/)                     | Fontconfig                                                    | 2.18.3                | https://www.freedesktop.org/wiki/Software/fontconfig/                |
 | [`fotaq`](fotaq/)                               | Flight of the Amazon Queen                                    | 1.0                   | https://www.scummvm.org/games/#games-queen                           |
