@@ -11,19 +11,18 @@ On Serenity, they are provided by a separate library (the libfts port)
 that was originally intended for musl-based Linux systems.
 This patch makes nnn link against this library.
 ---
- Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Makefile | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/Makefile b/Makefile
-index b6930330be77f9f2f252a96ba9b3e727ddfdc5aa..955965aad67967a5acd73822647b2ce11d4a819e 100644
+index 4c282d600d20db93156afc05f73e5f5bcb3edd84..5fc5e3d74d362424d1f13aec3e6f5ba5a9776c16 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -59,7 +59,7 @@ ifeq ($(strip $(O_NORL)),1)
- else ifeq ($(strip $(O_STATIC)),1)
- 	CPPFLAGS += -DNORL
+@@ -61,6 +61,7 @@ else ifeq ($(strip $(O_STATIC)),1)
  else
--	LDLIBS += -lreadline
-+	LDLIBS += -lreadline -lfts
+ 	LDLIBS += -lreadline
  endif
++LDLIBS += -lfts
  
- ifeq ($(strip $(O_PCRE)),1)
+ ifeq ($(strip $(O_PCRE2)),1)
+ 	CPPFLAGS += -DPCRE2

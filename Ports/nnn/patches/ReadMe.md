@@ -1,6 +1,6 @@
 # Patches for nnn on SerenityOS
 
-## `0001-Remove-needless-include-of-ftw.patch`
+## `0001-Remove-needless-include-of-ftw.h.patch`
 
 Remove needless include of ftw.h
 
