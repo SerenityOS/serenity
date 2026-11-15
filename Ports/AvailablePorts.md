@@ -167,7 +167,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`liblzf`](liblzf/)                             | LibLZF is a very small data compression library               | 3.6                   | http://software.schmorp.de/pkg/liblzf.html                           |
 | [`libmad`](libmad/)                             | libmad                                                        | 0.16.5                | https://codeberg.org/tenacityteam/libmad                             |
 | [`libmikmod`](libmikmod/)                       | libmikmod                                                     | 3.3.16                | http://mikmod.sourceforge.net/                                       |
-| [`libmodplug`](libmodplug/)                     | libmodplug                                                    | 0.8.9.0               | http://modplug-xmms.sourceforge.net/                                 |
+| [`libmodplug`](libmodplug/)                     | libmodplug                                                    | 0.8.9.2               | http://modplug-xmms.sourceforge.net/                                 |
 | [`libmpeg2`](libmpeg2/)                         | libmpeg2                                                      | 0.5.1                 | https://libmpeg2.sourceforge.io/                                     |
 | [`libmpg123`](libmpg123/)                       | libmpg123                                                     | 1.33.7                | https://www.mpg123.de/                                               |
 | [`libmt32emu`](libmt32emu/)                     | libmt32emu                                                    | 2.8.6                 | https://github.com/munt/munt                                         |
