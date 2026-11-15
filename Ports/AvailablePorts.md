@@ -329,7 +329,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`ssmtp`](ssmtp/)                               | sSMTP is a simple MTA                                         | 2.64-11               | https://wiki.debian.org/sSMTP                                        |
 | [`stb`](stb/)                                   | stb single-file public domain libraries for C/C++             | 2e2bef4               | https://github.com/nothings/stb                                      |
 | [`stockfish`](stockfish/)                       | Stockfish: A free and strong UCI chess engine                 | 19                    | https://github.com/official-stockfish/Stockfish                      |
-| [`stress-ng`](stress-ng/)                       | stress-ng                                                     | 0.16.04               | https://github.com/ColinIanKing/stress-ng                            |
+| [`stress-ng`](stress-ng/)                       | stress-ng                                                     | 0.22.02               | https://github.com/ColinIanKing/stress-ng                            |
 | [`Super-Mario`](Super-Mario/)                   | Super-Mario Clone                                             | 7293c07               | https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp              |
 | [`SuperTuxKart`](SuperTuxKart/)                 | Super Tux Kart                                                | 1.5                   | https://supertuxkart.net/                                            |
 | [`tar`](tar/)                                   | GNU tar                                                       | 1.35                  | https://www.gnu.org/software/tar/                                    |

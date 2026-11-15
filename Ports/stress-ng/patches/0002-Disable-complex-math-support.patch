@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 14 Nov 2026 08:53:07 +0000
+Subject: [PATCH] Disable complex math support
+
+We have complex.h, but it's missing a bunch of functions.
+---
+ Makefile.config | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/Makefile.config b/Makefile.config
+index 2554b10d9fd0ac34b06c48d2187d1b3ef3223c12..efb3ccc41f7e33de8403cb962557c9b319c0fc7e 100644
+--- a/Makefile.config
++++ b/Makefile.config
+@@ -722,7 +722,6 @@ BSD_WCHAR_H:
+ 	$(call check_header,bsd/wchar.h,HAVE_BSD_WCHAR_H)
+ 
+ COMPLEX_H:
+-	$(call check_header,complex.h,HAVE_COMPLEX_H)
+ 
+ WCHAR_H:
+ 	$(call check_header,wchar.h,HAVE_WCHAR_H)
+@@ -2051,7 +2050,6 @@ BF16:
+ 	$(call check_float,__bf16,HAVE__bf16,__bf16)
+ 
+ COMPLEX:
+-	$(call check,test-complex,HAVE_COMPLEX,complex)
+ 
+ CPU_SET_T:
+ 	$(call check,test-cpu_set_t,HAVE_CPU_SET_T,cpu_set_t)

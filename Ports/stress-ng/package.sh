@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='stress-ng'
-version='0.16.04'
+version='0.22.02'
 files=(
-    "https://github.com/ColinIanKing/stress-ng/archive/V${version}.tar.gz#3453719508e9e02c57a736c154408538372d078be7dcf8e0165d37a821cdba45"
+    "https://github.com/ColinIanKing/stress-ng/archive/V${version}.tar.gz#860004ce7484311b3296fc52796fbbc34dfb7f644a769bbd4e03935b7a1b0ccb"
 )
 depends=(
     'zlib'

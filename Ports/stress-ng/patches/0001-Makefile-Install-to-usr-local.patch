@@ -8,12 +8,12 @@ Subject: [PATCH] Makefile: Install to /usr/local
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 541a20f29091e543fc8af7dbb04bcab7b68e551d..e05f0102b84d30867b7b93ab0d747b566da5023a 100644
+index f47492061e33d6b3a6966cc96c0ff4d8ceb68f2c..4d1f8f4cdbed5be50a130a7214035103867f9c30 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -124,10 +124,10 @@ override LDFLAGS += -static -z muldefs
- override CFLAGS += -DBUILD_STATIC
- endif
+@@ -335,10 +335,10 @@ override LDFLAGS := $(LDFLAGS)
+ override VNNI_CFLAGS := $(VNNI_CFLAGS)
+ override CFLAGS := $(CFLAGS) -std=gnu99
  
 -BINDIR=/usr/bin
 -MANDIR=/usr/share/man/man1
