@@ -275,7 +275,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`php`](php/)                                   | PHP                                                           | 8.5.12                | https://www.php.net/                                                 |
 | [`pixman`](pixman/)                             | pixman                                                        | 0.46.4                | http://pixman.org                                                    |
 | [`pkgconf`](pkgconf/)                           | pkgconf                                                       | 3.0.11                | https://github.com/pkgconf/pkgconf                                   |
-| [`poppler`](poppler/)                           | Poppler is a PDF rendering library                            | 24.02.0               | https://poppler.freedesktop.org/                                     |
+| [`poppler`](poppler/)                           | Poppler is a PDF rendering library                            | 26.11.0               | https://poppler.freedesktop.org/                                     |
 | [`potrace`](potrace/)                           | Bitmap tracing utility                                        | 1.16                  | https://potrace.sourceforge.net/                                     |
 | [`powdertoy`](powdertoy/)                       | The Powder Toy                                                | 96.2.350              | https://powdertoy.co.uk/                                             |
 | [`prboom-plus`](prboom-plus/)                   | PrBoom+                                                       | 2.6.66                | https://prboom-plus.sourceforge.io/                                  |
