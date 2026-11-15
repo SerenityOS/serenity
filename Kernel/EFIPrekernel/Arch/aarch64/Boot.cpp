@@ -184,8 +184,6 @@ void arch_prepare_boot(void* root_page_table, BootInfo& boot_info)
     Aarch64::ID_AA64MMFR0_EL1 feature_register = Aarch64::ID_AA64MMFR0_EL1::read();
     tcr_el1.IPS = feature_register.PARange;
 
-    Aarch64::TCR_EL1::write(tcr_el1);
-
     // System Control Register value for EL1 with MMU enabled
     Aarch64::SCTLR_EL1 sctlr_el1_mmu_on = Aarch64::SCTLR_EL1::default_value();
     sctlr_el1_mmu_on.M = 1; // Enable MMU
