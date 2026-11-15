@@ -3,37 +3,19 @@ From: Linus Groh <mail@linusgroh.de>
 Date: Wed, 15 Apr 2020 14:23:25 +0100
 Subject: [PATCH] Don't build the docs and the demo
 
-- docs - segfault during make :/
-- demo - x86_64-serenity-gcc: error: unrecognized command line option '-rdynamic'
+Both run cross-compiled binaries on the host.
 ---
- Makefile.am | 5 ++++-
  Makefile.in | 2 +-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Makefile.am b/Makefile.am
-index 08cbf1ccc30eaaaa1d57eccdef4b8d3d7b355118..8ca4cac24374ea4ea42646c9ed14b8e33fd1f7bb 100644
---- a/Makefile.am
-+++ b/Makefile.am
-@@ -1,7 +1,10 @@
- ## Process this file with automake to produce Makefile.in -*-Makefile-*-
- AUTOMAKE_OPTIONS = foreign
- 
--SUBDIRS = config m4 term src docs man demo share
-+# Note: For the SerenityOS port of gnuplot, the following have been removed:
-+# docs - segfault during make :/
-+# demo - x86_64-serenity-gcc: error: unrecognized command line option '-rdynamic'
-+SUBDIRS = config m4 term src man share
- 
- EXTRA_DIST = BUGS Copyright FAQ.pdf INSTALL INSTALL.gnu \
- PATCHLEVEL PGPKEYS README RELEASE_NOTES \
 diff --git a/Makefile.in b/Makefile.in
-index d7a20e5a23ebf57192512b677613932fb633c51e..7fc8a3dff1b15eba351e05a6e153ff235130b004 100644
+index cfd2858039a6c5b23689a1b11864d86f4d92910c..0dd8572b663aba7f20cb3e91b8ae114008eb7de2 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -359,7 +359,7 @@ top_build_prefix = @top_build_prefix@
- top_builddir = @top_builddir@
+@@ -358,7 +358,7 @@ top_builddir = @top_builddir@
  top_srcdir = @top_srcdir@
  AUTOMAKE_OPTIONS = foreign
+ AM_DISTCHECK_DVI_TARGET = 
 -SUBDIRS = config m4 term src docs man demo share
 +SUBDIRS = config m4 term src man share
  EXTRA_DIST = BUGS Copyright FAQ.pdf INSTALL INSTALL.gnu \
