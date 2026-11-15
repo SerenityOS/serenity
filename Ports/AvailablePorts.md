@@ -290,7 +290,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`quake2`](quake2/)                             | QuakeII                                                       | 0.1                   | https://github.com/shamazmazum/quake2sdl                             |
 | [`quake3`](quake3/)                             | QuakeIII                                                      | 1.34                  | https://github.com/ioquake/ioq3                                      |
 | [`r0`](r0/)                                     | r0 (minimalistic commandline hexadecimal editor)              | 0.9                   | https://github.com/radareorg/r0                                      |
-| [`radare2`](radare2/)                           | radare2 reverse engineering framework                         | 5.7.6                 | https://github.com/radareorg/radare2                                 |
+| [`radare2`](radare2/)                           | radare2 reverse engineering framework                         | 6.2.6                 | https://github.com/radareorg/radare2                                 |
 | [`readline`](readline/)                         | GNU Readline Library                                          | 8.3                   | https://tiswww.case.edu/php/chet/readline/rltop.html                 |
 | [`RetroArch`](RetroArch/)                       | RetroArch                                                     | 1.22.2                | https://www.retroarch.com                                            |
 | [`RISCVEmu`](RISCVEmu/)                         | A Basic C++ RISC-V Emulator                                   | ad8ad6a               | https://github.com/IdanHo/RISCVEmu                                   |
