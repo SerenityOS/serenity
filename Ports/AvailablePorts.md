@@ -242,7 +242,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`ninja`](ninja/)                               | Ninja                                                         | 1.13.2                | https://ninja-build.org/                                             |
 | [`nippon`](nippon/)                             | Nippon Safes Inc.                                             | 1.0                   | https://www.scummvm.org/games/#games-nippon                          |
 | [`nlohmann-json`](nlohmann-json/)               | JSON for Modern C++                                           | 3.12.0                | https://json.nlohmann.me/                                            |
-| [`nnn`](nnn/)                                   | nnn file manager                                              | 4.8                   | https://github.com/jarun/nnn                                         |
+| [`nnn`](nnn/)                                   | nnn file manager                                              | 5.3                   | https://github.com/jarun/nnn                                         |
 | [`npiet`](npiet/)                               | Piet language interpreter                                     | 1.3f                  | https://www.bertnase.de/npiet/                                       |
 | [`npth`](npth/)                                 | New GNU Portable Threads Library                              | 1.8                   | https://gnupg.org/software/npth/index.html                           |
 | [`ntbtls`](ntbtls/)                             | The Not Too Bad TLS Library                                   | 0.3.2                 | https://gnupg.org/software/ntbtls/index.html                         |
