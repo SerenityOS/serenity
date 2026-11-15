@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 14 Nov 2026 08:31:34 +0000
+Subject: [PATCH] Use int for errno value
+
+On serenity ENOTSUP is provided via `enum ErrnoCode` instead of as a
+macro, so `auto` infers the wrong type.
+---
+ core/helpers.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/helpers.cpp b/core/helpers.cpp
+index 198cae07663a72fe8df550566dec88ec65e7b3c3..194e8f4937fda46dfc27544016919ec8c8f8af78 100644
+--- a/core/helpers.cpp
++++ b/core/helpers.cpp
+@@ -377,7 +377,7 @@ namespace {
+ 
+ bool SetRTPriorityPthread(int prio [[maybe_unused]])
+ {
+-    auto err = ENOTSUP;
++    int err = ENOTSUP;
+ #if defined(HAVE_PTHREAD_SETSCHEDPARAM) && !defined(__OpenBSD__)
+     /* Get the min and max priority for SCHED_RR. Limit the max priority to
+      * half, for now, to ensure the thread can't take the highest priority and

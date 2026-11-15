@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libopenal'
-version='1.24.3'
+version='1.25.2'
 workdir="openal-soft-${version}"
 depends=(
     'SDL2'
@@ -14,7 +14,7 @@ configopts=(
     '-DALSOFT_BACKEND_SDL2=ON'
 )
 files=(
-    "https://github.com/kcat/openal-soft/archive/refs/tags/${version}.tar.gz#7e1fecdeb45e7f78722b776c5cf30bd33934b961d7fd2a11e0494e064cc631ce"
+    "https://github.com/kcat/openal-soft/archive/refs/tags/${version}.tar.gz#fb27e5839aa11f0e5b9d33756965291fad5d6909ab928ea1f796f4a1a6877894"
 )
 
 configure() {
