@@ -215,6 +215,10 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
         TRY(copy_from_user(cmsg_buffer.data(), msg.msg_control, msg.msg_controllen));
         msg.msg_control = cmsg_buffer.data();
         for (struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+            // cmsg_len covers the header and its data, and has to fit in what is left of the control buffer.
+            size_t remaining_length = msg.msg_controllen - (reinterpret_cast<u8*>(cmsg) - cmsg_buffer.data());
+            if (cmsg->cmsg_len < CMSG_LEN(0) || cmsg->cmsg_len > remaining_length)
+                return EINVAL;
             if (socket.is_local() && cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
                 auto& local_socket = static_cast<LocalSocket&>(socket);
                 int* fds = (int*)CMSG_DATA(cmsg);
