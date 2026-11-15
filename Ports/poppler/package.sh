@@ -1,17 +1,19 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='poppler'
-version='24.02.0'
+version='26.11.0'
 version_data='0.4.12'
 files=(
-    "https://poppler.freedesktop.org/poppler-${version}.tar.xz#19187a3fdd05f33e7d604c4799c183de5ca0118640c88b370ddcf3136343222e"
+    "https://poppler.freedesktop.org/poppler-${version}.tar.xz#41c32680160addf5a8dd7a830e4869c01e9f6bee1abb91e44fabd1ba9d7828fb"
     "https://poppler.freedesktop.org/poppler-data-${version_data}.tar.gz#c835b640a40ce357e1b83666aabd95edffa24ddddd49b8daff63adb851cdab74"
 )
 depends=(
     'boost'
+    'brotli'
     'curl'
     'fontconfig'
     'freetype'
     'gpgme'
+    'harfbuzz'
     'lcms2'
     'libjpeg'
     'libpng'
