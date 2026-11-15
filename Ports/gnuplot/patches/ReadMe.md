@@ -4,6 +4,5 @@
 
 Don't build the docs and the demo
 
-- docs - segfault during make :/
-- demo - x86_64-serenity-gcc: error: unrecognized command line option '-rdynamic'
+Both run cross-compiled binaries on the host.
 
