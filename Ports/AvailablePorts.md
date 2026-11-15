@@ -173,7 +173,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`libmt32emu`](libmt32emu/)                     | libmt32emu                                                    | 2.8.6                 | https://github.com/munt/munt                                         |
 | [`libogg`](libogg/)                             | libogg                                                        | 1.3.6                 | https://github.com/xiph/ogg                                          |
 | [`liboggz`](liboggz/)                           | liboggz                                                       | 1.1.3                 | https://www.xiph.org/oggz/                                           |
-| [`libopenal`](libopenal/)                       | OpenAL soft                                                   | 1.24.3                | https://openal-soft.org/                                             |
+| [`libopenal`](libopenal/)                       | OpenAL soft                                                   | 1.25.2                | https://openal-soft.org/                                             |
 | [`libopus`](libopus/)                           | libopus                                                       | 1.6.1                 | https://opus-codec.org/                                              |
 | [`libphysfs`](libphysfs/)                       | PhysicsFS                                                     | 3.2.0                 | https://icculus.org/physfs/                                          |
 | [`libpng`](libpng/)                             | libpng                                                        | 1.6.59                | https://libpng.org/                                                  |
