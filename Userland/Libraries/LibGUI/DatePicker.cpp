@@ -4,14 +4,21 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringView.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/DatePicker.h>
-#include <LibGUI/DatePickerDialogGML.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 
 namespace GUI {
+
+static constexpr StringView s_date_picker_dialog_gml = [] {
+    static constexpr char raw[] = {
+#embed "DatePickerDialog.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 DatePicker::DatePicker(Window* parent_window, String const& title, Core::DateTime focused_date)
     : Dialog(parent_window)
@@ -24,7 +31,7 @@ DatePicker::DatePicker(Window* parent_window, String const& title, Core::DateTim
     set_title(title.to_byte_string());
 
     auto widget = set_main_widget<Widget>();
-    widget->load_from_gml(date_picker_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    widget->load_from_gml(s_date_picker_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& calendar = *widget->find_descendant_of_type_named<GUI::Calendar>("calendar_view");
     calendar.on_tile_click = [&]() {

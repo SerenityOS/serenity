@@ -8,7 +8,7 @@
 #include "CharacterMapWidget.h"
 #include "CharacterSearchWidget.h"
 #include <AK/StringUtils.h>
-#include <Applications/CharacterMap/CharacterMapWindowGML.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -25,9 +25,16 @@
 #include <LibGUI/Toolbar.h>
 #include <LibUnicode/CharacterTypes.h>
 
+static constexpr StringView s_character_map_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "CharacterMapWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 CharacterMapWidget::CharacterMapWidget()
 {
-    load_from_gml(character_map_window_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_character_map_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_toolbar = find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_font_name_label = find_descendant_of_type_named<GUI::Label>("font_name");

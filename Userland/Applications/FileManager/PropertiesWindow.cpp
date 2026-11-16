@@ -10,13 +10,8 @@
 #include <AK/GenericShorthands.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
+#include <AK/StringView.h>
 #include <Applications/FileManager/DirectoryView.h>
-#include <Applications/FileManager/PropertiesWindowArchiveTabGML.h>
-#include <Applications/FileManager/PropertiesWindowAudioTabGML.h>
-#include <Applications/FileManager/PropertiesWindowFontTabGML.h>
-#include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
-#include <Applications/FileManager/PropertiesWindowImageTabGML.h>
-#include <Applications/FileManager/PropertiesWindowPDFTabGML.h>
 #include <LibArchive/Zip.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/Directory.h>
@@ -50,6 +45,48 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+static constexpr StringView s_properties_window_archive_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "PropertiesWindowArchiveTab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_properties_window_audio_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "PropertiesWindowAudioTab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_properties_window_font_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "PropertiesWindowFontTab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_properties_window_general_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "PropertiesWindowGeneralTab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_properties_window_image_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "PropertiesWindowImageTab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_properties_window_pdf_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "PropertiesWindowPDFTab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(ByteString const& path, bool disable_rename, Window* parent)
 {
@@ -125,7 +162,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, bool disable_rename)
 {
     auto& general_tab = tab_widget.add_tab<GUI::Widget>("General"_string);
-    TRY(general_tab.load_from_gml(properties_window_general_tab_gml));
+    TRY(general_tab.load_from_gml(s_properties_window_general_tab_gml));
 
     m_icon = general_tab.find_descendant_of_type_named<GUI::ImageWidget>("icon");
 
@@ -262,7 +299,7 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
     auto zip = maybe_zip.release_value();
 
     auto& tab = tab_widget.add_tab<GUI::Widget>("Archive"_string);
-    TRY(tab.load_from_gml(properties_window_archive_tab_gml));
+    TRY(tab.load_from_gml(s_properties_window_archive_tab_gml));
 
     auto statistics = TRY(zip.calculate_statistics());
 
@@ -284,7 +321,7 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
     auto loader = loader_or_error.release_value();
 
     auto& tab = tab_widget.add_tab<GUI::Widget>("Audio"_string);
-    TRY(tab.load_from_gml(properties_window_audio_tab_gml));
+    TRY(tab.load_from_gml(s_properties_window_audio_tab_gml));
 
     tab.find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_byte_string(loader->format_name())));
     auto duration_seconds = loader->total_samples() / loader->sample_rate();
@@ -366,7 +403,7 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
     auto& typeface = font_info.typeface;
 
     auto& tab = tab_widget.add_tab<GUI::Widget>("Font"_string);
-    TRY(tab.load_from_gml(properties_window_font_tab_gml));
+    TRY(tab.load_from_gml(s_properties_window_font_tab_gml));
 
     String format_name;
     switch (font_info.format) {
@@ -411,7 +448,7 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
         return {};
 
     auto& tab = tab_widget.add_tab<GUI::Widget>("Image"_string);
-    TRY(tab.load_from_gml(properties_window_image_tab_gml));
+    TRY(tab.load_from_gml(s_properties_window_image_tab_gml));
 
     tab.find_descendant_of_type_named<GUI::Label>("image_type")->set_text(TRY(String::from_utf8(mime_type)));
     tab.find_descendant_of_type_named<GUI::Label>("image_size")->set_text(TRY(String::formatted("{} x {}", image_decoder->width(), image_decoder->height())));
@@ -520,7 +557,7 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
     }
 
     auto& tab = tab_widget.add_tab<GUI::Widget>("PDF"_string);
-    TRY(tab.load_from_gml(properties_window_pdf_tab_gml));
+    TRY(tab.load_from_gml(s_properties_window_pdf_tab_gml));
 
     tab.find_descendant_of_type_named<GUI::Label>("pdf_version")->set_text(TRY(String::formatted("{}.{}", document->version().major, document->version().minor)));
     tab.find_descendant_of_type_named<GUI::Label>("pdf_page_count")->set_text(String::number(document->get_page_count()));

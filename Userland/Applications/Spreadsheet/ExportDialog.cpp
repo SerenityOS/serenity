@@ -11,7 +11,7 @@
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
-#include <Applications/Spreadsheet/CSVExportGML.h>
+#include <AK/StringView.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
@@ -24,10 +24,17 @@
 #include <string.h>
 #include <unistd.h>
 
-// This is defined in ImportDialog.cpp, we can't include it twice, since the generated symbol is exported.
-extern StringView select_format_page_gml;
-
 namespace Spreadsheet {
+
+// This is defined in ImportDialog.cpp.
+extern StringView const g_select_format_page_gml;
+
+static constexpr StringView s_csv_export_gml = [] {
+    static constexpr char raw[] = {
+#embed "csv_export.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     : m_data(sheet.to_xsv())
@@ -39,7 +46,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
         "Please select the options for the csv file you wish to export to"sv)
                  .release_value_but_fixme_should_propagate_errors();
 
-    m_page->body_widget().load_from_gml(csv_export_gml).release_value_but_fixme_should_propagate_errors();
+    m_page->body_widget().load_from_gml(s_csv_export_gml).release_value_but_fixme_should_propagate_errors();
     m_page->set_is_final_page(true);
 
     m_delimiter_comma_radio = m_page->body_widget().find_descendant_of_type_named<GUI::RadioButton>("delimiter_comma_radio");
@@ -220,7 +227,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
 
         page->on_next_page = [] { return nullptr; };
 
-        TRY(page->body_widget().load_from_gml(select_format_page_gml));
+        TRY(page->body_widget().load_from_gml(g_select_format_page_gml));
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
         Vector<ByteString> supported_formats {

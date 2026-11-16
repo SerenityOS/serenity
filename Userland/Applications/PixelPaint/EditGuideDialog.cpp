@@ -5,13 +5,20 @@
  */
 
 #include "EditGuideDialog.h"
-#include <Applications/PixelPaint/EditGuideDialogGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {
+
+static constexpr StringView s_edit_guide_dialog_gml = [] {
+    static constexpr char raw[] = {
+#embed "EditGuideDialog.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, ByteString const& offset, Guide::Orientation orientation)
     : Dialog(parent_window)
@@ -24,7 +31,7 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, ByteString const& o
     set_resizable(false);
 
     auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(edit_guide_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(s_edit_guide_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto horizontal_radio = main_widget->find_descendant_of_type_named<GUI::RadioButton>("orientation_horizontal_radio");
     auto vertical_radio = main_widget->find_descendant_of_type_named<GUI::RadioButton>("orientation_vertical_radio");

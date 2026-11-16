@@ -8,8 +8,7 @@
 #include "Spreadsheet.h"
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
-#include <Applications/Spreadsheet/CSVImportGML.h>
-#include <Applications/Spreadsheet/FormatSelectionPageGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
@@ -24,6 +23,20 @@
 
 namespace Spreadsheet {
 
+extern StringView const g_select_format_page_gml = [] {
+    static constexpr char raw[] = {
+#embed "select_format_page.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_csv_import_gml = [] {
+    static constexpr char raw[] = {
+#embed "csv_import.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 CSVImportDialogPage::CSVImportDialogPage(StringView csv)
     : m_csv(csv)
 {
@@ -32,7 +45,7 @@ CSVImportDialogPage::CSVImportDialogPage(StringView csv)
         "Please select the options for the csv file you wish to import"sv)
                  .release_value_but_fixme_should_propagate_errors();
 
-    m_page->body_widget().load_from_gml(csv_import_gml).release_value_but_fixme_should_propagate_errors();
+    m_page->body_widget().load_from_gml(s_csv_import_gml).release_value_but_fixme_should_propagate_errors();
     m_page->set_is_final_page(true);
 
     m_delimiter_comma_radio = m_page->body_widget().find_descendant_of_type_named<GUI::RadioButton>("delimiter_comma_radio");
@@ -252,7 +265,7 @@ ErrorOr<Vector<NonnullRefPtr<Sheet>>, ByteString> ImportDialog::make_and_run_for
 
         page->on_next_page = [] { return nullptr; };
 
-        page->body_widget().load_from_gml(select_format_page_gml).release_value_but_fixme_should_propagate_errors();
+        page->body_widget().load_from_gml(g_select_format_page_gml).release_value_but_fixme_should_propagate_errors();
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
         Vector<ByteString> supported_formats {

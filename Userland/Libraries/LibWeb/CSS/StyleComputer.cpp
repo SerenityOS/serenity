@@ -15,6 +15,7 @@
 #include <AK/HashMap.h>
 #include <AK/Math/Exponentials.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -94,6 +95,26 @@ struct Traits<Web::CSS::FontFaceKey> : public DefaultTraits<Web::CSS::FontFaceKe
 }
 
 namespace Web::CSS {
+
+static constexpr unsigned char s_default_stylesheet_source_data[] = {
+#embed "Default.css"
+};
+static String const s_default_stylesheet_source = String::from_utf8_without_validation({ s_default_stylesheet_source_data, sizeof(s_default_stylesheet_source_data) });
+
+static constexpr unsigned char s_quirks_mode_stylesheet_source_data[] = {
+#embed "QuirksMode.css"
+};
+static String const s_quirks_mode_stylesheet_source = String::from_utf8_without_validation({ s_quirks_mode_stylesheet_source_data, sizeof(s_quirks_mode_stylesheet_source_data) });
+
+static constexpr unsigned char s_mathml_stylesheet_source_data[] = {
+#embed "../MathML/Default.css"
+};
+static String const s_mathml_stylesheet_source = String::from_utf8_without_validation({ s_mathml_stylesheet_source_data, sizeof(s_mathml_stylesheet_source_data) });
+
+static constexpr unsigned char s_svg_stylesheet_source_data[] = {
+#embed "../SVG/Default.css"
+};
+static String const s_svg_stylesheet_source = String::from_utf8_without_validation({ s_svg_stylesheet_source_data, sizeof(s_svg_stylesheet_source_data) });
 
 PropertyOwningCSSStyleDeclaration const& MatchingRule::declaration() const
 {
@@ -253,8 +274,7 @@ static CSSStyleSheet& default_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern String default_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), default_stylesheet_source));
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), s_default_stylesheet_source));
     }
     return *sheet;
 }
@@ -263,8 +283,7 @@ static CSSStyleSheet& quirks_mode_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern String quirks_mode_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), quirks_mode_stylesheet_source));
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), s_quirks_mode_stylesheet_source));
     }
     return *sheet;
 }
@@ -273,8 +292,7 @@ static CSSStyleSheet& mathml_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern String mathml_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), mathml_stylesheet_source));
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), s_mathml_stylesheet_source));
     }
     return *sheet;
 }
@@ -283,27 +301,21 @@ static CSSStyleSheet& svg_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern String svg_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), svg_stylesheet_source));
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), s_svg_stylesheet_source));
     }
     return *sheet;
 }
 
 Optional<String> StyleComputer::user_agent_style_sheet_source(StringView name)
 {
-    extern String default_stylesheet_source;
-    extern String quirks_mode_stylesheet_source;
-    extern String mathml_stylesheet_source;
-    extern String svg_stylesheet_source;
-
     if (name == "CSS/Default.css"sv)
-        return default_stylesheet_source;
+        return s_default_stylesheet_source;
     if (name == "CSS/QuirksMode.css"sv)
-        return quirks_mode_stylesheet_source;
+        return s_quirks_mode_stylesheet_source;
     if (name == "MathML/Default.css"sv)
-        return mathml_stylesheet_source;
+        return s_mathml_stylesheet_source;
     if (name == "SVG/Default.css"sv)
-        return svg_stylesheet_source;
+        return s_svg_stylesheet_source;
     return {};
 }
 

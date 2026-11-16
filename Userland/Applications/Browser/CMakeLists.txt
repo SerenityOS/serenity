@@ -5,13 +5,6 @@ serenity_component(
     DEPENDS BrowserSettings ImageDecoder RequestServer WebContent
 )
 
-stringify_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
-stringify_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
-stringify_gml(FindInPageWidget.gml FindInPageWidgetGML.h find_in_page_widget_gml)
-stringify_gml(History/HistoryWidget.gml HistoryWidgetGML.h history_widget_gml)
-stringify_gml(StorageWidget.gml StorageWidgetGML.h storage_widget_gml)
-stringify_gml(Tab.gml TabGML.h tab_gml)
-
 set(SOURCES
     BookmarksBarWidget.cpp
     BrowserWindow.cpp
@@ -29,15 +22,6 @@ set(SOURCES
     URLBox.cpp
     WindowActions.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    BrowserWindowGML.h
-    EditBookmarkGML.h
-    FindInPageWidgetGML.h
-    HistoryWidgetGML.h
-    StorageWidgetGML.h
-    TabGML.h
 )
 
 serenity_app(Browser ICON app-browser)

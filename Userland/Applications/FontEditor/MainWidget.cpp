@@ -13,8 +13,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
-#include <Applications/FontEditor/FontEditorWindowGML.h>
-#include <Applications/FontEditor/FontPreviewWindowGML.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -48,6 +47,20 @@
 namespace FontEditor {
 
 Resources g_resources;
+
+static constexpr StringView s_font_editor_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "FontEditorWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_font_preview_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "FontPreviewWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 static constexpr Array pangrams = {
     "quick fox jumps nightly above wizard"sv,
@@ -83,7 +96,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
     window->center_within(*this->window());
 
     auto main_widget = window->set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(font_preview_window_gml));
+    TRY(main_widget->load_from_gml(s_font_preview_window_gml));
 
     m_preview_label = find_descendant_of_type_named<GUI::Label>("preview_label");
     m_preview_label->set_font(m_font);
@@ -485,7 +498,7 @@ void MainWidget::update_action_text()
 
 ErrorOr<void> MainWidget::create_widgets()
 {
-    TRY(load_from_gml(font_editor_window_gml));
+    TRY(load_from_gml(s_font_editor_window_gml));
 
     m_font_metadata_groupbox = find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_container = find_descendant_of_type_named<GUI::Widget>("unicode_block_container");

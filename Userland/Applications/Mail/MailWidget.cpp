@@ -10,7 +10,7 @@
 #include "InboxModel.h"
 #include <AK/Base64.h>
 #include <AK/GenericLexer.h>
-#include <Applications/Mail/MailWindowGML.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -25,9 +25,16 @@
 #include <LibIMAP/MessageHeaderEncoding.h>
 #include <LibIMAP/QuotedPrintable.h>
 
+static constexpr StringView s_mail_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "MailWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 MailWidget::MailWidget()
 {
-    load_from_gml(mail_window_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_mail_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_mailbox_list = *find_descendant_of_type_named<GUI::TreeView>("mailbox_list");
     m_individual_mailbox_view = *find_descendant_of_type_named<GUI::TableView>("individual_mailbox_view");

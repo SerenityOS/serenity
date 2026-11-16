@@ -8,9 +8,6 @@ serenity_component(
 add_subdirectory(LanguageServers)
 add_subdirectory(LanguageClients)
 
-stringify_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
-stringify_gml(Dialogs/Git/GitCommitDialog.gml Dialogs/Git/GitCommitDialogGML.h git_commit_dialog_gml)
-
 set(SOURCES
     CodeDocument.cpp
     ClassViewWidget.cpp
@@ -47,11 +44,6 @@ set(SOURCES
     ToDoEntries.cpp
     ToDoEntriesWidget.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    Dialogs/Git/GitCommitDialogGML.h
-    Dialogs/NewProjectDialogGML.h
 )
 
 serenity_app(HackStudio ICON app-hack-studio)

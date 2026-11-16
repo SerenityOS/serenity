@@ -818,7 +818,6 @@ generate_css_implementation()
 
 set(GENERATED_SOURCES
     ARIA/AriaRoles.cpp
-    CSS/DefaultStyleSheetSource.cpp
     CSS/Enums.cpp
     CSS/GeneratedCSSStyleProperties.cpp
     CSS/GeneratedCSSStyleProperties.idl
@@ -827,10 +826,7 @@ set(GENERATED_SOURCES
     CSS/MediaFeatureID.cpp
     CSS/PropertyID.cpp
     CSS/PseudoClass.cpp
-    CSS/QuirksModeStyleSheetSource.cpp
     CSS/TransformFunctions.cpp
-    MathML/MathMLStyleSheetSource.cpp
-    SVG/SVGStyleSheetSource.cpp
     Worker/WebWorkerClientEndpoint.h
     Worker/WebWorkerServerEndpoint.h
 )

@@ -7,8 +7,15 @@
 
 #include "CharacterSearchWidget.h"
 #include "SearchCharacters.h"
-#include <Applications/CharacterMap/CharacterSearchWindowGML.h>
+#include <AK/StringView.h>
 #include <LibCore/Debounce.h>
+
+static constexpr StringView s_character_search_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "CharacterSearchWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 struct SearchResult {
     u32 code_point;
@@ -54,7 +61,7 @@ private:
 
 CharacterSearchWidget::CharacterSearchWidget()
 {
-    load_from_gml(character_search_window_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_character_search_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_search_input = find_descendant_of_type_named<GUI::TextBox>("search_input");
     m_results_table = find_descendant_of_type_named<GUI::TableView>("results_table");

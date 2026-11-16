@@ -18,7 +18,7 @@
 #include "ModeBilevelDialog.h"
 #include "ResizeImageDialog.h"
 #include <AK/String.h>
-#include <Applications/PixelPaint/PixelPaintWindowGML.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Debounce.h>
 #include <LibCore/MimeData.h>
@@ -37,10 +37,17 @@ namespace PixelPaint {
 
 IconBag g_icon_bag;
 
+static constexpr StringView s_pixel_paint_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "PixelPaintWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 MainWidget::MainWidget()
     : Widget()
 {
-    load_from_gml(pixel_paint_window_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_pixel_paint_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_toolbox = find_descendant_of_type_named<PixelPaint::ToolboxWidget>("toolbox");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");

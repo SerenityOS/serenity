@@ -10,7 +10,6 @@
 #include "PreviewWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringView.h>
-#include <Applications/ThemeEditor/WindowPreviewGML.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/MessageBox.h>
@@ -22,6 +21,13 @@ REGISTER_WIDGET(ThemeEditor, PreviewWidget);
 
 namespace ThemeEditor {
 
+static constexpr StringView s_window_preview_gml = [] {
+    static constexpr char raw[] = {
+#embed "Previews/WindowPreview.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 class MiniWidgetGallery final : public GUI::Widget {
     C_OBJECT_ABSTRACT(MiniWidgetGallery);
 
@@ -29,7 +35,7 @@ public:
     static ErrorOr<NonnullRefPtr<MiniWidgetGallery>> try_create()
     {
         auto gallery = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MiniWidgetGallery()));
-        TRY(gallery->load_from_gml(window_preview_gml));
+        TRY(gallery->load_from_gml(s_window_preview_gml));
 
         gallery->for_each_child_widget([](auto& child) {
             child.set_focus_policy(GUI::FocusPolicy::NoFocus);

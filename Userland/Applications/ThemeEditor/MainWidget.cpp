@@ -9,13 +9,7 @@
  */
 
 #include "MainWidget.h"
-#include <Applications/ThemeEditor/AlignmentPropertyGML.h>
-#include <Applications/ThemeEditor/ColorPropertyGML.h>
-#include <Applications/ThemeEditor/FlagPropertyGML.h>
-#include <Applications/ThemeEditor/MetricPropertyGML.h>
-#include <Applications/ThemeEditor/PathPropertyGML.h>
-#include <Applications/ThemeEditor/ThemeEditorGML.h>
-#include <Applications/ThemeEditor/WindowThemePropertyGML.h>
+#include <AK/StringView.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
@@ -35,6 +29,55 @@
 #include <LibGUI/Statusbar.h>
 
 namespace ThemeEditor {
+
+static constexpr StringView s_alignment_property_gml = [] {
+    static constexpr char raw[] = {
+#embed "AlignmentProperty.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_color_property_gml = [] {
+    static constexpr char raw[] = {
+#embed "ColorProperty.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_flag_property_gml = [] {
+    static constexpr char raw[] = {
+#embed "FlagProperty.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_metric_property_gml = [] {
+    static constexpr char raw[] = {
+#embed "MetricProperty.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_path_property_gml = [] {
+    static constexpr char raw[] = {
+#embed "PathProperty.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_theme_editor_gml = [] {
+    static constexpr char raw[] = {
+#embed "ThemeEditor.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_window_theme_property_gml = [] {
+    static constexpr char raw[] = {
+#embed "WindowThemeProperty.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 static PropertyTab const window_tab {
     "Windows"sv,
@@ -233,7 +276,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
 
     auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model), move(window_theme_model))));
 
-    TRY(main_widget->load_from_gml(theme_editor_gml));
+    TRY(main_widget->load_from_gml(s_theme_editor_gml));
     main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
     main_widget->m_property_tabs = main_widget->find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
     main_widget->m_statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
@@ -511,7 +554,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
             row_widget->set_fixed_height(22);
             TRY(property.role.visit(
                 [&](Gfx::AlignmentRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(alignment_property_gml));
+                    TRY(row_widget->load_from_gml(s_alignment_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -528,7 +571,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::ColorRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(color_property_gml));
+                    TRY(row_widget->load_from_gml(s_color_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -544,7 +587,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::FlagRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(flag_property_gml));
+                    TRY(row_widget->load_from_gml(s_flag_property_gml));
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
                     checkbox.set_text(TRY(String::from_utf8(to_string(role))));
@@ -558,7 +601,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::MetricRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(metric_property_gml));
+                    TRY(row_widget->load_from_gml(s_metric_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -574,7 +617,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::PathRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(path_property_gml));
+                    TRY(row_widget->load_from_gml(s_path_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -596,7 +639,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::WindowThemeRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(window_theme_property_gml));
+                    TRY(row_widget->load_from_gml(s_window_theme_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));

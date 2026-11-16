@@ -75,38 +75,6 @@ function (generate_css_implementation)
         arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/Properties.json"
     )
 
-    embed_as_string(
-        "DefaultStyleSheetSource.cpp"
-        "${LIBWEB_INPUT_FOLDER}/CSS/Default.css"
-        "CSS/DefaultStyleSheetSource.cpp"
-        "default_stylesheet_source"
-        NAMESPACE "Web::CSS"
-    )
-
-    embed_as_string(
-        "QuirksModeStyleSheetSource.cpp"
-        "${LIBWEB_INPUT_FOLDER}/CSS/QuirksMode.css"
-        "CSS/QuirksModeStyleSheetSource.cpp"
-        "quirks_mode_stylesheet_source"
-        NAMESPACE "Web::CSS"
-    )
-
-    embed_as_string(
-        "MathMLStyleSheetSource.cpp"
-        "${LIBWEB_INPUT_FOLDER}/MathML/Default.css"
-        "MathML/MathMLStyleSheetSource.cpp"
-        "mathml_stylesheet_source"
-        NAMESPACE "Web::CSS"
-    )
-
-    embed_as_string(
-        "SVGStyleSheetSource.cpp"
-        "${LIBWEB_INPUT_FOLDER}/SVG/Default.css"
-        "SVG/SVGStyleSheetSource.cpp"
-        "svg_stylesheet_source"
-        NAMESPACE "Web::CSS"
-    )
-
     set(CSS_GENERATED_TO_INSTALL
         "CSS/Enums.h"
         "CSS/GeneratedCSSStyleProperties.h"

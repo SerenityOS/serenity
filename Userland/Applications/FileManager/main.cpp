@@ -13,8 +13,8 @@
 #include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <AK/Try.h>
-#include <Applications/FileManager/FileManagerWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
@@ -55,6 +55,13 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+static constexpr StringView s_file_manager_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "FileManagerWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 using namespace FileManager;
 
@@ -600,7 +607,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     window->set_title("File Manager");
 
     auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(file_manager_window_gml));
+    TRY(widget->load_from_gml(s_file_manager_window_gml));
 
     auto& toolbar_container = *widget->find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     auto& main_toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("main_toolbar");

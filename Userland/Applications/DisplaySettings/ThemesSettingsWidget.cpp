@@ -7,7 +7,7 @@
 
 #include "ThemesSettingsWidget.h"
 #include <AK/QuickSort.h>
-#include <Applications/DisplaySettings/ThemesSettingsGML.h>
+#include <AK/StringView.h>
 #include <LibCore/Directory.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
@@ -18,6 +18,13 @@
 
 namespace DisplaySettings {
 
+static constexpr StringView s_themes_settings_gml = [] {
+    static constexpr char raw[] = {
+#embed "ThemesSettings.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 static ErrorOr<String> get_color_scheme_name_from_pathname(StringView color_scheme_path)
 {
     return TRY(String::from_byte_string(color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)));
@@ -26,7 +33,7 @@ static ErrorOr<String> get_color_scheme_name_from_pathname(StringView color_sche
 ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bool& background_settings_changed)
 {
     auto theme_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemesSettingsWidget(background_settings_changed)));
-    TRY(theme_settings_widget->load_from_gml(themes_settings_gml));
+    TRY(theme_settings_widget->load_from_gml(s_themes_settings_gml));
     TRY(theme_settings_widget->setup_interface());
 
     return theme_settings_widget;

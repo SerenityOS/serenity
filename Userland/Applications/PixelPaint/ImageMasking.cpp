@@ -5,8 +5,7 @@
  */
 
 #include "ImageMasking.h"
-#include <Applications/PixelPaint/ColorMaskingGML.h>
-#include <Applications/PixelPaint/LuminosityMaskingGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
@@ -18,6 +17,20 @@
 #include <LibGfx/Path.h>
 
 namespace PixelPaint {
+
+static constexpr StringView s_color_masking_gml = [] {
+    static constexpr char raw[] = {
+#embed "ColorMasking.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_luminosity_masking_gml = [] {
+    static constexpr char raw[] = {
+#embed "LuminosityMasking.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ImageMasking::ImageMasking(GUI::Window* parent_window, ImageEditor* editor, MaskingType masking_type)
     : GUI::Dialog(parent_window)
@@ -33,7 +46,7 @@ ImageMasking::ImageMasking(GUI::Window* parent_window, ImageEditor* editor, Mask
     m_editor->active_layer()->set_edit_mode(Layer::EditMode::Mask);
 
     if (m_masking_type == MaskingType::Luminosity) {
-        main_widget->load_from_gml(luminosity_masking_gml).release_value_but_fixme_should_propagate_errors();
+        main_widget->load_from_gml(s_luminosity_masking_gml).release_value_but_fixme_should_propagate_errors();
         set_title("Luminosity Mask");
         resize(300, 170);
 
@@ -73,7 +86,7 @@ ImageMasking::ImageMasking(GUI::Window* parent_window, ImageEditor* editor, Mask
     }
 
     if (m_masking_type == MaskingType::Color) {
-        main_widget->load_from_gml(color_masking_gml).release_value_but_fixme_should_propagate_errors();
+        main_widget->load_from_gml(s_color_masking_gml).release_value_but_fixme_should_propagate_errors();
 
         set_title("Color Mask");
         resize(300, 250);

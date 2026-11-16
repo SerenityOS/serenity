@@ -5,13 +5,20 @@
  */
 
 #include "ModeBilevelDialog.h"
-#include <Applications/PixelPaint/ModeBilevelDialogGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 
 namespace PixelPaint {
+
+static constexpr StringView s_mode_bilevel_dialog_gml = [] {
+    static constexpr char raw[] = {
+#embed "ModeBilevelDialog.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
     : Dialog(parent_window)
@@ -20,7 +27,7 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
     set_icon(parent_window->icon());
 
     auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(mode_bilevel_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(s_mode_bilevel_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto method_combobox = main_widget->find_descendant_of_type_named<GUI::ComboBox>("method_combobox");
     VERIFY(method_combobox);
