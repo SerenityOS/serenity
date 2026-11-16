@@ -216,6 +216,36 @@ TEST_CASE(fixed_memory_seeking_around)
     TRY_OR_FAIL(stream.read_until_filled(buffer));
 }
 
+TEST_CASE(fixed_memory_seek_rejects_out_of_bounds)
+{
+    auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(16));
+    FixedMemoryStream stream { ReadonlyBytes { stream_buffer.bytes() } };
+
+    // Seeking before the start used to wrap m_offset to a huge value, which
+    // allowed subsequent reads to access memory before the stream buffer.
+    EXPECT(stream.seek(-1, SeekMode::SetPosition).is_error());
+    EXPECT_EQ(stream.offset(), 0u);
+
+    TRY_OR_FAIL(stream.seek(4, SeekMode::SetPosition));
+    EXPECT(stream.seek(-5, SeekMode::FromCurrentPosition).is_error());
+    EXPECT_EQ(stream.offset(), 4u);
+
+    // Negative relative seeks that stay in range must still work.
+    TRY_OR_FAIL(stream.seek(-2, SeekMode::FromCurrentPosition));
+    EXPECT_EQ(stream.offset(), 2u);
+
+    // Seeking past the end must fail in every mode, including a positive
+    // offset from the end of the stream.
+    EXPECT(stream.seek(17, SeekMode::SetPosition).is_error());
+    EXPECT(stream.seek(16, SeekMode::FromCurrentPosition).is_error());
+    EXPECT(stream.seek(1, SeekMode::FromEndPosition).is_error());
+    EXPECT_EQ(stream.offset(), 2u);
+
+    // The end of the stream itself remains a valid position.
+    TRY_OR_FAIL(stream.seek(0, SeekMode::FromEndPosition));
+    EXPECT_EQ(stream.offset(), 16u);
+}
+
 BENCHMARK_CASE(fixed_memory_tell)
 {
     auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(10 * KiB));
