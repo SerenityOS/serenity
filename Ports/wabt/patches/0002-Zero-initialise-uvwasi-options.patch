@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gurkirat Singh <info@tbhaxor.com>
+Date: Mon, 16 Nov 2026 14:17:09 +0530
+Subject: [PATCH] Zero initialise uvwasi options
+
+---
+ src/tools/wasm-interp.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tools/wasm-interp.cc b/src/tools/wasm-interp.cc
+index 1c0ea9b6b278dcc9d1f6527f822734f97b21cc1e..ca2da3e3177eb0a32b9be091c633eb416f4fb0fe 100644
+--- a/src/tools/wasm-interp.cc
++++ b/src/tools/wasm-interp.cc
+@@ -362,7 +362,7 @@ static Result ReadAndRunModule(const char* module_filename) {
+   if (s_wasi) {
+ #if WITH_WASI
+     uvwasi_errno_t err;
+-    uvwasi_options_t init_options;
++    uvwasi_options_t init_options{};
+ 
+     std::vector<const char*> argv;
+     argv.push_back(module_filename);
