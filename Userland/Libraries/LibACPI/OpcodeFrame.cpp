@@ -16,61 +16,61 @@
 namespace ACPI::AML {
 
 // https://uefi.org/specs/ACPI/6.6/20_AML_Specification.html#aml-byte-stream-byte-values
-constexpr static Array<OperandType, 1> EMPTY_OPERANDS = { OperandType::End };
+constexpr static auto EMPTY_OPERANDS = to_array({ OperandType::End });
 
-constexpr static Array<OperandType, 3> SCOPE_OPERANDS = { OperandType::PackageLength, OperandType::NameString, OperandType::End };
-constexpr static Array<OperandType, 3> NAME_OPERANDS = { OperandType::NameString, OperandType::DataRefObject, OperandType::End };
+constexpr static auto SCOPE_OPERANDS = to_array({ OperandType::PackageLength, OperandType::NameString, OperandType::End });
+constexpr static auto NAME_OPERANDS = to_array({ OperandType::NameString, OperandType::DataRefObject, OperandType::End });
 
-constexpr static Array<OperandType, 2> BYTE_CONST_OPERANDS = { OperandType::ByteData, OperandType::End };
-constexpr static Array<OperandType, 2> WORD_CONST_OPERANDS = { OperandType::WordData, OperandType::End };
-constexpr static Array<OperandType, 2> DWORD_CONST_OPERANDS = { OperandType::DWordData, OperandType::End };
-constexpr static Array<OperandType, 2> QWORD_CONST_OPERANDS = { OperandType::QWordData, OperandType::End };
-constexpr static Array<OperandType, 2> STRING_CONST_OPERANDS = { OperandType::String, OperandType::End };
+constexpr static auto BYTE_CONST_OPERANDS = to_array({ OperandType::ByteData, OperandType::End });
+constexpr static auto WORD_CONST_OPERANDS = to_array({ OperandType::WordData, OperandType::End });
+constexpr static auto DWORD_CONST_OPERANDS = to_array({ OperandType::DWordData, OperandType::End });
+constexpr static auto QWORD_CONST_OPERANDS = to_array({ OperandType::QWordData, OperandType::End });
+constexpr static auto STRING_CONST_OPERANDS = to_array({ OperandType::String, OperandType::End });
 
-constexpr static Array<OperandType, 4> BUFFER_CONST_OPERANDS = {
+constexpr static auto BUFFER_CONST_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::TermArg,
     OperandType::ByteBuffer,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 6> PACKAGE_OPERANDS = {
+constexpr static auto PACKAGE_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::MarkAsCount,
     OperandType::ByteData,
     OperandType::RepeatNextCount,
     OperandType::PackageElement,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 5> ALIAS_OPERANDS = {
+constexpr static auto ALIAS_OPERANDS = to_array({
     OperandType::NameString,
     OperandType::NameString,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 4> METHOD_OPERANDS = {
+constexpr static auto METHOD_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::NameString,
     OperandType::ByteData,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 3> MUTEX_OPERANDS = {
+constexpr static auto MUTEX_OPERANDS = to_array({
     OperandType::NameString,
     OperandType::ByteData,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 5> OP_REGION_OPERANDS = {
+constexpr static auto OP_REGION_OPERANDS = to_array({
     OperandType::NameString,
     OperandType::ByteData,
     OperandType::TermArg,
     OperandType::TermArg,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 7> FIELD_OPERANDS = {
+constexpr static auto FIELD_OPERANDS = to_array({
     OperandType::MarkAsCount,
     OperandType::PackageLength,
     OperandType::NameString,
@@ -78,32 +78,32 @@ constexpr static Array<OperandType, 7> FIELD_OPERANDS = {
     OperandType::RepeatNextBytes,
     OperandType::FieldElement,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 3> DEVICE_OPERANDS = {
+constexpr static auto DEVICE_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::NameString,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 6> PROCESSOR_OPERANDS = {
+constexpr static auto PROCESSOR_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::NameString,
     OperandType::ByteData,
     OperandType::DWordData,
     OperandType::ByteData,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 5> POWER_RESOURCE_OPERANDS = {
+constexpr static auto POWER_RESOURCE_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::NameString,
     OperandType::ByteData,
     OperandType::WordData,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 8> INDEX_FIELD_OPERANDS = {
+constexpr static auto INDEX_FIELD_OPERANDS = to_array({
     OperandType::MarkAsCount,
     OperandType::PackageLength,
     OperandType::NameString,
@@ -112,47 +112,47 @@ constexpr static Array<OperandType, 8> INDEX_FIELD_OPERANDS = {
     OperandType::RepeatNextBytes,
     OperandType::IndexFieldElement,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 4> TARGET_BINARY_OPERANDS = {
+constexpr static auto TARGET_BINARY_OPERANDS = to_array({
     OperandType::TermArg,
     OperandType::TermArg,
     OperandType::Target,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 4> BINARY_OPERANDS = {
+constexpr static auto BINARY_OPERANDS = to_array({
     OperandType::TermArg,
     OperandType::TermArg,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 2> UNARY_OPERANDS = {
+constexpr static auto UNARY_OPERANDS = to_array({
     OperandType::TermArg,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 3> STORE_OPERANDS = {
+constexpr static auto STORE_OPERANDS = to_array({
     OperandType::TermArg,
     OperandType::SuperName,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 3> IF_OPERANDS = {
+constexpr static auto IF_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::TermArg,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 2> ELSE_OPERANDS = {
+constexpr static auto ELSE_OPERANDS = to_array({
     OperandType::PackageLength,
     OperandType::End,
-};
+});
 
-constexpr static Array<OperandType, 2> RETURN_OPERANDS = {
+constexpr static auto RETURN_OPERANDS = to_array({
     OperandType::TermArg,
     OperandType::End,
-};
+});
 
 static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opcode)
 {
