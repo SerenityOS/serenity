@@ -186,3 +186,11 @@ TEST_CASE(if_else)
     result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TIF7"sv, arguments));
     EXPECT_EQ(MUST(result.as<u64>()), 0x1ul);
 }
+
+TEST_CASE(alias)
+{
+    auto interpreter = TRY_OR_FAIL(load_test_table("alias.aml"sv));
+
+    auto result = TRY_OR_FAIL(interpreter->evaluate("\\_SB_.TST0"sv));
+    EXPECT_EQ(MUST(result.as<u64>()), 0x1234ul);
+}
