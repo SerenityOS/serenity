@@ -6,6 +6,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Checked.h>
 #include <AK/FixedArray.h>
 #include <AK/MemMem.h>
 #include <AK/MemoryStream.h>
@@ -68,26 +69,25 @@ ErrorOr<void> FixedMemoryStream::read_until_filled(AK::Bytes bytes)
 
 ErrorOr<size_t> FixedMemoryStream::seek(i64 offset, SeekMode seek_mode)
 {
+    Checked<i64> new_offset;
     switch (seek_mode) {
     case SeekMode::SetPosition:
-        if (offset > static_cast<i64>(m_bytes.size()))
-            return Error::from_string_view_or_print_error_and_return_errno("Offset past the end of the stream memory"sv, EINVAL);
-
-        m_offset = offset;
+        new_offset = offset;
         break;
     case SeekMode::FromCurrentPosition:
-        if (offset + static_cast<i64>(m_offset) > static_cast<i64>(m_bytes.size()))
-            return Error::from_string_view_or_print_error_and_return_errno("Offset past the end of the stream memory"sv, EINVAL);
-
-        m_offset += offset;
+        new_offset = static_cast<i64>(m_offset);
+        new_offset += offset;
         break;
     case SeekMode::FromEndPosition:
-        if (-offset > static_cast<i64>(m_bytes.size()))
-            return Error::from_string_view_or_print_error_and_return_errno("Offset past the start of the stream memory"sv, EINVAL);
-
-        m_offset = m_bytes.size() + offset;
+        new_offset = static_cast<i64>(m_bytes.size());
+        new_offset += offset;
         break;
     }
+
+    if (new_offset.has_overflow() || new_offset.value() < 0 || new_offset.value() > static_cast<i64>(m_bytes.size()))
+        return Error::from_string_view_or_print_error_and_return_errno("Offset outside of stream memory"sv, EINVAL);
+
+    m_offset = static_cast<size_t>(new_offset.value());
     return m_offset;
 }
 
