@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gurkirat Singh <info@tbhaxor.com>
+Date: Mon, 16 Nov 2026 14:17:42 +0530
+Subject: [PATCH] Provide uvwasi from Serenity Ports
+
+---
+ CMakeLists.txt | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b5a5da3445ad12966832c141e389608c74cc789c..fb919804b87d19b2fe2704cc8870e4c01d05dc40 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -581,21 +581,22 @@ if (BUILD_TOOLS)
+   )
+ 
+   if(WITH_WASI)
+-    # uvwasi uses the deprecated FetchContent_Populate function, disable it to avoid build error
+-    set(CMAKE_POLICY_DEFAULT_CMP0169_BACK ${CMAKE_POLICY_DEFAULT_CMP0169})
+-    set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
+-    add_subdirectory("third_party/uvwasi" EXCLUDE_FROM_ALL)
+-    set(CMAKE_POLICY_DEFAULT_CMP0169 ${CMAKE_POLICY_DEFAULT_CMP0169_BACK})
+-    include_directories(third_party/uvwasi/include)
++    # Require the installed uvwasi (from the port). No fallback.
++    find_package(uvwasi CONFIG REQUIRED)
++
++    message(STATUS "Using installed uvwasi")
++
++    # Prefer the static target if it exists, otherwise the shared one.
++    if(TARGET uvwasi::uvwasi_a)
++      set(INTERP_LIBS uvwasi::uvwasi_a)
++    elseif(TARGET uvwasi::uvwasi)
++      set(INTERP_LIBS uvwasi::uvwasi)
++    else()
++      set(INTERP_LIBS uvwasi)
++    endif()
++
+     add_definitions(-DWITH_WASI)
+-    set(INTERP_LIBS uvwasi_a)
+     set(EXTRA_INTERP_SRC src/interp/interp-wasi.cc)
+-
+-    if (COMPILER_IS_GNU)
+-      target_compile_options(uv_a PRIVATE "-Wno-sign-compare")
+-    elseif (COMPILER_IS_CLANG)
+-      target_compile_options(uv_a PRIVATE "-Wno-implicit-fallthrough")
+-    endif()
+   endif()
+ 
+   # wasm-interp
