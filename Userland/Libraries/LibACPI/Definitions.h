@@ -511,7 +511,7 @@ struct MethodFlags {
     u8 serialized : 1;
     u8 sync_level : 4;
 };
-static_assert(sizeof(MethodFlags) == 1);
+static_assert(AssertSize<MethodFlags, 1>());
 
 enum class FieldAccess : u8 {
     AnyAccess = 0,
