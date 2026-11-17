@@ -298,7 +298,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     out32(REG_RXCFG, rx_config);
 
     // disable interrupts
-    out16(REG_IMR, 0);
+    set_interrupt_mask(0);
 
     // initialize hardware
     if (m_version == ChipVersion::RTL8168EP) {
@@ -344,7 +344,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     }
 
     // clear interrupts
-    out16(REG_ISR, 0xffff);
+    set_interrupt_status(0xFFFF);
 
     pci_commit();
 
@@ -385,8 +385,8 @@ void RTL8168NetworkAdapter::startup()
     pci_commit();
 
     // disable interrupts
-    out16(REG_IMR, 0);
-    out16(REG_ISR, 0xffff);
+    set_interrupt_mask(0);
+    set_interrupt_status(0xFFFF);
     pci_commit();
 
     // send stop command
@@ -434,8 +434,8 @@ void RTL8168NetworkAdapter::startup()
     pci_commit();
 
     // re-enable interrupts
-    auto enabled_interrupts = INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_OVERFLOW | INT_LINK_CHANGE | INT_SYS_ERR;
-    out16(REG_IMR, enabled_interrupts);
+    u32 enabled_interrupts = INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_OVERFLOW | INT_LINK_CHANGE | INT_SYS_ERR;
+    set_interrupt_mask(enabled_interrupts);
     pci_commit();
 
     // update link status
@@ -792,7 +792,8 @@ void RTL8168NetworkAdapter::start_hardware()
     // version specific quirks and tweaks
     hardware_quirks();
 
-    in8(REG_IMR); // known good read (acts as a barrier)
+    // known good read (acts as a barrier)
+    in32(REG_TXCFG);
 
     // relock config registers
     out8(REG_CFG9346, CFG9346_NONE);
@@ -1122,8 +1123,8 @@ bool RTL8168NetworkAdapter::handle_irq()
 {
     bool was_handled = false;
     for (;;) {
-        int status = in16(REG_ISR);
-        out16(REG_ISR, status);
+        u32 status = read_interrupt_status();
+        set_interrupt_status(status);
 
         m_entropy_source.add_random_event(status);
 
@@ -1250,6 +1251,23 @@ void RTL8168NetworkAdapter::receive()
             flags |= RXDescriptor::EndOfRing;
         descriptor.flags = flags; // let the NIC know it can use this descriptor again
     }
+}
+
+void RTL8168NetworkAdapter::set_interrupt_mask(u32 mask)
+{
+    VERIFY((mask & 0xFFFF0000) == 0);
+    out16(REG_IMR, mask);
+}
+
+u32 RTL8168NetworkAdapter::read_interrupt_status()
+{
+    return in16(REG_ISR);
+}
+
+void RTL8168NetworkAdapter::set_interrupt_status(u32 status)
+{
+    VERIFY((status & 0xFFFF0000) == 0);
+    out16(REG_ISR, status);
 }
 
 void RTL8168NetworkAdapter::out8(u16 address, u8 data)
