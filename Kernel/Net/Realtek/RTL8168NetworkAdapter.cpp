@@ -285,10 +285,9 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     m_version = TRY(identify_chip_version());
     dmesgln_pci(*this, "Version detected - {} ({})", possible_device_name(), (u8)m_version);
 
-    if (!determine_supported_version()) {
-        dmesgln_pci(*this, "Aborting initialization! Support for your chip version ({}) is not implemented yet, please open a GH issue and include this message.", (u8)m_version);
-        return Error::from_errno(ENODEV); // Each ChipVersion requires a specific implementation of configure_phy and hardware_quirks
-    }
+    if (!determine_supported_version())
+        dmesgln_pci(*this, "Support for your chip version ({}) is not fully implemented yet, the chip might not work entirely properly, please open a GH issue and include this message.", (u8)m_version);
+
     // set initial REG_RXCFG
     auto rx_config = RXCFG_MAX_DMA_UNLIMITED;
     if (m_version <= ChipVersion::RTL8168B) {
