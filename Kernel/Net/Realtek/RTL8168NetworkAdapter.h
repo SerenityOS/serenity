@@ -112,11 +112,9 @@ private:
         Version20 = 20,
         Version21 = 21,
         Version22 = 22,
-        Version23 = 23,
         Version24 = 24,
         Version25 = 25,
         Version26 = 26,
-        Version27 = 27,
         Version28 = 28,
         Version29 = 29,
         Version30 = 30

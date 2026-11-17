@@ -238,11 +238,9 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     case ChipVersion::Version20:
     case ChipVersion::Version21:
     case ChipVersion::Version22:
-    case ChipVersion::Version23:
     case ChipVersion::Version24:
     case ChipVersion::Version25:
     case ChipVersion::Version26:
-    case ChipVersion::Version27:
     case ChipVersion::Version28:
     case ChipVersion::Version29:
         return false;
@@ -292,7 +290,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     out16(REG_IMR, 0);
 
     // initialize hardware
-    if (m_version == ChipVersion::Version23 || m_version == ChipVersion::Version27 || m_version == ChipVersion::Version28) {
+    if (m_version == ChipVersion::Version28) {
         // disable CMAC
         out8(REG_IBCR2, in8(REG_IBCR2) & ~1);
 
@@ -352,7 +350,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         // if check_dash
         //  notify
         TODO();
-    } else if (m_version == ChipVersion::Version23 || m_version == ChipVersion::Version27 || m_version == ChipVersion::Version28) {
+    } else if (m_version == ChipVersion::Version28) {
         // if check_dash
         //  notify
         TODO();
@@ -409,7 +407,7 @@ void RTL8168NetworkAdapter::startup()
         out8(REG_PMCH, in8(REG_PMCH) | 0x80);
     } else if (m_version >= ChipVersion::Version26) {
         out8(REG_PMCH, in8(REG_PMCH) | 0xC0);
-    } else if (m_version >= ChipVersion::Version21 && m_version <= ChipVersion::Version23) {
+    } else if (m_version >= ChipVersion::Version21 && m_version <= ChipVersion::Version22) {
         out8(REG_PMCH, in8(REG_PMCH) | 0xC0);
         // vendor magic values ???
         eri_update(0x1a8, ERI_MASK_1111, 0xfc000000, 0, ERI_EXGMAC);
@@ -485,15 +483,11 @@ void RTL8168NetworkAdapter::configure_phy()
         TODO();
     case ChipVersion::Version22:
         TODO();
-    case ChipVersion::Version23:
-        TODO();
     case ChipVersion::Version24:
         TODO();
     case ChipVersion::Version25:
         TODO();
     case ChipVersion::Version26:
-        TODO();
-    case ChipVersion::Version27:
         TODO();
     case ChipVersion::Version28:
         TODO();
@@ -974,15 +968,11 @@ void RTL8168NetworkAdapter::hardware_quirks()
         TODO();
     case ChipVersion::Version22:
         TODO();
-    case ChipVersion::Version23:
-        TODO();
     case ChipVersion::Version24:
         TODO();
     case ChipVersion::Version25:
         TODO();
     case ChipVersion::Version26:
-        TODO();
-    case ChipVersion::Version27:
         TODO();
     case ChipVersion::Version28:
         TODO();
@@ -1702,10 +1692,9 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
         }
         break;
     case 0x50000000:
-        if (hw_version_id == 00000) {
-            m_version = ChipVersion::Version23;
-        } else if (hw_version_id == 0x100000) {
-            m_version = ChipVersion::Version27;
+        if (hw_version_id == 0x000000 || hw_version_id == 0x100000) {
+            dmesgln_pci(*this, "Unsupported chip revision");
+            return ENOTSUP;
         } else if (hw_version_id == 0x200000) {
             m_version = ChipVersion::Version28;
         } else {
@@ -1783,10 +1772,8 @@ StringView RTL8168NetworkAdapter::possible_device_name()
     case ChipVersion::Version21:
     case ChipVersion::Version22:
         return "RTL8168G/8111G"sv; // 40, 41, 42
-    case ChipVersion::Version23:
-    case ChipVersion::Version27:
     case ChipVersion::Version28:
-        return "RTL8168EP/8111EP"sv; // 49, 50, 51
+        return "RTL8168EP/8111EP"sv; // 51
     case ChipVersion::Version24:
     case ChipVersion::Version25:
         return "RTL8168GU/8111GU"sv; // ???
