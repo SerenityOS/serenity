@@ -166,6 +166,7 @@ private:
     void hardware_quirks_c_3();
     void hardware_quirks_e_2();
     void hardware_quirks_h();
+    void hardware_quirks_8125_b();
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
