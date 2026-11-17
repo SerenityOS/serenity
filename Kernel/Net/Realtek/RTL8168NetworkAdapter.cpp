@@ -199,9 +199,16 @@ UNMAP_AFTER_INIT ErrorOr<bool> RTL8168NetworkAdapter::probe(PCI::DeviceIdentifie
 {
     if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::Realtek)
         return false;
-    if (pci_device_identifier.hardware_id().device_id != 0x8168)
+
+    switch (pci_device_identifier.hardware_id().device_id) {
+    case 0x8168:
+    case 0x8125:
+    case 0x8126:
+    case 0x8127:
+        return true;
+    default:
         return false;
-    return true;
+    }
 }
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> RTL8168NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
