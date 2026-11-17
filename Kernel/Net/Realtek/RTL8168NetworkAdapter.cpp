@@ -492,13 +492,6 @@ void RTL8168NetworkAdapter::configure_phy()
     case ChipVersion::RTL8168C_4:
         configure_phy_c_3();
         return;
-    case ChipVersion::RTL8168CP_1:
-    case ChipVersion::RTL8168CP_2:
-    case ChipVersion::RTL8168D_1:
-    case ChipVersion::RTL8168D_2:
-    case ChipVersion::RTL8168DP_1:
-    case ChipVersion::RTL8168DP_2:
-        TODO();
     case ChipVersion::RTL8168E:
         // FIXME: This might not actually be correct
         configure_phy_e_2();
@@ -506,28 +499,14 @@ void RTL8168NetworkAdapter::configure_phy()
     case ChipVersion::RTL8168EVL:
         configure_phy_e_2();
         return;
-    case ChipVersion::RTL8168F_1:
-    case ChipVersion::RTL8168F_2:
-    case ChipVersion::RTL8411:
-    case ChipVersion::RTL8168G:
-    case ChipVersion::RTL8168GU:
-    case ChipVersion::RTL8411B:
-        TODO();
-    case ChipVersion::RTL8168H: {
+    case ChipVersion::RTL8168H:
         configure_phy_h_2();
         return;
-    }
-    case ChipVersion::RTL8168EP:
-    case ChipVersion::RTL8168FP:
-    case ChipVersion::RTL8125A:
-    case ChipVersion::RTL8125B:
-    case ChipVersion::RTL8125D:
-    case ChipVersion::RTL8125BP:
-    case ChipVersion::RTL8126A:
-    case ChipVersion::RTL8127A:
-        TODO();
     case ChipVersion::Unknown:
         VERIFY_NOT_REACHED();
+    default:
+        dmesgln_pci(*this, "There is no PHY configuration for this version, the card might not achieve maximum speed.");
+        return;
     }
 
     VERIFY_NOT_REACHED();
