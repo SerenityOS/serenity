@@ -108,9 +108,11 @@ namespace Kernel {
 #define RXCFG_AB 0x8
 #define RXCFG_MAX_DMA_UNLIMITED 0x700
 #define RXCFG_EARLY_OFF_V2 0x800
+#define RXCFG_PAUSE_SLOT_ON 0x800
 #define RXCFG_FTH_NONE 0xE000
 #define RXCFG_MULTI_ENABLE 0x4000
 #define RXCFG_128INT_ENABLE 0x8000
+#define RXCFG_FETCH_DEFAULT_8125 0x40000000
 
 #define CFG1_SPEED_DOWN 0x10
 
@@ -293,8 +295,12 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         rx_config |= RXCFG_FTH_NONE;
     } else if (m_version <= ChipVersion::RTL8168CP_2 || (m_version >= ChipVersion::RTL8168EVL && m_version <= ChipVersion::RTL8168F_2)) {
         rx_config |= RXCFG_128INT_ENABLE | RXCFG_MULTI_ENABLE;
-    } else if (m_version >= ChipVersion::RTL8168G) {
+    } else if (m_version >= ChipVersion::RTL8168G && m_version <= ChipVersion::RTL8168FP) {
         rx_config |= RXCFG_128INT_ENABLE | RXCFG_MULTI_ENABLE | RXCFG_EARLY_OFF_V2;
+    } else if (m_version == ChipVersion::RTL8125A) {
+        rx_config |= RXCFG_FETCH_DEFAULT_8125;
+    } else if (m_version >= ChipVersion::RTL8125B) {
+        rx_config |= RXCFG_FETCH_DEFAULT_8125 | RXCFG_PAUSE_SLOT_ON;
     } else {
         rx_config |= RXCFG_128INT_ENABLE;
     }
