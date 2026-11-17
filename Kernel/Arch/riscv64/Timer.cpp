@@ -7,7 +7,9 @@
 #include <AK/Format.h>
 #include <Kernel/Arch/riscv64/SBI.h>
 #include <Kernel/Arch/riscv64/Timer.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Library/Panic.h>
 
 namespace Kernel::RISCV64 {
 
@@ -15,7 +17,19 @@ static Timer* s_the;
 
 Timer::Timer()
 {
-    m_frequency = DeviceTree::get().resolve_property("/cpus/timebase-frequency"sv).value().as<u32>();
+    if (DeviceTree::is_present()) {
+        m_frequency = DeviceTree::get().resolve_property("/cpus/timebase-frequency"sv).value().as<u32>();
+    } else if (ACPI::is_enabled()) {
+        auto rhct_table_paddr = ACPI::Parser::the()->find_table("RHCT"sv);
+        if (!rhct_table_paddr.has_value())
+            PANIC("No RHCT ACPI table found; unable to determine RISC-V timer frequency");
+
+        auto rhct = Memory::map_typed<::ACPI::Structures::RHCT>(rhct_table_paddr.value()).release_value_but_fixme_should_propagate_errors();
+
+        m_frequency = rhct->time_base_frequency;
+    } else {
+        PANIC("Neither devicetree present nor ACPI enabled; unable to determine RISC-V timer frequency");
+    }
 
     m_interrupt_interval = m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE;
 
