@@ -1275,10 +1275,16 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
     dbgln_if(RTL8168_DEBUG, "RTL8168: Chose descriptor {}", m_tx_free_index);
     memcpy(m_tx_buffers_regions[m_tx_free_index]->vaddr().as_ptr(), payload.data(), payload.size());
 
+    auto descriptor_index = m_tx_free_index;
     m_tx_free_index = (m_tx_free_index + 1) % number_of_tx_descriptors;
 
+    // Ensure all flags are set correctly
+    u16 flags = TXDescriptor::Ownership | TXDescriptor::FirstSegment | TXDescriptor::LastSegment;
+    if (descriptor_index == number_of_tx_descriptors - 1)
+        flags |= TXDescriptor::EndOfRing;
+
     free_descriptor.frame_length = payload.size() & 0x3FFF;
-    free_descriptor.flags = free_descriptor.flags | TXDescriptor::Ownership;
+    free_descriptor.flags = flags;
 
     doorbell(); // FIXME: this shouldn't be done so often, we should look into doing this using the watchdog timer
 }
