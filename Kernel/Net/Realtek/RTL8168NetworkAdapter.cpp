@@ -214,7 +214,6 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> RTL8168NetworkAdapter::c
 bool RTL8168NetworkAdapter::determine_supported_version() const
 {
     switch (m_version) {
-    case ChipVersion::Version1:
     case ChipVersion::Version2:
     case ChipVersion::Version3:
     case ChipVersion::Version4:
@@ -428,10 +427,6 @@ void RTL8168NetworkAdapter::startup()
 
     // re-enable interrupts
     auto enabled_interrupts = INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_OVERFLOW | INT_LINK_CHANGE | INT_SYS_ERR;
-    if (m_version == ChipVersion::Version1) {
-        enabled_interrupts |= INT_RX_FIFO_OVERFLOW;
-        enabled_interrupts &= ~INT_RX_OVERFLOW;
-    }
     out16(REG_IMR, enabled_interrupts);
     pci_commit();
 
@@ -444,10 +439,6 @@ void RTL8168NetworkAdapter::configure_phy()
 {
     // this method sets a bunch of magic vendor values to the phy configuration registers based on the hardware version
     switch (m_version) {
-    case ChipVersion::Version1: {
-        configure_phy_b_1();
-        return;
-    }
     case ChipVersion::Version2:
     case ChipVersion::Version3: {
         configure_phy_b_2();
@@ -519,19 +510,6 @@ void RTL8168NetworkAdapter::configure_phy()
     default:
         VERIFY_NOT_REACHED();
     }
-}
-
-void RTL8168NetworkAdapter::configure_phy_b_1()
-{
-    static constexpr auto phy_registers = to_array<PhyRegister>({
-        { 0x10, 0xf41b },
-        { 0x1f, 0 },
-    });
-
-    phy_out(0x1f, 0x1);
-    phy_out(0x16, 1 << 0);
-
-    phy_out_batch(phy_registers);
 }
 
 void RTL8168NetworkAdapter::configure_phy_b_2()
@@ -955,9 +933,6 @@ void RTL8168NetworkAdapter::start_hardware()
 void RTL8168NetworkAdapter::hardware_quirks()
 {
     switch (m_version) {
-    case ChipVersion::Version1:
-        hardware_quirks_b_1();
-        return;
     case ChipVersion::Version2:
     case ChipVersion::Version3:
         hardware_quirks_b_2();
@@ -1023,17 +998,12 @@ void RTL8168NetworkAdapter::hardware_quirks()
     }
 }
 
-void RTL8168NetworkAdapter::hardware_quirks_b_1()
+void RTL8168NetworkAdapter::hardware_quirks_b_2()
 {
     // disable checked reserved bits
     out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_BEACON_ENABLE);
     constexpr u16 version1_cplus_quirks = CPLUS_COMMAND_ENABLE_BIST | CPLUS_COMMAND_MAC_DBGO_OE | CPLUS_COMMAND_FORCE_HALF_DUP | CPLUS_COMMAND_FORCE_RXFLOW_ENABLE | CPLUS_COMMAND_FORCE_TXFLOW_ENABLE | CPLUS_COMMAND_CXPL_DBG_SEL | CPLUS_COMMAND_ASF | CPLUS_COMMAND_PACKET_CONTROL_DISABLE | CPLUS_COMMAND_MAC_DBGO_SEL;
     out16(REG_CPLUS_COMMAND, in16(REG_CPLUS_COMMAND) & ~version1_cplus_quirks);
-}
-
-void RTL8168NetworkAdapter::hardware_quirks_b_2()
-{
-    hardware_quirks_b_1();
 
     // configure the maximum transmit packet size (again)
     out16(REG_MTPS, MTPS_JUMBO);
@@ -1635,8 +1605,8 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
 
     switch (registers) {
     case 0x30000000:
-        m_version = ChipVersion::Version1;
-        break;
+        dmesgln_pci(*this, "Unsupported chip revision");
+        return ENOTSUP;
     case 0x38000000:
         if (hw_version_id == 00000) {
             m_version = ChipVersion::Version2;
@@ -1794,10 +1764,9 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
 StringView RTL8168NetworkAdapter::possible_device_name()
 {
     switch (m_version) { // We are following *BSD's versioning scheme, the comments note linux's versioning scheme, but they dont match up exactly
-    case ChipVersion::Version1:
     case ChipVersion::Version2:
     case ChipVersion::Version3:
-        return "RTL8168B/8111B"sv; // 11, 12, 17
+        return "RTL8168B/8111B"sv; // 12, 17
     case ChipVersion::Version4:
     case ChipVersion::Version5:
     case ChipVersion::Version6:
