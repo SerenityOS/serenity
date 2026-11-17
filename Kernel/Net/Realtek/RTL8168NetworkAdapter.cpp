@@ -776,7 +776,8 @@ void RTL8168NetworkAdapter::start_hardware()
     out8(REG_CFG9346, CFG9346_UNLOCK);
 
     // configure the maximum transmit packet size
-    out16(REG_MTPS, MTPS_JUMBO);
+    if (m_version <= ChipVersion::RTL8168FP)
+        out16(REG_MTPS, MTPS_JUMBO);
 
     // configure the maximum receive packet size
     out16(REG_RMS, RX_BUFFER_SIZE);
@@ -788,7 +789,8 @@ void RTL8168NetworkAdapter::start_hardware()
     out16(REG_CPLUS_COMMAND, cplus_command);
 
     // setup interrupt moderation, magic from vendor (Linux Driver uses 0x5151, *BSD Driver uses 0x5100, RTL Driver use 0x5f51???)
-    out16(REG_INT_MOD, 0x5151);
+    if (m_version <= ChipVersion::RTL8168FP)
+        out16(REG_INT_MOD, 0x5151);
 
     // point to tx descriptors
     out64(REG_TXADDR, m_tx_descriptors.paddr.get());
