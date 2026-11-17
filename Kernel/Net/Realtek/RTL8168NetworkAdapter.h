@@ -133,7 +133,7 @@ private:
     void startup();
 
     void configure_phy();
-    void configure_phy_b_2();
+    void configure_phy_b();
     void configure_phy_c_1();
     void configure_phy_c_2();
     void configure_phy_c_3();
@@ -144,7 +144,7 @@ private:
     void rar_exgmac_set();
 
     void hardware_quirks();
-    void hardware_quirks_b_2();
+    void hardware_quirks_b();
     void hardware_quirks_c_1();
     void hardware_quirks_c_2();
     void hardware_quirks_c_3();
