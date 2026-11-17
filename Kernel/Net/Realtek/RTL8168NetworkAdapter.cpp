@@ -24,7 +24,9 @@ namespace Kernel {
 #define REG_COMMAND 0x37
 #define REG_TXSTART 0x38
 #define REG_IMR 0x3C
+#define REG_IMR_8125 0x38
 #define REG_ISR 0x3E
+#define REG_ISR_8125 0x3C
 #define REG_TXCFG 0x40
 #define REG_RXCFG 0x44
 #define REG_MPC 0x4C
@@ -1255,19 +1257,30 @@ void RTL8168NetworkAdapter::receive()
 
 void RTL8168NetworkAdapter::set_interrupt_mask(u32 mask)
 {
-    VERIFY((mask & 0xFFFF0000) == 0);
-    out16(REG_IMR, mask);
+    if (m_version >= ChipVersion::RTL8125A) {
+        out32(REG_IMR_8125, mask);
+    } else {
+        VERIFY((mask & 0xFFFF0000) == 0);
+        out16(REG_IMR, mask);
+    }
 }
 
 u32 RTL8168NetworkAdapter::read_interrupt_status()
 {
+    if (m_version >= ChipVersion::RTL8125A)
+        return in32(REG_ISR_8125);
+
     return in16(REG_ISR);
 }
 
 void RTL8168NetworkAdapter::set_interrupt_status(u32 status)
 {
-    VERIFY((status & 0xFFFF0000) == 0);
-    out16(REG_ISR, status);
+    if (m_version >= ChipVersion::RTL8125A) {
+        out32(REG_ISR_8125, status);
+    } else {
+        VERIFY((status & 0xFFFF0000) == 0);
+        out16(REG_ISR, status);
+    }
 }
 
 void RTL8168NetworkAdapter::out8(u16 address, u8 data)
