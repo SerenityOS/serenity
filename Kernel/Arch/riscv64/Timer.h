@@ -16,6 +16,8 @@ namespace Kernel::RISCV64 {
 class Timer final : public HardwareTimerBase {
 public:
     static NonnullLockRefPtr<Timer> initialize();
+
+    static bool is_initialized();
     static Timer& the();
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RISCVTimer; }

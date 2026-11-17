@@ -31,6 +31,11 @@ NonnullLockRefPtr<Timer> Timer::initialize()
     return timer;
 }
 
+bool Timer::is_initialized()
+{
+    return s_the != nullptr;
+}
+
 Timer& Timer::the()
 {
     VERIFY(s_the);
