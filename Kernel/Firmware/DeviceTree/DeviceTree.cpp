@@ -64,6 +64,15 @@ ErrorOr<StringView> get_command_line_from_fdt()
     return **s_device_tree;
 }
 
+bool is_present()
+{
+    // pre_init always requires a devicetree and writes it to s_fdt_storage.
+    if (g_boot_info.boot_method == BootMethod::PreInit)
+        return true;
+
+    return !g_boot_info.flattened_devicetree_paddr.is_null() && g_boot_info.flattened_devicetree_size != 0;
+}
+
 void map_flattened_devicetree()
 {
     if (g_boot_info.boot_method != BootMethod::EFI) {
