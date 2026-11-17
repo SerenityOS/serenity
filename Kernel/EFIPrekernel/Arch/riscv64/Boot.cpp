@@ -39,6 +39,10 @@ namespace Kernel {
         csrw satp, %[satp]
         sfence.vma
 
+        # The kernel's trap handler expects sscratch to be zero if we are in supervisor mode.
+        # sscratch contains the kernel stack pointer if we are in user mode.
+        csrw sscratch, zero
+
         li ra, 0
         li fp, 0
         jr %[kernel_entry]
