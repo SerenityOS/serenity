@@ -262,7 +262,7 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interfa
 UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
     TRY(identify_chip_version());
-    dmesgln_pci(*this, "Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
+    dmesgln_pci(*this, "Version detected - {} ({})", possible_device_name(), (u8)m_version);
 
     if (!determine_supported_version()) {
         dmesgln_pci(*this, "Aborting initialization! Support for your chip version ({}) is not implemented yet, please open a GH issue and include this message.", (u8)m_version);
@@ -1436,8 +1436,6 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
     auto registers = transmit_config & 0x7c800000;
     auto hw_version_id = transmit_config & 0x700000;
 
-    m_version_uncertain = false;
-
     switch (registers) {
     case 0x30000000:
         dmesgln_pci(*this, "Unsupported chip revision");
@@ -1446,36 +1444,26 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
         m_version = ChipVersion::RTL8168B;
         break;
     case 0x3C000000:
-        if (hw_version_id == 0x000000) {
+        if (hw_version_id == 0x000000)
             m_version = ChipVersion::RTL8168C_1;
-        } else if (hw_version_id == 0x200000) {
+        else if (hw_version_id == 0x200000)
             m_version = ChipVersion::RTL8168C_2;
-        } else if (hw_version_id == 0x300000) {
+        else if (hw_version_id == 0x300000)
             m_version = ChipVersion::RTL8168C_3;
-        } else {
+        else
             m_version = ChipVersion::RTL8168C_4;
-            m_version_uncertain = true;
-        }
         break;
     case 0x3C800000:
-        if (hw_version_id == 0x000000) {
+        if (hw_version_id == 0x000000)
             m_version = ChipVersion::RTL8168CP_1;
-        } else if (hw_version_id == 0x100000) {
+        else
             m_version = ChipVersion::RTL8168CP_2;
-        } else {
-            m_version = ChipVersion::RTL8168CP_2;
-            m_version_uncertain = true;
-        }
         break;
     case 0x28000000:
-        if (hw_version_id == 0x100000) {
+        if (hw_version_id == 0x100000)
             m_version = ChipVersion::RTL8168D_1;
-        } else if (hw_version_id == 0x300000) {
+        else
             m_version = ChipVersion::RTL8168D_2;
-        } else {
-            m_version = ChipVersion::RTL8168D_2;
-            m_version_uncertain = true;
-        }
         break;
     case 0x28800000:
         if (hw_version_id == 0x000000) {
@@ -1558,7 +1546,6 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
     default:
         dbgln_if(RTL8168_DEBUG, "Unable to determine device version: {:#04x}", registers);
         m_version = ChipVersion::Unknown;
-        m_version_uncertain = true;
         break;
     }
 

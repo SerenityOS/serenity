@@ -209,7 +209,6 @@ private:
     u16 ocp_phy_in(u32 address);
 
     ChipVersion m_version { ChipVersion::Unknown };
-    bool m_version_uncertain { true };
     NonnullOwnPtr<IOWindow> m_registers_io_window;
     u32 m_ocp_base_address { 0 };
     Memory::TypedMapping<RXDescriptor volatile[]> m_rx_descriptors;
