@@ -840,40 +840,18 @@ void RTL8168NetworkAdapter::hardware_quirks()
     case ChipVersion::RTL8168C_4:
         hardware_quirks_c_3();
         return;
-    case ChipVersion::RTL8168CP_1:
-    case ChipVersion::RTL8168CP_2:
-    case ChipVersion::RTL8168D_1:
-    case ChipVersion::RTL8168D_2:
-    case ChipVersion::RTL8168DP_1:
-    case ChipVersion::RTL8168DP_2:
-        TODO();
-    case ChipVersion::RTL8168E:
-        // TODO: Implement the actual sequence
-        return;
     case ChipVersion::RTL8168EVL:
         hardware_quirks_e_2();
         return;
-    case ChipVersion::RTL8168F_1:
-    case ChipVersion::RTL8168F_2:
-    case ChipVersion::RTL8411:
-    case ChipVersion::RTL8168G:
-    case ChipVersion::RTL8168GU:
-    case ChipVersion::RTL8411B:
-        TODO();
     case ChipVersion::RTL8168H:
         hardware_quirks_h();
         return;
-    case ChipVersion::RTL8168EP:
-    case ChipVersion::RTL8168FP:
-    case ChipVersion::RTL8125A:
-    case ChipVersion::RTL8125B:
-    case ChipVersion::RTL8125D:
-    case ChipVersion::RTL8125BP:
-    case ChipVersion::RTL8126A:
-    case ChipVersion::RTL8127A:
-        TODO();
     case ChipVersion::Unknown:
         VERIFY_NOT_REACHED();
+
+    default:
+        dmesgln_pci(*this, "There are no hardware quirks for this version, the card might not work entirely properly.");
+        return;
     }
 }
 
