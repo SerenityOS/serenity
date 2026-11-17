@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2026, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,30 +94,39 @@ private:
 
     enum class ChipVersion : u8 {
         Unknown = 0,
-        Version2 = 2,
-        Version4 = 4,
-        Version5 = 5,
-        Version6 = 6,
-        Version7 = 7,
-        Version8 = 8,
-        Version9 = 9,
-        Version10 = 10,
-        Version12 = 12,
-        Version13 = 13,
-        Version14 = 14,
-        Version15 = 15,
-        Version16 = 16,
-        Version17 = 17,
-        Version18 = 18,
-        Version19 = 19,
-        Version20 = 20,
-        Version21 = 21,
-        Version22 = 22,
-        Version24 = 24,
-        Version25 = 25,
-        Version26 = 26,
-        Version28 = 28,
-        Version30 = 30
+
+        RTL8168B = 17,
+
+        RTL8168C_1 = 19,
+        RTL8168C_2 = 20,
+        RTL8168C_3 = 21,
+        RTL8168C_4 = 22,
+
+        RTL8168CP_1 = 18,
+        RTL8168CP_2 = 23, // 24
+
+        RTL8168D_1 = 25,
+        RTL8168D_2 = 26,
+
+        RTL8168DP_1 = 28,
+        RTL8168DP_2 = 31,
+
+        RTL8168E = 32, // 33
+        RTL8168EVL = 34,
+
+        RTL8168F_1 = 35,
+        RTL8168F_2 = 36,
+
+        RTL8411 = 38,
+
+        RTL8168G = 40,
+        RTL8168GU = 42,
+
+        RTL8411B = 44,
+
+        RTL8168H = 46,
+
+        RTL8168EP = 51,
     };
 
     ErrorOr<void> identify_chip_version();
