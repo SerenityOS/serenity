@@ -401,6 +401,26 @@ struct [[gnu::packed]] DSDT {
     unsigned char definition_block[];
 };
 
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#risc-v-hart-capabilities-table-rhct
+struct [[gnu::packed]] RHCT {
+    // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#rhct-flags
+    enum class Flags : u32 {
+        TimerCannotWakeUpCPUCapability = 1u << 0,
+    };
+
+    SDTHeader h;
+    Flags flags;
+    u64 time_base_frequency;
+    u32 number_of_rhct_nodes;
+    u32 offset_to_the_rhct_node_array;
+
+    // The RCHT node array offset is dependent on the offset_to_the_rhct_node_array member,
+    // so we can't statically declare it here.
+};
+static_assert(AssertSize<RHCT, 56>());
+
+AK_ENUM_BITWISE_OPERATORS(RHCT::Flags);
+
 // https://uefi.org/specs/ACPI/6.6/04_ACPI_Hardware_Specification.html#pm1-control-registers-fixed-hardware-feature-control-bits
 struct [[gnu::packed]] PM1ControlRegister {
     bool SCI_EN : 1;
