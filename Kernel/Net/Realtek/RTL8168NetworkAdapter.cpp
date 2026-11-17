@@ -215,7 +215,6 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
 {
     switch (m_version) {
     case ChipVersion::Version2:
-    case ChipVersion::Version3:
     case ChipVersion::Version4:
     case ChipVersion::Version5:
     case ChipVersion::Version6:
@@ -278,7 +277,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     }
     // set initial REG_RXCFG
     auto rx_config = RXCFG_MAX_DMA_UNLIMITED;
-    if (m_version <= ChipVersion::Version3) {
+    if (m_version <= ChipVersion::Version2) {
         rx_config |= RXCFG_FTH_NONE;
     } else if (m_version <= ChipVersion::Version8 || (m_version >= ChipVersion::Version16 && m_version <= ChipVersion::Version19)) {
         rx_config |= RXCFG_128INT_ENABLE | RXCFG_MULTI_ENABLE;
@@ -439,8 +438,7 @@ void RTL8168NetworkAdapter::configure_phy()
 {
     // this method sets a bunch of magic vendor values to the phy configuration registers based on the hardware version
     switch (m_version) {
-    case ChipVersion::Version2:
-    case ChipVersion::Version3: {
+    case ChipVersion::Version2: {
         configure_phy_b_2();
         return;
     }
@@ -934,7 +932,6 @@ void RTL8168NetworkAdapter::hardware_quirks()
 {
     switch (m_version) {
     case ChipVersion::Version2:
-    case ChipVersion::Version3:
         hardware_quirks_b_2();
         return;
     case ChipVersion::Version4:
@@ -1608,14 +1605,7 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
         dmesgln_pci(*this, "Unsupported chip revision");
         return ENOTSUP;
     case 0x38000000:
-        if (hw_version_id == 00000) {
-            m_version = ChipVersion::Version2;
-        } else if (hw_version_id == 0x500000) {
-            m_version = ChipVersion::Version3;
-        } else {
-            m_version = ChipVersion::Version3;
-            m_version_uncertain = true;
-        }
+        m_version = ChipVersion::Version2;
         break;
     case 0x3C000000:
         if (hw_version_id == 00000) {
@@ -1765,8 +1755,7 @@ StringView RTL8168NetworkAdapter::possible_device_name()
 {
     switch (m_version) { // We are following *BSD's versioning scheme, the comments note linux's versioning scheme, but they dont match up exactly
     case ChipVersion::Version2:
-    case ChipVersion::Version3:
-        return "RTL8168B/8111B"sv; // 12, 17
+        return "RTL8168B/8111B"sv; // 17
     case ChipVersion::Version4:
     case ChipVersion::Version5:
     case ChipVersion::Version6:
