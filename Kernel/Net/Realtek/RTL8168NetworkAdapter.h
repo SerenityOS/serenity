@@ -103,7 +103,6 @@ private:
         Version8 = 8,
         Version9 = 9,
         Version10 = 10,
-        Version11 = 11,
         Version12 = 12,
         Version13 = 13,
         Version14 = 14,
@@ -125,7 +124,7 @@ private:
         Version30 = 30
     };
 
-    void identify_chip_version();
+    ErrorOr<void> identify_chip_version();
     StringView possible_device_name();
 
     void reset();

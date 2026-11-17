@@ -225,7 +225,6 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     case ChipVersion::Version8:
     case ChipVersion::Version9:
     case ChipVersion::Version10:
-    case ChipVersion::Version11:
     case ChipVersion::Version12:
     case ChipVersion::Version13:
     case ChipVersion::Version14:
@@ -271,7 +270,7 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interfa
 
 UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
-    identify_chip_version();
+    TRY(identify_chip_version());
     dmesgln_pci(*this, "Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
 
     if (!determine_supported_version()) {
@@ -351,7 +350,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     dmesgln_pci(*this, "MAC address: {}", mac_address().to_string());
 
     // notify about driver start
-    if (m_version >= ChipVersion::Version11 && m_version <= ChipVersion::Version13) {
+    if (m_version >= ChipVersion::Version12 && m_version <= ChipVersion::Version13) {
         // if check_dash
         //  notify
         TODO();
@@ -470,8 +469,6 @@ void RTL8168NetworkAdapter::configure_phy()
     case ChipVersion::Version9:
         TODO();
     case ChipVersion::Version10:
-        TODO();
-    case ChipVersion::Version11:
         TODO();
     case ChipVersion::Version12:
         TODO();
@@ -982,8 +979,6 @@ void RTL8168NetworkAdapter::hardware_quirks()
         TODO();
     case ChipVersion::Version10:
         TODO();
-    case ChipVersion::Version11:
-        TODO();
     case ChipVersion::Version12:
         TODO();
     case ChipVersion::Version13:
@@ -1459,9 +1454,7 @@ u32 RTL8168NetworkAdapter::in32(u16 address)
 
 void RTL8168NetworkAdapter::phy_out(u8 address, u16 data)
 {
-    if (m_version == ChipVersion::Version11) {
-        TODO();
-    } else if (m_version == ChipVersion::Version12 || m_version == ChipVersion::Version13) {
+    if (m_version == ChipVersion::Version12 || m_version == ChipVersion::Version13) {
         TODO();
     } else if (m_version >= ChipVersion::Version21) {
         if (address == 0x1F) {
@@ -1483,9 +1476,7 @@ void RTL8168NetworkAdapter::phy_out(u8 address, u16 data)
 
 u16 RTL8168NetworkAdapter::phy_in(u8 address)
 {
-    if (m_version == ChipVersion::Version11) {
-        TODO();
-    } else if (m_version == ChipVersion::Version12 || m_version == ChipVersion::Version13) {
+    if (m_version == ChipVersion::Version12 || m_version == ChipVersion::Version13) {
         TODO();
     } else if (m_version >= ChipVersion::Version21) {
         if (m_ocp_base_address != OCP_STANDARD_PHY_BASE)
@@ -1634,7 +1625,7 @@ u16 RTL8168NetworkAdapter::ocp_phy_in(u32 address)
     return in32(REG_GPHY_OCP) & 0xFFFF;
 }
 
-void RTL8168NetworkAdapter::identify_chip_version()
+ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
 {
     auto transmit_config = in32(REG_TXCFG);
     auto registers = transmit_config & 0x7c800000;
@@ -1690,7 +1681,8 @@ void RTL8168NetworkAdapter::identify_chip_version()
         break;
     case 0x28800000:
         if (hw_version_id == 00000) {
-            m_version = ChipVersion::Version11;
+            dmesgln_pci(*this, "Unsupported chip revision");
+            return ENOTSUP;
         } else if (hw_version_id == 0x200000) {
             m_version = ChipVersion::Version12;
         } else if (hw_version_id == 0x300000) {
@@ -1795,6 +1787,8 @@ void RTL8168NetworkAdapter::identify_chip_version()
         m_version_uncertain = true;
         break;
     }
+
+    return {};
 }
 
 StringView RTL8168NetworkAdapter::possible_device_name()
@@ -1814,10 +1808,9 @@ StringView RTL8168NetworkAdapter::possible_device_name()
     case ChipVersion::Version9:
     case ChipVersion::Version10:
         return "RTL8168D/8111D"sv; // 25, 26
-    case ChipVersion::Version11:
     case ChipVersion::Version12:
     case ChipVersion::Version13:
-        return "RTL8168DP/8111DP"sv; // 27, 28, 31
+        return "RTL8168DP/8111DP"sv; // 28, 31
     case ChipVersion::Version14:
     case ChipVersion::Version15:
         return "RTL8168E/8111E"sv; // 32, 33
