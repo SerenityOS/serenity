@@ -439,7 +439,7 @@ void RTL8168NetworkAdapter::configure_phy()
     // this method sets a bunch of magic vendor values to the phy configuration registers based on the hardware version
     switch (m_version) {
     case ChipVersion::Version2: {
-        configure_phy_b_2();
+        configure_phy_b();
         return;
     }
     case ChipVersion::Version4:
@@ -510,7 +510,7 @@ void RTL8168NetworkAdapter::configure_phy()
     }
 }
 
-void RTL8168NetworkAdapter::configure_phy_b_2()
+void RTL8168NetworkAdapter::configure_phy_b()
 {
     static constexpr auto phy_registers = to_array<PhyRegister>({
         { 0x1f, 0x1 },
@@ -932,7 +932,7 @@ void RTL8168NetworkAdapter::hardware_quirks()
 {
     switch (m_version) {
     case ChipVersion::Version2:
-        hardware_quirks_b_2();
+        hardware_quirks_b();
         return;
     case ChipVersion::Version4:
         hardware_quirks_c_1();
@@ -995,7 +995,7 @@ void RTL8168NetworkAdapter::hardware_quirks()
     }
 }
 
-void RTL8168NetworkAdapter::hardware_quirks_b_2()
+void RTL8168NetworkAdapter::hardware_quirks_b()
 {
     // disable checked reserved bits
     out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_BEACON_ENABLE);
