@@ -172,6 +172,10 @@ private:
 
     void receive();
 
+    void set_interrupt_mask(u32 mask);
+    u32 read_interrupt_status();
+    void set_interrupt_status(u32 status);
+
     void out8(u16 address, u8 data);
     void out16(u16 address, u16 data);
     void out32(u16 address, u32 data);
