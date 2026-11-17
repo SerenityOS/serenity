@@ -37,10 +37,10 @@
 #include <unistd.h>
 #include <wchar.h>
 
-static void strtons(char const* str, char** endptr)
+static void strtons(char const* str, char const** endptr)
 {
     assert(endptr);
-    char* ptr = const_cast<char*>(str);
+    char const* ptr = str;
     while (isspace(*ptr)) {
         ptr += 1;
     }
@@ -52,22 +52,22 @@ enum Sign {
     Positive,
 };
 
-static Sign strtosign(char const* str, char** endptr)
+static Sign strtosign(char const* str, char const** endptr)
 {
     assert(endptr);
     if (*str == '+') {
-        *endptr = const_cast<char*>(str + 1);
+        *endptr = str + 1;
         return Sign::Positive;
     } else if (*str == '-') {
-        *endptr = const_cast<char*>(str + 1);
+        *endptr = str + 1;
         return Sign::Negative;
     } else {
-        *endptr = const_cast<char*>(str);
+        *endptr = str;
         return Sign::Positive;
     }
 }
 
-static int strtobase(char const* str, char** endptr, int base)
+static int strtobase(char const* str, char const** endptr, int base)
 {
     // "0x" is only a prefix if a hexadecimal digit follows it. Otherwise, the subject sequence is just the "0".
     bool const has_hex_prefix = str[0] == '0' && tolower(str[1]) == 'x' && isxdigit(str[2]);
@@ -86,7 +86,7 @@ static int strtobase(char const* str, char** endptr, int base)
     if (base == 16 && has_hex_prefix)
         str += 2;
 
-    *endptr = const_cast<char*>(str);
+    *endptr = str;
     return base;
 }
 
@@ -180,7 +180,7 @@ typedef NumParser<int, INT_MIN, INT_MAX> IntParser;
 typedef NumParser<long long, LONG_LONG_MIN, LONG_LONG_MAX> LongLongParser;
 typedef NumParser<unsigned long long, 0ULL, ULONG_LONG_MAX> ULongLongParser;
 
-static bool is_either(char* str, int offset, char lower, char upper)
+static bool is_either(char const* str, int offset, char lower, char upper)
 {
     char ch = *(str + offset);
     return ch == lower || ch == upper;
@@ -208,7 +208,7 @@ inline int generate_unique_filename(char* pattern, size_t suffix_length, Callbac
     return EEXIST;
 }
 
-static bool is_infinity_string(char* parse_ptr, char** endptr)
+static bool is_infinity_string(char const* parse_ptr, char const** endptr)
 {
     if (is_either(parse_ptr, 0, 'i', 'I')) {
         if (is_either(parse_ptr, 1, 'n', 'N')) {
@@ -236,7 +236,7 @@ static bool is_infinity_string(char* parse_ptr, char** endptr)
     return false;
 }
 
-static bool is_nan_string(char* parse_ptr, char** endptr)
+static bool is_nan_string(char const* parse_ptr, char const** endptr)
 {
     // FIXME: Actually parse (or at least skip) the (n-char-sequenceopt) part
     if (is_either(parse_ptr, 0, 'n', 'N')) {
@@ -256,7 +256,7 @@ template<FloatingPoint T>
 static T c_str_to_floating_point(char const* str, char** endptr)
 {
     // First, they decompose the input string into three parts:
-    char* parse_ptr = const_cast<char*>(str);
+    char const* parse_ptr = str;
 
     // An initial, possibly empty, sequence of white-space characters (as specified by isspace())
     strtons(parse_ptr, &parse_ptr);
@@ -340,7 +340,9 @@ static T c_str_to_floating_point(char const* str, char** endptr)
 
     Sign const sign = strtosign(parse_ptr, &parse_ptr);
 
-    if (is_infinity_string(parse_ptr, endptr)) {
+    if (is_infinity_string(parse_ptr, &parse_ptr)) {
+        if (endptr)
+            *endptr = const_cast<char*>(parse_ptr);
         // Don't set errno to ERANGE here:
         // The caller may want to distinguish between "input is
         // literal infinity" and "input is not literal infinity
@@ -351,7 +353,9 @@ static T c_str_to_floating_point(char const* str, char** endptr)
             return -AK::Infinity<T>;
     }
 
-    if (is_nan_string(parse_ptr, endptr)) {
+    if (is_nan_string(parse_ptr, &parse_ptr)) {
+        if (endptr)
+            *endptr = const_cast<char*>(parse_ptr);
         errno = ERANGE;
         // FIXME: Do we actually want to return "different" NaN bit values?
         if (sign != Sign::Negative)
@@ -1003,7 +1007,7 @@ unsigned long strtoul(char const* str, char** endptr, int base)
 long long strtoll(char const* str, char** endptr, int base)
 {
     // Parse spaces, sign and base
-    char* parse_ptr = const_cast<char*>(str);
+    char const* parse_ptr = str;
     strtons(parse_ptr, &parse_ptr);
     Sign const sign = strtosign(parse_ptr, &parse_ptr);
     base = strtobase(parse_ptr, &parse_ptr, base);
@@ -1050,7 +1054,7 @@ long long strtoll(char const* str, char** endptr, int base)
     }
 
     if (endptr)
-        *endptr = parse_ptr;
+        *endptr = const_cast<char*>(parse_ptr);
 
     if (overflow) {
         errno = ERANGE;
@@ -1068,7 +1072,7 @@ long long strtoll(char const* str, char** endptr, int base)
 unsigned long long strtoull(char const* str, char** endptr, int base)
 {
     // Parse spaces, sign and base
-    char* parse_ptr = const_cast<char*>(str);
+    char const* parse_ptr = str;
     strtons(parse_ptr, &parse_ptr);
     Sign const sign = strtosign(parse_ptr, &parse_ptr);
     base = strtobase(parse_ptr, &parse_ptr, base);
@@ -1115,7 +1119,7 @@ unsigned long long strtoull(char const* str, char** endptr, int base)
     }
 
     if (endptr)
-        *endptr = parse_ptr;
+        *endptr = const_cast<char*>(parse_ptr);
 
     if (overflow) {
         errno = ERANGE;
