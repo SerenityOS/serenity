@@ -176,6 +176,8 @@ private:
     u32 read_interrupt_status();
     void set_interrupt_status(u32 status);
 
+    void doorbell();
+
     void out8(u16 address, u8 data);
     void out16(u16 address, u16 data);
     void out32(u16 address, u32 data);

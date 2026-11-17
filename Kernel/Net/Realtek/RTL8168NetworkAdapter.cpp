@@ -1218,7 +1218,7 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
     free_descriptor.frame_length = payload.size() & 0x3FFF;
     free_descriptor.flags = free_descriptor.flags | TXDescriptor::Ownership;
 
-    out8(REG_TXSTART, TXSTART_START); // FIXME: this shouldn't be done so often, we should look into doing this using the watchdog timer
+    doorbell(); // FIXME: this shouldn't be done so often, we should look into doing this using the watchdog timer
 }
 
 void RTL8168NetworkAdapter::receive()
@@ -1281,6 +1281,11 @@ void RTL8168NetworkAdapter::set_interrupt_status(u32 status)
         VERIFY((status & 0xFFFF0000) == 0);
         out16(REG_ISR, status);
     }
+}
+
+void RTL8168NetworkAdapter::doorbell()
+{
+    out8(REG_TXSTART, TXSTART_START);
 }
 
 void RTL8168NetworkAdapter::out8(u16 address, u8 data)
