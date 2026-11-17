@@ -64,6 +64,8 @@ namespace Kernel {
 #define REG_IBCR0 0xF8
 #define REG_IBCR2 0xF9
 #define REG_IBISR0 0xFB
+#define REG_RSS_CTRL_8125 0x4500
+#define REG_Q_NUM_CTRL_8125 0x4800
 
 #define COMMAND_TX_ENABLE 0x4
 #define COMMAND_RX_ENABLE 0x8
@@ -847,6 +849,9 @@ void RTL8168NetworkAdapter::hardware_quirks()
     case ChipVersion::RTL8168H:
         hardware_quirks_h();
         return;
+    case ChipVersion::RTL8125B:
+        hardware_quirks_8125_b();
+        return;
     case ChipVersion::Unknown:
         VERIFY_NOT_REACHED();
 
@@ -1048,6 +1053,75 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
     ocp_out(0xe63e, 0);
     ocp_out(0xc094, 0);
     ocp_out(0xc09e, 0);
+}
+
+void RTL8168NetworkAdapter::hardware_quirks_8125_b()
+{
+    out8(0x34, 0x00);
+    for (int i = 0xa00; i < 0xa80; i += 4)
+        out32(i, 0);
+    out16(0x7a, 0x0000);
+
+    // Enable extended tally counter
+    ocp_update(0xea84, 0x3, 0);
+
+    static constexpr auto ephy_info = to_array<EPhyUpdate>({
+        { 0x0b, 0xffff, 0xa908 },
+        { 0x1e, 0xffff, 0x20eb },
+        { 0x02, 0x0030, 0x0020 },
+        { 0x1e, 0xffff, 0x20eb },
+        { 0x02, 0x0030, 0x0020 },
+        { 0x02, 0x0030, 0x0020 },
+    });
+    extended_phy_initialize(ephy_info);
+
+    // Set default ASPM entry latency (L0 7us, L1 16us) and disable L2/L3 ready
+    out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_READY_TO_L23);
+
+    out16(0x382, 0x221b);
+    out32(REG_RSS_CTRL_8125, 0);
+    out16(REG_Q_NUM_CTRL_8125, 0);
+
+    // Disable UPS
+    ocp_update(0xd40a, 0, 0x0010);
+    out8(REG_CONFIG1, in8(REG_CONFIG1) & ~0x10);
+
+    ocp_out(0xc140, 0xffff);
+    ocp_out(0xc142, 0xffff);
+
+    ocp_update(0xd3e2, 0x03a9, 0x0fff);
+    ocp_update(0xd3e4, 0x0000, 0x00ff);
+    ocp_update(0xe860, 0x0080, 0x0000);
+
+    // Disable new TX descriptor format
+    ocp_update(0xeb58, 0x0000, 0x0001);
+
+    ocp_update(0xe614, 0x0200, 0x0700);
+    ocp_update(0xe63e, 0x0000, 0x0c30);
+    ocp_update(0xc0b4, 0x000c, 0x0000);
+    ocp_update(0xeb6a, 0x0033, 0x00ff);
+    ocp_update(0xeb50, 0x0040, 0x03e0);
+    ocp_update(0xe056, 0x0000, 0x00f0);
+    ocp_update(0xe040, 0x0000, 0x1000);
+    ocp_update(0xea1c, 0x0001, 0x0003);
+    ocp_update(0xea1c, 0x0000, 0x0004);
+    ocp_update(0xe0c0, 0x4403, 0x4f0f);
+    ocp_update(0xe052, 0x0068, 0x0080);
+    ocp_update(0xd430, 0x047f, 0x0fff);
+
+    ocp_update(0xea1c, 0x0000, 0x0004);
+    ocp_update(0xeb54, 0x0001, 0x0000);
+    Processor::wait_check();
+    ocp_update(0xeb54, 0x0000, 0x0001);
+    out16(0x1880, in16(0x1880) & ~0x0030);
+
+    ocp_out(0xe098, 0xc302);
+
+    for (int i = 0; i < 1000 && (ocp_in(0xe00e) & (1 << 13)); ++i)
+        Processor::wait_check();
+
+    // Disable RXDV gate
+    out32(REG_MISC, in32(REG_MISC) & ~MISC_RXDV_GATE_ENABLE);
 }
 
 void RTL8168NetworkAdapter::set_phy_speed()
