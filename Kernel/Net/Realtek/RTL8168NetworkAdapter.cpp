@@ -1491,6 +1491,11 @@ u32 RTL8168NetworkAdapter::ocp_in(u32 address)
     return in32(REG_OCP_DATA);
 }
 
+void RTL8168NetworkAdapter::ocp_update(u32 address, u32 set, u32 clear)
+{
+    ocp_out(address, ((ocp_in(address) & ~clear) | set) & 0xFFFF);
+}
+
 void RTL8168NetworkAdapter::ocp_phy_out(u32 address, u32 data)
 {
     VERIFY((address & 0xFFFF0001) == 0);

@@ -220,6 +220,7 @@ private:
 
     void ocp_out(u32 address, u32 data);
     u32 ocp_in(u32 address);
+    void ocp_update(u32 address, u32 set, u32 clear);
 
     void ocp_phy_out(u32 address, u32 data);
     u16 ocp_phy_in(u32 address);
