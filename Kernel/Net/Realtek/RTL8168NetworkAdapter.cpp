@@ -310,6 +310,29 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     set_interrupt_mask(0);
 
     // initialize hardware
+    if (m_version >= ChipVersion::RTL8125A) {
+        m_ocp_base_address = OCP_STANDARD_PHY_BASE;
+
+        out32(REG_MISC, in32(REG_MISC) | MISC_RXDV_GATE_ENABLE);
+
+        while ((in32(REG_TXCFG) & TXCFG_EMPTY) == 0)
+            Processor::wait_check();
+        while ((in8(REG_MCU) & (MCU_RX_EMPTY | MCU_TX_EMPTY)) == 0)
+            Processor::wait_check();
+
+        out8(REG_COMMAND, in8(REG_COMMAND) & ~(COMMAND_RX_ENABLE | COMMAND_TX_ENABLE));
+        out8(REG_MCU, in8(REG_MCU) & ~MCU_NOW_IS_OOB);
+
+        ocp_update(0xe8de, 0, 1 << 14);
+        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+            Processor::wait_check();
+
+        ocp_out(0xc0aa, 0x07d0);
+        ocp_out(0xc0a6, 0x0150);
+        ocp_out(0xc01e, 0x5555);
+        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+            Processor::wait_check();
+    }
     if (m_version == ChipVersion::RTL8168EP) {
         // disable CMAC
         out8(REG_IBCR2, in8(REG_IBCR2) & ~1);
