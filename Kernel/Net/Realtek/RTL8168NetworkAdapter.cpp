@@ -47,6 +47,7 @@ namespace Kernel {
 #define REG_ERI_DATA 0x70
 #define REG_ERI_ADDR 0x74
 #define REG_EPHYACCESS 0x80
+#define REG_TXSTART_8125 0x90
 #define REG_OCP_DATA 0xB0
 #define REG_OCP_ADDR 0xB4
 #define REG_GPHY_OCP 0xB8
@@ -1285,7 +1286,10 @@ void RTL8168NetworkAdapter::set_interrupt_status(u32 status)
 
 void RTL8168NetworkAdapter::doorbell()
 {
-    out8(REG_TXSTART, TXSTART_START);
+    if (m_version >= ChipVersion::RTL8125A)
+        out8(REG_TXSTART_8125, 0x1);
+    else
+        out8(REG_TXSTART, TXSTART_START);
 }
 
 void RTL8168NetworkAdapter::out8(u16 address, u8 data)
