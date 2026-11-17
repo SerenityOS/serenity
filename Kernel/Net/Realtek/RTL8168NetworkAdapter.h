@@ -127,6 +127,16 @@ private:
         RTL8168H = 46,
 
         RTL8168EP = 51,
+        RTL8168FP = 52,
+
+        RTL8125A = 61,
+        RTL8125B = 63,
+        RTL8125D = 64,
+        RTL8125BP = 66,
+
+        RTL8126A = 70,
+
+        RTL8127A = 80,
     };
 
     ErrorOr<ChipVersion> identify_chip_version();

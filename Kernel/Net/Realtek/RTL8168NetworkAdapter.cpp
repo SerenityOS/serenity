@@ -236,14 +236,23 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     case ChipVersion::RTL8411:
     case ChipVersion::RTL8168G:
     case ChipVersion::RTL8168GU:
+    case ChipVersion::RTL8411B:
         return false;
     case ChipVersion::RTL8168H:
         return true;
     case ChipVersion::RTL8168EP:
-        return false;
-    default:
+    case ChipVersion::RTL8168FP:
+    case ChipVersion::RTL8125A:
+    case ChipVersion::RTL8125B:
+    case ChipVersion::RTL8125D:
+    case ChipVersion::RTL8125BP:
+    case ChipVersion::RTL8126A:
+    case ChipVersion::RTL8127A:
+    case ChipVersion::Unknown:
         return false;
     }
+
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const& device_identifier, InterruptNumber irq, NonnullOwnPtr<IOWindow> registers_io_window)
@@ -470,10 +479,19 @@ void RTL8168NetworkAdapter::configure_phy()
         return;
     }
     case ChipVersion::RTL8168EP:
+    case ChipVersion::RTL8168FP:
+    case ChipVersion::RTL8125A:
+    case ChipVersion::RTL8125B:
+    case ChipVersion::RTL8125D:
+    case ChipVersion::RTL8125BP:
+    case ChipVersion::RTL8126A:
+    case ChipVersion::RTL8127A:
         TODO();
-    default:
+    case ChipVersion::Unknown:
         VERIFY_NOT_REACHED();
     }
+
+    VERIFY_NOT_REACHED();
 }
 
 void RTL8168NetworkAdapter::configure_phy_b()
@@ -827,8 +845,15 @@ void RTL8168NetworkAdapter::hardware_quirks()
         hardware_quirks_h();
         return;
     case ChipVersion::RTL8168EP:
+    case ChipVersion::RTL8168FP:
+    case ChipVersion::RTL8125A:
+    case ChipVersion::RTL8125B:
+    case ChipVersion::RTL8125D:
+    case ChipVersion::RTL8125BP:
+    case ChipVersion::RTL8126A:
+    case ChipVersion::RTL8127A:
         TODO();
-    default:
+    case ChipVersion::Unknown:
         VERIFY_NOT_REACHED();
     }
 }
@@ -1480,6 +1505,28 @@ ErrorOr<RTL8168NetworkAdapter::ChipVersion> RTL8168NetworkAdapter::identify_chip
         { 0x540, 0x0, {} },
         { 0x540, 0x1, ChipVersion::RTL8168H },
 
+        { 0x548, 0x2, ChipVersion::RTL8168FP },
+        { 0x548, 0x3, ChipVersion::RTL8168FP },
+
+        { 0x608, 0x1, ChipVersion::RTL8125A },
+
+        { 0x640, 0x1, ChipVersion::RTL8125B },
+
+        { 0x648, 0x1, ChipVersion::RTL8126A },
+        { 0x648, 0x2, ChipVersion::RTL8126A },
+
+        { 0x680, 0x1, ChipVersion::RTL8125BP },
+
+        { 0x688, 0x0, ChipVersion::RTL8125D },
+        { 0x688, 0x1, ChipVersion::RTL8125D },
+        { 0x688, 0x2, ChipVersion::RTL8125D },
+        { 0x688, 0x3, ChipVersion::RTL8125D },
+
+        { 0x6C0, 0x0, ChipVersion::RTL8168H },
+
+        { 0x6C8, 0x1, ChipVersion::RTL8127A },
+
+        { 0x708, 0x0, ChipVersion::RTL8125D },
     });
 
     auto transmit_config = in32(REG_TXCFG);
@@ -1542,6 +1589,20 @@ StringView RTL8168NetworkAdapter::possible_device_name()
         return "RTL8168H/8111H"sv;
     case ChipVersion::RTL8168EP:
         return "RTL8168EP/8111EP"sv;
+    case ChipVersion::RTL8168FP:
+        return "RTL8168FP/8117"sv;
+    case ChipVersion::RTL8125A:
+        return "RTL8125A"sv;
+    case ChipVersion::RTL8125B:
+        return "RTL8125B"sv;
+    case ChipVersion::RTL8125D:
+        return "RTL8125D/RTL8125K/RTL9151A/RTL8125CP"sv;
+    case ChipVersion::RTL8125BP:
+        return "RTL8125BP"sv;
+    case ChipVersion::RTL8126A:
+        return "RTL8126A"sv;
+    case ChipVersion::RTL8127A:
+        return "RTL8127A"sv;
     case ChipVersion::Unknown:
         return "Unknown"sv;
     }
