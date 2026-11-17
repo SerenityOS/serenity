@@ -261,7 +261,7 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interfa
 
 UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
-    TRY(identify_chip_version());
+    m_version = TRY(identify_chip_version());
     dmesgln_pci(*this, "Version detected - {} ({})", possible_device_name(), (u8)m_version);
 
     if (!determine_supported_version()) {
@@ -1430,126 +1430,78 @@ u16 RTL8168NetworkAdapter::ocp_phy_in(u32 address)
     return in32(REG_GPHY_OCP) & 0xFFFF;
 }
 
-ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
+ErrorOr<RTL8168NetworkAdapter::ChipVersion> RTL8168NetworkAdapter::identify_chip_version()
 {
-    auto transmit_config = in32(REG_TXCFG);
-    auto registers = transmit_config & 0x7c800000;
-    auto hw_version_id = transmit_config & 0x700000;
+    struct VersionInfo {
+        u32 hardware_version_id_0;
+        Optional<u32> hardware_version_id_1;
+        Optional<RTL8168NetworkAdapter::ChipVersion> version;
+    };
 
-    switch (registers) {
-    case 0x30000000:
+    static constexpr auto VERSION_LIST = to_array<VersionInfo>({
+        { 0x300, {}, {} },
+
+        { 0x380, {}, ChipVersion::RTL8168B },
+
+        { 0x3C0, 0x0, ChipVersion::RTL8168C_1 },
+        { 0x3C0, 0x2, ChipVersion::RTL8168C_2 },
+        { 0x3C0, 0x3, ChipVersion::RTL8168C_3 },
+        { 0x3C0, {}, ChipVersion::RTL8168C_4 },
+
+        { 0x3C8, 0x0, ChipVersion::RTL8168CP_1 },
+        { 0x3C8, {}, ChipVersion::RTL8168CP_2 },
+
+        { 0x280, 0x1, ChipVersion::RTL8168D_1 },
+        { 0x280, {}, ChipVersion::RTL8168D_2 },
+
+        { 0x288, 0x0, {} },
+        { 0x288, 0x2, ChipVersion::RTL8168DP_1 },
+        { 0x288, 0x3, ChipVersion::RTL8168DP_2 },
+
+        { 0x2C0, {}, ChipVersion::RTL8168E },
+
+        { 0x2C8, {}, ChipVersion::RTL8168EVL },
+
+        { 0x480, 0x0, ChipVersion::RTL8168F_1 },
+        { 0x480, 0x1, ChipVersion::RTL8168F_2 },
+
+        { 0x488, {}, ChipVersion::RTL8411 },
+
+        { 0x4C0, 0x0, ChipVersion::RTL8168G },
+
+        { 0x500, 0x0, {} },
+        { 0x500, 0x1, {} },
+        { 0x500, 0x2, ChipVersion::RTL8168EP },
+
+        { 0x508, 0x1, ChipVersion::RTL8168GU },
+
+        { 0x5C8, 0x0, ChipVersion::RTL8411B },
+
+        { 0x540, 0x0, {} },
+        { 0x540, 0x1, ChipVersion::RTL8168H },
+
+    });
+
+    auto transmit_config = in32(REG_TXCFG);
+    auto hardware_version_id_0 = (transmit_config & 0x7c800000) >> 20;
+    auto hardware_version_id_1 = (transmit_config & 0x700000) >> 20;
+
+    for (auto const& version : VERSION_LIST) {
+        if (version.hardware_version_id_0 != hardware_version_id_0)
+            continue;
+
+        if (version.hardware_version_id_1.has_value() && version.hardware_version_id_1.value() != hardware_version_id_1)
+            continue;
+
+        if (version.version.has_value())
+            return version.version.value();
+
         dmesgln_pci(*this, "Unsupported chip revision");
         return ENOTSUP;
-    case 0x38000000:
-        m_version = ChipVersion::RTL8168B;
-        break;
-    case 0x3C000000:
-        if (hw_version_id == 0x000000)
-            m_version = ChipVersion::RTL8168C_1;
-        else if (hw_version_id == 0x200000)
-            m_version = ChipVersion::RTL8168C_2;
-        else if (hw_version_id == 0x300000)
-            m_version = ChipVersion::RTL8168C_3;
-        else
-            m_version = ChipVersion::RTL8168C_4;
-        break;
-    case 0x3C800000:
-        if (hw_version_id == 0x000000)
-            m_version = ChipVersion::RTL8168CP_1;
-        else
-            m_version = ChipVersion::RTL8168CP_2;
-        break;
-    case 0x28000000:
-        if (hw_version_id == 0x100000)
-            m_version = ChipVersion::RTL8168D_1;
-        else
-            m_version = ChipVersion::RTL8168D_2;
-        break;
-    case 0x28800000:
-        if (hw_version_id == 0x000000) {
-            dmesgln_pci(*this, "Unsupported chip revision");
-            return ENOTSUP;
-        } else if (hw_version_id == 0x200000) {
-            m_version = ChipVersion::RTL8168DP_1;
-        } else if (hw_version_id == 0x300000) {
-            m_version = ChipVersion::RTL8168DP_2;
-        } else {
-            dmesgln_pci(*this, "Invalid chip revision");
-            return EINVAL;
-        }
-        break;
-    case 0x2C000000:
-        m_version = ChipVersion::RTL8168E;
-        break;
-    case 0x2C800000:
-        m_version = ChipVersion::RTL8168EVL;
-        break;
-    case 0x48000000:
-        if (hw_version_id == 0x000000) {
-            m_version = ChipVersion::RTL8168F_1;
-        } else if (hw_version_id == 0x100000) {
-            m_version = ChipVersion::RTL8168F_2;
-        } else {
-            dmesgln_pci(*this, "Invalid chip revision");
-            return EINVAL;
-        }
-        break;
-    case 0x48800000:
-        m_version = ChipVersion::RTL8411;
-        break;
-    case 0x4C000000:
-        if (hw_version_id == 0x000000) {
-            m_version = ChipVersion::RTL8168G;
-        } else {
-            dmesgln_pci(*this, "Invalid chip revision");
-            return EINVAL;
-        }
-        break;
-    case 0x50000000:
-        if (hw_version_id == 0x000000 || hw_version_id == 0x100000) {
-            dmesgln_pci(*this, "Unsupported chip revision");
-            return ENOTSUP;
-        } else if (hw_version_id == 0x200000) {
-            m_version = ChipVersion::RTL8168EP;
-        } else {
-            dmesgln_pci(*this, "Invalid chip revision");
-            return EINVAL;
-        }
-        break;
-    case 0x50800000:
-        if (hw_version_id == 0x100000) {
-            m_version = ChipVersion::RTL8168GU;
-        } else {
-            dmesgln_pci(*this, "Invalid chip revision");
-            return EINVAL;
-        }
-        break;
-    case 0x5C800000:
-        if (hw_version_id == 0x000000) {
-            m_version = ChipVersion::RTL8411B;
-        } else {
-            dmesgln_pci(*this, "Invalid chip revision");
-            return EINVAL;
-        }
-        break;
-    case 0x54000000:
-        if (hw_version_id == 0x00000) {
-            dmesgln_pci(*this, "Unsupported chip revision");
-            return ENOTSUP;
-        } else if (hw_version_id == 0x100000) {
-            m_version = ChipVersion::RTL8168H;
-        } else {
-            dmesgln_pci(*this, "Invalid chip revision");
-            return EINVAL;
-        }
-        break;
-    default:
-        dbgln_if(RTL8168_DEBUG, "Unable to determine device version: {:#04x}", registers);
-        m_version = ChipVersion::Unknown;
-        break;
     }
 
-    return {};
+    dmesgln_pci(*this, "Unable to determine device version: {:#04x} ({:#01x})", hardware_version_id_0, hardware_version_id_1);
+    return ChipVersion::Unknown;
 }
 
 StringView RTL8168NetworkAdapter::possible_device_name()

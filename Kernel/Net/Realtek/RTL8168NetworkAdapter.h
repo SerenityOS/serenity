@@ -129,7 +129,7 @@ private:
         RTL8168EP = 51,
     };
 
-    ErrorOr<void> identify_chip_version();
+    ErrorOr<ChipVersion> identify_chip_version();
     StringView possible_device_name();
 
     void reset();
