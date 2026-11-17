@@ -46,6 +46,8 @@
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
+#include <Kernel/Firmware/DeviceTree/PlatformInit.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
@@ -74,13 +76,7 @@
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #    include <Kernel/Arch/aarch64/RPi/MiniUART.h>
 #elif ARCH(RISCV64)
-#    include <Kernel/Arch/riscv64/Delay.h>
 #    include <Kernel/Arch/riscv64/SBI.h>
-#endif
-
-#if ARCH(AARCH64) || ARCH(RISCV64)
-#    include <Kernel/Firmware/DeviceTree/Management.h>
-#    include <Kernel/Firmware/DeviceTree/PlatformInit.h>
 #endif
 
 // Defined in the linker script
@@ -183,10 +179,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
     CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
 
-#if ARCH(AARCH64) || ARCH(RISCV64)
-    DeviceTree::map_flattened_devicetree();
-    DeviceTree::run_platform_init();
-#endif
+    if (DeviceTree::is_present()) {
+        DeviceTree::map_flattened_devicetree();
+        DeviceTree::run_platform_init();
+    }
 
     // NOTE: If the bootloader provided a framebuffer, then set up an initial console.
     // If the bootloader didn't provide a framebuffer, then set up an initial text console.
@@ -217,30 +213,29 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
     for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
         (*init_function)();
 
-#if ARCH(AARCH64) || ARCH(RISCV64)
-    MUST(DeviceTree::unflatten_fdt());
+    if (DeviceTree::is_present()) {
+        MUST(DeviceTree::unflatten_fdt());
 
-    if (kernel_command_line().contains("dump_fdt"sv))
-        DeviceTree::dump_fdt();
+        if (kernel_command_line().contains("dump_fdt"sv))
+            DeviceTree::dump_fdt();
 
-    DeviceTree::Management::initialize();
+        DeviceTree::Management::initialize();
 
-#    if ARCH(RISCV64)
-    bsp_processor().find_and_parse_devicetree_node();
-    init_delay_loop();
-#    endif
-
-    MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::InterruptController));
+#if ARCH(RISCV64)
+        bsp_processor().find_and_parse_devicetree_node();
+        init_delay_loop();
 #endif
+
+        MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::InterruptController));
+    }
 
     if (auto maybe_error = ACPI::early_initialize(); maybe_error.is_error())
         dmesgln("ACPI: Error during early initilization: {}", maybe_error.release_error());
 
     InterruptManagement::initialize();
 
-#if ARCH(AARCH64) || ARCH(RISCV64)
-    MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Early));
-#endif
+    if (DeviceTree::is_present())
+        MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Early));
 
     if (ACPI::is_enabled()) {
         if (auto maybe_error = ACPI::Parser::the()->full_initialize(); maybe_error.is_error())
@@ -333,9 +328,8 @@ void init_stage2(void*)
     }
 #endif
 
-#if ARCH(AARCH64) || ARCH(RISCV64)
-    MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Regular));
-#endif
+    if (DeviceTree::is_present())
+        MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Regular));
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();

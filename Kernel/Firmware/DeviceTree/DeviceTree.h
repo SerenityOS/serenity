@@ -23,6 +23,8 @@ ErrorOr<StringView> get_command_line_from_fdt();
 
 ::DeviceTree::DeviceTree const& get();
 
+bool is_present();
+
 void map_flattened_devicetree();
 ReadonlyBytes flattened_devicetree();
 
