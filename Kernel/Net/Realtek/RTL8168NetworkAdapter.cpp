@@ -242,7 +242,6 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     case ChipVersion::Version25:
     case ChipVersion::Version26:
     case ChipVersion::Version28:
-    case ChipVersion::Version29:
         return false;
     case ChipVersion::Version30:
         return true;
@@ -491,10 +490,6 @@ void RTL8168NetworkAdapter::configure_phy()
         TODO();
     case ChipVersion::Version28:
         TODO();
-    case ChipVersion::Version29: {
-        configure_phy_h_1();
-        return;
-    }
     case ChipVersion::Version30: {
         configure_phy_h_2();
         return;
@@ -673,113 +668,6 @@ void RTL8168NetworkAdapter::configure_phy_e_2()
 
     // Broken BIOS workaround: feed GigaMAC registers with MAC address.
     rar_exgmac_set();
-}
-
-void RTL8168NetworkAdapter::configure_phy_h_1()
-{
-    // FIXME: linux's driver writes a firmware blob to the device at this point, is this needed?
-
-    // CHN EST parameters adjust - giga master
-    phy_out(0x1f, 0x0a43);
-    phy_out(0x13, 0x809b);
-    phy_update(0x14, 0x8000, 0xf800);
-    phy_out(0x13, 0x80a2);
-    phy_update(0x14, 0x8000, 0xff00);
-    phy_out(0x13, 0x80a4);
-    phy_update(0x14, 0x8500, 0xff00);
-    phy_out(0x13, 0x809c);
-    phy_update(0x14, 0xbd00, 0xff00);
-    phy_out(0x1f, 0);
-
-    // CHN EST parameters adjust - giga slave
-    phy_out(0x1f, 0x0a43);
-    phy_out(0x13, 0x80ad);
-    phy_update(0x14, 0x7000, 0xf800);
-    phy_out(0x13, 0x80b4);
-    phy_update(0x14, 0x5000, 0xff00);
-    phy_out(0x13, 0x80ac);
-    phy_update(0x14, 0x4000, 0xff00);
-    phy_out(0x1f, 0);
-
-    // CHN EST parameters adjust - fnet
-    phy_out(0x1f, 0x0a43);
-    phy_out(0x13, 0x808e);
-    phy_update(0x14, 0x1200, 0xff00);
-    phy_out(0x13, 0x8090);
-    phy_update(0x14, 0xe500, 0xff00);
-    phy_out(0x13, 0x8092);
-    phy_update(0x14, 0x9f00, 0xff00);
-    phy_out(0x1f, 0);
-
-    // enable R-tune & PGA-retune function
-    u16 dout_tapbin = 0;
-    phy_out(0x1f, 0x0a46);
-    auto data = phy_in(0x13);
-    data &= 3;
-    data <<= 2;
-    dout_tapbin |= data;
-    data = phy_in(0x12);
-    data &= 0xc000;
-    data >>= 14;
-    dout_tapbin |= data;
-    dout_tapbin = ~(dout_tapbin ^ 0x8);
-    dout_tapbin <<= 12;
-    dout_tapbin &= 0xf000;
-    phy_out(0x1f, 0x0a43);
-    phy_out(0x13, 0x827a);
-    phy_update(0x14, dout_tapbin, 0xf000);
-    phy_out(0x13, 0x827b);
-    phy_update(0x14, dout_tapbin, 0xf000);
-    phy_out(0x13, 0x827c);
-    phy_update(0x14, dout_tapbin, 0xf000);
-    phy_out(0x13, 0x827d);
-    phy_update(0x14, dout_tapbin, 0xf000);
-
-    phy_out(0x1f, 0x0a43);
-    phy_out(0x13, 0x811);
-    phy_update(0x14, 0x800, 0);
-    phy_out(0x1f, 0x0a42);
-    phy_update(0x16, 0x2, 0);
-    phy_out(0x1f, 0);
-
-    // enable GPHY 10M
-    phy_out(0x1f, 0x0a44);
-    phy_update(0x11, 0x800, 0);
-    phy_out(0x1f, 0);
-
-    // SAR ADC performance
-    phy_out(0x1f, 0x0bca);
-    phy_update(0x17, 0x4000, 0x3000);
-    phy_out(0x1f, 0);
-
-    phy_out(0x1f, 0x0a43);
-    phy_out(0x13, 0x803f);
-    phy_update(0x14, 0, 0x3000);
-    phy_out(0x13, 0x8047);
-    phy_update(0x14, 0, 0x3000);
-    phy_out(0x13, 0x804f);
-    phy_update(0x14, 0, 0x3000);
-    phy_out(0x13, 0x8057);
-    phy_update(0x14, 0, 0x3000);
-    phy_out(0x13, 0x805f);
-    phy_update(0x14, 0, 0x3000);
-    phy_out(0x13, 0x8067);
-    phy_update(0x14, 0, 0x3000);
-    phy_out(0x13, 0x806f);
-    phy_update(0x14, 0, 0x3000);
-    phy_out(0x1f, 0);
-
-    // disable phy pfm mode
-    phy_out(0x1f, 0x0a44);
-    phy_update(0x11, 0, 0x80);
-    phy_out(0x1f, 0);
-
-    // Check ALDPS bit, disable it if enabled
-    phy_out(0x1f, 0x0a43);
-    if (phy_in(0x10) & 0x4)
-        phy_update(0x10, 0, 0x4);
-
-    phy_out(0x1f, 0);
 }
 
 void RTL8168NetworkAdapter::configure_phy_h_2()
@@ -976,7 +864,6 @@ void RTL8168NetworkAdapter::hardware_quirks()
         TODO();
     case ChipVersion::Version28:
         TODO();
-    case ChipVersion::Version29:
     case ChipVersion::Version30:
         hardware_quirks_h();
         return;
@@ -1721,8 +1608,9 @@ ErrorOr<void> RTL8168NetworkAdapter::identify_chip_version()
         }
         break;
     case 0x54000000:
-        if (hw_version_id == 00000) {
-            m_version = ChipVersion::Version29;
+        if (hw_version_id == 0x00000) {
+            dmesgln_pci(*this, "Unsupported chip revision");
+            return ENOTSUP;
         } else if (hw_version_id == 0x100000) {
             m_version = ChipVersion::Version30;
         } else {
@@ -1779,9 +1667,8 @@ StringView RTL8168NetworkAdapter::possible_device_name()
         return "RTL8168GU/8111GU"sv; // ???
     case ChipVersion::Version26:
         return "RTL8411B"sv; // 44
-    case ChipVersion::Version29:
     case ChipVersion::Version30:
-        return "RTL8168H/8111H"sv; // 45, 46
+        return "RTL8168H/8111H"sv; // 46
     case ChipVersion::Unknown:
         return "Unknown"sv;
     }
