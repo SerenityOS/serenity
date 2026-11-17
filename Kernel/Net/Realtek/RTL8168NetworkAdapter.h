@@ -116,7 +116,6 @@ private:
         Version25 = 25,
         Version26 = 26,
         Version28 = 28,
-        Version29 = 29,
         Version30 = 30
     };
 
@@ -136,7 +135,6 @@ private:
     void configure_phy_c_2();
     void configure_phy_c_3();
     void configure_phy_e_2();
-    void configure_phy_h_1();
     void configure_phy_h_2();
 
     void rar_exgmac_set();
