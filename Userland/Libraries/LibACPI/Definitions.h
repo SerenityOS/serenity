@@ -265,7 +265,10 @@ enum class MADTEntryType : u8 {
     GIC_Distributor = 0xC,
     GIC_MSI = 0xD,
     GIC_Redistrbutor = 0xE,
-    GIC_Interrupt_Translation = 0xF
+    GIC_Interrupt_Translation = 0xF,
+    RISCV_Hart_Local_Interrupt_Controller = 0x18,
+    RISCV_Advanced_Platform_Level_Interrupt_Controller = 0x1A,
+    RISCV_Platform_Level_Interrupt_Controller = 0x1B,
 };
 
 struct [[gnu::packed]] MADTEntryHeader {
@@ -309,6 +312,61 @@ struct [[gnu::packed]] InterruptSourceOverride {
     u32 global_system_interrupt;
     u16 flags;
 };
+
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#risc-v-interrupt-controller-rintc-structure
+struct [[gnu::packed]] RISCVInterruptController {
+    enum class Flags : u32 {
+        Enabled = 1u << 0,
+        OnlineCapable = 1u << 1,
+    };
+
+    union ExternalInterruptControllerID {
+        struct {
+            u16 idc_id;
+            u8 _;
+            u8 aplic_id;
+        } aplic;
+
+        struct {
+            u16 s_mode_context_id;
+            u8 _;
+            u8 plic_id;
+        } plic;
+    };
+
+    MADTEntryHeader h;
+    u8 version;
+    u8 _;
+    Flags flags;
+    u64 hart_id;
+    u32 acpi_processor_uid;
+    ExternalInterruptControllerID external_interrupt_controller_id;
+    u64 imsic_base_address;
+    u32 imsic_size;
+};
+static_assert(AssertSize<RISCVInterruptController, 36>());
+
+AK_ENUM_BITWISE_OPERATORS(RISCVInterruptController::Flags);
+
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#risc-v-platform-level-interrupt-controller-plic-structure
+struct [[gnu::packed]] RISCVPlatformLevelInterruptController {
+    enum class Flags : u32 { };
+
+    MADTEntryHeader h;
+    u8 version;
+    u8 plic_id;
+    u64 hardware_id;
+    u16 total_external_interrupt_sources_supported;
+    u16 max_priority;
+    Flags flags;
+    u32 plic_size;
+    u64 plic_address;
+    u32 global_system_interrupt_base;
+};
+static_assert(AssertSize<RISCVPlatformLevelInterruptController, 36>());
+
+AK_ENUM_BITWISE_OPERATORS(RISCVPlatformLevelInterruptController::Flags);
+
 }
 
 // https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#multiple-apic-description-table-madt-format
