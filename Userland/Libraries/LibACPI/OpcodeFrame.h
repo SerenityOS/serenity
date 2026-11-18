@@ -34,7 +34,6 @@ enum class OperandType : u8 {
 
     MarkAsCount,
     RepeatNextBytes,
-    RepeatNextCount,
     End,
 };
 
@@ -68,7 +67,7 @@ private:
     }
 
     OperandType peek_next_operand();
-    bool check_repeat_opcodes(size_t current_offset);
+    bool check_repeat_opcode(size_t current_offset);
 
     Optional<Opcode> m_opcode;
     Vector<Object> m_operands;
