@@ -35,10 +35,10 @@ constexpr static auto BUFFER_CONST_OPERANDS = to_array({
 });
 
 constexpr static auto PACKAGE_OPERANDS = to_array({
-    OperandType::PackageLength,
     OperandType::MarkAsCount,
+    OperandType::PackageLength,
     OperandType::ByteData,
-    OperandType::RepeatNextCount,
+    OperandType::RepeatNextBytes,
     OperandType::PackageElement,
     OperandType::End,
 });
