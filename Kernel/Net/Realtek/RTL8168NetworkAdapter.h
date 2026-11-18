@@ -181,6 +181,7 @@ private:
     void configure_phy_c_3();
     void configure_phy_e_2();
     void configure_phy_h_2();
+    void configure_phy_8126_a();
 
     void rar_exgmac_set();
 

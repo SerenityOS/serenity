@@ -514,6 +514,9 @@ void RTL8168NetworkAdapter::configure_phy()
     case ChipVersion::RTL8168H:
         configure_phy_h_2();
         return;
+    case ChipVersion::RTL8126A:
+        configure_phy_8126_a();
+        return;
     case ChipVersion::Unknown:
         VERIFY_NOT_REACHED();
     default:
@@ -761,6 +764,24 @@ void RTL8168NetworkAdapter::configure_phy_h_2()
         phy_update(0x10, 0, 0x4);
 
     phy_out(0x1f, 0);
+}
+
+void RTL8168NetworkAdapter::configure_phy_8126_a()
+{
+    // FIXME: linux also loads a PHY firmware blob here, without it 2.5G/5G might not work
+
+    auto update_paged = [&](u16 page, u8 reg, u16 set, u16 clear) {
+        phy_out(0x1f, page);
+        phy_update(reg, set, clear);
+        phy_out(0x1f, 0);
+    };
+
+    update_paged(0xa44, 0x11, 1 << 11, 0); // enable gphy 10m
+    update_paged(0xa5b, 0x12, 0, 1 << 15); // legacy force mode
+    update_paged(0xa43, 0x10, 0, 1 << 2);  // disable ALDPS
+    update_paged(0xa6d, 0x14, 0, 0x0010);  // EEE
+    update_paged(0xa42, 0x14, 0, 0x0080);
+    update_paged(0xa4a, 0x11, 0, 0x0200);
 }
 
 void RTL8168NetworkAdapter::rar_exgmac_set()
