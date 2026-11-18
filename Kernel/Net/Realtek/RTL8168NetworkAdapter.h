@@ -38,9 +38,8 @@ public:
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
 private:
-    // FIXME: should this be increased? (maximum allowed here is 1024) - memory usage vs packet loss chance tradeoff
-    static constexpr size_t number_of_rx_descriptors = 64;
-    static constexpr size_t number_of_tx_descriptors = 16;
+    static constexpr size_t number_of_rx_descriptors = 256;
+    static constexpr size_t number_of_tx_descriptors = 256;
 
     RTL8168NetworkAdapter(StringView, PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow> registers_io_window);
 
