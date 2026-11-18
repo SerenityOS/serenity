@@ -226,10 +226,9 @@ UNMAP_AFTER_INIT ErrorOr<bool> RTL8168NetworkAdapter::probe(PCI::DeviceIdentifie
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> RTL8168NetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    InterruptNumber irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR2));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RTL8168NetworkAdapter(interface_name.representable_view(), pci_device_identifier, irq, move(registers_io_window))));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RTL8168NetworkAdapter(interface_name.representable_view(), pci_device_identifier, move(registers_io_window))));
 }
 
 bool RTL8168NetworkAdapter::determine_supported_version() const
@@ -277,10 +276,9 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const& device_identifier, InterruptNumber irq, NonnullOwnPtr<IOWindow> registers_io_window)
+UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const& device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
     : NetworkAdapter(interface_name)
     , PCI::Device(device_identifier)
-    , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
     // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
     , m_rx_descriptors(Memory::allocate_dma_region_as_typed_array<RXDescriptor volatile>(number_of_rx_descriptors + 1, "RTL8168 RX"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO).release_value_but_fixme_should_propagate_errors())
@@ -408,18 +406,21 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         TODO();
     }
 
-    startup();
+    TRY(startup());
     return {};
 }
 
-void RTL8168NetworkAdapter::startup()
+ErrorOr<void> RTL8168NetworkAdapter::startup()
 {
     // initialize descriptors
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
     // register irq
-    enable_irq();
+    TRY(reserve_irqs(1, m_version <= ChipVersion::RTL8168B ? PCI::AllowedInterruptTypes::Pin : PCI::AllowedInterruptTypes::PinAndMSIAndMSIX));
+
+    auto interrupt_number = TRY(allocate_irq(0));
+    m_interrupt_handler = TRY(InterruptHandler::create(*this, interrupt_number));
 
     // version specific phy configuration
     configure_phy();
@@ -482,6 +483,8 @@ void RTL8168NetworkAdapter::startup()
     // update link status
     m_link_up = (read_phy_status() & PHY_LINK_STATUS) != 0;
     autoconfigure_link_local_ipv6();
+
+    return {};
 }
 
 void RTL8168NetworkAdapter::configure_phy()
@@ -1202,7 +1205,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
 
 UNMAP_AFTER_INIT RTL8168NetworkAdapter::~RTL8168NetworkAdapter() = default;
 
-bool RTL8168NetworkAdapter::handle_irq()
+bool RTL8168NetworkAdapter::handle_interrupt()
 {
     bool was_handled = false;
     for (;;) {

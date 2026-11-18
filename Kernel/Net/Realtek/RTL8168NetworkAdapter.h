@@ -12,6 +12,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Security/Random.h>
@@ -20,8 +21,7 @@ namespace Kernel {
 
 // RTL8618 / RTL8111 Driver based on https://people.freebsd.org/~wpaul/RealTek/RTL8111B_8168B_Registers_DataSheet_1.0.pdf
 class RTL8168NetworkAdapter final : public NetworkAdapter
-    , public PCI::Device
-    , public IRQHandler {
+    , public PCI::Device {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
     static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
@@ -34,7 +34,6 @@ public:
     virtual bool link_full_duplex() override;
     virtual i32 link_speed() override;
 
-    virtual StringView purpose() const override { return class_name(); }
     virtual StringView device_name() const override { return class_name(); }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
@@ -43,9 +42,35 @@ private:
     static constexpr size_t number_of_rx_descriptors = 64;
     static constexpr size_t number_of_tx_descriptors = 16;
 
-    RTL8168NetworkAdapter(StringView, PCI::DeviceIdentifier const&, InterruptNumber irq, NonnullOwnPtr<IOWindow> registers_io_window);
+    RTL8168NetworkAdapter(StringView, PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow> registers_io_window);
 
-    virtual bool handle_irq() override;
+    bool handle_interrupt();
+
+    class InterruptHandler final : public PCI::IRQHandler {
+    public:
+        static ErrorOr<NonnullOwnPtr<InterruptHandler>> create(RTL8168NetworkAdapter& network_adapter, InterruptNumber interrupt_number)
+        {
+            auto interrupt_handler = TRY(adopt_nonnull_own_or_enomem(new (nothrow) InterruptHandler(network_adapter, interrupt_number)));
+            interrupt_handler->enable_irq();
+            return interrupt_handler;
+        }
+
+    private:
+        InterruptHandler(RTL8168NetworkAdapter& network_adapter, InterruptNumber interrupt_number)
+            : PCI::IRQHandler(network_adapter, interrupt_number)
+            , m_network_adapter(network_adapter)
+        {
+        }
+
+        virtual StringView purpose() const override { return "RTL8168 Interrupt Handler"sv; }
+        virtual bool handle_irq() override
+        {
+            return m_network_adapter.handle_interrupt();
+        }
+
+        RTL8168NetworkAdapter& m_network_adapter;
+    };
+
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }
 
     bool determine_supported_version() const;
@@ -147,7 +172,7 @@ private:
     void read_mac_address();
     void set_phy_speed();
     void start_hardware();
-    void startup();
+    ErrorOr<void> startup();
 
     void configure_phy();
     void configure_phy_b();
@@ -226,6 +251,8 @@ private:
 
     void ocp_phy_out(u32 address, u32 data);
     u16 ocp_phy_in(u32 address);
+
+    OwnPtr<InterruptHandler> m_interrupt_handler;
 
     ChipVersion m_version { ChipVersion::Unknown };
     NonnullOwnPtr<IOWindow> m_registers_io_window;
