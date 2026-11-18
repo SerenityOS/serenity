@@ -211,7 +211,8 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
     case Opcode::BufferOp:
         return move(frame.operand(2));
 
-    case Opcode::PackageOp: {
+    case Opcode::PackageOp:
+    case Opcode::VarPackageOp: {
         auto num_elements = TRY(frame.operand(1).release_as<u64>());
 
         auto operands = frame.release_operands();
