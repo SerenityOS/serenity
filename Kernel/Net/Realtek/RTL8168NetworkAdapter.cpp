@@ -193,6 +193,9 @@ namespace Kernel {
 #define MISC2_PFM_D3COLD_ENABLE 0x40
 
 #define PHYSTATUS_FULLDUP 0x01
+#define PHYSTATUS_10000MF 0x4000
+#define PHYSTATUS_5000MF 0x1000
+#define PHYSTATUS_2500MF 0x400
 #define PHYSTATUS_1000MF 0x10
 #define PHYSTATUS_100M 0x08
 #define PHYSTATUS_10M 0x04
@@ -477,7 +480,7 @@ void RTL8168NetworkAdapter::startup()
     pci_commit();
 
     // update link status
-    m_link_up = (in8(REG_PHYSTATUS) & PHY_LINK_STATUS) != 0;
+    m_link_up = (read_phy_status() & PHY_LINK_STATUS) != 0;
     autoconfigure_link_local_ipv6();
 }
 
@@ -1233,7 +1236,7 @@ bool RTL8168NetworkAdapter::handle_irq()
             receive();
         }
         if (status & INT_LINK_CHANGE) {
-            m_link_up = (in8(REG_PHYSTATUS) & PHY_LINK_STATUS) != 0;
+            m_link_up = (read_phy_status() & PHY_LINK_STATUS) != 0;
             dmesgln_pci(*this, "Link status changed up={}", m_link_up);
             autoconfigure_link_local_ipv6();
         }
@@ -1373,6 +1376,14 @@ void RTL8168NetworkAdapter::doorbell()
         out8(REG_TXSTART_8125, 0x1);
     else
         out8(REG_TXSTART, TXSTART_START);
+}
+
+u32 RTL8168NetworkAdapter::read_phy_status()
+{
+    if (m_version >= ChipVersion::RTL8125A)
+        return in32(REG_PHYSTATUS);
+
+    return in8(REG_PHYSTATUS);
 }
 
 void RTL8168NetworkAdapter::out8(u16 address, u8 data)
@@ -1746,8 +1757,8 @@ StringView RTL8168NetworkAdapter::possible_device_name()
 
 bool RTL8168NetworkAdapter::link_full_duplex()
 {
-    u8 phystatus = in8(REG_PHYSTATUS);
-    return !!(phystatus & (PHYSTATUS_FULLDUP | PHYSTATUS_1000MF));
+    u32 phystatus = read_phy_status();
+    return !!(phystatus & (PHYSTATUS_FULLDUP | PHYSTATUS_1000MF | PHYSTATUS_2500MF | PHYSTATUS_5000MF | PHYSTATUS_10000MF));
 }
 
 i32 RTL8168NetworkAdapter::link_speed()
@@ -1755,7 +1766,14 @@ i32 RTL8168NetworkAdapter::link_speed()
     if (!link_up())
         return NetworkAdapter::LINKSPEED_INVALID;
 
-    u8 phystatus = in8(REG_PHYSTATUS);
+    auto phystatus = read_phy_status();
+
+    if (phystatus & PHYSTATUS_10000MF)
+        return 10000;
+    if (phystatus & PHYSTATUS_5000MF)
+        return 5000;
+    if (phystatus & PHYSTATUS_2500MF)
+        return 2500;
     if (phystatus & PHYSTATUS_1000MF)
         return 1000;
     if (phystatus & PHYSTATUS_100M)
