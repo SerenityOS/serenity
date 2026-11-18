@@ -59,10 +59,18 @@ TEST_CASE(data_objects_and_named_objects)
     auto package = TRY_OR_FAIL(interpreter->evaluate("\\PKG0"sv));
     EXPECT(package.is<ACPI::AML::Package>());
     auto package_data = MUST(package.release_as<ACPI::AML::Package>());
-    EXPECT_EQ(package_data.package().size(), 3u);
+    EXPECT_EQ(package_data.package().size(), 4u);
+
+    EXPECT(package_data.package()[0].is<u64>());
     EXPECT_EQ(MUST(package_data.package()[0].as<u64>()), 0ul);
+
+    EXPECT(package_data.package()[1].is<u64>());
     EXPECT_EQ(MUST(package_data.package()[1].as<u64>()), 1ul);
+
+    EXPECT(package_data.package()[2].is<u64>());
     EXPECT_EQ(MUST(package_data.package()[2].as<u64>()), 42ul);
+
+    EXPECT(package_data.package()[3].is_empty());
 
     auto device_value = TRY_OR_FAIL(interpreter->evaluate("\\DEV0.VAL0"sv));
     EXPECT_EQ(MUST(device_value.as<u64>()), 0x1234ul);

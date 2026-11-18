@@ -212,8 +212,13 @@ ErrorOr<Object> Interpreter::finalize_value_opcode(OpcodeFrame& frame)
         return move(frame.operand(2));
 
     case Opcode::PackageOp: {
+        auto num_elements = TRY(frame.operand(1).release_as<u64>());
+
         auto operands = frame.release_operands();
         operands.remove(0, 2);
+
+        TRY(operands.try_resize(num_elements));
+
         return Package(move(operands));
     }
 
