@@ -268,7 +268,9 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     case ChipVersion::RTL8125D:
     case ChipVersion::RTL8125BP:
     case ChipVersion::RTL8126A:
+        return true;
     case ChipVersion::RTL8127A:
+        return false;
     case ChipVersion::Unknown:
         return false;
     }
