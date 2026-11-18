@@ -43,6 +43,15 @@ constexpr static auto PACKAGE_OPERANDS = to_array({
     OperandType::End,
 });
 
+constexpr static auto VAR_PACKAGE_OPERANDS = to_array({
+    OperandType::MarkAsCount,
+    OperandType::PackageLength,
+    OperandType::TermArg,
+    OperandType::RepeatNextBytes,
+    OperandType::PackageElement,
+    OperandType::End,
+});
+
 constexpr static auto ALIAS_OPERANDS = to_array({
     OperandType::NameString,
     OperandType::NameString,
@@ -171,6 +180,8 @@ static ErrorOr<ReadonlySpan<OperandType>> get_opcode_operand_template(Opcode opc
         return BUFFER_CONST_OPERANDS.span();
     case Opcode::PackageOp:
         return PACKAGE_OPERANDS.span();
+    case Opcode::VarPackageOp:
+        return VAR_PACKAGE_OPERANDS.span();
 
     case Opcode::AliasOp:
         return ALIAS_OPERANDS.span();

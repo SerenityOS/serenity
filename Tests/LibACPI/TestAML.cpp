@@ -72,6 +72,20 @@ TEST_CASE(data_objects_and_named_objects)
 
     EXPECT(package_data.package()[3].is_empty());
 
+    auto var_package = TRY_OR_FAIL(interpreter->evaluate("\\VPK1"sv));
+    EXPECT(var_package.is<ACPI::AML::Package>());
+    auto var_package_data = MUST(var_package.release_as<ACPI::AML::Package>());
+    EXPECT_EQ(var_package_data.package().size(), 512u);
+
+    EXPECT(var_package_data.package()[0].is<u64>());
+    EXPECT_EQ(MUST(var_package_data.package()[0].as<u64>()), 0ul);
+
+    EXPECT(var_package_data.package()[1].is<ACPI::AML::String>());
+    auto var_package_string = MUST(var_package_data.package()[1].as_pointer<ACPI::AML::String>());
+    EXPECT_EQ(StringView(StringView(var_package_string->buffer())), "hello"sv);
+
+    EXPECT(var_package_data.package()[511].is_empty());
+
     auto device_value = TRY_OR_FAIL(interpreter->evaluate("\\DEV0.VAL0"sv));
     EXPECT_EQ(MUST(device_value.as<u64>()), 0x1234ul);
 
