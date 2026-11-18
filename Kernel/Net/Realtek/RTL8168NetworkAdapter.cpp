@@ -339,19 +339,19 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         ocp_out(0xc01e, 0x5555);
         while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
             Processor::wait_check();
-    }
-    if (m_version == ChipVersion::RTL8168EP) {
-        // disable CMAC
-        out8(REG_IBCR2, in8(REG_IBCR2) & ~1);
-
-        while ((in8(REG_IBISR0) & 0x2) != 0)
-            Processor::wait_check();
-
-        out8(REG_IBISR0, in8(REG_IBISR0) | 0x20);
-        out8(REG_IBCR0, in8(REG_IBCR0) & ~1);
-    }
-    if (m_version >= ChipVersion::RTL8168G) {
+    } else if (m_version >= ChipVersion::RTL8168G) {
         m_ocp_base_address = OCP_STANDARD_PHY_BASE;
+
+        if (m_version == ChipVersion::RTL8168EP) {
+            // disable CMAC
+            out8(REG_IBCR2, in8(REG_IBCR2) & ~1);
+
+            while ((in8(REG_IBISR0) & 0x2) != 0)
+                Processor::wait_check();
+
+            out8(REG_IBISR0, in8(REG_IBISR0) | 0x20);
+            out8(REG_IBCR0, in8(REG_IBCR0) & ~1);
+        }
 
         // enable RXDV gate
         out32(REG_MISC, in32(REG_MISC) | MISC_RXDV_GATE_ENABLE);
