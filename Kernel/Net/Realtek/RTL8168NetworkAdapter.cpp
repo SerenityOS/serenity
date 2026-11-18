@@ -6,6 +6,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/GenericShorthands.h>
 #include <AK/MACAddress.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
@@ -21,6 +22,7 @@ namespace Kernel {
 #define REG_MAR4 0x0C
 #define REG_EEE_LED 0x1B
 #define REG_TXADDR 0x20
+#define REG_INT_CFG0_8125 0x34
 #define REG_COMMAND 0x37
 #define REG_TXSTART 0x38
 #define REG_IMR 0x3C
@@ -46,6 +48,7 @@ namespace Kernel {
 #define REG_PMCH 0x6F
 #define REG_ERI_DATA 0x70
 #define REG_ERI_ADDR 0x74
+#define REG_INT_CFG1_8125 0x7A
 #define REG_EPHYACCESS 0x80
 #define REG_TXSTART_8125 0x90
 #define REG_OCP_DATA 0xB0
@@ -805,6 +808,22 @@ void RTL8168NetworkAdapter::start_hardware()
     // configure tx: use the maximum dma transfer size, default interframe gap time.
     out32(REG_TXCFG, TXCFG_IFG011 | TXCFG_MAX_DMA_UNLIMITED);
 
+    // disable interrupt coalescing
+    if (m_version >= ChipVersion::RTL8125A) {
+        out8(REG_INT_CFG0_8125, 0x00);
+
+        if (first_is_one_of(m_version, ChipVersion::RTL8125B, ChipVersion::RTL8126A, ChipVersion::RTL8127A))
+            out16(REG_INT_CFG1_8125, 0x0000);
+
+        if (first_is_one_of(m_version, ChipVersion::RTL8125A, ChipVersion::RTL8125D, ChipVersion::RTL8125BP, ChipVersion::RTL8127A)) {
+            for (u16 i = 0xA00; i < 0xB00; i += 4)
+                out32(i, 0);
+        } else if (first_is_one_of(m_version, ChipVersion::RTL8125B, ChipVersion::RTL8126A)) {
+            for (u16 i = 0xA00; i < 0xA80; i += 4)
+                out32(i, 0);
+        }
+    }
+
     // version specific quirks and tweaks
     hardware_quirks();
 
@@ -1059,11 +1078,6 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
 
 void RTL8168NetworkAdapter::hardware_quirks_8125_b()
 {
-    out8(0x34, 0x00);
-    for (int i = 0xa00; i < 0xa80; i += 4)
-        out32(i, 0);
-    out16(0x7a, 0x0000);
-
     // Enable extended tally counter
     ocp_update(0xea84, 0x3, 0);
 
