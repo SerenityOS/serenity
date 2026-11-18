@@ -191,7 +191,10 @@ private:
     void hardware_quirks_c_3();
     void hardware_quirks_e_2();
     void hardware_quirks_h();
+
+    void hardware_quirks_8125_generic();
     void hardware_quirks_8125_b();
+    void hardware_quirks_8126_a();
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();

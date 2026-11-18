@@ -879,6 +879,9 @@ void RTL8168NetworkAdapter::hardware_quirks()
     case ChipVersion::RTL8125B:
         hardware_quirks_8125_b();
         return;
+    case ChipVersion::RTL8126A:
+        hardware_quirks_8126_a();
+        return;
     case ChipVersion::Unknown:
         VERIFY_NOT_REACHED();
 
@@ -1082,21 +1085,8 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
     ocp_out(0xc09e, 0);
 }
 
-void RTL8168NetworkAdapter::hardware_quirks_8125_b()
+void RTL8168NetworkAdapter::hardware_quirks_8125_generic()
 {
-    // Enable extended tally counter
-    ocp_update(0xea84, 0x3, 0);
-
-    static constexpr auto ephy_info = to_array<EPhyUpdate>({
-        { 0x0b, 0xffff, 0xa908 },
-        { 0x1e, 0xffff, 0x20eb },
-        { 0x02, 0x0030, 0x0020 },
-        { 0x1e, 0xffff, 0x20eb },
-        { 0x02, 0x0030, 0x0020 },
-        { 0x02, 0x0030, 0x0020 },
-    });
-    extended_phy_initialize(ephy_info);
-
     // Set default ASPM entry latency (L0 7us, L1 16us) and disable L2/L3 ready
     out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_READY_TO_L23);
 
@@ -1118,15 +1108,41 @@ void RTL8168NetworkAdapter::hardware_quirks_8125_b()
     // Disable new TX descriptor format
     ocp_update(0xeb58, 0x0000, 0x0001);
 
-    ocp_update(0xe614, 0x0200, 0x0700);
-    ocp_update(0xe63e, 0x0000, 0x0c30);
+    if (m_version >= ChipVersion::RTL8126A)
+        out8(0xD8, in8(0xD8) & ~0x02);
+
+    switch (m_version) {
+    case ChipVersion::RTL8125B:
+        ocp_update(0xe614, 0x0200, 0x0700);
+        break;
+    case ChipVersion::RTL8126A:
+        ocp_update(0xe614, 0x0400, 0x0700);
+        break;
+    case ChipVersion::RTL8127A:
+        ocp_update(0xe614, 0x0f00, 0x0f00);
+        break;
+    default:
+        ocp_update(0xe614, 0x0300, 0x0700);
+        break;
+    }
+
+    if (m_version == ChipVersion::RTL8125B)
+        ocp_update(0xe63e, 0x0000, 0x0c30);
+    else
+        ocp_update(0xe63e, 0x0020, 0x0c30);
+
     ocp_update(0xc0b4, 0x000c, 0x0000);
     ocp_update(0xeb6a, 0x0033, 0x00ff);
     ocp_update(0xeb50, 0x0040, 0x03e0);
     ocp_update(0xe056, 0x0000, 0x00f0);
     ocp_update(0xe040, 0x0000, 0x1000);
     ocp_update(0xea1c, 0x0001, 0x0003);
-    ocp_update(0xea1c, 0x0000, 0x0004);
+
+    if (m_version >= ChipVersion::RTL8126A)
+        ocp_update(0xea1c, 0x0000, 0x0300);
+    else
+        ocp_update(0xea1c, 0x0000, 0x0004);
+
     ocp_update(0xe0c0, 0x4403, 0x4f0f);
     ocp_update(0xe052, 0x0068, 0x0080);
     ocp_update(0xd430, 0x047f, 0x0fff);
@@ -1144,6 +1160,30 @@ void RTL8168NetworkAdapter::hardware_quirks_8125_b()
 
     // Disable RXDV gate
     out32(REG_MISC, in32(REG_MISC) & ~MISC_RXDV_GATE_ENABLE);
+}
+
+void RTL8168NetworkAdapter::hardware_quirks_8125_b()
+{
+    // Enable extended tally counter
+    ocp_update(0xea84, 0x3, 0);
+
+    static constexpr auto ephy_info = to_array<EPhyUpdate>({
+        { 0x0b, 0xffff, 0xa908 },
+        { 0x1e, 0xffff, 0x20eb },
+        { 0x02, 0x0030, 0x0020 },
+        { 0x1e, 0xffff, 0x20eb },
+        { 0x02, 0x0030, 0x0020 },
+        { 0x02, 0x0030, 0x0020 },
+    });
+    extended_phy_initialize(ephy_info);
+
+    hardware_quirks_8125_generic();
+}
+
+void RTL8168NetworkAdapter::hardware_quirks_8126_a()
+{
+    // FIXME: This requires more stuff
+    hardware_quirks_8125_generic();
 }
 
 void RTL8168NetworkAdapter::set_phy_speed()
