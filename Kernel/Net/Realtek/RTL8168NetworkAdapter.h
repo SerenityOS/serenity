@@ -178,6 +178,7 @@ private:
     void set_interrupt_status(u32 status);
 
     void doorbell();
+    u32 read_phy_status();
 
     void out8(u16 address, u8 data);
     void out16(u16 address, u16 data);
