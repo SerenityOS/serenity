@@ -10,6 +10,8 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 
 namespace Kernel::PCI {
 
@@ -23,9 +25,19 @@ void initialize()
         return;
     }
 
-    // Host controllers defined in the devicetree are added before PCI::initialize() is called.
+    if (DeviceTree::is_present()) {
+        // Host controllers defined in the devicetree are added before PCI::initialize() is called.
+        Access::the().rescan_hardware();
+    } else if (ACPI::is_enabled()) {
+        auto mcfg_table_paddr = ACPI::Parser::the()->find_table("MCFG"sv);
 
-    Access::the().rescan_hardware();
+        if (mcfg_table_paddr.has_value()) {
+            auto success = Access::initialize_for_multiple_pci_domains(mcfg_table_paddr.value());
+            if (!success) {
+                dmesgln("PCI: Failed to initialize via ACPI MCFG table");
+            }
+        }
+    }
 
     PCIBusSysFSDirectory::initialize();
 
