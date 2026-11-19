@@ -372,7 +372,7 @@ AK_ENUM_BITWISE_OPERATORS(RISCVPlatformLevelInterruptController::Flags);
 // https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#multiple-apic-description-table-madt-format
 struct [[gnu::packed]] MADT {
     SDTHeader h;
-    u32 lapic_address;
+    u32 local_interrupt_controller_address;
     u32 flags;
     MADTEntryHeader entries[];
 };
