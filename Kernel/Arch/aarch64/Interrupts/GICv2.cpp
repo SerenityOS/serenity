@@ -92,8 +92,13 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv2>> GICv2::try_to_initialize(Devi
     if (cpu_interface_registers_resource.size < sizeof(CPUInterfaceRegisters))
         return EINVAL;
 
-    auto distributor_registers = TRY(Memory::map_typed_writable<DistributorRegisters volatile>(distributor_registers_resource.paddr));
-    auto cpu_interface_registers = TRY(Memory::map_typed_writable<CPUInterfaceRegisters volatile>(cpu_interface_registers_resource.paddr));
+    return try_to_initialize(distributor_registers_resource.paddr, cpu_interface_registers_resource.paddr);
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv2>> GICv2::try_to_initialize(PhysicalAddress distributor_registers_paddr, PhysicalAddress cpu_interface_registers_paddr)
+{
+    auto distributor_registers = TRY(Memory::map_typed_writable<DistributorRegisters volatile>(distributor_registers_paddr));
+    auto cpu_interface_registers = TRY(Memory::map_typed_writable<CPUInterfaceRegisters volatile>(cpu_interface_registers_paddr));
 
     auto gic = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) GICv2(move(distributor_registers), move(cpu_interface_registers))));
     TRY(gic->initialize());

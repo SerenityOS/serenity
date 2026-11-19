@@ -21,6 +21,7 @@ class GICv2 final
     , public DeviceTree::InterruptController {
 public:
     static ErrorOr<NonnullLockRefPtr<GICv2>> try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, DeviceTree::Device::Resource cpu_interface_registers_registers_resource);
+    static ErrorOr<NonnullLockRefPtr<GICv2>> try_to_initialize(PhysicalAddress distributor_registers_paddr, PhysicalAddress cpu_interface_registers_registers_paddr);
 
     virtual void enable(GenericInterruptHandler const&) override;
     virtual void disable(GenericInterruptHandler const&) override;
