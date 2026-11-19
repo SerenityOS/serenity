@@ -288,6 +288,7 @@ set(KERNEL_SOURCES
     Library/UserOrKernelBuffer.cpp
     Net/Cadence/GEM.cpp
     Net/Intel/E1000NetworkAdapter.cpp
+    Net/Realtek/RTL8168HardwareQuirks.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IP/Socket.cpp
