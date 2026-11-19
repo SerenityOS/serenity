@@ -27,10 +27,6 @@ void RTL8168NetworkAdapter::configure_phy()
     case ChipVersion::RTL8168C_4:
         configure_phy_c_3();
         return;
-    case ChipVersion::RTL8168E:
-        // FIXME: This might not actually be correct
-        configure_phy_e_2();
-        return;
     case ChipVersion::RTL8168EVL:
         configure_phy_e_2();
         return;
