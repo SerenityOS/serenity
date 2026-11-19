@@ -35,7 +35,9 @@ ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(InterruptNumber in
 
     timer->enable_irq();
 
-    return timer;
+    s_the = &timer.leak_ref();
+
+    return NonnullLockRefPtr { *s_the };
 }
 
 bool ARMv8Timer::is_initialized()
@@ -148,8 +150,6 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
     auto timer = TRY(ARMv8Timer::initialize(interrupt_number, frequency));
 
     MUST(TimeManagement::register_hardware_timer(timer));
-
-    s_the = &timer.leak_ref();
 
     return {};
 }

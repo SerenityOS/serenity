@@ -452,6 +452,39 @@ struct [[gnu::packed]] DSDT {
     unsigned char definition_block[];
 };
 
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#generic-timer-description-table-gtdt
+struct [[gnu::packed]] GTDT {
+    // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#flag-definitions-secure-el1-timer-non-secure-el1-timer-el2-timer-virtual-el1-timer-and-virtual-el2-timer
+    enum class TimerFlags : u32 {
+        TimerInterruptEdgeTriggered = 1u << 0,
+        TimerInterruptActiveLow = 1u << 1,
+        AlwaysOnCapability = 1u << 2,
+    };
+
+    SDTHeader h;
+    u64 cnt_control_base_physical_address;
+    u32 _;
+    u32 secure_el1_timer_gsi;
+    TimerFlags secure_el1_timer_flags;
+    u32 non_secure_el1_timer_gsi;
+    TimerFlags non_secure_el1_timer_flags;
+    u32 virtual_el1_timer_gsi;
+    TimerFlags virtual_el1_timer_flags;
+    u32 el2_timer_gsi;
+    TimerFlags el2_timer_flags;
+    u64 cnt_read_base_base_physical_address;
+    u32 platform_timer_count;
+    u32 platform_timer_offset;
+    u32 virtual_el2_timer_gsi;
+    TimerFlags virtual_el2_timer_flags;
+
+    // The Platform Timer Structure array offset is dependent on the platform_timer_offset member,
+    // so we can't statically declare it here.
+};
+static_assert(AssertSize<GTDT, 104>());
+
+AK_ENUM_BITWISE_OPERATORS(GTDT::TimerFlags);
+
 // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#risc-v-hart-capabilities-table-rhct
 struct [[gnu::packed]] RHCT {
     // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#rhct-flags
