@@ -51,8 +51,6 @@ void RTL8168NetworkAdapter::hardware_quirks_b()
 {
     // disable checked reserved bits
     out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_BEACON_ENABLE);
-    constexpr u16 version1_cplus_quirks = CPLUS_COMMAND_ENABLE_BIST | CPLUS_COMMAND_MAC_DBGO_OE | CPLUS_COMMAND_FORCE_HALF_DUP | CPLUS_COMMAND_FORCE_RXFLOW_ENABLE | CPLUS_COMMAND_FORCE_TXFLOW_ENABLE | CPLUS_COMMAND_CXPL_DBG_SEL | CPLUS_COMMAND_ASF | CPLUS_COMMAND_PACKET_CONTROL_DISABLE | CPLUS_COMMAND_MAC_DBGO_SEL;
-    out16(REG_CPLUS_COMMAND, in16(REG_CPLUS_COMMAND) & ~version1_cplus_quirks);
 
     // configure the maximum transmit packet size (again)
     out16(REG_MTPS, MTPS_JUMBO);
@@ -131,14 +129,6 @@ void RTL8168NetworkAdapter::hardware_quirks_e_2()
 
     // FIXME: Disable PCIe clock request
 
-    // enable tx auto fifo
-    out32(REG_TXCFG, in32(REG_TXCFG) | TXCFG_AUTO_FIFO);
-
-    out8(REG_MCU, in8(REG_MCU) & ~MCU_NOW_IS_OOB);
-
-    // Set EEE LED frequency
-    out8(REG_EEE_LED, in8(REG_EEE_LED) & ~0x7);
-
     out8(REG_DLLPR, in8(REG_DLLPR) | DLLPR_PFM_ENABLE);
     out32(REG_MISC, in32(REG_MISC) | MISC_PWM_ENABLE);
     out8(REG_CONFIG5, in8(REG_CONFIG5) & ~CFG5_SPI_ENABLE);
@@ -160,9 +150,6 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
         { 0x1, 0xffff, 0x68b },
     });
     extended_phy_initialize(ephy_info);
-
-    // enable tx auto fifo
-    out32(REG_TXCFG, in32(REG_TXCFG) | TXCFG_AUTO_FIFO);
 
     // vendor magic values ???
     eri_out(0xC8, ERI_MASK_0101, 0x80002, ERI_EXGMAC);
@@ -188,9 +175,6 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
     // vendor magic values ???
     eri_out(0xC0, ERI_MASK_0011, 0, ERI_EXGMAC);
     eri_out(0xB8, ERI_MASK_0011, 0, ERI_EXGMAC);
-
-    // Set EEE LED frequency
-    out8(REG_EEE_LED, in8(REG_EEE_LED) & ~0x7);
 
     out8(REG_DLLPR, in8(REG_DLLPR) & ~DLLPR_PFM_ENABLE);
     out8(REG_MISC2, in8(REG_MISC2) & ~MISC2_PFM_D3COLD_ENABLE);
