@@ -446,6 +446,19 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
 #elif ARCH(AARCH64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 {
+    if (ACPI::is_enabled()) {
+        auto gtdt_table_paddr = ACPI::Parser::the()->find_table("GTDT"sv);
+        if (gtdt_table_paddr.has_value()) {
+            auto gtdt = Memory::map_typed<::ACPI::Structures::GTDT>(gtdt_table_paddr.value()).release_value_but_fixme_should_propagate_errors();
+
+            auto virtual_el1_gsi = gtdt->virtual_el1_timer_gsi;
+            auto timer_frequency = Aarch64::CNTFRQ_EL0::read().ClockFrequency;
+
+            auto timer = ARMv8Timer::initialize(virtual_el1_gsi, timer_frequency).release_value_but_fixme_should_propagate_errors();
+            s_hardware_timers->try_append(move(timer)).release_value_but_fixme_should_propagate_errors();
+        }
+    }
+
     if (s_hardware_timers->is_empty())
         PANIC("TimeManagement: No supported timer was found");
 
