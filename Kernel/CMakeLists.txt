@@ -542,7 +542,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         Bus/PCI/Controller/GenericECAMHostController.cpp
         Bus/PCI/DeviceTreeHelpers.cpp
-        Bus/PCI/DeviceTreeInitializer.cpp
+        Bus/PCI/GenericInitializer.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
@@ -604,7 +604,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
 
         Bus/PCI/Controller/GenericECAMHostController.cpp
         Bus/PCI/DeviceTreeHelpers.cpp
-        Bus/PCI/DeviceTreeInitializer.cpp
+        Bus/PCI/GenericInitializer.cpp
 
         Devices/Time/GoldfishRTC.cpp
     )
