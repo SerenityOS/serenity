@@ -313,6 +313,57 @@ struct [[gnu::packed]] InterruptSourceOverride {
     u16 flags;
 };
 
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-cpu-interface-gicc-structure
+struct [[gnu::packed]] GICCPUInterface {
+    // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gicc-cpu-interface-flags
+    enum class Flags : u32 {
+        Enabled = 1u << 0,
+        PerformanceInterruptEdgeTriggered = 1u << 1,
+        VGICMaintenanceInterruptEdgeTriggered = 1u << 2,
+        OnlineCapable = 1u << 3,
+        GICRNonCoherent = 1u << 4,
+    };
+
+    static constexpr size_t MPDIR_AFF0_OFFSET = 0;
+    static constexpr size_t MPDIR_AFF1_OFFSET = 8;
+    static constexpr size_t MPDIR_AFF2_OFFSET = 16;
+    static constexpr size_t MPDIR_AFF3_OFFSET = 32;
+
+    MADTEntryHeader h;
+    u16 _;
+    u32 cpu_interface_number;
+    u32 acpi_processor_uid;
+    Flags flags;
+    u32 parking_protocol_version;
+    u32 performance_interrupt_gsi;
+    u64 parked_address;
+    u64 physical_base_address;
+    u64 gicv;
+    u64 gich;
+    u32 vgic_maintenance_interrupt;
+    u64 gicr_base_address;
+    u64 mpidr;
+    u8 processor_power_efficiency_class;
+    u8 _;
+    u16 spe_overflow_interrupt;
+    u16 trbe_interrupt;
+};
+static_assert(AssertSize<GICCPUInterface, 82>());
+
+AK_ENUM_BITWISE_OPERATORS(GICCPUInterface::Flags);
+
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-distributor-gicd-structure
+struct [[gnu::packed]] GICDistributor {
+    MADTEntryHeader h;
+    u16 _;
+    u32 gic_id;
+    u64 physical_base_address;
+    u32 system_vector_base;
+    u8 gic_version;
+    u8 _[3];
+};
+static_assert(AssertSize<GICDistributor, 24>());
+
 // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#risc-v-interrupt-controller-rintc-structure
 struct [[gnu::packed]] RISCVInterruptController {
     enum class Flags : u32 {
