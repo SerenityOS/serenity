@@ -112,21 +112,21 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         dmesgln_pci(*this, "Support for your chip version ({}) is not fully implemented yet, the chip might not work entirely properly, please open a GH issue and include this message.", (u8)m_version);
 
     // set initial REG_RXCFG
-    auto rx_config = RXCFG_MAX_DMA_UNLIMITED;
-    if (m_version <= ChipVersion::RTL8168B) {
-        rx_config |= RXCFG_FTH_NONE;
-    } else if (m_version <= ChipVersion::RTL8168CP_2 || (m_version >= ChipVersion::RTL8168EVL && m_version <= ChipVersion::RTL8168F_2)) {
-        rx_config |= RXCFG_128INT_ENABLE | RXCFG_MULTI_ENABLE;
-    } else if (m_version >= ChipVersion::RTL8168G && m_version <= ChipVersion::RTL8168FP) {
-        rx_config |= RXCFG_128INT_ENABLE | RXCFG_MULTI_ENABLE | RXCFG_EARLY_OFF_V2;
-    } else if (m_version == ChipVersion::RTL8125A) {
-        rx_config |= RXCFG_FETCH_DEFAULT_8125;
-    } else if (m_version >= ChipVersion::RTL8125B) {
-        rx_config |= RXCFG_FETCH_DEFAULT_8125 | RXCFG_PAUSE_SLOT_ON;
-    } else {
-        rx_config |= RXCFG_128INT_ENABLE;
-    }
-    out32(REG_RXCFG, rx_config);
+    auto rx_config = RXConfig::MaxRXDMAUnlimited;
+    if (m_version <= ChipVersion::RTL8168B)
+        rx_config |= RXConfig::NoRXThreshold;
+    else if (m_version <= ChipVersion::RTL8168CP_2 || (m_version >= ChipVersion::RTL8168EVL && m_version <= ChipVersion::RTL8168F_2))
+        rx_config |= RXConfig::_128IntEnable | RXConfig::MultiEnable;
+    else if (m_version >= ChipVersion::RTL8168G && m_version <= ChipVersion::RTL8168FP)
+        rx_config |= RXConfig::_128IntEnable | RXConfig::MultiEnable | RXConfig::EarlyOff;
+    else if (m_version == ChipVersion::RTL8125A)
+        rx_config |= RXConfig::FetchDefault8125;
+    else if (m_version >= ChipVersion::RTL8125B)
+        rx_config |= RXConfig::FetchDefault8125 | RXConfig::PauseSlot;
+    else
+        rx_config |= RXConfig::_128IntEnable;
+
+    out32(RTL8168Register::RXConfig, rx_config);
 
     // disable interrupts
     set_interrupt_mask(0);
@@ -135,57 +135,57 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
     if (m_version >= ChipVersion::RTL8125A) {
         m_ocp_base_address = OCP_STANDARD_PHY_BASE;
 
-        out32(REG_MISC, in32(REG_MISC) | MISC_RXDV_GATE_ENABLE);
+        out32(RTL8168Register::Misc, in32(RTL8168Register::Misc) | Misc::RXDVGateEnable);
 
-        while ((in32(REG_TXCFG) & TXCFG_EMPTY) == 0)
+        while ((in32(RTL8168Register::TXConfig) & TXConfig::Empty) == 0)
             Processor::wait_check();
-        while ((in8(REG_MCU) & (MCU_RX_EMPTY | MCU_TX_EMPTY)) == 0)
+        while ((in8(RTL8168Register::MCU) & (MCU::RXEmpty | MCU::TXEmpty)) == 0)
             Processor::wait_check();
 
-        out8(REG_COMMAND, in8(REG_COMMAND) & ~(COMMAND_RX_ENABLE | COMMAND_TX_ENABLE));
-        out8(REG_MCU, in8(REG_MCU) & ~MCU_NOW_IS_OOB);
+        out8(RTL8168Register::Command, in8(RTL8168Register::Command) & ~(Command::RXEnable | Command::TXEnable));
+        out8(RTL8168Register::MCU, in8(RTL8168Register::MCU) & ~MCU::NowIsOOB);
 
         ocp_update(0xe8de, 0, 1 << 14);
-        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+        while ((in8(RTL8168Register::MCU) & MCU::LinkListReady) == 0)
             Processor::wait_check();
 
         ocp_out(0xc0aa, 0x07d0);
         ocp_out(0xc0a6, 0x0150);
         ocp_out(0xc01e, 0x5555);
-        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+        while ((in8(RTL8168Register::MCU) & MCU::LinkListReady) == 0)
             Processor::wait_check();
     } else if (m_version >= ChipVersion::RTL8168G) {
         m_ocp_base_address = OCP_STANDARD_PHY_BASE;
 
         if (m_version == ChipVersion::RTL8168EP) {
             // disable CMAC
-            out8(REG_IBCR2, in8(REG_IBCR2) & ~1);
+            out8(RTL8168Register::IBCR2, in8(RTL8168Register::IBCR2) & ~1);
 
-            while ((in8(REG_IBISR0) & 0x2) != 0)
+            while ((in8(RTL8168Register::IBISR0) & 0x2) != 0)
                 Processor::wait_check();
 
-            out8(REG_IBISR0, in8(REG_IBISR0) | 0x20);
-            out8(REG_IBCR0, in8(REG_IBCR0) & ~1);
+            out8(RTL8168Register::IBISR0, in8(RTL8168Register::IBISR0) | 0x20);
+            out8(RTL8168Register::IBCR0, in8(RTL8168Register::IBCR0) & ~1);
         }
 
         // enable RXDV gate
-        out32(REG_MISC, in32(REG_MISC) | MISC_RXDV_GATE_ENABLE);
+        out32(RTL8168Register::Misc, in32(RTL8168Register::Misc) | Misc::RXDVGateEnable);
 
-        while ((in32(REG_TXCFG) & TXCFG_EMPTY) == 0)
+        while ((in32(RTL8168Register::TXConfig) & TXConfig::Empty) == 0)
             Processor::wait_check();
 
-        while ((in8(REG_MCU) & (MCU_RX_EMPTY | MCU_TX_EMPTY)) == 0)
+        while ((in8(RTL8168Register::MCU) & (MCU::RXEmpty | MCU::TXEmpty)) == 0)
             Processor::wait_check();
 
-        out8(REG_COMMAND, in8(REG_COMMAND) & ~(COMMAND_RX_ENABLE | COMMAND_TX_ENABLE));
-        out8(REG_MCU, in8(REG_MCU) & ~MCU_NOW_IS_OOB);
+        out8(RTL8168Register::Command, in8(RTL8168Register::Command) & ~(Command::RXEnable | Command::TXEnable));
+        out8(RTL8168Register::MCU, in8(RTL8168Register::MCU) & ~MCU::NowIsOOB);
 
         // vendor magic values ???
         auto data = ocp_in(0xe8de);
         data &= ~(1 << 14);
         ocp_out(0xe8de, data);
 
-        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+        while ((in8(RTL8168Register::MCU) & MCU::LinkListReady) == 0)
             Processor::wait_check();
 
         // vendor magic values ???
@@ -193,7 +193,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         data |= (1 << 15);
         ocp_out(0xe8de, data);
 
-        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+        while ((in8(RTL8168Register::MCU) & MCU::LinkListReady) == 0)
             Processor::wait_check();
     }
 
@@ -247,7 +247,7 @@ ErrorOr<void> RTL8168NetworkAdapter::startup()
     pci_commit();
 
     // send stop command
-    out8(REG_COMMAND, COMMAND_STOP);
+    out8(RTL8168Register::Command, Command::Stop);
 
     reset();
 
@@ -259,24 +259,23 @@ ErrorOr<void> RTL8168NetworkAdapter::startup()
     set_phy_speed();
 
     // set C+ command
-    auto cplus_command = in16(REG_CPLUS_COMMAND) | CPLUS_COMMAND_VERIFY_CHECKSUM | CPLUS_COMMAND_VLAN_STRIP;
-    out16(REG_CPLUS_COMMAND, cplus_command);
-    in16(REG_CPLUS_COMMAND); // C+ Command barrier
+    out16(RTL8168Register::CPlusCommand, in16(RTL8168Register::CPlusCommand) | CPlusCommand::VerifyChecksum | CPlusCommand::VLANStrip);
+    in16(RTL8168Register::CPlusCommand); // C+ Command barrier
 
     if (m_version == ChipVersion::RTL8168C_2 || m_version == ChipVersion::RTL8168C_3) {
-        if (in8(REG_MACDBG) & 0x80)
-            out8(REG_GPIO, in8(REG_GPIO) | GPIO_ENABLE);
+        if (in8(RTL8168Register::MACDebug) & 0x80)
+            out8(RTL8168Register::GPIO, in8(RTL8168Register::GPIO) | GPIO::Enable);
         else
-            out8(REG_GPIO, in8(REG_GPIO) & ~GPIO_ENABLE);
+            out8(RTL8168Register::GPIO, in8(RTL8168Register::GPIO) & ~GPIO::Enable);
     }
 
     // power up phy
     if (m_version >= ChipVersion::RTL8168D_1 && m_version <= ChipVersion::RTL8168E) {
-        out8(REG_PMCH, in8(REG_PMCH) | 0x80);
+        out8(RTL8168Register::PMCH, in8(RTL8168Register::PMCH) | 0x80);
     } else if (m_version >= ChipVersion::RTL8168GU) {
-        out8(REG_PMCH, in8(REG_PMCH) | 0xC0);
+        out8(RTL8168Register::PMCH, in8(RTL8168Register::PMCH) | 0xC0);
     } else if (m_version == ChipVersion::RTL8168G) {
-        out8(REG_PMCH, in8(REG_PMCH) | 0xC0);
+        out8(RTL8168Register::PMCH, in8(RTL8168Register::PMCH) | 0xC0);
         // vendor magic values ???
         eri_update(0x1a8, ERI_MASK_1111, 0xfc000000, 0, ERI_EXGMAC);
     }
@@ -291,12 +290,12 @@ ErrorOr<void> RTL8168NetworkAdapter::startup()
     pci_commit();
 
     // re-enable interrupts
-    u32 enabled_interrupts = INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_OVERFLOW | INT_LINK_CHANGE | INT_SYS_ERR;
+    u32 enabled_interrupts = Interrupt::RXOK | Interrupt::RXError | Interrupt::TXOK | Interrupt::TXError | Interrupt::RXOverflow | Interrupt::LinkChange | Interrupt::SystemError;
     set_interrupt_mask(enabled_interrupts);
     pci_commit();
 
     // update link status
-    m_link_up = (read_phy_status() & PHY_LINK_STATUS) != 0;
+    m_link_up = (read_phy_status() & PHYStatus::LinkStatus) != 0;
     autoconfigure_link_local_ipv6();
 
     return {};
@@ -325,47 +324,47 @@ void RTL8168NetworkAdapter::rar_exgmac_set()
 void RTL8168NetworkAdapter::start_hardware()
 {
     // unlock config registers
-    out8(REG_CFG9346, CFG9346_UNLOCK);
+    out8(RTL8168Register::CFG9346, CFG9346::Unlock);
 
     // configure the maximum transmit packet size
     if (m_version <= ChipVersion::RTL8168FP)
-        out16(REG_MTPS, MTPS_JUMBO);
+        out8(RTL8168Register::MaxTXPacketSize, MTPS_JUMBO);
 
     // configure the maximum receive packet size
-    out16(REG_RMS, RX_BUFFER_SIZE);
+    out16(RTL8168Register::RMS, RX_BUFFER_SIZE);
 
-    auto cplus_command = in16(REG_CPLUS_COMMAND);
-    cplus_command |= CPLUS_COMMAND_PACKET_CONTROL_DISABLE;
+    auto cplus_command = in16(RTL8168Register::CPlusCommand);
+    cplus_command |= CPlusCommand::PacketControlDisable;
     // undocumented magic value???
     cplus_command |= 0x1;
-    out16(REG_CPLUS_COMMAND, cplus_command);
+    out16(RTL8168Register::CPlusCommand, cplus_command);
 
     // setup interrupt moderation, magic from vendor (Linux Driver uses 0x5151, *BSD Driver uses 0x5100, RTL Driver use 0x5f51???)
     if (m_version <= ChipVersion::RTL8168FP)
-        out16(REG_INT_MOD, 0x5151);
+        out16(RTL8168Register::InterruptModeration, 0x5151);
 
     // point to tx descriptors
-    out64(REG_TXADDR, m_tx_descriptors.paddr.get());
+    out64(RTL8168Register::TXAddress, m_tx_descriptors.paddr.get());
 
     // point to rx descriptors
-    out64(REG_RXADDR, m_rx_descriptors.paddr.get());
+    out64(RTL8168Register::RXAddress, m_rx_descriptors.paddr.get());
 
     // configure tx: use the maximum dma transfer size, default interframe gap time.
-    out32(REG_TXCFG, TXCFG_IFG011 | TXCFG_MAX_DMA_UNLIMITED);
+    out32(RTL8168Register::TXConfig, TXConfig::MaxTXDMAUnlimited | TXConfig::InterFrameGap);
 
     // disable interrupt coalescing
     if (m_version >= ChipVersion::RTL8125A) {
-        out8(REG_INT_CFG0_8125, 0x00);
+        out8(RTL8168Register::INT_CFG0_8125, 0x00);
 
         if (first_is_one_of(m_version, ChipVersion::RTL8125B, ChipVersion::RTL8126A, ChipVersion::RTL8127A))
-            out16(REG_INT_CFG1_8125, 0x0000);
+            out16(RTL8168Register::INT_CFG1_8125, 0x0000);
 
         if (first_is_one_of(m_version, ChipVersion::RTL8125A, ChipVersion::RTL8125D, ChipVersion::RTL8125BP, ChipVersion::RTL8127A)) {
             for (u16 i = 0xA00; i < 0xB00; i += 4)
-                out32(i, 0);
+                out32(static_cast<RTL8168Register>(i), 0);
         } else if (first_is_one_of(m_version, ChipVersion::RTL8125B, ChipVersion::RTL8126A)) {
             for (u16 i = 0xA00; i < 0xA80; i += 4)
-                out32(i, 0);
+                out32(static_cast<RTL8168Register>(i), 0);
         }
     }
 
@@ -373,24 +372,24 @@ void RTL8168NetworkAdapter::start_hardware()
     hardware_quirks();
 
     // known good read (acts as a barrier)
-    in32(REG_TXCFG);
+    in32(RTL8168Register::TXConfig);
 
     // relock config registers
-    out8(REG_CFG9346, CFG9346_NONE);
+    out8(RTL8168Register::CFG9346, 0);
 
     // enable rx/tx
-    out8(REG_COMMAND, COMMAND_RX_ENABLE | COMMAND_TX_ENABLE);
+    out8(RTL8168Register::Command, Command::RXEnable | Command::TXEnable);
     pci_commit();
 
     // turn on all multicast
-    out32(REG_MAR0, 0xFFFFFFFF);
-    out32(REG_MAR4, 0xFFFFFFFF);
+    out32(RTL8168Register::MulticastAddress0, 0xFFFFFFFF);
+    out32(RTL8168Register::MulticastAddress4, 0xFFFFFFFF);
 
     // configure rx mode: accept physical (MAC) match, multicast, and broadcast
-    out32(REG_RXCFG, (in32(REG_RXCFG) & ~RXCFG_READ_MASK) | RXCFG_APM | RXCFG_AM | RXCFG_AB);
+    out32(RTL8168Register::RXConfig, (in32(RTL8168Register::RXConfig) & ~RXConfig::AcceptMask) | RXConfig::AcceptPhysicalMatch | RXConfig::AcceptMulticast | RXConfig::AcceptBroadcast);
 
     // disable early-rx interrupts
-    out16(REG_MULTIINTR, in16(REG_MULTIINTR) & 0xF000);
+    out16(RTL8168Register::MultipleInterrupt, in16(RTL8168Register::MultipleInterrupt) & 0xF000);
 }
 
 void RTL8168NetworkAdapter::set_phy_speed()
@@ -463,38 +462,38 @@ bool RTL8168NetworkAdapter::handle_interrupt()
 
         dbgln_if(RTL8168_DEBUG, "RTL8168: handle_irq status={:#04x}", status);
 
-        if ((status & (INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_SYS_ERR)) == 0)
+        if ((status & (Interrupt::RXOK | Interrupt::RXError | Interrupt::TXOK | Interrupt::TXError | Interrupt::RXOverflow | Interrupt::LinkChange | Interrupt::RXFIFOOverflow | Interrupt::SystemError)) == 0)
             break;
 
         was_handled = true;
-        if (status & INT_RXOK) {
+        if (status & Interrupt::RXOK) {
             dbgln_if(RTL8168_DEBUG, "RTL8168: RX ready");
             receive();
         }
-        if (status & INT_RXERR) {
+        if (status & Interrupt::RXError) {
             dbgln_if(RTL8168_DEBUG, "RTL8168: RX error - invalid packet");
         }
-        if (status & INT_TXOK) {
+        if (status & Interrupt::TXOK) {
             dbgln_if(RTL8168_DEBUG, "RTL8168: TX complete");
             m_wait_queue.wake_one();
         }
-        if (status & INT_TXERR) {
+        if (status & Interrupt::TXError) {
             dbgln_if(RTL8168_DEBUG, "RTL8168: TX error - invalid packet");
         }
-        if (status & INT_RX_OVERFLOW) {
+        if (status & Interrupt::RXOverflow) {
             dmesgln_pci(*this, "RX descriptor unavailable (packet lost)");
             receive();
         }
-        if (status & INT_LINK_CHANGE) {
-            m_link_up = (read_phy_status() & PHY_LINK_STATUS) != 0;
+        if (status & Interrupt::LinkChange) {
+            m_link_up = (read_phy_status() & PHYStatus::LinkStatus) != 0;
             dmesgln_pci(*this, "Link status changed up={}", m_link_up);
             autoconfigure_link_local_ipv6();
         }
-        if (status & INT_RX_FIFO_OVERFLOW) {
+        if (status & Interrupt::RXFIFOOverflow) {
             dmesgln_pci(*this, "RX FIFO overflow");
             receive();
         }
-        if (status & INT_SYS_ERR) {
+        if (status & Interrupt::SystemError) {
             dmesgln_pci(*this, "Fatal system error");
         }
     }
@@ -503,22 +502,22 @@ bool RTL8168NetworkAdapter::handle_interrupt()
 
 void RTL8168NetworkAdapter::reset()
 {
-    out8(REG_COMMAND, COMMAND_RESET);
-    while ((in8(REG_COMMAND) & COMMAND_RESET) != 0)
+    out8(RTL8168Register::Command, Command::Reset);
+    while ((in8(RTL8168Register::Command) & Command::Reset) != 0)
         Processor::wait_check();
 }
 
 void RTL8168NetworkAdapter::pci_commit()
 {
     // read any register to commit previous PCI write
-    in8(REG_COMMAND);
+    in8(RTL8168Register::Command);
 }
 
 UNMAP_AFTER_INIT void RTL8168NetworkAdapter::read_mac_address()
 {
     MACAddress mac {};
     for (int i = 0; i < 6; i++)
-        mac[i] = in8(REG_MAC + i);
+        mac[i] = in8(static_cast<RTL8168Register>(static_cast<u16>(RTL8168Register::MACAddress) + i));
     set_mac_address(mac);
 }
 
@@ -595,82 +594,82 @@ void RTL8168NetworkAdapter::receive()
 void RTL8168NetworkAdapter::set_interrupt_mask(u32 mask)
 {
     if (m_version >= ChipVersion::RTL8125A) {
-        out32(REG_IMR_8125, mask);
+        out32(RTL8168Register::InterruptMask_8125, mask);
     } else {
         VERIFY((mask & 0xFFFF0000) == 0);
-        out16(REG_IMR, mask);
+        out16(RTL8168Register::InterruptMask, mask);
     }
 }
 
 u32 RTL8168NetworkAdapter::read_interrupt_status()
 {
     if (m_version >= ChipVersion::RTL8125A)
-        return in32(REG_ISR_8125);
+        return in32(RTL8168Register::InterruptStatus_8125);
 
-    return in16(REG_ISR);
+    return in16(RTL8168Register::InterruptStatus);
 }
 
 void RTL8168NetworkAdapter::set_interrupt_status(u32 status)
 {
     if (m_version >= ChipVersion::RTL8125A) {
-        out32(REG_ISR_8125, status);
+        out32(RTL8168Register::InterruptStatus_8125, status);
     } else {
         VERIFY((status & 0xFFFF0000) == 0);
-        out16(REG_ISR, status);
+        out16(RTL8168Register::InterruptStatus, status);
     }
 }
 
 void RTL8168NetworkAdapter::doorbell()
 {
     if (m_version >= ChipVersion::RTL8125A)
-        out8(REG_TXSTART_8125, 0x1);
+        out8(RTL8168Register::TXStart_8125, 0x1);
     else
-        out8(REG_TXSTART, TXSTART_START);
+        out8(RTL8168Register::TXStart, TXStart::Start);
 }
 
 u32 RTL8168NetworkAdapter::read_phy_status()
 {
     if (m_version >= ChipVersion::RTL8125A)
-        return in32(REG_PHYSTATUS);
+        return in32(RTL8168Register::PHYStatus);
 
-    return in8(REG_PHYSTATUS);
+    return in8(RTL8168Register::PHYStatus);
 }
 
-void RTL8168NetworkAdapter::out8(u16 address, u8 data)
+void RTL8168NetworkAdapter::out8(RTL8168Register reg, u8 data)
 {
-    m_registers_io_window->write8(address, data);
+    m_registers_io_window->write8(to_underlying(reg), data);
 }
 
-void RTL8168NetworkAdapter::out16(u16 address, u16 data)
+void RTL8168NetworkAdapter::out16(RTL8168Register reg, u16 data)
 {
-    m_registers_io_window->write16(address, data);
+    m_registers_io_window->write16(to_underlying(reg), data);
 }
 
-void RTL8168NetworkAdapter::out32(u16 address, u32 data)
+void RTL8168NetworkAdapter::out32(RTL8168Register reg, u32 data)
 {
-    m_registers_io_window->write32(address, data);
+    m_registers_io_window->write32(to_underlying(reg), data);
 }
 
-void RTL8168NetworkAdapter::out64(u16 address, u64 data)
+void RTL8168NetworkAdapter::out64(RTL8168Register reg, u64 data)
 {
     // ORDER MATTERS: Some NICs require the high part of the address to be written first
-    m_registers_io_window->write32(address + 4, (u32)(data >> 32));
-    m_registers_io_window->write32(address, (u32)(data & 0xFFFFFFFF));
+    m_registers_io_window->write32(to_underlying(reg) + 4, (u32)(data >> 32));
+    m_registers_io_window->write32(to_underlying(reg), (u32)(data & 0xFFFFFFFF));
 }
 
-u8 RTL8168NetworkAdapter::in8(u16 address)
+u8 RTL8168NetworkAdapter::in8(RTL8168Register reg)
 {
-    return m_registers_io_window->read8(address);
+    return m_registers_io_window->read8(to_underlying(reg));
 }
 
-u16 RTL8168NetworkAdapter::in16(u16 address)
+u16 RTL8168NetworkAdapter::in16(RTL8168Register reg)
 {
-    return m_registers_io_window->read16(address);
+    return m_registers_io_window->read16(to_underlying(reg));
 }
 
-u32 RTL8168NetworkAdapter::in32(u16 address)
+u32 RTL8168NetworkAdapter::in32(RTL8168Register reg)
 {
-    return m_registers_io_window->read32(address);
+    return m_registers_io_window->read32(to_underlying(reg));
 }
 
 void RTL8168NetworkAdapter::phy_out(u8 address, u16 data)
@@ -689,8 +688,8 @@ void RTL8168NetworkAdapter::phy_out(u8 address, u16 data)
         ocp_phy_out(m_ocp_base_address + address * 2, data);
     } else {
         VERIFY((address & 0xE0) == 0); // register address is only 5 bit
-        out32(REG_PHYACCESS, PHY_FLAG | (address & 0x1F) << 16 | (data & 0xFFFF));
-        while ((in32(REG_PHYACCESS) & PHY_FLAG) != 0)
+        out32(RTL8168Register::PHYAccess, PHY_FLAG | (address & 0x1F) << 16 | (data & 0xFFFF));
+        while ((in32(RTL8168Register::PHYAccess) & PHY_FLAG) != 0)
             Processor::wait_check();
     }
 }
@@ -706,10 +705,10 @@ u16 RTL8168NetworkAdapter::phy_in(u8 address)
         return ocp_phy_in(m_ocp_base_address + address * 2);
     } else {
         VERIFY((address & 0xE0) == 0); // register address is only 5 bit
-        out32(REG_PHYACCESS, (address & 0x1F) << 16);
-        while ((in32(REG_PHYACCESS) & PHY_FLAG) == 0)
+        out32(RTL8168Register::PHYAccess, (address & 0x1F) << 16);
+        while ((in32(RTL8168Register::PHYAccess) & PHY_FLAG) == 0)
             Processor::wait_check();
-        return in32(REG_PHYACCESS) & 0xFFFF;
+        return in32(RTL8168Register::PHYAccess) & 0xFFFF;
     }
 }
 
@@ -729,18 +728,18 @@ void RTL8168NetworkAdapter::phy_out_batch(ReadonlySpan<PhyRegister> phy_register
 void RTL8168NetworkAdapter::extended_phy_out(u8 address, u16 data)
 {
     VERIFY((address & 0xE0) == 0); // register address is only 5 bit
-    out32(REG_EPHYACCESS, EPHY_FLAG | (address & 0x1F) << 16 | (data & 0xFFFF));
-    while ((in32(REG_EPHYACCESS) & EPHY_FLAG) != 0)
+    out32(RTL8168Register::EPHYAccess, EPHY_FLAG | (address & 0x1F) << 16 | (data & 0xFFFF));
+    while ((in32(RTL8168Register::EPHYAccess) & EPHY_FLAG) != 0)
         Processor::wait_check();
 }
 
 u16 RTL8168NetworkAdapter::extended_phy_in(u8 address)
 {
     VERIFY((address & 0xE0) == 0); // register address is only 5 bit
-    out32(REG_EPHYACCESS, (address & 0x1F) << 16);
-    while ((in32(REG_EPHYACCESS) & EPHY_FLAG) == 0)
+    out32(RTL8168Register::EPHYAccess, (address & 0x1F) << 16);
+    while ((in32(RTL8168Register::EPHYAccess) & EPHY_FLAG) == 0)
         Processor::wait_check();
-    return in32(REG_EPHYACCESS) & 0xFFFF;
+    return in32(RTL8168Register::EPHYAccess) & 0xFFFF;
 }
 
 void RTL8168NetworkAdapter::extended_phy_initialize(ReadonlySpan<EPhyUpdate> ephy_info)
@@ -753,18 +752,18 @@ void RTL8168NetworkAdapter::extended_phy_initialize(ReadonlySpan<EPhyUpdate> eph
 
 void RTL8168NetworkAdapter::eri_out(u32 address, u32 mask, u32 data, u32 type)
 {
-    out32(REG_ERI_DATA, data);
-    out32(REG_ERI_ADDR, ERI_FLAG | type | mask | address);
-    while ((in32(REG_ERI_ADDR) & ERI_FLAG) != 0)
+    out32(RTL8168Register::ERIData, data);
+    out32(RTL8168Register::ERIAddress, ERI_FLAG | type | mask | address);
+    while ((in32(RTL8168Register::ERIAddress) & ERI_FLAG) != 0)
         Processor::wait_check();
 }
 
 u32 RTL8168NetworkAdapter::eri_in(u32 address, u32 type)
 {
-    out32(REG_ERI_ADDR, type | ERI_MASK_1111 | address);
-    while ((in32(REG_ERI_ADDR) & ERI_FLAG) == 0)
+    out32(RTL8168Register::ERIAddress, type | ERI_MASK_1111 | address);
+    while ((in32(RTL8168Register::ERIAddress) & ERI_FLAG) == 0)
         Processor::wait_check();
-    return in32(REG_ERI_DATA);
+    return in32(RTL8168Register::ERIData);
 }
 
 void RTL8168NetworkAdapter::eri_update(u32 address, u32 mask, u32 set, u32 clear, u32 type)
@@ -783,15 +782,15 @@ void RTL8168NetworkAdapter::exgmac_out_batch(ReadonlySpan<ExgMacRegister> exgmac
 void RTL8168NetworkAdapter::csi_out(u32 address, u32 data)
 {
     VERIFY(m_version >= ChipVersion::RTL8168C_1);
-    out32(REG_CSI_DATA, data);
+    out32(RTL8168Register::CSIData, data);
     auto modifier = CSI_BYTE_ENABLE;
     if (m_version == ChipVersion::RTL8411) {
         modifier |= CSI_FUNC_NIC;
     } else if (m_version == ChipVersion::RTL8411B) {
         modifier |= CSI_FUNC_NIC2;
     }
-    out32(REG_CSI_ADDR, CSI_FLAG | (address & 0xFFF) | modifier);
-    while ((in32(REG_CSI_ADDR) & CSI_FLAG) != 0)
+    out32(RTL8168Register::CSIAddress, CSI_FLAG | (address & 0xFFF) | modifier);
+    while ((in32(RTL8168Register::CSIAddress) & CSI_FLAG) != 0)
         Processor::wait_check();
 }
 
@@ -804,10 +803,10 @@ u32 RTL8168NetworkAdapter::csi_in(u32 address)
     } else if (m_version == ChipVersion::RTL8411B) {
         modifier |= CSI_FUNC_NIC2;
     }
-    out32(REG_CSI_ADDR, (address & 0xFFF) | modifier);
-    while ((in32(REG_CSI_ADDR) & CSI_FLAG) == 0)
+    out32(RTL8168Register::CSIAddress, (address & 0xFFF) | modifier);
+    while ((in32(RTL8168Register::CSIAddress) & CSI_FLAG) == 0)
         Processor::wait_check();
-    return in32(REG_CSI_DATA) & 0xFFFF;
+    return in32(RTL8168Register::CSIData) & 0xFFFF;
 }
 
 void RTL8168NetworkAdapter::csi_enable(u32 bits)
@@ -819,14 +818,14 @@ void RTL8168NetworkAdapter::csi_enable(u32 bits)
 void RTL8168NetworkAdapter::ocp_out(u32 address, u32 data)
 {
     VERIFY((address & 0xFFFF0001) == 0);
-    out32(REG_OCP_DATA, OCP_FLAG | address << 15 | data);
+    out32(RTL8168Register::OCPData, OCP_FLAG | address << 15 | data);
 }
 
 u32 RTL8168NetworkAdapter::ocp_in(u32 address)
 {
     VERIFY((address & 0xFFFF0001) == 0);
-    out32(REG_OCP_DATA, address << 15);
-    return in32(REG_OCP_DATA);
+    out32(RTL8168Register::OCPData, address << 15);
+    return in32(RTL8168Register::OCPData);
 }
 
 void RTL8168NetworkAdapter::ocp_update(u32 address, u32 set, u32 clear)
@@ -837,18 +836,18 @@ void RTL8168NetworkAdapter::ocp_update(u32 address, u32 set, u32 clear)
 void RTL8168NetworkAdapter::ocp_phy_out(u32 address, u32 data)
 {
     VERIFY((address & 0xFFFF0001) == 0);
-    out32(REG_GPHY_OCP, OCP_FLAG | (address << 15) | data);
-    while ((in32(REG_GPHY_OCP) & OCP_FLAG) != 0)
+    out32(RTL8168Register::GPHYOCP, OCP_FLAG | (address << 15) | data);
+    while ((in32(RTL8168Register::GPHYOCP) & OCP_FLAG) != 0)
         Processor::wait_check();
 }
 
 u16 RTL8168NetworkAdapter::ocp_phy_in(u32 address)
 {
     VERIFY((address & 0xFFFF0001) == 0);
-    out32(REG_GPHY_OCP, address << 15);
-    while ((in32(REG_GPHY_OCP) & OCP_FLAG) == 0)
+    out32(RTL8168Register::GPHYOCP, address << 15);
+    while ((in32(RTL8168Register::GPHYOCP) & OCP_FLAG) == 0)
         Processor::wait_check();
-    return in32(REG_GPHY_OCP) & 0xFFFF;
+    return in32(RTL8168Register::GPHYOCP) & 0xFFFF;
 }
 
 ErrorOr<RTL8168NetworkAdapter::ChipVersion> RTL8168NetworkAdapter::identify_chip_version()
@@ -925,7 +924,7 @@ ErrorOr<RTL8168NetworkAdapter::ChipVersion> RTL8168NetworkAdapter::identify_chip
         { 0x708, 0x0, ChipVersion::RTL8125D },
     });
 
-    auto transmit_config = in32(REG_TXCFG);
+    auto transmit_config = in32(RTL8168Register::TXConfig);
     auto hardware_version_id_0 = (transmit_config & 0x7c800000) >> 20;
     auto hardware_version_id_1 = (transmit_config & 0x700000) >> 20;
 
@@ -1008,7 +1007,7 @@ StringView RTL8168NetworkAdapter::possible_device_name()
 bool RTL8168NetworkAdapter::link_full_duplex()
 {
     u32 phystatus = read_phy_status();
-    return !!(phystatus & (PHYSTATUS_FULLDUP | PHYSTATUS_1000MF | PHYSTATUS_2500MF | PHYSTATUS_5000MF | PHYSTATUS_10000MF));
+    return !!(phystatus & (PHYStatus::FullDuplex | PHYStatus::Speed1000MF | PHYStatus::Speed2500MF | PHYStatus::Speed5000MF | PHYStatus::Speed10000MF));
 }
 
 i32 RTL8168NetworkAdapter::link_speed()
@@ -1018,17 +1017,17 @@ i32 RTL8168NetworkAdapter::link_speed()
 
     auto phystatus = read_phy_status();
 
-    if (phystatus & PHYSTATUS_10000MF)
+    if (phystatus & PHYStatus::Speed10000MF)
         return 10000;
-    if (phystatus & PHYSTATUS_5000MF)
+    if (phystatus & PHYStatus::Speed5000MF)
         return 5000;
-    if (phystatus & PHYSTATUS_2500MF)
+    if (phystatus & PHYStatus::Speed2500MF)
         return 2500;
-    if (phystatus & PHYSTATUS_1000MF)
+    if (phystatus & PHYStatus::Speed1000MF)
         return 1000;
-    if (phystatus & PHYSTATUS_100M)
+    if (phystatus & PHYStatus::Speed100)
         return 100;
-    if (phystatus & PHYSTATUS_10M)
+    if (phystatus & PHYStatus::Speed10)
         return 10;
 
     return NetworkAdapter::LINKSPEED_INVALID;

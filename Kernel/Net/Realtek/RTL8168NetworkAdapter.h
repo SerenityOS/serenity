@@ -19,6 +19,8 @@
 
 namespace Kernel {
 
+enum class RTL8168Register : u16;
+
 // RTL8618 / RTL8111 Driver based on https://people.freebsd.org/~wpaul/RealTek/RTL8111B_8168B_Registers_DataSheet_1.0.pdf
 class RTL8168NetworkAdapter final : public NetworkAdapter
     , public PCI::Device {
@@ -208,13 +210,13 @@ private:
     void doorbell();
     u32 read_phy_status();
 
-    void out8(u16 address, u8 data);
-    void out16(u16 address, u16 data);
-    void out32(u16 address, u32 data);
-    void out64(u16 address, u64 data);
-    u8 in8(u16 address);
-    u16 in16(u16 address);
-    u32 in32(u16 address);
+    void out8(RTL8168Register reg, u8 data);
+    void out16(RTL8168Register reg, u16 data);
+    void out32(RTL8168Register reg, u32 data);
+    void out64(RTL8168Register reg, u64 data);
+    u8 in8(RTL8168Register reg);
+    u16 in16(RTL8168Register reg);
+    u32 in32(RTL8168Register reg);
 
     void phy_out(u8 address, u16 data);
     u16 phy_in(u8 address);

@@ -50,20 +50,20 @@ void RTL8168NetworkAdapter::hardware_quirks()
 void RTL8168NetworkAdapter::hardware_quirks_b()
 {
     // disable checked reserved bits
-    out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_BEACON_ENABLE);
+    out8(RTL8168Register::Config3, in8(RTL8168Register::Config3) & ~Config3::BeaconEnable);
 
     // configure the maximum transmit packet size (again)
-    out16(REG_MTPS, MTPS_JUMBO);
+    out16(RTL8168Register::MaxTXPacketSize, MTPS_JUMBO);
 
     // disable checked reserved bits
-    out8(REG_CONFIG4, in8(REG_CONFIG4) & ~1);
+    out8(RTL8168Register::Config4, in8(RTL8168Register::Config4) & ~1);
 }
 
 void RTL8168NetworkAdapter::hardware_quirks_c_1()
 {
     csi_enable(CSI_ACCESS_2);
 
-    out8(REG_DBG, 0x06 | DBG_FIX_NAK_1 | DBG_FIX_NAK_2);
+    out8(RTL8168Register::Debug, 0x06 | Debug::FixNAK1 | Debug::FixNAK2);
 
     static constexpr auto ephy_info = to_array<EPhyUpdate>({
         { 0x02, 0x0800, 0x1000 },
@@ -72,8 +72,8 @@ void RTL8168NetworkAdapter::hardware_quirks_c_1()
     });
     extended_phy_initialize(ephy_info);
 
-    out8(REG_CONFIG1, in8(REG_CONFIG1) | CFG1_SPEED_DOWN);
-    out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_BEACON_ENABLE);
+    out8(RTL8168Register::Config1, in8(RTL8168Register::Config1) | Config1::SpeedDown);
+    out8(RTL8168Register::Config3, in8(RTL8168Register::Config3) & ~Config3::BeaconEnable);
 }
 
 void RTL8168NetworkAdapter::hardware_quirks_c_2()
@@ -86,8 +86,8 @@ void RTL8168NetworkAdapter::hardware_quirks_c_2()
     });
     extended_phy_initialize(ephy_info);
 
-    out8(REG_CONFIG1, in8(REG_CONFIG1) | CFG1_SPEED_DOWN);
-    out8(REG_CONFIG3, in8(REG_CONFIG3) | CFG3_BEACON_ENABLE);
+    out8(RTL8168Register::Config1, in8(RTL8168Register::Config1) | Config1::SpeedDown);
+    out8(RTL8168Register::Config3, in8(RTL8168Register::Config3) | Config3::BeaconEnable);
 
     // FIXME: Disable PCIe clock request
 }
@@ -96,8 +96,8 @@ void RTL8168NetworkAdapter::hardware_quirks_c_3()
 {
     csi_enable(CSI_ACCESS_2);
 
-    out8(REG_CONFIG1, in8(REG_CONFIG1) | CFG1_SPEED_DOWN);
-    out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_BEACON_ENABLE);
+    out8(RTL8168Register::Config1, in8(RTL8168Register::Config1) | Config1::SpeedDown);
+    out8(RTL8168Register::Config3, in8(RTL8168Register::Config3) & ~Config3::BeaconEnable);
 
     // FIXME: Disable PCIe clock request
 }
@@ -125,20 +125,20 @@ void RTL8168NetworkAdapter::hardware_quirks_e_2()
     eri_update(0xd4, ERI_MASK_0011, 0xc00, 0xff00, ERI_EXGMAC);
 
     // Set early TX
-    out8(REG_MTPS, 0x27);
+    out8(RTL8168Register::MaxTXPacketSize, 0x27);
 
     // FIXME: Disable PCIe clock request
 
-    out8(REG_DLLPR, in8(REG_DLLPR) | DLLPR_PFM_ENABLE);
-    out32(REG_MISC, in32(REG_MISC) | MISC_PWM_ENABLE);
-    out8(REG_CONFIG5, in8(REG_CONFIG5) & ~CFG5_SPI_ENABLE);
+    out8(RTL8168Register::DLLPR, in8(RTL8168Register::DLLPR) | DLLPR::PFMEnable);
+    out32(RTL8168Register::Misc, in32(RTL8168Register::Misc) | Misc::PWMEnable);
+    out8(RTL8168Register::Config5, in8(RTL8168Register::Config5) & ~Config5::SPIEnable);
 }
 
 void RTL8168NetworkAdapter::hardware_quirks_h()
 {
     // disable aspm and clock request before accessing extended phy
-    out8(REG_CONFIG2, in8(REG_CONFIG2) & ~CFG2_CLOCK_REQUEST_ENABLE);
-    out8(REG_CONFIG5, in8(REG_CONFIG5) & ~CFG5_ASPM_ENABLE);
+    out8(RTL8168Register::Config2, in8(RTL8168Register::Config2) & ~Config2::ClockRequestEnable);
+    out8(RTL8168Register::Config5, in8(RTL8168Register::Config5) & ~Config5::ASPMEnable);
 
     // initialize extended phy
     static constexpr auto ephy_info = to_array<EPhyUpdate>({
@@ -167,24 +167,24 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
     eri_out(0x5F0, ERI_MASK_0011, 0x4F87, ERI_EXGMAC);
 
     // disable rxdv gate
-    out32(REG_MISC, in32(REG_MISC) & ~MISC_RXDV_GATE_ENABLE);
+    out32(RTL8168Register::Misc, in32(RTL8168Register::Misc) & ~Misc::RXDVGateEnable);
 
     // set early TX
-    out8(REG_MTPS, 0x27);
+    out8(RTL8168Register::MaxTXPacketSize, 0x27);
 
     // vendor magic values ???
     eri_out(0xC0, ERI_MASK_0011, 0, ERI_EXGMAC);
     eri_out(0xB8, ERI_MASK_0011, 0, ERI_EXGMAC);
 
-    out8(REG_DLLPR, in8(REG_DLLPR) & ~DLLPR_PFM_ENABLE);
-    out8(REG_MISC2, in8(REG_MISC2) & ~MISC2_PFM_D3COLD_ENABLE);
-    out8(REG_DLLPR, in8(REG_DLLPR) & ~DLLPR_TX_10M_PS_ENABLE);
+    out8(RTL8168Register::DLLPR, in8(RTL8168Register::DLLPR) & ~DLLPR::PFMEnable);
+    out8(RTL8168Register::Misc1, in8(RTL8168Register::Misc1) & ~Misc1::PFMD3ColdEnable);
+    out8(RTL8168Register::DLLPR, in8(RTL8168Register::DLLPR) & ~DLLPR::TX10MPSEnable);
 
     // vendor magic values ???
     eri_update(0x1B0, ERI_MASK_0011, 0, 0x1000, ERI_EXGMAC);
 
     // disable l2l3 state
-    out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_READY_TO_L23);
+    out8(RTL8168Register::Config3, in8(RTL8168Register::Config3) & ~Config3::ReadyToL23);
 
     // blackmagic code taken from linux's r8169
     phy_out(0x1F, 0x0C42);
@@ -228,15 +228,15 @@ void RTL8168NetworkAdapter::hardware_quirks_h()
 void RTL8168NetworkAdapter::hardware_quirks_8125_generic()
 {
     // Set default ASPM entry latency (L0 7us, L1 16us) and disable L2/L3 ready
-    out8(REG_CONFIG3, in8(REG_CONFIG3) & ~CFG3_READY_TO_L23);
+    out8(RTL8168Register::Config3, in8(RTL8168Register::Config3) & ~Config3::ReadyToL23);
 
-    out16(0x382, 0x221b);
-    out32(REG_RSS_CTRL_8125, 0);
-    out16(REG_Q_NUM_CTRL_8125, 0);
+    out16(static_cast<RTL8168Register>(0x382), 0x221b);
+    out32(RTL8168Register::RSS_CTRL_8125, 0);
+    out16(RTL8168Register::Q_NUM_CTRL_8125, 0);
 
     // Disable UPS
     ocp_update(0xd40a, 0, 0x0010);
-    out8(REG_CONFIG1, in8(REG_CONFIG1) & ~0x10);
+    out8(RTL8168Register::Config1, in8(RTL8168Register::Config1) & ~0x10);
 
     ocp_out(0xc140, 0xffff);
     ocp_out(0xc142, 0xffff);
@@ -249,7 +249,7 @@ void RTL8168NetworkAdapter::hardware_quirks_8125_generic()
     ocp_update(0xeb58, 0x0000, 0x0001);
 
     if (m_version >= ChipVersion::RTL8126A)
-        out8(0xD8, in8(0xD8) & ~0x02);
+        out8(static_cast<RTL8168Register>(0xD8), in8(static_cast<RTL8168Register>(0xD8)) & ~0x02);
 
     switch (m_version) {
     case ChipVersion::RTL8125B:
@@ -291,7 +291,7 @@ void RTL8168NetworkAdapter::hardware_quirks_8125_generic()
     ocp_update(0xeb54, 0x0001, 0x0000);
     Processor::wait_check();
     ocp_update(0xeb54, 0x0000, 0x0001);
-    out16(0x1880, in16(0x1880) & ~0x0030);
+    out16(static_cast<RTL8168Register>(0x1880), in16(static_cast<RTL8168Register>(0x1880)) & ~0x0030);
 
     ocp_out(0xe098, 0xc302);
 
@@ -299,7 +299,7 @@ void RTL8168NetworkAdapter::hardware_quirks_8125_generic()
         Processor::wait_check();
 
     // Disable RXDV gate
-    out32(REG_MISC, in32(REG_MISC) & ~MISC_RXDV_GATE_ENABLE);
+    out32(RTL8168Register::Misc, in32(RTL8168Register::Misc) & ~Misc::RXDVGateEnable);
 }
 
 void RTL8168NetworkAdapter::hardware_quirks_8125_b()
