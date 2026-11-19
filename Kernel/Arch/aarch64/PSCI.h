@@ -8,6 +8,8 @@
 
 namespace Kernel::PSCI {
 
+void initialize();
+
 bool is_supported();
 void poweroff();
 void reset();

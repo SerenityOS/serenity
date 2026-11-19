@@ -72,6 +72,7 @@
 #    include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #    include <Kernel/Devices/Serial/16550/Serial16550.h>
 #elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/PSCI.h>
 #    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #    include <Kernel/Arch/aarch64/RPi/MiniUART.h>
@@ -240,6 +241,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
         if (auto maybe_error = ACPI::Parser::the()->full_initialize(); maybe_error.is_error())
             dmesgln("ACPI: Error during full initilization: {}", maybe_error.release_error());
     }
+
+#if ARCH(AARCH64)
+    PSCI::initialize();
+#endif
 
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);

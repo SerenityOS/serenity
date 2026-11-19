@@ -80,6 +80,7 @@ struct [[gnu::packed]] HardwareFeatures {
     bool hardware_reduced_acpi : 1;
     bool low_power_s0_idle_capable : 1;
 };
+
 struct [[gnu::packed]] x86_Specific_Flags {
     bool legacy_devices : 1;
     bool keyboard_8042 : 1;
@@ -87,7 +88,16 @@ struct [[gnu::packed]] x86_Specific_Flags {
     bool msi_not_supported : 1;
     bool cmos_rtc_not_present : 1;
 };
+
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#arm-architecture-boot-flags
+enum class ARMArchitectureBootFlags : u16 {
+    PSCICompliant = 1u << 0,
+    PSCIUseHVC = 1u << 1,
 };
+
+AK_ENUM_BITWISE_OPERATORS(ARMArchitectureBootFlags);
+
+}
 
 // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#generic-address-structure
 namespace GenericAddressStructure {
@@ -231,7 +241,7 @@ struct [[gnu::packed]] FADT {
     FADTFlags::FeatureFlags flags;
     GenericAddressStructure reset_reg;
     u8 reset_value;
-    u16 arm_boot_arch;
+    FADTFlags::ARMArchitectureBootFlags arm_boot_arch;
     u8 fadt_minor_version;
     u64 x_firmware_ctrl;
     u64 x_dsdt;
