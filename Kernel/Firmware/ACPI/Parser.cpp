@@ -140,6 +140,8 @@ UNMAP_AFTER_INIT ErrorOr<void> Parser::process_fadt_data()
     m_hardware_flags.wbinvd = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::WBINVD);
     m_hardware_flags.wbinvd_flush = has_flag(sdt->flags, ::ACPI::FADTFlags::FeatureFlags::WBINVD_FLUSH);
 
+    m_arm_architecture_boot_flags = sdt->arm_boot_arch;
+
     m_interrupt_handler = TRY(InterruptHandler::create(*this, sdt->sci_int));
 
     return {};

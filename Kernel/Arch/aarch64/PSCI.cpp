@@ -5,6 +5,8 @@
  */
 
 #include <Kernel/Arch/aarch64/PSCI.h>
+#include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Firmware/DeviceTree/Driver.h>
 #include <Kernel/Firmware/DeviceTree/Management.h>
 
@@ -67,6 +69,31 @@ static FlatPtr call(Function function, FlatPtr arg0, FlatPtr arg1, FlatPtr arg2)
         : "memory", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17");
 
     return x0;
+}
+
+void initialize()
+{
+    ScopeGuard print_psci_info = [] {
+        if (s_is_supported)
+            dbgln("PSCI: Using {} conduit"sv, s_conduit == Conduit::HVC ? "HVC"sv : "SMC"sv);
+        else
+            dbgln("PSCI: Not supported");
+    };
+
+    // On devicetree systems, initialization is handled via PSCIDriver::probe().
+    if (DeviceTree::is_present())
+        return;
+
+    if (ACPI::is_enabled()) {
+        auto flags = ACPI::Parser::the()->arm_architecture_boot_flags();
+        if (has_flag(flags, ::ACPI::FADTFlags::ARMArchitectureBootFlags::PSCICompliant)) {
+            s_is_supported = true;
+
+            bool hvc_conduit = has_flag(flags, ::ACPI::FADTFlags::ARMArchitectureBootFlags::PSCIUseHVC);
+            s_conduit = hvc_conduit ? Conduit::HVC : Conduit::SMC;
+        }
+        return;
+    }
 }
 
 bool is_supported()

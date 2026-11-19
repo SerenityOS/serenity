@@ -46,6 +46,7 @@ public:
 
     ::ACPI::FADTFlags::HardwareFeatures const& hardware_features() const { return m_hardware_flags; }
     ::ACPI::FADTFlags::x86_Specific_Flags const& x86_specific_flags() const { return m_x86_specific_flags; }
+    ::ACPI::FADTFlags::ARMArchitectureBootFlags const& arm_architecture_boot_flags() const { return m_arm_architecture_boot_flags; }
 
     ~Parser() = default;
 
@@ -107,6 +108,7 @@ private:
     bool m_xsdt_supported { false };
     ::ACPI::FADTFlags::HardwareFeatures m_hardware_flags;
     ::ACPI::FADTFlags::x86_Specific_Flags m_x86_specific_flags;
+    ::ACPI::FADTFlags::ARMArchitectureBootFlags m_arm_architecture_boot_flags;
 
     OwnPtr<::ACPI::AML::Interpreter> m_aml_interpreter;
 };
