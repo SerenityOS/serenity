@@ -5,7 +5,7 @@
  */
 
 #include "EffectsSettingsWidget.h"
-#include <Applications/DisplaySettings/EffectsSettingsGML.h>
+#include <AK/StringView.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
@@ -13,6 +13,13 @@
 #include <LibGUI/ItemListModel.h>
 
 namespace GUI {
+
+static constexpr StringView s_effects_settings_gml = [] {
+    static constexpr char raw[] = {
+#embed "EffectsSettings.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 namespace DisplaySettings {
 
@@ -25,7 +32,7 @@ ErrorOr<NonnullRefPtr<EffectsSettingsWidget>> EffectsSettingsWidget::try_create(
 
 ErrorOr<void> EffectsSettingsWidget::setup_interface()
 {
-    TRY(load_from_gml(effects_settings_gml));
+    TRY(load_from_gml(s_effects_settings_gml));
 
     m_geometry_combobox = find_descendant_of_type_named<ComboBox>("geometry_combobox");
     m_geometry_combobox->set_only_allow_values_from_model(true);

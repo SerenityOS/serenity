@@ -6,13 +6,20 @@
  */
 
 #include "ClockSettingsWidget.h"
-#include <Applications/ClockSettings/ClockSettingsWidgetGML.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
+
+static constexpr StringView s_clock_settings_widget_gml = [] {
+    static constexpr char raw[] = {
+#embed "ClockSettingsWidget.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 constexpr auto time_format_12h = "%I:%M %p"sv;
 constexpr auto time_format_12h_seconds = "%r"sv;
@@ -28,7 +35,7 @@ ErrorOr<NonnullRefPtr<ClockSettingsWidget>> ClockSettingsWidget::try_create()
 
 ErrorOr<void> ClockSettingsWidget::setup()
 {
-    TRY(load_from_gml(clock_settings_widget_gml));
+    TRY(load_from_gml(s_clock_settings_widget_gml));
 
     m_24_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("24hour_radio");
     auto& twelve_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("12hour_radio");

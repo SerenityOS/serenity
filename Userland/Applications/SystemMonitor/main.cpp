@@ -16,8 +16,7 @@
 #include "ProcessUnveiledPathsWidget.h"
 #include "ThreadStackWidget.h"
 #include <AK/NumberFormat.h>
-#include <Applications/SystemMonitor/ProcessWindowGML.h>
-#include <Applications/SystemMonitor/SystemMonitorGML.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -61,6 +60,20 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t);
 static ErrorOr<void> build_performance_tab(GUI::Widget&);
 
 static RefPtr<GUI::Statusbar> statusbar;
+
+static constexpr StringView s_process_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "ProcessWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_system_monitor_gml = [] {
+    static constexpr char raw[] = {
+#embed "SystemMonitor.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 namespace SystemMonitor {
 
@@ -283,7 +296,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->save_size_and_position_on_close("SystemMonitor"sv, "Window"sv);
 
     auto main_widget = window->set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(system_monitor_gml));
+    TRY(main_widget->load_from_gml(s_system_monitor_gml));
     auto& tabwidget = *main_widget->find_descendant_of_type_named<GUI::TabWidget>("main_tabs");
     statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
@@ -556,7 +569,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = window->set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(process_window_gml));
+    TRY(main_widget->load_from_gml(s_process_window_gml));
 
     GUI::ModelIndex process_index;
     for (int row = 0; row < ProcessModel::the().row_count({}); ++row) {

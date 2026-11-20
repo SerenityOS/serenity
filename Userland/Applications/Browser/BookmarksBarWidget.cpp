@@ -6,9 +6,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringView.h>
 #include <Applications/Browser/BookmarksBarWidget.h>
 #include <Applications/Browser/Browser.h>
-#include <Applications/Browser/EditBookmarkGML.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -24,6 +24,13 @@
 #include <LibGfx/Palette.h>
 
 namespace Browser {
+
+static constexpr StringView s_edit_bookmark_gml = [] {
+    static constexpr char raw[] = {
+#embed "EditBookmark.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 namespace {
 
@@ -59,7 +66,7 @@ private:
         : Dialog(parent_window)
     {
         auto widget = set_main_widget<GUI::Widget>();
-        widget->load_from_gml(edit_bookmark_gml).release_value_but_fixme_should_propagate_errors();
+        widget->load_from_gml(s_edit_bookmark_gml).release_value_but_fixme_should_propagate_errors();
 
         set_resizable(false);
         resize(260, 85);

@@ -5,8 +5,8 @@
  */
 
 #include "TimeZoneSettingsWidget.h"
+#include <AK/StringView.h>
 #include <AK/Time.h>
-#include <Applications/ClockSettings/TimeZoneSettingsWidgetGML.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/ImageWidget.h>
@@ -23,6 +23,13 @@
 #include <math.h>
 #include <spawn.h>
 #include <unistd.h>
+
+static constexpr StringView s_time_zone_settings_widget_gml = [] {
+    static constexpr char raw[] = {
+#embed "TimeZoneSettingsWidget.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 static constexpr auto PI_OVER_180 = M_PIf32 / 180.0f;
 static constexpr auto PI_OVER_4 = M_PIf32 / 4.0f;
@@ -59,7 +66,7 @@ ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> TimeZoneSettingsWidget::create()
 
 TimeZoneSettingsWidget::TimeZoneSettingsWidget()
 {
-    load_from_gml(time_zone_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_time_zone_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     static auto time_zones = []() {
         Vector<StringView> time_zones;

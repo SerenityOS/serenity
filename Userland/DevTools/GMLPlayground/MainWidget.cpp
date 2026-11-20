@@ -10,6 +10,7 @@
 
 #include "MainWidget.h"
 #include <AK/LexicalPath.h>
+#include <AK/StringView.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
@@ -28,7 +29,13 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/VimEditingEngine.h>
-#include <Userland/DevTools/GMLPlayground/GMLPlaygroundWindowGML.h>
+
+static constexpr StringView s_gml_playground_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "GMLPlaygroundWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 namespace {
 
@@ -64,7 +71,7 @@ void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
 ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
 {
     auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget()));
-    TRY(main_widget->load_from_gml(gml_playground_window_gml));
+    TRY(main_widget->load_from_gml(s_gml_playground_window_gml));
     main_widget->m_icon = icon;
 
     main_widget->m_toolbar = main_widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");

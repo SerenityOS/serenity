@@ -5,7 +5,7 @@
  */
 
 #include "FindInPageWidget.h"
-#include <Applications/Browser/FindInPageWidgetGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
@@ -16,9 +16,16 @@ REGISTER_WIDGET(Browser, FindInPageWidget)
 
 namespace Browser {
 
+static constexpr StringView s_find_in_page_widget_gml = [] {
+    static constexpr char raw[] = {
+#embed "FindInPageWidget.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 FindInPageWidget::FindInPageWidget()
 {
-    load_from_gml(find_in_page_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_find_in_page_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_close_button = find_descendant_of_type_named<GUI::Button>("close_button");
     m_previous_button = find_descendant_of_type_named<GUI::Button>("previous_button");

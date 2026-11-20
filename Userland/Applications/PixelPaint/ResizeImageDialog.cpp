@@ -5,7 +5,7 @@
  */
 
 #include "ResizeImageDialog.h"
-#include <Applications/PixelPaint/ResizeImageDialogGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -15,6 +15,13 @@
 #include <LibGUI/SpinBox.h>
 
 namespace PixelPaint {
+
+static constexpr StringView s_resize_image_dialog_gml = [] {
+    static constexpr char raw[] = {
+#embed "ResizeImageDialog.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ResizeImageDialog::ResizeImageDialog(Gfx::IntSize suggested_size, GUI::Window* parent_window)
     : Dialog(parent_window)
@@ -28,7 +35,7 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize suggested_size, GUI::Window* p
     set_icon(parent_window->icon());
 
     auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(resize_image_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(s_resize_image_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto width_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("width_spinbox");
     auto height_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("height_spinbox");

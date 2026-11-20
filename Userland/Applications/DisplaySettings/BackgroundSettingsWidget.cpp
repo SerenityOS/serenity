@@ -9,7 +9,7 @@
 #include "BackgroundSettingsWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
-#include <Applications/DisplaySettings/BackgroundSettingsGML.h>
+#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/Launcher.h>
@@ -30,6 +30,13 @@
 #include <LibGfx/SystemTheme.h>
 
 namespace DisplaySettings {
+
+static constexpr StringView s_background_settings_gml = [] {
+    static constexpr char raw[] = {
+#embed "BackgroundSettings.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_create(bool& background_settings_changed)
 {
@@ -127,7 +134,7 @@ private:
 
 ErrorOr<void> BackgroundSettingsWidget::create_frame()
 {
-    TRY(load_from_gml(background_settings_gml));
+    TRY(load_from_gml(s_background_settings_gml));
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 

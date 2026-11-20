@@ -25,14 +25,6 @@ if (SERENITYOS)
     list(APPEND SOURCES OutOfProcessWebView.cpp)
 endif()
 
-embed_as_string(
-    "NativeStyleSheetSource.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Native.css"
-    "NativeStyleSheetSource.cpp"
-    "native_stylesheet_source"
-    NAMESPACE "WebView"
-)
-
 compile_ipc(UIProcessServer.ipc UIProcessServerEndpoint.h)
 compile_ipc(UIProcessClient.ipc UIProcessClientEndpoint.h)
 
@@ -44,7 +36,6 @@ set(GENERATED_SOURCES
     ../../Services/WebContent/WebContentServerEndpoint.h
     ../../Services/WebContent/WebDriverClientEndpoint.h
     ../../Services/WebContent/WebDriverServerEndpoint.h
-    NativeStyleSheetSource.cpp
     UIProcessClientEndpoint.h
     UIProcessServerEndpoint.h
 )

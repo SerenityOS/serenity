@@ -13,7 +13,7 @@
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include "TaskManagerWidget.h"
-#include <Applications/Browser/BrowserWindowGML.h>
+#include <AK/StringView.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
@@ -44,6 +44,13 @@
 
 namespace Browser {
 
+static constexpr StringView s_browser_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "BrowserWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 static ByteString bookmarks_file_path()
 {
     StringBuilder builder;
@@ -65,7 +72,7 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
     set_title("Browser");
 
     auto widget = set_main_widget<GUI::Widget>();
-    widget->load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
+    widget->load_from_gml(s_browser_window_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& top_line = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 

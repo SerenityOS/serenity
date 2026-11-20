@@ -8,7 +8,7 @@
 #include "StorageWidget.h"
 #include "CookiesModel.h"
 #include "StorageModel.h"
-#include <Applications/Browser/StorageWidgetGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
@@ -16,9 +16,16 @@
 
 namespace Browser {
 
+static constexpr StringView s_storage_widget_gml = [] {
+    static constexpr char raw[] = {
+#embed "StorageWidget.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 StorageWidget::StorageWidget()
 {
-    load_from_gml(storage_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_storage_widget_gml).release_value_but_fixme_should_propagate_errors();
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     m_cookies_table_view = tab_widget.find_descendant_of_type_named<GUI::TableView>("cookies_tableview");

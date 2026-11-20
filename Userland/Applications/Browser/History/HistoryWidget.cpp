@@ -5,13 +5,21 @@
  */
 
 #include "HistoryWidget.h"
-#include <Applications/Browser/HistoryWidgetGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/TableView.h>
 
 namespace Browser {
+
+static constexpr StringView s_history_widget_gml = [] {
+    static constexpr char raw[] = {
+#embed "HistoryWidget.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 HistoryWidget::HistoryWidget()
 {
-    load_from_gml(history_widget_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_history_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     m_table_view = find_descendant_of_type_named<GUI::TableView>("history_tableview");
     m_textbox = find_descendant_of_type_named<GUI::TextBox>("history_filter_textbox");

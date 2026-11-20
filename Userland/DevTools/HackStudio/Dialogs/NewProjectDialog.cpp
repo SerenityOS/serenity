@@ -7,11 +7,10 @@
 
 #include "NewProjectDialog.h"
 #include "ProjectTemplatesModel.h"
-#include <DevTools/HackStudio/Dialogs/NewProjectDialogGML.h>
-#include <DevTools/HackStudio/ProjectTemplate.h>
-
 #include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
+#include <AK/StringView.h>
+#include <DevTools/HackStudio/ProjectTemplate.h>
 #include <LibCore/Directory.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGUI/BoxLayout.h>
@@ -25,6 +24,13 @@
 #include <LibRegex/Regex.h>
 
 namespace HackStudio {
+
+static constexpr StringView s_new_project_dialog_gml = [] {
+    static constexpr char raw[] = {
+#embed "NewProjectDialog.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 static Regex<PosixExtended> const s_project_name_validity_regex("^([A-Za-z0-9_-])*$");
 
@@ -50,7 +56,7 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
     set_title("New Project");
 
     auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(new_project_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(s_new_project_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_icon_view_container = *main_widget->find_descendant_of_type_named<GUI::Widget>("icon_view_container");
     m_icon_view = m_icon_view_container->add<GUI::IconView>();

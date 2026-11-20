@@ -15,6 +15,11 @@
 
 namespace WebView {
 
+static constexpr unsigned char s_native_stylesheet_source_data[] = {
+#embed "Native.css"
+};
+static String const s_native_stylesheet_source = String::from_utf8_without_validation({ s_native_stylesheet_source_data, sizeof(s_native_stylesheet_source_data) });
+
 ViewImplementation::ViewImplementation()
 {
     m_backing_store_shrink_timer = Core::Timer::create_single_shot(3000, [this] {
@@ -635,8 +640,7 @@ void ViewImplementation::set_user_style_sheet(String source)
 
 void ViewImplementation::use_native_user_style_sheet()
 {
-    extern String native_stylesheet_source;
-    set_user_style_sheet(native_stylesheet_source);
+    set_user_style_sheet(s_native_stylesheet_source);
 }
 
 void ViewImplementation::enable_inspector_prototype()

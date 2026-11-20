@@ -5,12 +5,25 @@
  */
 
 #include "DemoWizardDialog.h"
-#include <Demos/WidgetGallery/DemoWizardPage1GML.h>
-#include <Demos/WidgetGallery/DemoWizardPage2GML.h>
+#include <AK/StringView.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Wizards/WizardDialog.h>
+
+static constexpr StringView s_demo_wizard_page_1_gml = [] {
+    static constexpr char raw[] = {
+#embed "DemoWizardPage1.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_demo_wizard_page_2_gml = [] {
+    static constexpr char raw[] = {
+#embed "DemoWizardPage2.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
     : GUI::WizardDialog(parent_window)
@@ -32,7 +45,7 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
         "Installation location"sv,
         "Choose where Demo Application is installed on your computer."sv)
                    .release_value_but_fixme_should_propagate_errors();
-    m_page_1->body_widget().load_from_gml(demo_wizard_page_1_gml).release_value_but_fixme_should_propagate_errors();
+    m_page_1->body_widget().load_from_gml(s_demo_wizard_page_1_gml).release_value_but_fixme_should_propagate_errors();
     m_page_1_location_text_box = m_page_1->body_widget().find_descendant_of_type_named<GUI::TextBox>("page_1_location_text_box");
     m_page_1->on_next_page = [&]() {
         return m_page_2;
@@ -43,7 +56,7 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
         "Installation in progress..."sv,
         "Please wait. Do not turn off your computer."sv)
                    .release_value_but_fixme_should_propagate_errors();
-    m_page_2->body_widget().load_from_gml(demo_wizard_page_2_gml).release_value_but_fixme_should_propagate_errors();
+    m_page_2->body_widget().load_from_gml(s_demo_wizard_page_2_gml).release_value_but_fixme_should_propagate_errors();
     m_page_2_progressbar = m_page_2->body_widget().find_descendant_of_type_named<GUI::Progressbar>("page_2_progressbar");
     m_page_2_timer = Core::Timer::create_repeating(
         100, [&]() {

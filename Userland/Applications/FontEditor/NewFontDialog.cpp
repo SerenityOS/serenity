@@ -6,8 +6,7 @@
 
 #include "NewFontDialog.h"
 #include <AK/StringBuilder.h>
-#include <Applications/FontEditor/NewFontDialogPage1GML.h>
-#include <Applications/FontEditor/NewFontDialogPage2GML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
@@ -22,6 +21,20 @@
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
+
+static constexpr StringView s_new_font_dialog_page_1_gml = [] {
+    static constexpr char raw[] = {
+#embed "NewFontDialogPage1.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_new_font_dialog_page_2_gml = [] {
+    static constexpr char raw[] = {
+#embed "NewFontDialogPage2.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 namespace FontEditor {
 
@@ -134,7 +147,7 @@ ErrorOr<void> NewFontDialog::build()
     TRY(GUI::WizardDialog::build());
 
     m_font_properties_page = TRY(GUI::WizardPage::create("Typeface properties"sv, "Edit details about this font."sv));
-    TRY(m_font_properties_page->body_widget().load_from_gml(new_font_dialog_page_1_gml));
+    TRY(m_font_properties_page->body_widget().load_from_gml(s_new_font_dialog_page_1_gml));
 
     m_name_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_family_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("family_textbox");
@@ -164,7 +177,7 @@ ErrorOr<void> NewFontDialog::build()
     };
 
     m_glyph_properties_page = TRY(GUI::WizardPage::create("Glyph properties"sv, "Edit details about this font."sv));
-    TRY(m_glyph_properties_page->body_widget().load_from_gml(new_font_dialog_page_2_gml));
+    TRY(m_glyph_properties_page->body_widget().load_from_gml(s_new_font_dialog_page_2_gml));
     m_glyph_properties_page->set_is_final_page(true);
 
     m_glyph_height_spinbox = m_glyph_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("height_spinbox");

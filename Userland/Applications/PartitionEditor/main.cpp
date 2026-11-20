@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Applications/PartitionEditor/PartitionEditorWindowGML.h>
+#include <AK/StringView.h>
 #include <Applications/PartitionEditor/PartitionModel.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
@@ -16,6 +16,13 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/TableView.h>
 #include <unistd.h>
+
+static constexpr StringView s_partition_editor_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "PartitionEditorWindow.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 static Vector<ByteString> get_device_paths()
 {
@@ -59,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(partition_editor_window_gml));
+    TRY(widget->load_from_gml(s_partition_editor_window_gml));
 
     auto device_paths = get_device_paths();
 
