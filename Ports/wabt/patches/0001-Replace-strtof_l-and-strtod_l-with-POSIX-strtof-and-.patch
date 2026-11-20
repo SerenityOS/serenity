@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gurkirat Singh <info@tbhaxor.com>
+Date: Sun, 15 Nov 2026 16:24:03 +0530
+Subject: [PATCH] Replace strtof_l and strtod_l with POSIX strtof and strtod
+
+---
+ src/literal.cc | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/literal.cc b/src/literal.cc
+index b10b5ad43bd1f6fc0165b146e0f21cda2e144900..f56d206e84a7f2c6e69d31cbac7e5e4d177756da 100644
+--- a/src/literal.cc
++++ b/src/literal.cc
+@@ -48,8 +48,6 @@ namespace {
+ #define strtof_l _strtof_l
+ #define strtod_l _strtod_l
+ static _locale_t c_locale = _create_locale(LC_ALL, "C");
+-#else
+-static locale_t c_locale = newlocale(LC_ALL_MASK, "C", nullptr);
+ #endif
+ 
+ template <typename T>
+@@ -67,7 +65,7 @@ struct FloatTraitsBase<float> {
+   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
+ 
+   static float Strto(const char* s, char** endptr) {
+-    return strtof_l(s, endptr, c_locale);
++    return strtof(s, endptr);
+   }
+ };
+ 
+@@ -80,7 +78,7 @@ struct FloatTraitsBase<double> {
+   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
+ 
+   static double Strto(const char* s, char** endptr) {
+-    return strtod_l(s, endptr, c_locale);
++    return strtod(s, endptr);
+   }
+ };
+ 
