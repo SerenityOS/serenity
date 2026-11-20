@@ -849,6 +849,8 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
         if (command.should_immediately_execute_next) {
             VERIFY(command.argv.is_empty());
 
+            jobs.clear();
+
             Core::EventLoop mainloop;
             setup_signals();
 
@@ -861,11 +863,10 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
         if (int local_return_code = 0; TRY(run_builtin(command, {}, local_return_code)))
             _exit(local_return_code);
 
+        jobs.clear();
+
         if (int local_return_code = 0; invoke_function(command, local_return_code))
             _exit(local_return_code);
-
-        // We no longer need the jobs here.
-        jobs.clear();
 
         execute_process(move(argv));
         VERIFY_NOT_REACHED();

@@ -486,6 +486,7 @@ private:
     size_t m_history_capacity { 1024 };
     bool m_history_dirty { false };
     static ErrorOr<Vector<HistoryEntry>> try_load_history(StringView path);
+    ErrorOr<void> try_save_history(ByteString const& path);
 
     enum class InputState {
         Free,
