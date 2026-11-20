@@ -68,10 +68,14 @@ Application* Application::the()
     return *s_the;
 }
 
+static bool s_in_teardown = false;
+
 ErrorOr<NonnullRefPtr<Application>> Application::create(Main::Arguments const& arguments)
 {
     if (*s_the)
         return Error::from_string_literal("An Application has already been created for this process!");
+
+    s_in_teardown = false;
 
     auto application = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Application {}));
     *s_the = *application;
@@ -79,6 +83,11 @@ ErrorOr<NonnullRefPtr<Application>> Application::create(Main::Arguments const& a
     application->m_event_loop = TRY(try_make<Core::EventLoop>());
 
     ConnectionToWindowServer::the();
+
+    // The ConnectionToWindowServer constructor loads the current system theme.
+    // We ensured that ConnectionToWindowServer has been constructed above.
+    application->set_system_palette(Gfx::current_system_theme_buffer());
+
     TRY(Clipboard::initialize({}));
 
     if (arguments.argc > 0)
@@ -108,8 +117,6 @@ ErrorOr<NonnullRefPtr<Application>> Application::create(Main::Arguments const& a
 
     return application;
 }
-
-static bool s_in_teardown;
 
 bool Application::in_teardown()
 {
