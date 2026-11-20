@@ -209,7 +209,7 @@ void Application::did_delete_last_window(Badge<Window>)
         m_event_loop->quit(0);
 }
 
-void Application::set_system_palette(Core::AnonymousBuffer& buffer)
+void Application::set_system_palette(Core::AnonymousBuffer const& buffer)
 {
     if (!m_system_palette)
         m_system_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(buffer);
