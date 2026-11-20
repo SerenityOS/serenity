@@ -36,19 +36,13 @@ ConnectionToWindowServer& ConnectionToWindowServer::the()
     return *s_connection;
 }
 
-static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
-{
-    Gfx::set_system_theme(buffer);
-    Application::the()->set_system_palette(buffer);
-}
-
 ConnectionToWindowServer::ConnectionToWindowServer(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionToServer<WindowClientEndpoint, WindowServerEndpoint>(*this, move(socket))
 {
     // NOTE: WindowServer automatically sends a "fast_greet" message to us when we connect.
     //       All we have to do is wait for it to arrive. This avoids a round-trip during application startup.
     auto message = wait_for_specific_message<Messages::WindowClient::FastGreet>();
-    set_system_theme_from_anonymous_buffer(message->theme_buffer());
+    Gfx::set_system_theme(message->theme_buffer());
     Desktop::the().did_receive_screen_rects({}, message->screen_rects(), message->main_screen_index(), message->workspace_rows(), message->workspace_columns());
     Desktop::the().set_system_effects(message->effects());
     Gfx::FontDatabase::set_default_font_query(message->default_font_query());
@@ -64,7 +58,8 @@ void ConnectionToWindowServer::fast_greet(Vector<Gfx::IntRect> const&, u32, u32,
 
 void ConnectionToWindowServer::update_system_theme(Core::AnonymousBuffer const& theme_buffer)
 {
-    set_system_theme_from_anonymous_buffer(theme_buffer);
+    Gfx::set_system_theme(theme_buffer);
+    Application::the()->set_system_palette(theme_buffer);
     Window::update_all_windows({});
     Window::for_each_window({}, [](auto& window) {
         Core::EventLoop::current().post_event(window, make<ThemeChangeEvent>());
