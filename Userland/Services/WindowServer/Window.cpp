@@ -17,7 +17,9 @@
 #include <AK/Badge.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/Format.h>
 #include <LibCore/Account.h>
+#include <LibCore/Event.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/SessionManagement.h>
 #include <LibKeyboard/CharacterMap.h>
@@ -111,6 +113,8 @@ Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode 
     , m_frame(*this)
     , m_process_id(process_id)
 {
+    m_pressed_keys = MUST(Bitmap::create(key_code_count, false));
+
     if (parent_window)
         set_parent_window(*parent_window);
     if (!is_frameless() && type() == WindowType::Normal) {
@@ -123,6 +127,7 @@ Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode 
 
 Window::~Window()
 {
+    stop_timer();
     // Detach from client at the start of teardown since we don't want
     // to confuse things by trying to send messages to it.
     m_client = nullptr;
@@ -444,6 +449,50 @@ void Window::set_resizable(bool resizable)
     update_window_menu_items();
 }
 
+void Window::redirect_keydown_event(KeyEvent const& event)
+{
+    bool is_key_just_pressed = !m_pressed_keys.get(event.key());
+
+    if (is_key_just_pressed) {
+        stop_timer();
+        start_timer(WindowManager::the().key_initial_delay());
+        m_last_pressed_key = event;
+        m_pressed_keys.set(event.key(), true);
+        handle_keydown_event(event);
+    }
+}
+
+void Window::redirect_keyup_event(KeyEvent const& event)
+{
+    m_pressed_keys.set(event.key(), false);
+    if (m_last_pressed_key.has_value() && m_last_pressed_key.value().key() == event.key()) {
+        m_last_pressed_key.clear();
+    }
+
+    m_client->async_key_up(m_window_id,
+        (u32)event.code_point(),
+        (u32)event.key(),
+        (u8)event.map_entry_index(),
+        event.modifiers(),
+        event.scancode());
+}
+
+void Window::timer_event(Core::TimerEvent&)
+{
+    stop_timer();
+    start_timer(WindowManager::the().key_repeat_delay());
+
+    if (m_last_pressed_key.has_value())
+        handle_keydown_event(m_last_pressed_key.value());
+}
+
+void Window::window_deactivated()
+{
+    m_last_pressed_key.clear();
+    m_pressed_keys.fill(false);
+    m_client->async_window_deactivated(m_window_id);
+}
+
 void Window::event(Core::Event& event)
 {
     if (is_internal()) {
@@ -469,21 +518,16 @@ void Window::event(Core::Event& event)
         m_client->async_window_left(m_window_id);
         break;
     case Event::KeyDown:
-        handle_keydown_event(static_cast<KeyEvent const&>(event));
+        redirect_keydown_event(static_cast<KeyEvent const&>(event));
         break;
     case Event::KeyUp:
-        m_client->async_key_up(m_window_id,
-            (u32) static_cast<KeyEvent const&>(event).code_point(),
-            (u32) static_cast<KeyEvent const&>(event).key(),
-            (u8) static_cast<KeyEvent const&>(event).map_entry_index(),
-            static_cast<KeyEvent const&>(event).modifiers(),
-            (u32) static_cast<KeyEvent const&>(event).scancode());
+        redirect_keyup_event(static_cast<KeyEvent const&>(event));
         break;
     case Event::WindowActivated:
         m_client->async_window_activated(m_window_id);
         break;
     case Event::WindowDeactivated:
-        m_client->async_window_deactivated(m_window_id);
+        window_deactivated();
         break;
     case Event::WindowInputPreempted:
         m_client->async_window_input_preempted(m_window_id);
@@ -501,6 +545,7 @@ void Window::event(Core::Event& event)
         m_client->async_window_moved(m_window_id, static_cast<MoveEvent const&>(event).rect());
         break;
     default:
+        EventReceiver::event(event);
         break;
     }
 }

@@ -151,6 +151,11 @@ public:
     ScreenLayout get_screen_layout() const;
     bool save_screen_layout(ByteString&);
 
+    void set_key_initial_delay(int);
+    void set_key_repeat_delay(int);
+    int key_initial_delay() const;
+    int key_repeat_delay() const;
+
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);
     void set_double_click_speed(int);
@@ -442,6 +447,9 @@ private:
     Gfx::IntPoint to_floating_cursor_position(Gfx::IntPoint) const;
 
     void show_tile_window_overlay(Window&, Screen const&, WindowTileType);
+
+    int m_key_initial_delay_ms { 600 };
+    int m_key_repeat_delay_ms { 30 };
 
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
