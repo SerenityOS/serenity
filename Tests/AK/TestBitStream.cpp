@@ -10,6 +10,33 @@
 
 using namespace Test::Randomized;
 
+TEST_CASE(little_endian_peek_past_end)
+{
+    Array<u8, 1> const input { 0xf0 };
+    auto memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream stream { move(memory_stream) };
+
+    EXPECT_EQ(TRY_OR_FAIL(stream.read_bits(5)), 0x10u);
+    EXPECT_EQ(TRY_OR_FAIL(stream.peek_bits_possibly_past_end(8)), 0x07u);
+    EXPECT(stream.peek_bits(8).is_error());
+    EXPECT(stream.read_bits(8).is_error());
+    EXPECT_EQ(TRY_OR_FAIL(stream.read_bits(3)), 0x07u);
+    EXPECT_EQ(TRY_OR_FAIL(stream.peek_bits_possibly_past_end(8)), 0u);
+    EXPECT(stream.read_bit().is_error());
+}
+
+TEST_CASE(little_endian_peek_past_end_fill_with_zero)
+{
+    Array<u8, 1> const input { 0xf0 };
+    auto memory_stream = TRY_OR_FAIL(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream stream { move(memory_stream), LittleEndianInputBitStream::FillWithZero };
+
+    EXPECT_EQ(TRY_OR_FAIL(stream.read_bits(5)), 0x10u);
+    EXPECT_EQ(TRY_OR_FAIL(stream.peek_bits_possibly_past_end(8)), 0x07u);
+    EXPECT_EQ(TRY_OR_FAIL(stream.read_bits(8)), 0x07u);
+    EXPECT_EQ(TRY_OR_FAIL(stream.read_bits(8)), 0u);
+}
+
 // Note: This does not do any checks on the internal representation, it just ensures that the behavior of the input and output streams match.
 TEST_CASE(little_endian_bit_stream_input_output_match)
 {
