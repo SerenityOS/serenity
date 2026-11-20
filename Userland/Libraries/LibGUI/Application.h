@@ -58,7 +58,7 @@ public:
     Gfx::Palette palette() const;
     void set_palette(Gfx::Palette&);
 
-    void set_system_palette(Core::AnonymousBuffer&);
+    void set_system_palette(Core::AnonymousBuffer const&);
 
     bool focus_debugging_enabled() const { return m_focus_debugging_enabled; }
     bool hover_debugging_enabled() const { return m_hover_debugging_enabled; }
