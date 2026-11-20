@@ -105,6 +105,9 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interfa
 
 UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<NetworkingManagement>)
 {
+    PCI::enable_memory_space(device_identifier());
+    PCI::enable_bus_mastering(device_identifier());
+
     m_version = TRY(identify_chip_version());
     dmesgln_pci(*this, "Version detected - {} ({})", possible_device_name(), (u8)m_version);
 
@@ -204,8 +207,6 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
 
     // software reset
     reset();
-
-    PCI::enable_bus_mastering(device_identifier());
 
     read_mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac_address().to_string());
