@@ -82,6 +82,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
+        LexicalPath destination_directory { TRY(FileSystem::current_working_directory()) };
+
         if (gzip)
             input_stream = make<Compress::GzipDecompressor>(move(input_stream));
 
@@ -191,6 +193,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (!skip && extract) {
                 auto absolute_path = TRY(FileSystem::absolute_path(filename));
+                if (!LexicalPath(absolute_path).is_child_of(destination_directory)) {
+                    warnln("Refusing to extract '{}' outside of the destination directory", filename);
+                    local_overrides.clear();
+                    TRY(tar_stream->advance());
+                    continue;
+                }
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
                 auto header_timestamp = TRY(header.timestamp());

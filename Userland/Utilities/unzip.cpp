@@ -33,10 +33,15 @@ static ErrorOr<void> adjust_modification_time(Archive::ZipMember const& zip_memb
     return Core::System::utime(zip_member.name, buf);
 }
 
-static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
+static bool unpack_zip_member(Archive::ZipMember zip_member, LexicalPath const& output_directory, bool quiet)
 {
+    LexicalPath path { LexicalPath::absolute_path(output_directory.string(), zip_member.name.to_byte_string()) };
+    if (!path.is_child_of(output_directory)) {
+        warnln("Refusing to extract '{}' outside of the output directory", zip_member.name);
+        return false;
+    }
     if (zip_member.is_directory) {
-        if (auto maybe_error = Core::System::mkdir(zip_member.name, 0755); maybe_error.is_error()) {
+        if (auto maybe_error = Core::System::mkdir(path.string(), 0755); maybe_error.is_error()) {
             warnln("Failed to create directory '{}': {}", zip_member.name, maybe_error.error());
             return false;
         }
@@ -44,9 +49,9 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
             outln(" extracting: {}", zip_member.name);
         return true;
     }
-    MUST(Core::Directory::create(LexicalPath(zip_member.name.to_byte_string()).parent(), Core::Directory::CreateDirectories::Yes));
+    MUST(Core::Directory::create(path.parent(), Core::Directory::CreateDirectories::Yes));
     mode_t file_permissions = zip_member.mode.value_or(0644) & 0777;
-    auto new_file_or_error = Core::File::open(zip_member.name.to_byte_string(), Core::File::OpenMode::Write, file_permissions);
+    auto new_file_or_error = Core::File::open(path.string(), Core::File::OpenMode::Write, file_permissions);
     if (new_file_or_error.is_error()) {
         warnln("Can't write file {}: {}", zip_member.name, new_file_or_error.release_error());
         return false;
@@ -145,6 +150,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::chdir(output_directory_path));
     }
 
+    LexicalPath output_directory { TRY(FileSystem::current_working_directory()) };
+
     if (list_files) {
         outln("  Length     Date      Time     Name");
         outln("--------- ---------- --------   ----");
@@ -181,7 +188,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (keep_file) {
-            if (!unpack_zip_member(zip_member, quiet))
+            if (!unpack_zip_member(zip_member, output_directory, quiet))
                 return IterationDecision::Break;
             if (zip_member.is_directory)
                 zip_directories.append(zip_member);
