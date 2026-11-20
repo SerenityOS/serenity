@@ -524,21 +524,14 @@ void FILE::Buffer::did_enqueue(size_t actual_size)
 
 bool FILE::Buffer::enqueue_front(u8 byte)
 {
-    size_t placement_index;
-    if (m_ungotten == 0u) {
-        placement_index = 3u;
-        m_ungotten = 1u;
-    } else {
-        auto first_zero_index = count_trailing_zeroes(bit_cast<u32>(~m_ungotten)); // Thanks C.
-        if (first_zero_index >= unget_buffer_size) {
-            // Sorry, the place is already taken!
-            return false;
-        }
-        placement_index = unget_buffer_size - first_zero_index - 1;
-        m_ungotten |= (1 << first_zero_index);
+    auto first_zero_index = count_trailing_zeroes(bit_cast<u32>(~m_ungotten)); // Thanks C.
+    if (first_zero_index >= unget_buffer_size) {
+        // Sorry, the place is already taken!
+        return false;
     }
 
-    m_unget_buffer[placement_index] = byte;
+    m_unget_buffer[unget_buffer_size - first_zero_index - 1] = byte;
+    m_ungotten |= (1 << first_zero_index);
     return true;
 }
 
