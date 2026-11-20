@@ -41,6 +41,7 @@ configopts=(
     "-DCMAKE_CXX_FLAGS=-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
     '-DUSE_IPV6=OFF'
     '-DUSE_SYSTEM_ENET=OFF'
+    '-DUSE_GLES2=OFF'
 )
 
 configure() {
