@@ -97,6 +97,7 @@ private:
         bool enqueue_front(u8 byte);
 
     private:
+        // FIXME: Potentially use MB_LEN_MAX here once we support changing locales at runtime.
         constexpr static auto unget_buffer_size = MB_CUR_MAX;
         constexpr static u32 ungotten_mask = ((u32)0xffffffff) >> (sizeof(u32) * 8 - unget_buffer_size);
 
