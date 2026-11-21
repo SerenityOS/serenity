@@ -2,13 +2,13 @@ set(SOURCES
     Clipper.cpp
     Device.cpp
     Image.cpp
-    PixelConverter.cpp
     ShaderCompiler.cpp
     ShaderProcessor.cpp
     Sampler.cpp
     Shader.cpp
 
     ../LibGPU/Image.cpp
+    ../LibGPU/PixelConverter.cpp
 )
 
 add_compile_options(-Wno-psabi)

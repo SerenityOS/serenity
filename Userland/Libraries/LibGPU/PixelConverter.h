@@ -11,7 +11,7 @@
 #include <LibGPU/ImageDataLayout.h>
 #include <LibGfx/Vector4.h>
 
-namespace SoftGPU {
+namespace GPU {
 
 class PixelConverter {
 public:

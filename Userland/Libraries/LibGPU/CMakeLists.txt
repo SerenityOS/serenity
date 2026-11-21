@@ -1,6 +1,7 @@
 set(SOURCES
     Driver.cpp
     Image.cpp
+    PixelConverter.cpp
 )
 
 serenity_lib(LibGPU gpu)
