@@ -88,8 +88,6 @@ public:
         return previous_callback;
     }
 
-    virtual size_t ticks_per_second() const override { return m_frequency; }
-
 protected:
     HardwareTimer(InterruptNumber irq_number, Function<void()> callback = nullptr)
         : IRQHandler(irq_number)
@@ -106,8 +104,6 @@ protected:
         }
         return false;
     }
-
-    u64 m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };
 
 private:
     Function<void()> m_callback;
@@ -140,7 +136,6 @@ public:
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
     virtual StringView controller() const override { return {}; }
     virtual bool eoi() override;
-    virtual size_t ticks_per_second() const override { return m_frequency; }
 
 protected:
     HardwareTimer(InterruptNumber irq_number, Function<void()> callback = nullptr)
@@ -158,8 +153,6 @@ protected:
         }
         return false;
     }
-
-    u64 m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };
 
 private:
     Function<void()> m_callback;

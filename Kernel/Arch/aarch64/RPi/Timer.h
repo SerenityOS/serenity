@@ -31,6 +31,8 @@ public:
     virtual void set_non_periodic() override { }
     virtual void disable() override;
 
+    virtual size_t ticks_per_second() const override;
+
     virtual void reset_to_default_ticks_per_second() override { }
     virtual bool try_to_set_frequency(size_t frequency) override { return frequency == m_frequency; }
     virtual bool is_capable_of_frequency(size_t frequency) const override { return frequency == m_frequency; }
@@ -82,6 +84,8 @@ private:
 
     u64 m_main_counter_last_read { 0 };
     u64 m_main_counter_drift { 0 };
+
+    size_t m_frequency { 0 };
 };
 
 }

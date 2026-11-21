@@ -34,6 +34,8 @@ public:
     virtual u64 current_raw() const override;
     virtual u64 raw_to_ns(u64) const override;
 
+    virtual size_t ticks_per_second() const override;
+
     virtual void reset_to_default_ticks_per_second() override;
     virtual bool try_to_set_frequency(size_t frequency) override;
     virtual bool is_capable_of_frequency(size_t frequency) const override;
@@ -48,5 +50,7 @@ private:
     bool m_enabled : 1;
     bool m_is_64bit_capable : 1;
     u8 m_comparator_number { 0 };
+
+    size_t m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };
 };
 }

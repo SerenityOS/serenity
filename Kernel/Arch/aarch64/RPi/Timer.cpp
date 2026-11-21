@@ -72,6 +72,11 @@ void Timer::disable()
     disable_irq();
 }
 
+size_t Timer::ticks_per_second() const
+{
+    return m_frequency;
+}
+
 u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
 {
     // Should only be called by the time keeper interrupt handler!
