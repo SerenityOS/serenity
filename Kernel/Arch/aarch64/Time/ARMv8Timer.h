@@ -32,10 +32,6 @@ public:
     virtual void set_non_periodic() override { }
     virtual void disable() override;
 
-    virtual bool try_to_set_frequency(size_t frequency) override { return frequency == m_frequency; }
-    virtual bool is_capable_of_frequency(size_t frequency) const override { return frequency == m_frequency; }
-    virtual size_t calculate_nearest_possible_frequency(size_t) const override { return m_frequency; }
-
     // FIXME: Share code with HPET::update_time
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
 

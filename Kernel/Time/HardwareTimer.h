@@ -56,9 +56,9 @@ public:
 
     virtual size_t ticks_per_second() const = 0;
 
-    virtual bool try_to_set_frequency(size_t frequency) = 0;
-    virtual bool is_capable_of_frequency(size_t frequency) const = 0;
-    virtual size_t calculate_nearest_possible_frequency(size_t frequency) const = 0;
+    virtual bool try_to_set_frequency(size_t frequency) { return frequency == ticks_per_second(); }
+    virtual bool is_capable_of_frequency(size_t frequency) const { return frequency == ticks_per_second(); }
+    virtual size_t calculate_nearest_possible_frequency(size_t) const { return ticks_per_second(); }
 };
 
 template<>

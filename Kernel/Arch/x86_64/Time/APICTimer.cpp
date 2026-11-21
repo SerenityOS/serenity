@@ -157,19 +157,4 @@ size_t APICTimer::ticks_per_second() const
     return m_frequency;
 }
 
-bool APICTimer::try_to_set_frequency([[maybe_unused]] size_t frequency)
-{
-    return true;
-}
-
-bool APICTimer::is_capable_of_frequency([[maybe_unused]] size_t frequency) const
-{
-    return false;
-}
-
-size_t APICTimer::calculate_nearest_possible_frequency([[maybe_unused]] size_t frequency) const
-{
-    return 0;
-}
-
 }

@@ -30,10 +30,6 @@ public:
     virtual void set_non_periodic() override { }
     virtual void disable() override;
 
-    virtual bool try_to_set_frequency(size_t frequency) override { return frequency == m_frequency; }
-    virtual bool is_capable_of_frequency(size_t frequency) const override { return frequency == m_frequency; }
-    virtual size_t calculate_nearest_possible_frequency(size_t) const override { return m_frequency; }
-
     virtual void will_be_destroyed() override { }
     virtual Function<void()> set_callback(Function<void()> callback) override
     {
