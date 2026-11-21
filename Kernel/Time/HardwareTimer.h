@@ -56,7 +56,6 @@ public:
 
     virtual size_t ticks_per_second() const = 0;
 
-    virtual void reset_to_default_ticks_per_second() = 0;
     virtual bool try_to_set_frequency(size_t frequency) = 0;
     virtual bool is_capable_of_frequency(size_t frequency) const = 0;
     virtual size_t calculate_nearest_possible_frequency(size_t frequency) const = 0;

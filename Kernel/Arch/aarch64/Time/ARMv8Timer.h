@@ -32,7 +32,6 @@ public:
     virtual void set_non_periodic() override { }
     virtual void disable() override;
 
-    virtual void reset_to_default_ticks_per_second() override { }
     virtual bool try_to_set_frequency(size_t frequency) override { return frequency == m_frequency; }
     virtual bool is_capable_of_frequency(size_t frequency) const override { return frequency == m_frequency; }
     virtual size_t calculate_nearest_possible_frequency(size_t) const override { return m_frequency; }

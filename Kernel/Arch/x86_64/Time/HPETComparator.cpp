@@ -68,15 +68,6 @@ void HPETComparator::set_new_countdown()
     HPET::the().update_non_periodic_comparator_value(*this);
 }
 
-void HPETComparator::reset_to_default_ticks_per_second()
-{
-    dbgln("reset_to_default_ticks_per_second");
-    m_frequency = OPTIMAL_TICKS_PER_SECOND_RATE;
-    if (!is_periodic())
-        set_new_countdown();
-    else
-        try_to_set_frequency(m_frequency);
-}
 bool HPETComparator::try_to_set_frequency(size_t frequency)
 {
     InterruptDisabler disabler;

@@ -157,10 +157,6 @@ size_t APICTimer::ticks_per_second() const
     return m_frequency;
 }
 
-void APICTimer::reset_to_default_ticks_per_second()
-{
-}
-
 bool APICTimer::try_to_set_frequency([[maybe_unused]] size_t frequency)
 {
     return true;
