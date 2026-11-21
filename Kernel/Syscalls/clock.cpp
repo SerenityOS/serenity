@@ -4,11 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <AK/Time.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
+
+static ErrorOr<void> validate_clock_id(clockid_t clock_id)
+{
+    if (!first_is_one_of(clock_id, CLOCK_MONOTONIC, CLOCK_MONOTONIC_COARSE, CLOCK_MONOTONIC_RAW, CLOCK_REALTIME, CLOCK_REALTIME_COARSE))
+        return EINVAL;
+
+    return {};
+}
 
 ErrorOr<FlatPtr> Process::sys$map_time_page()
 {
@@ -28,7 +37,7 @@ ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timesp
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
-    TRY(TimeManagement::validate_clock_id(clock_id));
+    TRY(validate_clock_id(clock_id));
 
     auto ts = TimeManagement::the().current_time(clock_id).to_timespec();
     TRY(copy_to_user(user_ts, &ts));
@@ -76,7 +85,7 @@ ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosl
         return EINVAL;
     }
 
-    TRY(TimeManagement::validate_clock_id(params.clock_id));
+    TRY(validate_clock_id(params.clock_id));
 
     bool was_interrupted;
     if (is_absolute) {
@@ -99,7 +108,7 @@ ErrorOr<FlatPtr> Process::sys$clock_getres(Userspace<Syscall::SC_clock_getres_pa
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    TRY(TimeManagement::validate_clock_id(params.clock_id));
+    TRY(validate_clock_id(params.clock_id));
 
     auto ts = TimeManagement::the().clock_resolution().to_timespec();
     TRY(copy_to_user(params.result, &ts));

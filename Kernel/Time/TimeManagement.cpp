@@ -79,20 +79,6 @@ u64 TimeManagement::scheduler_current_time()
     return s_scheduler_current_time();
 }
 
-ErrorOr<void> TimeManagement::validate_clock_id(clockid_t clock_id)
-{
-    switch (clock_id) {
-    case CLOCK_MONOTONIC:
-    case CLOCK_MONOTONIC_COARSE:
-    case CLOCK_MONOTONIC_RAW:
-    case CLOCK_REALTIME:
-    case CLOCK_REALTIME_COARSE:
-        return {};
-    default:
-        return EINVAL;
-    };
-}
-
 Duration TimeManagement::current_time(clockid_t clock_id) const
 {
     switch (clock_id) {
