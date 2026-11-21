@@ -224,7 +224,6 @@ void APIC::write_icr(ICRReg const& icr)
 
 #define APIC_LVT_TIMER_ONESHOT 0
 #define APIC_LVT_TIMER_PERIODIC (1 << 17)
-#define APIC_LVT_TIMER_TSCDEADLINE (1 << 18)
 
 #define APIC_LVT_MASKED (1 << 16)
 #define APIC_LVT_TRIGGER_LEVEL (1 << 14)
@@ -601,9 +600,6 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
         break;
     case TimerMode::Periodic:
         flags |= APIC_LVT_TIMER_PERIODIC;
-        break;
-    case TimerMode::TSCDeadline:
-        flags |= APIC_LVT_TIMER_TSCDEADLINE;
         break;
     }
     if (!enable)

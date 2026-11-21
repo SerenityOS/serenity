@@ -42,7 +42,6 @@ public:
     enum class TimerMode {
         OneShot,
         Periodic,
-        TSCDeadline
     };
     void setup_local_timer(u32, TimerMode, bool);
     u32 get_timer_current_count();
