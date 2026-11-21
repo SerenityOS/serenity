@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGPU/PixelConverter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Size.h>
 #include <LibSoftGPU/Image.h>
-#include <LibSoftGPU/PixelConverter.h>
 
 namespace SoftGPU {
 
@@ -69,7 +69,7 @@ void Image::write_texels(u32 level, Vector3<i32> const& output_offset, void cons
     auto output_layout = image_data_layout(level, output_offset);
     auto texel_data = texel_pointer(level, 0, 0, 0);
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     ErrorOr<void> conversion_result;
     switch (pixel_format()) {
     case GPU::PixelFormat::Luminance:
@@ -90,7 +90,7 @@ void Image::read_texels(u32 level, Vector3<i32> const& input_offset, void* outpu
 
     auto input_layout = image_data_layout(level, input_offset);
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     auto conversion_result = converter.convert(texel_pointer(level, 0, 0, 0), output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
@@ -162,7 +162,7 @@ void Image::regenerate_mipmaps()
         auto output_layout = image_data_layout_for_bitmap(bitmap);
         auto* output_data = bitmap->scanline(0);
 
-        PixelConverter converter { input_layout, output_layout };
+        GPU::PixelConverter converter { input_layout, output_layout };
         MUST(converter.convert(input_data, output_data, {}));
         return bitmap;
     };
@@ -175,7 +175,7 @@ void Image::regenerate_mipmaps()
         auto output_layout = image_data_layout(level, { 0, 0, 0 });
         auto* output_data = texel_pointer(level, 0, 0, 0);
 
-        PixelConverter converter { input_layout, output_layout };
+        GPU::PixelConverter converter { input_layout, output_layout };
         MUST(converter.convert(input_data, output_data, {}));
     };
 

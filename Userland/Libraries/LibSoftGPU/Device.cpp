@@ -16,13 +16,13 @@
 #include <AK/SIMDMath.h>
 #include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibGPU/PixelConverter.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
 #include <LibSoftGPU/Image.h>
-#include <LibSoftGPU/PixelConverter.h>
 #include <LibSoftGPU/PixelQuad.h>
 #include <LibSoftGPU/SIMD.h>
 #include <LibSoftGPU/Shader.h>
@@ -1462,7 +1462,7 @@ void Device::blit_from_color_buffer(NonnullRefPtr<GPU::Image> image, u32 level, 
     auto output_layout = softgpu_image->image_data_layout(level, output_offset);
     auto* output_data = softgpu_image->texel_pointer(level, 0, 0, 0);
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
@@ -1473,7 +1473,7 @@ void Device::blit_from_color_buffer(void* output_data, Vector2<i32> input_offset
     auto const& output_selection = output_layout.selection;
     auto input_layout = color_buffer_data_layout({ output_selection.width, output_selection.height }, input_offset);
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     auto const* input_data = m_frame_buffer->color_buffer()->scanline(0);
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
@@ -1485,7 +1485,7 @@ void Device::blit_from_depth_buffer(void* output_data, Vector2<i32> input_offset
     auto const& output_selection = output_layout.selection;
     auto input_layout = depth_buffer_data_layout({ output_selection.width, output_selection.height }, input_offset);
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     auto const* input_data = m_frame_buffer->depth_buffer()->scanline(0);
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
@@ -1501,7 +1501,7 @@ void Device::blit_from_depth_buffer(NonnullRefPtr<GPU::Image> image, u32 level, 
     auto output_layout = softgpu_image->image_data_layout(level, output_offset);
     auto* output_data = softgpu_image->texel_pointer(level, 0, 0, 0);
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
@@ -1521,7 +1521,7 @@ void Device::blit_to_color_buffer_at_raster_position(void const* input_data, GPU
         { static_cast<u32>(rasterization_rect.width()), static_cast<u32>(rasterization_rect.height()) },
         { rasterization_rect.x(), rasterization_rect.y() });
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     auto* output_data = m_frame_buffer->color_buffer()->scanline(0);
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
@@ -1539,7 +1539,7 @@ void Device::blit_to_depth_buffer_at_raster_position(void const* input_data, GPU
         { static_cast<u32>(rasterization_rect.width()), static_cast<u32>(rasterization_rect.height()) },
         { rasterization_rect.x(), rasterization_rect.y() });
 
-    PixelConverter converter { input_layout, output_layout };
+    GPU::PixelConverter converter { input_layout, output_layout };
     auto* output_data = m_frame_buffer->depth_buffer()->scanline(0);
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())

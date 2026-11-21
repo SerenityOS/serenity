@@ -7,9 +7,9 @@
 #include <AK/Array.h>
 #include <AK/Error.h>
 #include <AK/FloatingPoint.h>
-#include <LibSoftGPU/PixelConverter.h>
+#include <LibGPU/PixelConverter.h>
 
-namespace SoftGPU {
+namespace GPU {
 
 template<typename T>
 static constexpr T reverse_component_bytes_if_needed(T value, GPU::ImageDataLayout const& image_data_layout)
