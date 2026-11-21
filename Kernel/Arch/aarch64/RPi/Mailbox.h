@@ -58,12 +58,14 @@ public:
 
     u32 query_firmware_version();
 
-    Memory::TypedMapping<MailboxRegisters volatile> m_registers;
-
 private:
-    Mailbox(Memory::TypedMapping<MailboxRegisters volatile> registers);
+    Mailbox(Memory::TypedMapping<MailboxRegisters volatile> registers, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Memory::PhysicalRAMPage>);
     void wait_until_we_can_write() const;
     void wait_for_reply() const;
+
+    Memory::TypedMapping<MailboxRegisters volatile> m_registers;
+    NonnullOwnPtr<Memory::Region> m_dma_region;
+    NonnullRefPtr<Memory::PhysicalRAMPage> m_dma_page;
 };
 
 }

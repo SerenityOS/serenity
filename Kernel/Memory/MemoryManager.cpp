@@ -24,6 +24,7 @@
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MMIOVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Prekernel/Prekernel.h>
@@ -1200,6 +1201,20 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
     return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, memory_type);
 }
 
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page_below(PhysicalAddress below, StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalRAMPage>& dma_buffer_page, MemoryType memory_type)
+{
+    // FIXME: Share code!!
+    auto page = TRY(allocate_physical_page_below(below));
+    dma_buffer_page = page;
+
+    // Ensure that the zeroing of the DMA pages is visible for devices.
+    // Use a full memory fence, as a device could theoretically start reading from this DMA region when we issue an MMIO load, so we need to prevent reordering of both loads and stores.
+    full_memory_fence();
+
+    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
+    return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, memory_type);
+}
+
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, MemoryType memory_type)
 {
     RefPtr<Memory::PhysicalRAMPage> dma_buffer_page;
@@ -1378,6 +1393,42 @@ RefPtr<PhysicalRAMPage> MemoryManager::find_free_physical_page(bool committed, G
 
     return page;
 }
+RefPtr<PhysicalRAMPage> MemoryManager::find_free_physical_page_below(PhysicalAddress below, bool committed, GlobalData& global_data)
+{
+    // FIXME: Share code!!
+    RefPtr<PhysicalRAMPage> page;
+    if (committed) {
+        // Draw from the committed pages pool. We should always have these pages available
+        VERIFY(global_data.system_memory_info.physical_pages_committed > 0);
+        global_data.system_memory_info.physical_pages_committed--;
+    } else {
+        // We need to make sure we don't touch pages that we have committed to
+        if (global_data.system_memory_info.physical_pages_uncommitted == 0) {
+            dbgln("MM: couldn't find free physical page. Continuing...");
+            return nullptr;
+        }
+        global_data.system_memory_info.physical_pages_uncommitted--;
+    }
+    for (auto& region : global_data.physical_regions) {
+        if (region->lower() > below)
+            continue;
+
+        // FIXME: We need to check all zones, before giving up on the region
+        page = region->take_free_page();
+
+        if (!page.is_null()) {
+            if (page->paddr() > below)
+                continue;
+            ++global_data.system_memory_info.physical_pages_used;
+            break;
+        }
+    }
+
+    if (page.is_null())
+        dbgln("MM: couldn't find free physical page. Continuing...");
+
+    return page;
+}
 
 NonnullRefPtr<PhysicalRAMPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
@@ -1430,6 +1481,64 @@ ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page(Sh
                 if (auto released_page_count = inode_vmobject.try_release_clean_pages(1)) {
                     dbgln("MM: Clean inode release saved the day! Released {} pages from InodeVMObject", released_page_count);
                     page = find_free_physical_page(false, global_data);
+                    VERIFY(page);
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+        }
+        if (!page) {
+            dmesgln("MM: no physical pages available");
+            return ENOMEM;
+        }
+
+        if (should_zero_fill == ShouldZeroFill::Yes) {
+            auto* ptr = quickmap_page(*page, memory_type_for_zero_fill);
+            memset(ptr, 0, PAGE_SIZE);
+            unquickmap_page();
+        }
+
+        if (did_purge)
+            *did_purge = purged_pages;
+        return page.release_nonnull();
+    });
+}
+
+ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page_below(PhysicalAddress below, ShouldZeroFill should_zero_fill, bool* did_purge, MemoryType memory_type_for_zero_fill)
+{
+    // FIXME: Share code!!
+    return m_global_data.with([&](auto& global_data) -> ErrorOr<NonnullRefPtr<PhysicalRAMPage>> {
+        auto page = find_free_physical_page_below(below, false, global_data);
+        bool purged_pages = false;
+
+        if (!page) {
+            // We didn't have a single free physical page. Let's try to free something up!
+            // First, we look for a purgeable VMObject in the volatile state.
+            for_each_vmobject([&](auto& vmobject) {
+                if (!vmobject.is_anonymous())
+                    return IterationDecision::Continue;
+                auto& anonymous_vmobject = static_cast<AnonymousVMObject&>(vmobject);
+                if (!anonymous_vmobject.is_purgeable() || !anonymous_vmobject.is_volatile())
+                    return IterationDecision::Continue;
+                if (auto purged_page_count = anonymous_vmobject.purge()) {
+                    dbgln("MM: Purge saved the day! Purged {} pages from AnonymousVMObject", purged_page_count);
+                    page = find_free_physical_page_below(below, false, global_data);
+                    purged_pages = true;
+                    VERIFY(page);
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+        }
+        if (!page) {
+            // Second, we look for a file-backed VMObject with clean pages.
+            for_each_vmobject([&](auto& vmobject) {
+                if (!vmobject.is_inode())
+                    return IterationDecision::Continue;
+                auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject);
+                if (auto released_page_count = inode_vmobject.try_release_clean_pages(1)) {
+                    dbgln("MM: Clean inode release saved the day! Released {} pages from InodeVMObject", released_page_count);
+                    page = find_free_physical_page_below(below, false, global_data);
                     VERIFY(page);
                     return IterationDecision::Break;
                 }

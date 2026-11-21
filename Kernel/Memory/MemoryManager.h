@@ -166,12 +166,14 @@ public:
 
     NonnullRefPtr<PhysicalRAMPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
     ErrorOr<NonnullRefPtr<PhysicalRAMPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr, MemoryType memory_type_for_zero_fill = MemoryType::Normal);
+    ErrorOr<NonnullRefPtr<PhysicalRAMPage>> allocate_physical_page_below(PhysicalAddress below, ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr, MemoryType memory_type_for_zero_fill = MemoryType::Normal);
     ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> allocate_contiguous_physical_pages(size_t size, MemoryType memory_type_for_zero_fill);
     void deallocate_physical_page(PhysicalAddress);
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, MemoryType = MemoryType::Normal);
     ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_page(StringView name, Region::Access access, RefPtr<PhysicalRAMPage>& dma_buffer_page, MemoryType = MemoryType::NonCacheable);
     ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_page(StringView name, Region::Access access, MemoryType = MemoryType::NonCacheable);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_page_below(PhysicalAddress below, StringView name, Region::Access access, RefPtr<PhysicalRAMPage>& dma_buffer_page, MemoryType = MemoryType::NonCacheable);
     ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access, Vector<NonnullRefPtr<PhysicalRAMPage>>& dma_buffer_pages, MemoryType = MemoryType::NonCacheable);
     ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access, MemoryType = MemoryType::NonCacheable);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, MemoryType = MemoryType::Normal);
@@ -267,6 +269,7 @@ private:
     static void flush_tlb(PageDirectory const*, VirtualAddress, size_t page_count = 1);
 
     RefPtr<PhysicalRAMPage> find_free_physical_page(bool, GlobalData&);
+    RefPtr<PhysicalRAMPage> find_free_physical_page_below(PhysicalAddress, bool, GlobalData&);
 
     ALWAYS_INLINE u8* quickmap_page(PhysicalRAMPage& page, MemoryType memory_type = Memory::MemoryType::Normal)
     {
