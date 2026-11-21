@@ -12,12 +12,12 @@
 namespace GPU {
 
 template<typename T>
-static constexpr T reverse_component_bytes_if_needed(T value, GPU::ImageDataLayout const& image_data_layout)
+static constexpr T reverse_component_bytes_if_needed(T value, ImageDataLayout const& image_data_layout)
 requires(sizeof(T) == 2 || sizeof(T) == 4)
 {
-    if (image_data_layout.packing.component_bytes_order == GPU::ComponentBytesOrder::Normal)
+    if (image_data_layout.packing.component_bytes_order == ComponentBytesOrder::Normal)
         return value;
-    VERIFY(image_data_layout.pixel_type.bits == GPU::PixelComponentBits::AllBits);
+    VERIFY(image_data_layout.pixel_type.bits == PixelComponentBits::AllBits);
 
     auto* u8_ptr = reinterpret_cast<u8*>(&value);
     if constexpr (sizeof(T) == 2) {
@@ -29,76 +29,76 @@ requires(sizeof(T) == 2 || sizeof(T) == 4)
     return value;
 }
 
-static constexpr FloatVector4 decode_component_order_for_format(FloatVector4 const& components, GPU::PixelFormat format)
+static constexpr FloatVector4 decode_component_order_for_format(FloatVector4 const& components, PixelFormat format)
 {
     switch (format) {
-    case GPU::PixelFormat::Alpha:
+    case PixelFormat::Alpha:
         return { 0.f, 0.f, 0.f, components[0] };
-    case GPU::PixelFormat::BGR:
+    case PixelFormat::BGR:
         return { components[2], components[1], components[0], 1.f };
-    case GPU::PixelFormat::BGRA:
+    case PixelFormat::BGRA:
         return { components[2], components[1], components[0], components[3] };
-    case GPU::PixelFormat::Blue:
+    case PixelFormat::Blue:
         return { 0.f, 0.f, components[0], 1.f };
-    case GPU::PixelFormat::ColorIndex:
-    case GPU::PixelFormat::DepthComponent:
-    case GPU::PixelFormat::StencilIndex:
+    case PixelFormat::ColorIndex:
+    case PixelFormat::DepthComponent:
+    case PixelFormat::StencilIndex:
         return { components[0], 0.f, 0.f, 0.f };
-    case GPU::PixelFormat::Green:
+    case PixelFormat::Green:
         return { 0.f, components[0], 0.f, 1.f };
-    case GPU::PixelFormat::Intensity:
+    case PixelFormat::Intensity:
         return { components[0], components[0], components[0], components[0] };
-    case GPU::PixelFormat::Luminance:
+    case PixelFormat::Luminance:
         return { components[0], components[0], components[0], 1.f };
-    case GPU::PixelFormat::LuminanceAlpha:
+    case PixelFormat::LuminanceAlpha:
         return { components[0], components[0], components[0], components[1] };
-    case GPU::PixelFormat::Red:
+    case PixelFormat::Red:
         return { components[0], 0.f, 0.f, 1.f };
-    case GPU::PixelFormat::RGB:
+    case PixelFormat::RGB:
         return { components[0], components[1], components[2], 1.f };
-    case GPU::PixelFormat::RGBA:
+    case PixelFormat::RGBA:
         return components;
     }
     VERIFY_NOT_REACHED();
 }
 
-static constexpr FloatVector4 encode_component_order_for_format(FloatVector4 const& components, GPU::PixelFormat format)
+static constexpr FloatVector4 encode_component_order_for_format(FloatVector4 const& components, PixelFormat format)
 {
     switch (format) {
-    case GPU::PixelFormat::Alpha:
+    case PixelFormat::Alpha:
         return { components[3], 0.f, 0.f, 0.f };
-    case GPU::PixelFormat::BGR:
+    case PixelFormat::BGR:
         return { components[2], components[1], components[0], 0.f };
-    case GPU::PixelFormat::BGRA:
+    case PixelFormat::BGRA:
         return { components[2], components[1], components[0], components[3] };
-    case GPU::PixelFormat::Blue:
+    case PixelFormat::Blue:
         return { components[2], 0.f, 0.f, 0.f };
-    case GPU::PixelFormat::ColorIndex:
-    case GPU::PixelFormat::DepthComponent:
-    case GPU::PixelFormat::Intensity:
-    case GPU::PixelFormat::Luminance:
-    case GPU::PixelFormat::Red:
-    case GPU::PixelFormat::RGB:
-    case GPU::PixelFormat::RGBA:
-    case GPU::PixelFormat::StencilIndex:
+    case PixelFormat::ColorIndex:
+    case PixelFormat::DepthComponent:
+    case PixelFormat::Intensity:
+    case PixelFormat::Luminance:
+    case PixelFormat::Red:
+    case PixelFormat::RGB:
+    case PixelFormat::RGBA:
+    case PixelFormat::StencilIndex:
         return components;
-    case GPU::PixelFormat::Green:
+    case PixelFormat::Green:
         return { components[1], 0.f, 0.f, 0.f };
-    case GPU::PixelFormat::LuminanceAlpha:
+    case PixelFormat::LuminanceAlpha:
         return { components[0], components[3], 0.f, 0.f };
     }
     VERIFY_NOT_REACHED();
 }
 
 template<typename S, typename O>
-static int read_pixel_values(u8 const* input_data, Array<O, 4>& output_values, GPU::ImageDataLayout const& layout)
+static int read_pixel_values(u8 const* input_data, Array<O, 4>& output_values, ImageDataLayout const& layout)
 {
     auto const& pixel_type = layout.pixel_type;
-    auto const number_of_data_reads = GPU::number_of_components(pixel_type.format) / GPU::number_of_components(pixel_type.bits);
+    auto const number_of_data_reads = number_of_components(pixel_type.format) / number_of_components(pixel_type.bits);
 
     for (int i = 0; i < number_of_data_reads; ++i) {
         auto storage_value = reinterpret_cast<S const*>(input_data)[i];
-        if (layout.pixel_type.bits == GPU::PixelComponentBits::AllBits) {
+        if (layout.pixel_type.bits == PixelComponentBits::AllBits) {
             if constexpr (sizeof(S) == 2 || sizeof(S) == 4)
                 storage_value = reverse_component_bytes_if_needed(storage_value, layout);
         }
@@ -106,7 +106,7 @@ static int read_pixel_values(u8 const* input_data, Array<O, 4>& output_values, G
 
         // Special case: convert HalfFloat to regular float
         if constexpr (IsSame<O, float>) {
-            if (pixel_type.data_type == GPU::PixelDataType::HalfFloat)
+            if (pixel_type.data_type == PixelDataType::HalfFloat)
                 value = convert_to_native_float(FloatingPointBits<1, 5, 10>(storage_value));
         }
 
@@ -116,7 +116,7 @@ static int read_pixel_values(u8 const* input_data, Array<O, 4>& output_values, G
 }
 
 template<typename T>
-constexpr FloatVector4 extract_component_values(Span<T> data_values, GPU::PixelType const& pixel_type)
+constexpr FloatVector4 extract_component_values(Span<T> data_values, PixelType const& pixel_type)
 {
     // FIXME: implement fixed point conversion for ::StencilIndex
     // FIXME: stencil components should account for GL_MAP_STENCIL
@@ -140,7 +140,7 @@ constexpr FloatVector4 extract_component_values(Span<T> data_values, GPU::PixelT
     };
 
     // Handle full data values (1 or more)
-    if (pixel_type.bits == GPU::PixelComponentBits::AllBits) {
+    if (pixel_type.bits == PixelComponentBits::AllBits) {
         FloatVector4 components;
         for (size_t i = 0; i < number_of_values; ++i) {
             if constexpr (IsSigned<T>)
@@ -173,7 +173,7 @@ constexpr FloatVector4 extract_component_values(Span<T> data_values, GPU::PixelT
 }
 
 template<>
-constexpr FloatVector4 extract_component_values(Span<float> data_values, GPU::PixelType const&)
+constexpr FloatVector4 extract_component_values(Span<float> data_values, PixelType const&)
 {
     FloatVector4 components;
     for (size_t i = 0; i < data_values.size(); ++i)
@@ -182,11 +182,11 @@ constexpr FloatVector4 extract_component_values(Span<float> data_values, GPU::Pi
 }
 
 template<typename T>
-static FloatVector4 pixel_values_to_components(Span<T> values, GPU::PixelType const& pixel_type)
+static FloatVector4 pixel_values_to_components(Span<T> values, PixelType const& pixel_type)
 {
     // Deconstruct read value(s) into separate components
     auto components = extract_component_values(values, pixel_type);
-    if (pixel_type.components_order == GPU::ComponentsOrder::Reversed)
+    if (pixel_type.components_order == ComponentsOrder::Reversed)
         components = { components[3], components[2], components[1], components[0] };
 
     // Reconstruct component values in order
@@ -204,29 +204,29 @@ FloatVector4 PixelConverter::read_pixel(u8 const** input_data)
         return pixel_values_to_components(values.span().trim(number_of_values), m_input_specification.pixel_type);
     };
     switch (m_input_specification.pixel_type.data_type) {
-    case GPU::PixelDataType::Bitmap:
+    case PixelDataType::Bitmap:
         VERIFY_NOT_REACHED();
-    case GPU::PixelDataType::Byte:
+    case PixelDataType::Byte:
         return read_components.template operator()<i8, i8>();
-    case GPU::PixelDataType::Float:
+    case PixelDataType::Float:
         return read_components.template operator()<float, float>();
-    case GPU::PixelDataType::HalfFloat:
+    case PixelDataType::HalfFloat:
         return read_components.template operator()<u16, float>();
-    case GPU::PixelDataType::Int:
+    case PixelDataType::Int:
         return read_components.template operator()<i32, i32>();
-    case GPU::PixelDataType::Short:
+    case PixelDataType::Short:
         return read_components.template operator()<i16, i16>();
-    case GPU::PixelDataType::UnsignedByte:
+    case PixelDataType::UnsignedByte:
         return read_components.template operator()<u8, u8>();
-    case GPU::PixelDataType::UnsignedInt:
+    case PixelDataType::UnsignedInt:
         return read_components.template operator()<u32, u32>();
-    case GPU::PixelDataType::UnsignedShort:
+    case PixelDataType::UnsignedShort:
         return read_components.template operator()<u16, u16>();
     }
     VERIFY_NOT_REACHED();
 }
 
-static constexpr void write_pixel_as_type(u8** output_data, float value, GPU::ImageDataLayout layout)
+static constexpr void write_pixel_as_type(u8** output_data, float value, ImageDataLayout layout)
 {
     auto write_value = [&output_data, &layout]<typename T>(T value) -> void {
         if constexpr (sizeof(T) == 2 || sizeof(T) == 4)
@@ -244,36 +244,36 @@ static constexpr void write_pixel_as_type(u8** output_data, float value, GPU::Im
         return round_to<T>(static_cast<double>(value) * unsigned_max);
     };
     switch (layout.pixel_type.data_type) {
-    case GPU::PixelDataType::Bitmap:
+    case PixelDataType::Bitmap:
         VERIFY_NOT_REACHED();
-    case GPU::PixelDataType::Byte:
+    case PixelDataType::Byte:
         write_value(float_to_signed.operator()<i8>(value));
         break;
-    case GPU::PixelDataType::Float:
+    case PixelDataType::Float:
         write_value(value);
         break;
-    case GPU::PixelDataType::HalfFloat:
+    case PixelDataType::HalfFloat:
         write_value(static_cast<u16>(convert_from_native_float<FloatingPointBits<1, 5, 10>>(value).bits()));
         break;
-    case GPU::PixelDataType::Int:
+    case PixelDataType::Int:
         write_value(float_to_signed.operator()<i32>(value));
         break;
-    case GPU::PixelDataType::Short:
+    case PixelDataType::Short:
         write_value(float_to_signed.operator()<i16>(value));
         break;
-    case GPU::PixelDataType::UnsignedByte:
+    case PixelDataType::UnsignedByte:
         write_value(float_to_unsigned.operator()<u8>(value));
         break;
-    case GPU::PixelDataType::UnsignedInt:
+    case PixelDataType::UnsignedInt:
         write_value(float_to_unsigned.operator()<u32>(value));
         break;
-    case GPU::PixelDataType::UnsignedShort:
+    case PixelDataType::UnsignedShort:
         write_value(float_to_unsigned.operator()<u16>(value));
         break;
     }
 }
 
-void constexpr write_pixel_as_bitfield(u8** output_data, FloatVector4 const& components, GPU::PixelType const& pixel_type)
+void constexpr write_pixel_as_bitfield(u8** output_data, FloatVector4 const& components, PixelType const& pixel_type)
 {
     auto constexpr float_to_unsigned = [](float value, u8 bits) {
         auto unsigned_max = (1ull << bits) - 1;
@@ -298,13 +298,13 @@ void constexpr write_pixel_as_bitfield(u8** output_data, FloatVector4 const& com
         (*output_data) += sizeof(T);
     };
     switch (pixel_type.data_type) {
-    case GPU::PixelDataType::UnsignedByte:
+    case PixelDataType::UnsignedByte:
         write_value.operator()<u8>(value);
         break;
-    case GPU::PixelDataType::UnsignedInt:
+    case PixelDataType::UnsignedInt:
         write_value.operator()<u32>(value);
         break;
-    case GPU::PixelDataType::UnsignedShort:
+    case PixelDataType::UnsignedShort:
         write_value.operator()<u16>(value);
         break;
     default:
@@ -319,12 +319,12 @@ void PixelConverter::write_pixel(u8** output_data, FloatVector4 const& component
     // Reorder float components to data order
     auto const& pixel_type = m_output_specification.pixel_type;
     auto output_components = encode_component_order_for_format(components, pixel_type.format);
-    if (pixel_type.components_order == GPU::ComponentsOrder::Reversed)
+    if (pixel_type.components_order == ComponentsOrder::Reversed)
         output_components = { output_components[3], output_components[2], output_components[1], output_components[0] };
 
     // Write components as full data types
     auto const number_of_components_in_pixel = number_of_components(pixel_type.format);
-    if (pixel_type.bits == GPU::PixelComponentBits::AllBits) {
+    if (pixel_type.bits == PixelComponentBits::AllBits) {
         for (u8 i = 0; i < number_of_components_in_pixel; ++i)
             write_pixel_as_type(output_data, output_components[i], m_output_specification);
         return;
@@ -335,7 +335,7 @@ void PixelConverter::write_pixel(u8** output_data, FloatVector4 const& component
     write_pixel_as_bitfield(output_data, output_components, pixel_type);
 }
 
-static constexpr GPU::ImageSelection restrain_selection_within_dimensions(GPU::ImageSelection selection, GPU::DimensionSpecification const& dimensions)
+static constexpr ImageSelection restrain_selection_within_dimensions(ImageSelection selection, DimensionSpecification const& dimensions)
 {
     if (selection.offset_x < 0) {
         selection.width += selection.offset_x;
@@ -363,7 +363,7 @@ static constexpr GPU::ImageSelection restrain_selection_within_dimensions(GPU::I
 ErrorOr<void> PixelConverter::convert(void const* input_data, void* output_data, Function<void(FloatVector4&)> transform)
 {
     // Verify pixel data specifications
-    auto validate_image_data_layout = [](GPU::ImageDataLayout const& specification) -> ErrorOr<void> {
+    auto validate_image_data_layout = [](ImageDataLayout const& specification) -> ErrorOr<void> {
         if (specification.packing.row_stride > 0
             && specification.dimensions.width > specification.packing.row_stride)
             return Error::from_string_view("Width exceeds the row stride"sv);
@@ -374,7 +374,7 @@ ErrorOr<void> PixelConverter::convert(void const* input_data, void* output_data,
 
         // NOTE: GL_BITMAP is removed from current OpenGL specs. Since it is largely unsupported and it
         //       requires extra logic (i.e. 8 vs. 1 pixel packing/unpacking), we also do not support it.
-        if (specification.pixel_type.data_type == GPU::PixelDataType::Bitmap)
+        if (specification.pixel_type.data_type == PixelDataType::Bitmap)
             return Error::from_string_view("Bitmap is unsupported"sv);
 
         return {};
