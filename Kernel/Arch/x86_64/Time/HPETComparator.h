@@ -36,7 +36,7 @@ public:
 
     virtual size_t ticks_per_second() const override;
 
-    virtual bool try_to_set_frequency(size_t frequency) override;
+    virtual ErrorOr<void> try_to_set_frequency(size_t frequency) override;
     virtual bool is_capable_of_frequency(size_t frequency) const override;
     virtual size_t calculate_nearest_possible_frequency(size_t frequency) const override;
 

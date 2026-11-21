@@ -68,12 +68,12 @@ void HPETComparator::set_new_countdown()
     HPET::the().update_non_periodic_comparator_value(*this);
 }
 
-bool HPETComparator::try_to_set_frequency(size_t frequency)
+ErrorOr<void> HPETComparator::try_to_set_frequency(size_t frequency)
 {
     InterruptDisabler disabler;
     if (!is_capable_of_frequency(frequency)) {
         dbgln("HPETComparator: not capable of frequency: {}", frequency);
-        return false;
+        return Error::from_errno(ENOTSUP);
     }
 
     auto hpet_frequency = HPET::the().frequency();
@@ -90,7 +90,7 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
     }
     HPET::the().enable(*this);
     enable_irq(); // Enable if we haven't already
-    return true;
+    return {};
 }
 bool HPETComparator::is_capable_of_frequency(size_t frequency) const
 {

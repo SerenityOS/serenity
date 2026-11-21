@@ -56,7 +56,14 @@ public:
 
     virtual size_t ticks_per_second() const = 0;
 
-    virtual bool try_to_set_frequency(size_t frequency) { return frequency == ticks_per_second(); }
+    virtual ErrorOr<void> try_to_set_frequency(size_t frequency)
+    {
+        if (frequency == ticks_per_second())
+            return {};
+
+        return Error::from_errno(ENOTSUP);
+    }
+
     virtual bool is_capable_of_frequency(size_t frequency) const { return frequency == ticks_per_second(); }
     virtual size_t calculate_nearest_possible_frequency(size_t) const { return ticks_per_second(); }
 };

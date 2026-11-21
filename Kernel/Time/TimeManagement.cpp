@@ -362,7 +362,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
     m_can_query_precise_time.set();
     m_time_ticks_per_second = HPET::the().frequency();
 
-    m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(OPTIMAL_TICKS_PER_SECOND_RATE));
+    MUST(m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(OPTIMAL_TICKS_PER_SECOND_RATE)));
 
     // We don't need an interrupt for time keeping purposes because we
     // can query the timer.
@@ -387,7 +387,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
 
     if (m_profile_timer) {
         m_profile_timer->set_callback(PerformanceManager::timer_tick);
-        m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
+        MUST(m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1)));
     }
 
     return true;
@@ -520,7 +520,7 @@ bool TimeManagement::enable_profile_timer()
     if (!m_profile_timer)
         return false;
     if (m_profile_enable_count.fetch_add(1) == 0)
-        return m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE));
+        return !m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE)).is_error();
     return true;
 }
 
@@ -529,7 +529,7 @@ bool TimeManagement::disable_profile_timer()
     if (!m_profile_timer)
         return false;
     if (m_profile_enable_count.fetch_sub(1) == 1)
-        return m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
+        return !m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1)).is_error();
     return true;
 }
 
