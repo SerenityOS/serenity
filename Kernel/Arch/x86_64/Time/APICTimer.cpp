@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
         // TODO: How should we handle this?
         PANIC("APICTimer: Timer fired during calibration!");
     });
-    state.apic.setup_local_timer(0xffffffff, APIC::TimerMode::Periodic, true);
+    state.apic.setup_local_timer(0xffffffff, TimerMode::Periodic, true);
 
     sti();
     // Loop for about 100 ms
@@ -138,18 +138,7 @@ void APICTimer::enable_local_timer()
 
 void APICTimer::disable_local_timer()
 {
-    APIC::the().setup_local_timer(0, APIC::TimerMode::OneShot, false);
-}
-
-void APICTimer::set_periodic()
-{
-    // FIXME: Implement it...
-    VERIFY_NOT_REACHED();
-}
-void APICTimer::set_non_periodic()
-{
-    // FIXME: Implement it...
-    VERIFY_NOT_REACHED();
+    APIC::the().setup_local_timer(0, TimerMode::OneShot, false);
 }
 
 size_t APICTimer::ticks_per_second() const

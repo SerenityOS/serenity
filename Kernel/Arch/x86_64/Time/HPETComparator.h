@@ -25,10 +25,10 @@ public:
     bool is_enabled() const { return m_enabled; }
     bool is_64bit_capable() const { return m_is_64bit_capable; }
 
-    virtual bool is_periodic() const override { return m_periodic; }
-    virtual bool is_periodic_capable() const override { return m_periodic_capable; }
-    virtual void set_periodic() override;
-    virtual void set_non_periodic() override;
+    virtual TimerMode mode() const override { return m_mode; }
+    virtual void set_mode(TimerMode) override;
+    virtual bool supports_mode(TimerMode mode) const override;
+
     virtual void disable() override;
     virtual bool can_query_raw() const override { return true; }
     virtual u64 current_raw() const override;
@@ -46,7 +46,7 @@ private:
 
     HPETComparator(u8 number, InterruptNumber irq, bool periodic_capable, bool is_64bit_capable);
 
-    bool m_periodic;
+    TimerMode m_mode;
     bool m_periodic_capable;
     bool m_enabled;
     bool m_is_64bit_capable;

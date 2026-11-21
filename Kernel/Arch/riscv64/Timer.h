@@ -24,10 +24,10 @@ public:
     virtual StringView model() const override { return "RISC-V Timer"sv; }
     virtual size_t ticks_per_second() const override { return m_frequency; }
 
-    virtual bool is_periodic() const override { return false; }
-    virtual bool is_periodic_capable() const override { return false; }
-    virtual void set_periodic() override { }
-    virtual void set_non_periodic() override { }
+    virtual TimerMode mode() const override { return TimerMode::OneShot; }
+    virtual void set_mode(TimerMode) override { }
+    virtual bool supports_mode(TimerMode mode) const override { return mode == TimerMode::OneShot; }
+
     virtual void disable() override;
 
     virtual void will_be_destroyed() override { }

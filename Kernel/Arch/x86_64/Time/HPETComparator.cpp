@@ -22,7 +22,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<HPETComparator> HPETComparator::create(Badge<
 
 UNMAP_AFTER_INIT HPETComparator::HPETComparator(u8 number, InterruptNumber irq, bool periodic_capable, bool is_64bit_capable)
     : HardwareTimer(irq)
-    , m_periodic(false)
+    , m_mode(TimerMode::OneShot)
     , m_periodic_capable(periodic_capable)
     , m_enabled(false)
     , m_is_64bit_capable(is_64bit_capable)
@@ -38,27 +38,27 @@ void HPETComparator::disable()
     HPET::the().toggle_comparator(*this, false);
 }
 
-void HPETComparator::set_periodic()
+void HPETComparator::set_mode(TimerMode mode)
 {
-    VERIFY(m_periodic_capable);
-
-    m_periodic = true;
+    VERIFY(supports_mode(mode));
+    m_mode = mode;
     m_enabled = true;
-    HPET::the().set_comparator_periodic(*this, true);
+    HPET::the().set_comparator_periodic(*this, mode == TimerMode::Periodic);
 }
 
-void HPETComparator::set_non_periodic()
+bool HPETComparator::supports_mode(TimerMode mode) const
 {
-    m_periodic = false;
-    m_enabled = true;
-    HPET::the().set_comparator_periodic(*this, false);
+    if (mode == TimerMode::Periodic)
+        return m_periodic_capable;
+
+    return true;
 }
 
 bool HPETComparator::handle_irq()
 {
     auto result = HardwareTimer::handle_irq();
 
-    if (!is_periodic())
+    if (m_mode == TimerMode::OneShot)
         set_new_countdown();
 
     return result;
@@ -83,9 +83,9 @@ ErrorOr<void> HPETComparator::try_to_set_frequency(size_t frequency)
     m_frequency = frequency;
     m_enabled = true;
 
-    dbgln_if(HPET_COMPARATOR_DEBUG, "HPET Comparator: Max frequency {} Hz, want to set {} Hz, periodic: {}", HPET::the().frequency(), frequency, is_periodic());
+    dbgln_if(HPET_COMPARATOR_DEBUG, "HPET Comparator: Max frequency {} Hz, want to set {} Hz, periodic: {}", HPET::the().frequency(), frequency, m_mode == TimerMode::Periodic);
 
-    if (is_periodic())
+    if (m_mode == TimerMode::Periodic)
         HPET::the().update_periodic_comparator_value();
     else
         HPET::the().update_non_periodic_comparator_value(*this);

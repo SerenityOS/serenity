@@ -126,7 +126,7 @@ void HPET::update_periodic_comparator_value()
         if (!comparator->is_enabled())
             continue;
 
-        if (comparator->is_periodic()) {
+        if (comparator->mode() == TimerMode::Periodic) {
             // NOTE: This means we're restarting all periodic timers. There is no way
             // to resume periodic timers properly because we reset the main counter
             // and we can only write the period into the comparator value...
@@ -158,7 +158,7 @@ void HPET::update_non_periodic_comparator_value(HPETComparator const& comparator
 {
     VERIFY_INTERRUPTS_DISABLED();
 
-    VERIFY(!comparator.is_periodic());
+    VERIFY(comparator.mode() == TimerMode::OneShot);
 
     auto& timer = m_registers->timers[comparator.comparator_number()];
     u64 value = frequency() / comparator.ticks_per_second();

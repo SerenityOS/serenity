@@ -19,10 +19,11 @@ public:
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::LocalAPICTimer; }
     virtual StringView model() const override { return "LocalAPIC"sv; }
 
-    virtual bool is_periodic() const override { return m_timer_mode == APIC::TimerMode::Periodic; }
-    virtual bool is_periodic_capable() const override { return true; }
-    virtual void set_periodic() override;
-    virtual void set_non_periodic() override;
+    // FIXME: Implement support for changing timer modes
+    virtual TimerMode mode() const override { return m_timer_mode; }
+    virtual void set_mode(TimerMode) override { }
+    virtual bool supports_mode(TimerMode mode) const override { return mode == TimerMode::Periodic; }
+
     virtual void disable() override { }
 
     virtual size_t ticks_per_second() const override;
@@ -37,7 +38,7 @@ private:
     bool calibrate(HardwareTimerBase&);
 
     u32 m_timer_period { 0 };
-    APIC::TimerMode m_timer_mode { APIC::TimerMode::Periodic };
+    TimerMode m_timer_mode { TimerMode::Periodic };
     size_t m_frequency { 0 };
 };
 

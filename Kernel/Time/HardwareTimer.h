@@ -28,6 +28,11 @@ enum class HardwareTimerType {
     RISCVTimer,
 };
 
+enum class TimerMode {
+    OneShot,
+    Periodic,
+};
+
 template<typename InterruptHandlerType>
 class HardwareTimer;
 
@@ -45,10 +50,10 @@ public:
     virtual HardwareTimerType timer_type() const = 0;
     virtual Function<void()> set_callback(Function<void()>) = 0;
 
-    virtual bool is_periodic() const = 0;
-    virtual bool is_periodic_capable() const = 0;
-    virtual void set_periodic() = 0;
-    virtual void set_non_periodic() = 0;
+    virtual TimerMode mode() const = 0;
+    virtual void set_mode(TimerMode) = 0;
+    virtual bool supports_mode(TimerMode) const = 0;
+
     virtual void disable() = 0;
     virtual bool can_query_raw() const { return false; }
     virtual u64 current_raw() const { return 0; }
