@@ -15,7 +15,7 @@ namespace GPU {
 
 class PixelConverter {
 public:
-    PixelConverter(GPU::ImageDataLayout input_specification, GPU::ImageDataLayout output_specification)
+    PixelConverter(ImageDataLayout input_specification, ImageDataLayout output_specification)
         : m_input_specification { input_specification }
         , m_output_specification { output_specification }
     {
@@ -27,8 +27,8 @@ private:
     FloatVector4 read_pixel(u8 const**);
     void write_pixel(u8**, FloatVector4 const&);
 
-    GPU::ImageDataLayout m_input_specification;
-    GPU::ImageDataLayout m_output_specification;
+    ImageDataLayout m_input_specification;
+    ImageDataLayout m_output_specification;
 };
 
 }
