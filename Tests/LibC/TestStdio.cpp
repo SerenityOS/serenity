@@ -79,3 +79,20 @@ TEST_CASE(cannot_read_from_write_only_file)
     EXPECT(ferror(c_file));
     EXPECT(!fclose(c_file));
 }
+
+TEST_CASE(ungetc)
+{
+    auto temp_file = TRY_OR_FAIL(FileSystem::TempFile::create_temp_file());
+
+    auto c_file = fopen(temp_file->path().characters(), "rw");
+    EXPECT(c_file);
+
+    EXPECT_EQ(ungetc('c', c_file), 'c');
+    EXPECT_EQ(getc(c_file), 'c');
+    EXPECT_EQ(ungetc('d', c_file), 'd');
+    EXPECT_EQ(getc(c_file), 'd');
+    EXPECT_EQ(getc(c_file), EOF);
+
+    EXPECT(!ferror(c_file));
+    EXPECT(!fclose(c_file));
+}

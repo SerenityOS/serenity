@@ -526,7 +526,7 @@ bool FILE::Buffer::enqueue_front(u8 byte)
 {
     size_t placement_index;
     if (m_ungotten == 0u) {
-        placement_index = 3u;
+        placement_index = unget_buffer_size - 1;
         m_ungotten = 1u;
     } else {
         auto first_zero_index = count_trailing_zeroes(bit_cast<u32>(~m_ungotten)); // Thanks C.
