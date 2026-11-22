@@ -41,7 +41,6 @@
 
 namespace Kernel {
 
-static NeverDestroyed<Vector<NonnullLockRefPtr<HardwareTimerBase>>> s_hardware_timers;
 static Singleton<TimeManagement> s_the;
 
 bool TimeManagement::is_initialized()
@@ -60,7 +59,7 @@ ErrorOr<void> TimeManagement::register_hardware_timer(NonnullLockRefPtr<Hardware
     // as we do not support dynamic registration of timers.
     VERIFY(!is_initialized());
 
-    return s_hardware_timers->try_append(move(timer));
+    return m_hardware_timers.try_append(move(timer));
 }
 
 // The s_scheduler_specific_current_time function provides a current time for scheduling purposes,
@@ -271,7 +270,7 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_
 {
     dbgln("Duration: Scanning for periodic timers");
     Vector<HardwareTimerBase*> timers;
-    for (auto& hardware_timer : *s_hardware_timers) {
+    for (auto& hardware_timer : m_hardware_timers) {
         if (hardware_timer->supports_mode(TimerMode::Periodic)) {
             timers.try_append(hardware_timer).release_value_but_fixme_should_propagate_errors();
             hardware_timer->set_mode(TimerMode::Periodic);
@@ -284,7 +283,7 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodi
 {
     dbgln("Duration: Scanning for non-periodic timers");
     Vector<HardwareTimerBase*> timers;
-    for (auto& hardware_timer : *s_hardware_timers) {
+    for (auto& hardware_timer : m_hardware_timers) {
         if (!hardware_timer->supports_mode(TimerMode::Periodic))
             timers.try_append(hardware_timer).release_value_but_fixme_should_propagate_errors();
     }
@@ -307,7 +306,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
     dbgln("HPET: Setting appropriate functions to timers.");
 
     for (auto& hpet_comparator : HPET::the().comparators())
-        s_hardware_timers->try_append(hpet_comparator).release_value_but_fixme_should_propagate_errors();
+        m_hardware_timers.try_append(hpet_comparator).release_value_but_fixme_should_propagate_errors();
 
     auto periodic_timers = scan_and_initialize_periodic_timers();
     auto non_periodic_timers = scan_for_non_periodic_timers();
@@ -379,15 +378,15 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
             auto timer_frequency = Aarch64::CNTFRQ_EL0::read().ClockFrequency;
 
             auto timer = ARMv8Timer::initialize(virtual_el1_gsi, timer_frequency).release_value_but_fixme_should_propagate_errors();
-            s_hardware_timers->try_append(move(timer)).release_value_but_fixme_should_propagate_errors();
+            m_hardware_timers.try_append(move(timer)).release_value_but_fixme_should_propagate_errors();
         }
     }
 
-    if (s_hardware_timers->is_empty())
+    if (m_hardware_timers.is_empty())
         PANIC("TimeManagement: No supported timer was found");
 
     // TODO: Use some kind of heuristic to decide which timer to use.
-    m_system_timer = s_hardware_timers->last();
+    m_system_timer = m_hardware_timers.last();
     dbgln("TimeManagement: System timer: {}", m_system_timer->model());
 
     m_time_ticks_per_second = m_system_timer->frequency();
@@ -409,8 +408,8 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 #elif ARCH(RISCV64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 {
-    MUST(s_hardware_timers->try_append(RISCV64::Timer::initialize()));
-    m_system_timer = (*s_hardware_timers)[0];
+    MUST(s_hardware_timers.try_append(RISCV64::Timer::initialize()));
+    m_system_timer = m_hardware_timers[0];
     m_time_ticks_per_second = m_system_timer->frequency();
 
     m_read_time_from_hardware = [this](auto&&... args) {

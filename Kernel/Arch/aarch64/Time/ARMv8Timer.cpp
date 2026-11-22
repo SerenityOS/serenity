@@ -148,7 +148,7 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
 
     auto timer = TRY(ARMv8Timer::initialize(interrupt_number, frequency));
 
-    MUST(TimeManagement::register_hardware_timer(timer));
+    MUST(TimeManagement::the().register_hardware_timer(timer));
 
     return {};
 }

@@ -37,7 +37,7 @@ public:
     static bool is_initialized();
     static TimeManagement& the();
 
-    static ErrorOr<void> register_hardware_timer(NonnullLockRefPtr<HardwareTimerBase>);
+    ErrorOr<void> register_hardware_timer(NonnullLockRefPtr<HardwareTimerBase>);
 
     static u64 scheduler_current_time();
 
@@ -113,6 +113,8 @@ private:
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
     // If you set this, ensure to have provided a valid m_read_time_from_hardware.
     SetOnce m_can_query_precise_time;
+
+    Vector<NonnullLockRefPtr<HardwareTimerBase>> m_hardware_timers;
 
     LockRefPtr<HardwareTimerBase> m_system_timer;
     LockRefPtr<HardwareTimerBase> m_time_keeper_timer;

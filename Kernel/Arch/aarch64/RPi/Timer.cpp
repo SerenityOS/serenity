@@ -206,7 +206,7 @@ ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, String
 
     auto timer = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Timer(move(registers_mapping), interrupt_number)));
 
-    MUST(TimeManagement::register_hardware_timer(move(timer)));
+    MUST(TimeManagement::the().register_hardware_timer(move(timer)));
 
     return {};
 }
