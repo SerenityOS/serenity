@@ -9,24 +9,10 @@
 #include <AK/AtomicRefCounted.h>
 #include <AK/Function.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Time/HardwareTimerType.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
-
-enum class HardwareTimerType {
-    // x86
-    i8253,                   // PIT
-    RTC,                     // Real Time Clock
-    HighPrecisionEventTimer, // also known as IA-PC HPET
-    LocalAPICTimer,          // Local APIC
-
-    // AArch64
-    RPiTimer,
-    ARMv8Timer,
-
-    // RISC-V
-    RISCVTimer,
-};
 
 enum class TimerMode {
     OneShot,
