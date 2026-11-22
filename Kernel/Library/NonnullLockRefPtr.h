@@ -65,7 +65,7 @@ public:
     template<typename U>
     ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U>&& other)
     requires(IsConvertible<U*, T*>)
-        : m_bits((FlatPtr)&other.leak_ref())
+        : m_bits((FlatPtr) static_cast<T*>(&other.leak_ref()))
     {
         VERIFY(!(m_bits & 1));
     }
@@ -77,7 +77,7 @@ public:
     template<typename U>
     ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
-        : m_bits((FlatPtr)other.add_ref())
+        : m_bits((FlatPtr) static_cast<T*>(other.add_ref()))
     {
         VERIFY(!(m_bits & 1));
     }

@@ -178,7 +178,7 @@ public:
     template<typename U, typename P = LockRefPtrTraits<U>>
     LockRefPtr(LockRefPtr<U, P> const& other)
     requires(IsConvertible<U*, T*>)
-        : m_bits(other.add_ref_raw())
+        : m_bits(PtrTraits::template convert_from<U, P>(other.add_ref_raw()))
     {
     }
     ALWAYS_INLINE ~LockRefPtr()
@@ -263,7 +263,7 @@ public:
     ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
     {
-        assign_raw(other.add_ref_raw());
+        assign_raw(PtrTraits::template convert_from<U, LockRefPtrTraits<U>>(other.add_ref_raw()));
         return *this;
     }
 
