@@ -267,11 +267,12 @@ ErrorOr<void> SSHClient::send_ecdh_reply(ByteBuffer&& client_public_key)
 
     // "Compute shared secret."
     auto shared_secret = TRY(curve.compute_coordinate(private_key, client_public_key));
-    m_key_exchange_data.shared_secret = shared_secret;
 
     TRY(write_keylog_file(shared_secret));
 
-    set_shared_secret(move(shared_secret));
+    auto shared_secret_as_mpint = TRY(as_mpint(shared_secret));
+    m_key_exchange_data.shared_secret = shared_secret_as_mpint;
+    set_shared_secret(move(shared_secret_as_mpint));
 
     // FIXME: Abort if shared_point is not valid (at least when it's all zero, maybe there are other cases too).
 

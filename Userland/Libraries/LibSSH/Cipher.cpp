@@ -55,13 +55,9 @@ NonnullOwnPtr<ChaCha20Poly1305Cipher> ChaCha20Poly1305Cipher::create(ByteBuffer 
     // The same hash algorithm MUST be used in key derivation.  Here, we'll call it HASH."
     Crypto::Hash::SHA256 sha256;
 
-    // Seems like shared_secret is supposed to be encoded as a mpint.
-    // FIXME: Find spec quote for this.
-    auto shared_secret_as_mpint = MUST(as_mpint(shared_secret));
-
     // "Encryption key client to server: HASH(K || H || "C" || session_id)"
 
-    sha256.update(shared_secret_as_mpint);
+    sha256.update(shared_secret);
     sha256.update(hash.bytes());
     sha256.update("C"sv);
     sha256.update(session_id.bytes());
@@ -70,7 +66,7 @@ NonnullOwnPtr<ChaCha20Poly1305Cipher> ChaCha20Poly1305Cipher::create(ByteBuffer 
 
     // Encryption key server to client: HASH(K || H || "D" || session_id)
 
-    sha256.update(shared_secret_as_mpint);
+    sha256.update(shared_secret);
     sha256.update(hash.bytes());
     sha256.update("D"sv);
     sha256.update(session_id.bytes());
@@ -88,9 +84,9 @@ NonnullOwnPtr<ChaCha20Poly1305Cipher> ChaCha20Poly1305Cipher::create(ByteBuffer 
     // ...
     // key = K1 || K2 || K3 || ..."
 
-    auto extend_key = [&shared_secret_as_mpint, &hash](Crypto::Hash::Digest<256> key) {
+    auto extend_key = [&shared_secret, &hash](Crypto::Hash::Digest<256> key) {
         Crypto::Hash::SHA256 sha256;
-        sha256.update(shared_secret_as_mpint);
+        sha256.update(shared_secret);
         sha256.update(hash.bytes());
         sha256.update(key.bytes());
         return sha256.digest();
