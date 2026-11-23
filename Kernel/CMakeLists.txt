@@ -407,6 +407,7 @@ set(KERNEL_SOURCES
     Time/TimeDeviceBase.cpp
     Time/TimeManagement.cpp
     Time/TimerQueue.cpp
+    Time/TimeSource.cpp
     kprintf.cpp
 )
 
