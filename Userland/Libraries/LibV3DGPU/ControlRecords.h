@@ -20,6 +20,11 @@ using Opcode = u8;
 
 using u14p8 = u32; // Unsigned 14.8 fixed point
 
+constexpr u14p8 to_u14p8(u16 integer, u16 fraction)
+{
+    return static_cast<u14p8>((integer << 8) | fraction);
+}
+
 // <enum name="Compare Function" prefix="V3D_COMPARE_FUNC">
 enum class CompareFunction : u32 {
     Never = 0,
