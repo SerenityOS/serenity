@@ -10,6 +10,7 @@
 #include <AK/Function.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Time/HardwareTimerType.h>
+#include <Kernel/Time/TimeDeviceBase.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -22,18 +23,10 @@ enum class TimerMode {
 template<typename InterruptHandlerType>
 class HardwareTimer;
 
-class HardwareTimerBase : public AtomicRefCounted<HardwareTimerBase> {
+class HardwareTimerBase : public virtual TimeDeviceBase {
 public:
     virtual ~HardwareTimerBase() = default;
 
-    // We need to create a virtual will_be_destroyed here because we derive
-    // from RefCounted<HardwareTimerBase> here, which means that RefCounted<>
-    // will only call will_be_destroyed if we define it here. The derived
-    // classes then should forward this to e.g. GenericInterruptHandler.
-    virtual void will_be_destroyed() = 0;
-
-    virtual StringView model() const = 0;
-    virtual HardwareTimerType timer_type() const = 0;
     virtual Function<void()> set_callback(Function<void()>) = 0;
 
     virtual TimerMode mode() const = 0;
@@ -44,8 +37,6 @@ public:
     virtual bool can_query_raw() const { return false; }
     virtual u64 current_raw() const { return 0; }
     virtual u64 raw_to_ns(u64) const { return 0; }
-
-    virtual size_t frequency() const = 0;
 
     virtual ErrorOr<void> try_to_set_frequency(size_t new_frequency)
     {
