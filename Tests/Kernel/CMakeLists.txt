@@ -63,6 +63,7 @@ set(LIBTEST_BASED_SOURCES
     TestSignalDispatch.cpp
     TestSymlink.cpp
     TestTCPSocket.cpp
+    TestTimeSource.cpp
     TestUDPSocket.cpp
     TestWXProtection.cpp
 )
@@ -88,5 +89,6 @@ foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
 endforeach()
 
 target_link_libraries(TestPageFaultRace PRIVATE LibThreading)
+target_sources(TestTimeSource PRIVATE ../../Kernel/Time/TimeSource.cpp)
 
 add_subdirectory(POSIX)
