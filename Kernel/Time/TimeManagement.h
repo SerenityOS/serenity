@@ -16,6 +16,7 @@
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Time/TimeSource.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -38,6 +39,7 @@ public:
     static TimeManagement& the();
 
     ErrorOr<void> register_hardware_timer(NonnullLockRefPtr<HardwareTimerBase>);
+    ErrorOr<void> register_time_source(NonnullLockRefPtr<TimeSource>);
 
     static u64 scheduler_current_time();
 
@@ -115,6 +117,7 @@ private:
     SetOnce m_can_query_precise_time;
 
     Vector<NonnullLockRefPtr<HardwareTimerBase>> m_hardware_timers;
+    Vector<NonnullLockRefPtr<TimeSource>> m_time_sources;
 
     LockRefPtr<HardwareTimerBase> m_system_timer;
     LockRefPtr<HardwareTimerBase> m_time_keeper_timer;

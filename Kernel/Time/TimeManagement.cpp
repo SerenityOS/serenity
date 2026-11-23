@@ -62,6 +62,15 @@ ErrorOr<void> TimeManagement::register_hardware_timer(NonnullLockRefPtr<Hardware
     return m_hardware_timers.try_append(move(timer));
 }
 
+ErrorOr<void> TimeManagement::register_time_source(NonnullLockRefPtr<TimeSource> time_source)
+{
+    // This function has to be called before TimeManagement is initialized,
+    // as we do not support dynamic registration of time sources.
+    VERIFY(!is_initialized());
+
+    return m_time_sources.try_append(move(time_source));
+}
+
 // The s_scheduler_specific_current_time function provides a current time for scheduling purposes,
 // which may not necessarily relate to wall time
 static u64 (*s_scheduler_current_time)();
