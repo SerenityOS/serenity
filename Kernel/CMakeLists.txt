@@ -404,6 +404,7 @@ set(KERNEL_SOURCES
     Tasks/ThreadTracer.cpp
     Tasks/WaitQueue.cpp
     Tasks/WorkQueue.cpp
+    Time/TimeDeviceBase.cpp
     Time/TimeManagement.cpp
     Time/TimerQueue.cpp
     kprintf.cpp

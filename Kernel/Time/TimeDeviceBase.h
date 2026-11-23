@@ -12,6 +12,8 @@
 
 namespace Kernel {
 
+class HardwareTimerBase;
+
 class TimeDeviceBase : public AtomicRefCounted<TimeDeviceBase> {
 public:
     virtual ~TimeDeviceBase() = default;
@@ -26,6 +28,14 @@ public:
     virtual HardwareTimerType timer_type() const = 0;
 
     virtual size_t frequency() const = 0;
+
+protected:
+    enum class CounterDirection {
+        Up,
+        Down,
+    };
+
+    u64 measure_frequency(HardwareTimerBase& source, AK::Function<u64()> read_counter, CounterDirection direction) const;
 };
 
 }
