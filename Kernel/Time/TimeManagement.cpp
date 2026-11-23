@@ -351,13 +351,13 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
     // can query the timer.
     m_time_keeper_timer = m_system_timer;
 
-    if (TSC::is_supported_and_invariant()
-        && TSC::the().calibrate(*m_system_timer)) {
+    if (TSC::is_supported_and_invariant()) {
+        auto tsc = TSC::create(*m_system_timer).release_value_but_fixme_should_propagate_errors();
 
-        m_read_time_from_hardware = [](auto&&... args) -> u64 {
-            return TSC::the().update_time(args...);
+        m_read_time_from_hardware = [tsc](auto&&... args) mutable -> u64 {
+            return tsc->update_time(args...);
         };
-        m_time_ticks_per_second = TSC::the().frequency();
+        m_time_ticks_per_second = tsc->frequency();
     }
 
     if (periodic_timers.size() > taken_periodic_timers_count) {

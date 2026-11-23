@@ -7,23 +7,27 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Time/HardwareTimer.h>
+#include <Kernel/Time/TimeSource.h>
 
 namespace Kernel {
 
-class TSC {
+class TSC : public TimeSource {
 public:
+    static ErrorOr<NonnullLockRefPtr<TSC>> create(HardwareTimerBase& calibration_reference);
     static bool is_supported_and_invariant();
-    static TSC& the();
 
-    bool calibrate(HardwareTimerBase& calibration_source);
-    u64 frequency() const { return m_frequency; }
-    // FIXME: Share code with HPET::update_time
-    u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
+    TSC(HardwareTimerBase& calibration_reference);
+
+    virtual StringView model() const override { return "TSC"sv; }
+    virtual HardwareTimerType timer_type() const override { return HardwareTimerType::TSC; }
+
+    virtual u64 read_counter_raw() const override;
+    virtual u64 frequency() const override { return m_frequency; }
 
 private:
     u64 m_frequency { 0 };
-    u64 m_main_counter_last_read { 0 };
 };
 
 }

@@ -14,6 +14,7 @@ enum class HardwareTimerType {
     RTC,                     // Real Time Clock
     HighPrecisionEventTimer, // also known as IA-PC HPET
     LocalAPICTimer,          // Local APIC
+    TSC,                     // Time Stamp Counter
 
     // AArch64
     RPiTimer,
