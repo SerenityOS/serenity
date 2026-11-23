@@ -35,6 +35,7 @@ enum FlagBits {
 
 Timer::Timer(Memory::TypedMapping<TimerRegisters volatile> registers_mapping, InterruptNumber interrupt_number)
     : HardwareTimer(interrupt_number)
+    , TimeSource(TimeSource::CounterSize::Bits64)
     , m_registers(move(registers_mapping))
 {
     // FIXME: Actually query the frequency of the timer. By default it is 100MHz.
@@ -46,22 +47,11 @@ Timer::Timer(Memory::TypedMapping<TimerRegisters volatile> registers_mapping, In
 
 Timer::~Timer() = default;
 
-u64 Timer::microseconds_since_boot()
-{
-    u32 high = m_registers->counter_high;
-    u32 low = m_registers->counter_low;
-    if (high != m_registers->counter_high) {
-        high = m_registers->counter_high;
-        low = m_registers->counter_low;
-    }
-    return (static_cast<u64>(high) << 32) | low;
-}
-
 bool Timer::handle_irq()
 {
     auto result = HardwareTimer::handle_irq();
 
-    set_compare(TimerID::Timer1, microseconds_since_boot() + m_interrupt_interval);
+    set_compare(TimerID::Timer1, read_counter() + m_interrupt_interval);
     clear_interrupt(TimerID::Timer1);
 
     return result;
@@ -72,39 +62,25 @@ void Timer::disable()
     disable_irq();
 }
 
+u64 Timer::read_counter_raw() const
+{
+    u32 high = m_registers->counter_high;
+    u32 low = m_registers->counter_low;
+    if (high != m_registers->counter_high) {
+        high = m_registers->counter_high;
+        low = m_registers->counter_low;
+    }
+    return (static_cast<u64>(high) << 32) | low;
+}
+
 size_t Timer::frequency() const
 {
     return m_frequency;
 }
 
-u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
-{
-    // Should only be called by the time keeper interrupt handler!
-    u64 current_value = microseconds_since_boot();
-    u64 delta_ticks = m_main_counter_drift;
-    if (current_value >= m_main_counter_last_read) {
-        delta_ticks += current_value - m_main_counter_last_read;
-    } else {
-        // the counter wrapped around
-        delta_ticks += (NumericLimits<u64>::max() - m_main_counter_last_read + 1) + current_value;
-    }
-
-    u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
-    seconds_since_boot += ticks_since_last_second / m_frequency;
-    ticks_this_second = ticks_since_last_second % m_frequency;
-
-    if (!query_only) {
-        m_main_counter_drift = 0;
-        m_main_counter_last_read = current_value;
-    }
-
-    // Return the time passed (in ns) since last time update_time was called
-    return (delta_ticks * 1000000000ull) / m_frequency;
-}
-
 void Timer::enable_interrupt_mode()
 {
-    set_compare(TimerID::Timer1, microseconds_since_boot() + m_interrupt_interval);
+    set_compare(TimerID::Timer1, read_counter() + m_interrupt_interval);
     enable_irq();
 }
 
@@ -207,6 +183,7 @@ ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, String
     auto timer = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Timer(move(registers_mapping), interrupt_number)));
 
     MUST(TimeManagement::the().register_hardware_timer(move(timer)));
+    MUST(TimeManagement::the().register_time_source(move(timer)));
 
     return {};
 }

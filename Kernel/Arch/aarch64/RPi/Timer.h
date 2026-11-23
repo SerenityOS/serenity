@@ -12,12 +12,14 @@
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Time/HardwareTimer.h>
+#include <Kernel/Time/TimeSource.h>
 
 namespace Kernel::RPi {
 
 struct TimerRegisters;
 
-class Timer final : public HardwareTimer<IRQHandler> {
+class Timer final : public HardwareTimer<IRQHandler>
+    , public TimeSource {
 public:
     Timer(Memory::TypedMapping<TimerRegisters volatile>, InterruptNumber interrupt_number);
     virtual ~Timer();
@@ -31,12 +33,8 @@ public:
 
     virtual void disable() override;
 
+    virtual u64 read_counter_raw() const override;
     virtual size_t frequency() const override;
-
-    // FIXME: Share code with HPET::update_time
-    u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
-
-    u64 microseconds_since_boot();
 
     void set_interrupt_interval_usec(u32);
     void enable_interrupt_mode();
@@ -76,9 +74,6 @@ private:
 
     Memory::TypedMapping<TimerRegisters volatile> m_registers;
     u32 m_interrupt_interval { 0 };
-
-    u64 m_main_counter_last_read { 0 };
-    u64 m_main_counter_drift { 0 };
 
     size_t m_frequency { 0 };
 };
