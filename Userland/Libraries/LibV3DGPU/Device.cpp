@@ -85,9 +85,9 @@ ErrorOr<ControlList> Device::generate_initial_binner_control_list()
     control_list.append(clip_z_min_max_clipping_planes);
 
     ControlRecord::ViewportOffset viewport_offset {};
-    viewport_offset.fine_x = (m_framebuffer_size.width() / 2u) * 256u;
+    viewport_offset.fine_x = ControlRecord::to_u14p8(m_framebuffer_size.width() / 2u, 0);
     viewport_offset.coarse_x = 0;
-    viewport_offset.fine_y = (m_framebuffer_size.height() / 2u) * 256u;
+    viewport_offset.fine_y = ControlRecord::to_u14p8(m_framebuffer_size.height() / 2u, 0);
     viewport_offset.coarse_y = 0;
     control_list.append(viewport_offset);
 
