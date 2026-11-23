@@ -44,9 +44,9 @@ public:
     static u64 scheduler_current_time();
 
     // This API cannot distinguish returned time types; prefer the clock-specific functions instead.
-    Duration current_time(clockid_t) const;
-    MonotonicTime monotonic_time(TimePrecision = TimePrecision::Coarse) const;
-    MonotonicTime monotonic_time_raw() const
+    Duration current_time(clockid_t);
+    MonotonicTime monotonic_time(TimePrecision = TimePrecision::Coarse);
+    MonotonicTime monotonic_time_raw()
     {
         // TODO: implement
         return monotonic_time(TimePrecision::Precise);
@@ -64,7 +64,7 @@ public:
     bool enable_profile_timer();
     bool disable_profile_timer();
 
-    u64 uptime_ms() const;
+    u64 uptime_ms();
     static UnixDateTime now();
 
     // FIXME: Most likely broken, because it does not check m_update[12] for in-progress updates.

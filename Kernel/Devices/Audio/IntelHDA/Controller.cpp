@@ -365,11 +365,10 @@ ErrorOr<u32> Controller::get_pcm_output_sample_rate(size_t channel_index)
 ErrorOr<void> wait_until(size_t delay_in_microseconds, size_t timeout_in_microseconds, Function<ErrorOr<bool>()> condition)
 {
     auto const timeout = Duration::from_microseconds(static_cast<i64>(timeout_in_microseconds));
-    auto const& time_management = TimeManagement::the();
-    auto start = time_management.monotonic_time(TimePrecision::Precise);
+    auto start = TimeManagement::the().monotonic_time(TimePrecision::Precise);
     while (!TRY(condition())) {
         microseconds_delay(delay_in_microseconds);
-        if (time_management.monotonic_time(TimePrecision::Precise) - start >= timeout)
+        if (TimeManagement::the().monotonic_time(TimePrecision::Precise) - start >= timeout)
             return ETIMEDOUT;
     }
     return {};

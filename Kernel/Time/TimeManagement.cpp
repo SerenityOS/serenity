@@ -87,7 +87,7 @@ u64 TimeManagement::scheduler_current_time()
     return s_scheduler_current_time();
 }
 
-Duration TimeManagement::current_time(clockid_t clock_id) const
+Duration TimeManagement::current_time(clockid_t clock_id)
 {
     switch (clock_id) {
     case CLOCK_MONOTONIC:
@@ -120,7 +120,7 @@ void TimeManagement::set_epoch_time(UnixDateTime ts)
     m_remaining_epoch_time_adjustment = {};
 }
 
-MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
+MonotonicTime TimeManagement::monotonic_time(TimePrecision precision)
 {
     // This is the time when last updated by an interrupt.
     u64 seconds;
@@ -157,7 +157,7 @@ UnixDateTime TimeManagement::epoch_time(TimePrecision) const
     return time;
 }
 
-u64 TimeManagement::uptime_ms() const
+u64 TimeManagement::uptime_ms()
 {
     auto mtime = monotonic_time().time_since_start({}).to_timespec();
     // This overflows after 292 million years of uptime.
