@@ -418,7 +418,10 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 #elif ARCH(RISCV64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 {
-    MUST(s_hardware_timers.try_append(RISCV64::Timer::initialize()));
+    auto timer = RISCV64::Timer::initialize();
+    m_hardware_timers.try_append(timer).release_value_but_fixme_should_propagate_errors();
+    m_time_sources.try_append(move(timer)).release_value_but_fixme_should_propagate_errors();
+
     m_system_timer = m_hardware_timers[0];
     m_time_ticks_per_second = m_system_timer->frequency();
 
