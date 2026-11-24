@@ -30,7 +30,7 @@ static constexpr size_t EXTENDED_PRIVATE_PERIPHERAL_INTERRUPT_RANGE_END = 1120;
 static constexpr size_t EXTENDED_SHARED_PERIPHERAL_INTERRUPT_RANGE_START = 4096; // Extended SPI
 static constexpr size_t EXTENDED_SHARED_PERIPHERAL_INTERRUPT_RANGE_END = 5120;
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv3>> GICv3::try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, Span<DeviceTree::Device::Resource const> redistributor_region_resources, Optional<size_t> redistributor_stride)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv3>> GICv3::try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, ReadonlySpan<DeviceTree::Device::Resource> redistributor_region_resources, Optional<size_t> redistributor_stride)
 {
     if (distributor_registers_resource.size < sizeof(DistributorRegisters))
         return EINVAL;
