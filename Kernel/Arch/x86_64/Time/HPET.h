@@ -22,7 +22,6 @@ class HPET {
 public:
     static bool initialized();
     static bool test_and_initialize();
-    static bool check_for_exisiting_periodic_timers();
     static HPET& the();
 
     u64 frequency() const { return m_frequency; }

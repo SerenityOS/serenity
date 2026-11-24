@@ -46,9 +46,6 @@ List of options:
 -   **`graphics_subsystem_mode`** - This parameter expects one of the following values. **`on`**- Boot into the graphical environment if possible (default). **`off`** - Boot into text mode, don't initialize any driver. **`limited`** - Boot into the pre-defined framebuffer that the bootloader
     has set up before booting the Kernel, don't initialize any driver.
 
--   **`hpet`** - This parameter expects one of the following values. **`periodic`** - The High Precision Event Timer should
-    be configured in a periodic mode. **`nonperiodic`** - The High Precision Event Timer should eb configure din non-periodic mode.
-
 -   **`init`** - This parameter expects the fully qualified path to the init program the Kernel should launch after boot.
     This defaults to [`SystemServer`(7)](help://man/7/SystemServer).
 

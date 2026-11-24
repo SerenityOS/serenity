@@ -128,38 +128,8 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
     // Note: HPET is only usable from System Memory
     VERIFY(sdt_or_error.value()->event_timer_block.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
 
-    if (TimeManagement::is_hpet_periodic_mode_allowed()) {
-        if (!check_for_exisiting_periodic_timers()) {
-            dbgln("HPET: No periodic capable timers");
-            return false;
-        }
-    }
     new HPET(PhysicalAddress(hpet_table.value()));
     return true;
-}
-
-UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
-{
-    auto hpet_table = ACPI::Parser::the()->find_table("HPET"sv);
-    if (!hpet_table.has_value())
-        return false;
-
-    auto sdt_or_error = Memory::map_typed<::ACPI::Structures::HPET>(hpet_table.value());
-    if (sdt_or_error.is_error())
-        return false;
-    auto sdt = sdt_or_error.release_value();
-    VERIFY(sdt->event_timer_block.address_space == ::ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
-    auto registers_or_error = Memory::map_typed<HPETRegistersBlock>(PhysicalAddress(sdt->event_timer_block.address));
-    if (registers_or_error.is_error())
-        return false;
-    auto registers = registers_or_error.release_value();
-
-    size_t timers_count = ((registers->capabilities.attributes >> 8) & 0x1f) + 1;
-    for (size_t index = 0; index < timers_count; index++) {
-        if (registers->timers[index].capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable)
-            return true;
-    }
-    return false;
 }
 
 void HPET::global_disable()

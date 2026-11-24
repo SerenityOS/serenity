@@ -60,8 +60,6 @@ public:
 
     void increment_time_since_boot();
 
-    static bool is_hpet_periodic_mode_allowed();
-
     bool enable_profile_timer();
     bool disable_profile_timer();
 

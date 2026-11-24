@@ -281,14 +281,12 @@ UnixDateTime TimeManagement::now()
 
 UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
 {
-    bool should_enable = is_hpet_periodic_mode_allowed();
     dbgln("Duration: Scanning for periodic timers");
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : *s_hardware_timers) {
         if (hardware_timer->is_periodic_capable()) {
             timers.try_append(hardware_timer).release_value_but_fixme_should_propagate_errors();
-            if (should_enable)
-                hardware_timer->set_periodic();
+            hardware_timer->set_periodic();
         }
     }
     return timers;
@@ -303,18 +301,6 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodi
             timers.try_append(hardware_timer).release_value_but_fixme_should_propagate_errors();
     }
     return timers;
-}
-
-bool TimeManagement::is_hpet_periodic_mode_allowed()
-{
-    switch (kernel_command_line().hpet_mode()) {
-    case HPETMode::Periodic:
-        return true;
-    case HPETMode::NonPeriodic:
-        return false;
-    default:
-        VERIFY_NOT_REACHED();
-    }
 }
 
 #if ARCH(X86_64)
@@ -333,9 +319,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
 
     auto periodic_timers = scan_and_initialize_periodic_timers();
     auto non_periodic_timers = scan_for_non_periodic_timers();
-
-    if (is_hpet_periodic_mode_allowed())
-        VERIFY(!periodic_timers.is_empty());
 
     VERIFY(periodic_timers.size() + non_periodic_timers.size() > 0);
 
