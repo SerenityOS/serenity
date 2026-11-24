@@ -38,8 +38,8 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
 
     auto entry_array_size = madt->h.length - offsetof(::ACPI::Structures::MADT, entries);
 
-    Optional<::ACPI::Structures::MADTEntries::GICCPUInterface> gic_boot_cpu_interface;
-    Optional<::ACPI::Structures::MADTEntries::GICDistributor> gic_distributor;
+    Optional<::ACPI::Structures::MADTEntries::GICCPUInterface> gic_boot_cpu_interface_entry;
+    Optional<::ACPI::Structures::MADTEntries::GICDistributor> gic_distributor_entry;
 
     auto boot_cpu_mpidr = Aarch64::MPIDR_EL1::read();
 
@@ -58,7 +58,7 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
                 && (((mpidr >> ::ACPI::Structures::MADTEntries::GICCPUInterface::MPDIR_AFF1_OFFSET) & 0xff) == boot_cpu_mpidr.Aff1)
                 && (((mpidr >> ::ACPI::Structures::MADTEntries::GICCPUInterface::MPDIR_AFF2_OFFSET) & 0xff) == boot_cpu_mpidr.Aff2)
                 && (((mpidr >> ::ACPI::Structures::MADTEntries::GICCPUInterface::MPDIR_AFF3_OFFSET) & 0xff) == boot_cpu_mpidr.Aff3)) {
-                gic_boot_cpu_interface = *entry;
+                gic_boot_cpu_interface_entry = *entry;
             }
 
             break;
@@ -67,14 +67,14 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
         case GIC_Distributor: {
             auto const* entry = reinterpret_cast<::ACPI::Structures::MADTEntries::GICDistributor const*>(entry_header);
 
-            if (gic_distributor.has_value()) {
+            if (gic_distributor_entry.has_value()) {
                 // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-distributor-gicd-structure
                 // "One, and only one, GIC distributor structure must be present in the MADT for an ARM based system."
                 dmesgln("ACPI: Multiple GIC distributor structures found in the MADT table");
                 return EINVAL;
             }
 
-            gic_distributor = *entry;
+            gic_distributor_entry = *entry;
 
             break;
         }
@@ -91,45 +91,45 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
     // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-cpu-interface-gicc-structure
     // "In the GIC interrupt model, logical processors are required to have a Processor Device object in the DSDT,
     //  and must convey each processor’s GIC information to the OS using the GICC structure."
-    if (!gic_boot_cpu_interface.has_value()) {
+    if (!gic_boot_cpu_interface_entry.has_value()) {
         dmesgln("ACPI: No GIC CPU Interface MADT entry for the boot processor");
         return EINVAL;
     }
 
-    if (!has_flag(gic_boot_cpu_interface->flags, ::ACPI::Structures::MADTEntries::GICCPUInterface::Flags::Enabled)) {
+    if (!has_flag(gic_boot_cpu_interface_entry->flags, ::ACPI::Structures::MADTEntries::GICCPUInterface::Flags::Enabled)) {
         dmesgln("ACPI: GIC CPU Interface MADT entry for the boot processor is not enabled");
         return EINVAL;
     }
 
     // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-distributor-gicd-structure
     // "One, and only one, GIC distributor structure must be present in the MADT for an ARM based system."
-    if (!gic_distributor.has_value()) {
+    if (!gic_distributor_entry.has_value()) {
         dmesgln("ACPI: No GIC Distributor MADT entry found");
         return EINVAL;
     }
 
-    if (gic_distributor->gic_version == 0) {
+    if (gic_distributor_entry->gic_version == 0) {
         // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-distributor-gicd-structure
         // "0x00: No GIC version is specified, fall back to hardware discovery for GIC version"
         dmesgln("ACPI: FIXME: GIC Distributor MADT entry doesn't specify the GIC version; this is currently not supported");
         return ENOTSUP;
     }
 
-    if (gic_distributor->gic_version == 2) {
-        auto distributor_paddr = PhysicalAddress { gic_distributor->physical_base_address };
+    if (gic_distributor_entry->gic_version == 2) {
+        auto distributor_paddr = PhysicalAddress { gic_distributor_entry->physical_base_address };
 
         // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-cpu-interface-gicc-structure
         // "On GICv1/v2 systems and GICv3/4 systems in GICv2 compatibility mode, this field holds the 64-bit
         //  physical address at which the processor can access this GIC CPU Interface. If provided here, the “Local
         //  Interrupt Controller Address” field in the MADT must be ignored by the OSPM."
-        auto boot_cpu_interface_paddr = PhysicalAddress { gic_boot_cpu_interface->physical_base_address };
+        auto boot_cpu_interface_paddr = PhysicalAddress { gic_boot_cpu_interface_entry->physical_base_address };
         if (boot_cpu_interface_paddr.is_null())
             boot_cpu_interface_paddr = PhysicalAddress { madt->local_interrupt_controller_address };
 
         auto gic = TRY(GICv2::try_to_initialize(distributor_paddr, boot_cpu_interface_paddr));
         TRY(s_interrupt_controllers->try_append(move(gic)));
     } else {
-        dmesgln("ACPI: Unsupported GIC Distributor version: {}", gic_distributor->gic_version);
+        dmesgln("ACPI: Unsupported GIC Distributor version: {}", gic_distributor_entry->gic_version);
         return ENOTSUP;
     }
 
