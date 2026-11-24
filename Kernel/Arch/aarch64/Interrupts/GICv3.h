@@ -21,6 +21,12 @@ class GICv3 final
     : public IRQController
     , public DeviceTree::InterruptController {
 public:
+    struct RedistributorRegion {
+        PhysicalAddress physical_address;
+        size_t size;
+    };
+    static ErrorOr<NonnullLockRefPtr<GICv3>> try_to_initialize(PhysicalAddress distributor_registers_paddr, ReadonlySpan<RedistributorRegion> redistributor_regions, Optional<size_t> redistributor_stride);
+
     static ErrorOr<NonnullLockRefPtr<GICv3>> try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, ReadonlySpan<DeviceTree::Device::Resource> redistributor_region_resources, Optional<size_t> redistributor_stride);
 
     virtual void enable(GenericInterruptHandler const&) override;

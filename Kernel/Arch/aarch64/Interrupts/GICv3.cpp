@@ -35,17 +35,26 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv3>> GICv3::try_to_initialize(Devi
     if (distributor_registers_resource.size < sizeof(DistributorRegisters))
         return EINVAL;
 
+    Vector<RedistributorRegion> redistributor_regions;
+    for (auto const& redistributor_resource : redistributor_region_resources)
+        TRY(redistributor_regions.try_empend(redistributor_resource.paddr, redistributor_resource.size));
+
+    return GICv3::try_to_initialize(distributor_registers_resource.paddr, redistributor_regions, redistributor_stride);
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv3>> GICv3::try_to_initialize(PhysicalAddress distributor_registers_paddr, ReadonlySpan<RedistributorRegion> redistributor_regions, Optional<size_t> redistributor_stride)
+{
     Vector<Memory::TypedMapping<RedistributorRegisters volatile>> redistributor_registers;
 
     auto boot_cpu_mpidr = Aarch64::MPIDR_EL1::read();
     Optional<size_t> boot_cpu_redistributor_index;
 
     // Detect the redistributors. Each redistributor region can have multiple redistributors.
-    for (auto redistributor_region_resource : redistributor_region_resources) {
-        PhysicalAddress current_address = redistributor_region_resource.paddr;
+    for (auto redistributor_region : redistributor_regions) {
+        PhysicalAddress current_address = redistributor_region.physical_address;
 
         for (;;) {
-            if (current_address.get() - redistributor_region_resource.paddr.get() >= redistributor_region_resource.size)
+            if (current_address.get() - redistributor_region.physical_address.get() >= redistributor_region.size)
                 break;
 
             auto registers = TRY(Memory::map_typed_writable<RedistributorRegisters volatile>(current_address));
@@ -91,7 +100,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv3>> GICv3::try_to_initialize(Devi
     if (!boot_cpu_redistributor_index.has_value())
         return ENOENT;
 
-    auto distributor_registers = TRY(Memory::map_typed_writable<DistributorRegisters volatile>(distributor_registers_resource.paddr));
+    auto distributor_registers = TRY(Memory::map_typed_writable<DistributorRegisters volatile>(distributor_registers_paddr));
 
     auto gic = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) GICv3(move(distributor_registers), move(redistributor_registers), boot_cpu_redistributor_index.value())));
     TRY(gic->initialize());
