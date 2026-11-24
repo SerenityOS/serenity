@@ -17,7 +17,7 @@ void microseconds_delay(u32 microseconds)
 {
     VERIFY(RISCV64::Timer::is_initialized());
 
-    auto frequency = RISCV64::Timer::the().ticks_per_second();
+    auto frequency = RISCV64::Timer::the().frequency();
     VERIFY(frequency != 0);
 
     u64 const start = RISCV64::CSR::read<RISCV64::CSR::Address::TIME>();

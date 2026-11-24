@@ -45,7 +45,7 @@ bool TSC::calibrate(HardwareTimerBase& calibration_source)
         u64 volatile start_reference { 0 }, end_reference { 0 };
     } state;
 
-    state.ticks_in_100ms = calibration_source.ticks_per_second() / 10;
+    state.ticks_in_100ms = calibration_source.frequency() / 10;
 
     if (!calibration_source.can_query_raw())
         return false;

@@ -85,9 +85,8 @@ u64 ARMv8Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, boo
     }
 
     u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
-    auto frequency = ticks_per_second();
-    seconds_since_boot += ticks_since_last_second / frequency;
-    ticks_this_second = ticks_since_last_second % frequency;
+    seconds_since_boot += ticks_since_last_second / m_frequency;
+    ticks_this_second = ticks_since_last_second % m_frequency;
 
     if (!query_only) {
         m_main_counter_drift = 0;
@@ -95,7 +94,7 @@ u64 ARMv8Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, boo
     }
 
     // Return the time passed (in ns) since last time update_time was called
-    return (delta_ticks * 1'000'000'000ull) / frequency;
+    return (delta_ticks * 1'000'000'000ull) / m_frequency;
 }
 
 void ARMv8Timer::start_timer(u32 delta)

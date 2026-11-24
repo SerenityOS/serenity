@@ -22,7 +22,7 @@ public:
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RISCVTimer; }
     virtual StringView model() const override { return "RISC-V Timer"sv; }
-    virtual size_t ticks_per_second() const override { return m_frequency; }
+    virtual size_t frequency() const override { return m_frequency; }
 
     virtual TimerMode mode() const override { return TimerMode::OneShot; }
     virtual void set_mode(TimerMode) override { }

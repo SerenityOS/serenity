@@ -218,7 +218,7 @@ void TimeManagement::set_system_timer(HardwareTimerBase& timer)
 
 time_t TimeManagement::ticks_per_second() const
 {
-    return m_time_keeper_timer->ticks_per_second();
+    return m_time_keeper_timer->frequency();
 }
 
 UnixDateTime TimeManagement::boot_time()
@@ -242,7 +242,7 @@ UnixDateTime TimeManagement::boot_time()
 
 Duration TimeManagement::clock_resolution() const
 {
-    long nanoseconds_per_tick = 1'000'000'000 / m_time_keeper_timer->ticks_per_second();
+    long nanoseconds_per_tick = 1'000'000'000 / m_time_keeper_timer->frequency();
     return Duration::from_nanoseconds(nanoseconds_per_tick);
 }
 
@@ -402,7 +402,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
     m_system_timer = s_hardware_timers->last();
     dbgln("TimeManagement: System timer: {}", m_system_timer->model());
 
-    m_time_ticks_per_second = m_system_timer->ticks_per_second();
+    m_time_ticks_per_second = m_system_timer->frequency();
 
     m_read_time_from_hardware = [this](auto&&... args) {
         if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
@@ -423,7 +423,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 {
     MUST(s_hardware_timers->try_append(RISCV64::Timer::initialize()));
     m_system_timer = (*s_hardware_timers)[0];
-    m_time_ticks_per_second = m_system_timer->ticks_per_second();
+    m_time_ticks_per_second = m_system_timer->frequency();
 
     m_read_time_from_hardware = [this](auto&&... args) {
         return static_cast<RISCV64::Timer*>(m_system_timer.ptr())->update_time(args...);
@@ -465,7 +465,7 @@ void TimeManagement::increment_time_since_boot()
     // Compute time adjustment for adjtime. Let the clock run up to 1% fast or slow.
     // That way, adjtime can adjust up to 36 seconds per hour, without time getting very jumpy.
     // Once we have a smarter NTP service that also adjusts the frequency instead of just slewing time, maybe we can lower this.
-    long nanos_per_tick = 1'000'000'000 / m_time_keeper_timer->ticks_per_second();
+    long nanos_per_tick = 1'000'000'000 / m_time_keeper_timer->frequency();
     time_t max_slew_nanos = nanos_per_tick / 100;
 
     u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
@@ -476,7 +476,7 @@ void TimeManagement::increment_time_since_boot()
 
     m_epoch_time += Duration::from_nanoseconds(nanos_per_tick + slew_nanos.to_nanoseconds());
 
-    if (++m_ticks_this_second >= m_time_keeper_timer->ticks_per_second()) {
+    if (++m_ticks_this_second >= m_time_keeper_timer->frequency()) {
         // FIXME: Synchronize with other clock somehow to prevent drifting apart.
         ++m_seconds_since_boot;
         m_ticks_this_second = 0;

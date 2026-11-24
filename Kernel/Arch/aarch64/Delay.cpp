@@ -14,7 +14,7 @@ void microseconds_delay(u32 microseconds)
 {
     VERIFY(ARMv8Timer::is_initialized());
 
-    auto frequency = ARMv8Timer::the().ticks_per_second();
+    auto frequency = ARMv8Timer::the().frequency();
     VERIFY(frequency != 0);
 
     // Use the EL1 virtual timer, as that timer should should be accessible to us both on device and in a VM.

@@ -131,7 +131,7 @@ void HPET::update_periodic_comparator_value()
             // to resume periodic timers properly because we reset the main counter
             // and we can only write the period into the comparator value...
             timer.capabilities = timer.capabilities | TimerConfiguration::ValueSet;
-            u64 value = ns_to_raw_counter_ticks(1'000'000'000ull / comparator->ticks_per_second());
+            u64 value = ns_to_raw_counter_ticks(1'000'000'000ull / comparator->frequency());
             dbgln_if(HPET_DEBUG, "HPET: Update periodic comparator {} comparator value to {} main value was: {}", comparator->comparator_number(), value, previous_main_value);
 
             if (comparator->is_64bit_capable())
@@ -161,7 +161,7 @@ void HPET::update_non_periodic_comparator_value(HPETComparator const& comparator
     VERIFY(comparator.mode() == TimerMode::OneShot);
 
     auto& timer = m_registers->timers[comparator.comparator_number()];
-    u64 value = frequency() / comparator.ticks_per_second();
+    u64 value = frequency() / comparator.frequency();
 
     // NOTE: If the main counter passes this new value before we finish writing it, we will never receive an interrupt!
     u64 new_counter_value = read_main_counter() + value;

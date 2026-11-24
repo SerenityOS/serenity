@@ -31,7 +31,7 @@ public:
 
     virtual void disable() override;
 
-    virtual size_t ticks_per_second() const override;
+    virtual size_t frequency() const override;
 
     // FIXME: Share code with HPET::update_time
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);

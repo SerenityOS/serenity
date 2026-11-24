@@ -116,7 +116,7 @@ u64 HPETComparator::raw_to_ns(u64 raw_delta) const
     return HPET::the().raw_counter_ticks_to_ns(raw_delta);
 }
 
-size_t HPETComparator::ticks_per_second() const
+size_t HPETComparator::frequency() const
 {
     return m_frequency;
 }

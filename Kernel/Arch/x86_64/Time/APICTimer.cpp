@@ -51,7 +51,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
         bool query_reference { false };
     } state;
 
-    state.ticks_in_100ms = calibration_source.ticks_per_second() / 10;
+    state.ticks_in_100ms = calibration_source.frequency() / 10;
     state.query_reference = calibration_source.can_query_raw();
 
     // temporarily replace the timer callbacks
@@ -106,7 +106,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
         dmesgln("APICTimer: Ticks per second: {} ({}.{}ms)", m_frequency, one_tick_ns / 1000000, one_tick_ns % 1000000);
     } else {
         // For now, assume the frequency is exactly the same
-        m_frequency = calibration_source.ticks_per_second();
+        m_frequency = calibration_source.frequency();
         dmesgln("APICTimer: Ticks per second: {} (assume same frequency as reference clock)", m_frequency);
     }
 
@@ -141,7 +141,7 @@ void APICTimer::disable_local_timer()
     APIC::the().setup_local_timer(0, TimerMode::OneShot, false);
 }
 
-size_t APICTimer::ticks_per_second() const
+size_t APICTimer::frequency() const
 {
     return m_frequency;
 }

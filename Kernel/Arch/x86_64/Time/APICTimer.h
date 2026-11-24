@@ -26,7 +26,7 @@ public:
 
     virtual void disable() override { }
 
-    virtual size_t ticks_per_second() const override;
+    virtual size_t frequency() const override;
 
     void will_be_destroyed() override { HardwareTimer<GenericInterruptHandler>::will_be_destroyed(); }
     void enable_local_timer();

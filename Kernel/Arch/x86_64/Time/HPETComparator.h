@@ -34,7 +34,7 @@ public:
     virtual u64 current_raw() const override;
     virtual u64 raw_to_ns(u64) const override;
 
-    virtual size_t ticks_per_second() const override;
+    virtual size_t frequency() const override;
 
     virtual ErrorOr<void> try_to_set_frequency(size_t frequency) override;
     virtual bool is_capable_of_frequency(size_t frequency) const override;

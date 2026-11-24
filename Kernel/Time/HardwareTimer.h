@@ -45,18 +45,18 @@ public:
     virtual u64 current_raw() const { return 0; }
     virtual u64 raw_to_ns(u64) const { return 0; }
 
-    virtual size_t ticks_per_second() const = 0;
+    virtual size_t frequency() const = 0;
 
-    virtual ErrorOr<void> try_to_set_frequency(size_t frequency)
+    virtual ErrorOr<void> try_to_set_frequency(size_t new_frequency)
     {
-        if (frequency == ticks_per_second())
+        if (new_frequency == frequency())
             return {};
 
         return Error::from_errno(ENOTSUP);
     }
 
-    virtual bool is_capable_of_frequency(size_t frequency) const { return frequency == ticks_per_second(); }
-    virtual size_t calculate_nearest_possible_frequency(size_t) const { return ticks_per_second(); }
+    virtual bool is_capable_of_frequency(size_t new_frequency) const { return new_frequency == frequency(); }
+    virtual size_t calculate_nearest_possible_frequency(size_t) const { return frequency(); }
 };
 
 template<>
