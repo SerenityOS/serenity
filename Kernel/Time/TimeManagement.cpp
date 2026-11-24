@@ -306,8 +306,12 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodi
 #if ARCH(X86_64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
 {
-    if (!HPET::test_and_initialize())
+    auto maybe_hpet_result = HPET::initialize();
+    if (maybe_hpet_result.is_error())
         return false;
+    if (!maybe_hpet_result.value())
+        return false;
+
     if (!HPET::the().comparators().size()) {
         dbgln("HPET initialization aborted.");
         return false;

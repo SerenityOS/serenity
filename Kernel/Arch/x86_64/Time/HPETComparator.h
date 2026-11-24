@@ -6,17 +6,17 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86_64/Time/HPET.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {
-class HPETComparator final : public HardwareTimer<IRQHandler> {
-    friend class HPET;
 
+class HPETComparator final : public HardwareTimer<IRQHandler> {
 public:
-    static NonnullLockRefPtr<HPETComparator> create(u8 number, InterruptNumber irq, bool periodic_capable, bool is_64bit_capable);
+    static NonnullLockRefPtr<HPETComparator> create(Badge<HPET>, u8 number, InterruptNumber irq, bool periodic_capable, bool is_64bit_capable);
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::HighPrecisionEventTimer; }
     virtual StringView model() const override { return "HPET"sv; }
@@ -43,11 +43,14 @@ public:
 private:
     void set_new_countdown();
     virtual bool handle_irq() override;
+
     HPETComparator(u8 number, InterruptNumber irq, bool periodic_capable, bool is_64bit_capable);
-    bool m_periodic : 1;
-    bool m_periodic_capable : 1;
-    bool m_enabled : 1;
-    bool m_is_64bit_capable : 1;
+
+    bool m_periodic;
+    bool m_periodic_capable;
+    bool m_enabled;
+    bool m_is_64bit_capable;
+
     u8 m_comparator_number { 0 };
 
     size_t m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };
