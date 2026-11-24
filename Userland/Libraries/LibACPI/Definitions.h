@@ -374,6 +374,21 @@ struct [[gnu::packed]] GICDistributor {
 };
 static_assert(AssertSize<GICDistributor, 24>());
 
+// https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-redistributor-gicr-structure
+struct [[gnu::packed]] GICRedistributor {
+    // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gicr-flags
+    enum class Flags : u8 {
+        GICRNonCoherent = 1u << 0,
+    };
+
+    MADTEntryHeader h;
+    Flags flags;
+    u8 _;
+    u64 discovery_range_base_address;
+    u32 discovery_range_length;
+};
+static_assert(AssertSize<GICRedistributor, 16>());
+
 // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#risc-v-interrupt-controller-rintc-structure
 struct [[gnu::packed]] RISCVInterruptController {
     enum class Flags : u32 {

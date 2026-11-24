@@ -5,9 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <AK/NeverDestroyed.h>
 #include <Kernel/Arch/aarch64/InterruptManagement.h>
 #include <Kernel/Arch/aarch64/Interrupts/GICv2.h>
+#include <Kernel/Arch/aarch64/Interrupts/GICv3.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/Panic.h>
 
@@ -40,6 +42,7 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
 
     Optional<::ACPI::Structures::MADTEntries::GICCPUInterface> gic_boot_cpu_interface_entry;
     Optional<::ACPI::Structures::MADTEntries::GICDistributor> gic_distributor_entry;
+    Vector<::ACPI::Structures::MADTEntries::GICRedistributor> gic_redistributor_entries;
 
     auto boot_cpu_mpidr = Aarch64::MPIDR_EL1::read();
 
@@ -79,6 +82,12 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
             break;
         }
 
+        case GIC_Redistributor: {
+            auto const* entry = reinterpret_cast<::ACPI::Structures::MADTEntries::GICRedistributor const*>(entry_header);
+            TRY(gic_redistributor_entries.try_append(*entry));
+            break;
+        }
+
         default:
             dbgln("ACPI: Unsupported AArch64 MADT table entry type: {:#x}", to_underlying(entry_header->type));
             break;
@@ -115,9 +124,9 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
         return ENOTSUP;
     }
 
-    if (gic_distributor_entry->gic_version == 2) {
-        auto distributor_paddr = PhysicalAddress { gic_distributor_entry->physical_base_address };
+    auto distributor_paddr = PhysicalAddress { gic_distributor_entry->physical_base_address };
 
+    if (gic_distributor_entry->gic_version == 2) {
         // https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#gic-cpu-interface-gicc-structure
         // "On GICv1/v2 systems and GICv3/4 systems in GICv2 compatibility mode, this field holds the 64-bit
         //  physical address at which the processor can access this GIC CPU Interface. If provided here, the “Local
@@ -127,6 +136,24 @@ static ErrorOr<void> find_interrupt_controllers_in_acpi_madt_table(PhysicalAddre
             boot_cpu_interface_paddr = PhysicalAddress { madt->local_interrupt_controller_address };
 
         auto gic = TRY(GICv2::try_to_initialize(distributor_paddr, boot_cpu_interface_paddr));
+        TRY(s_interrupt_controllers->try_append(move(gic)));
+    } else if (first_is_one_of(gic_distributor_entry->gic_version, 3, 4)) {
+        if (gic_redistributor_entries.is_empty()) {
+            if (gic_boot_cpu_interface_entry->gicr_base_address != 0) {
+                // This field might be used on systems that don't put all GIC Redistributors in the always-on power domain.
+                dmesgln("ACPI: FIXME: Support GIC Redistributor addresses specified in the GIC CPU Interface Structures");
+                return ENOTSUP;
+            }
+
+            dmesgln("ACPI: No GIC Redistributor entries found in MADT table");
+        }
+
+        Vector<GICv3::RedistributorRegion> redistributor_regions;
+
+        for (auto const& redistributor_entry : gic_redistributor_entries)
+            TRY(redistributor_regions.try_empend(PhysicalAddress { redistributor_entry.discovery_range_base_address }, redistributor_entry.discovery_range_length));
+
+        auto gic = TRY(GICv3::try_to_initialize(distributor_paddr, redistributor_regions, {}));
         TRY(s_interrupt_controllers->try_append(move(gic)));
     } else {
         dmesgln("ACPI: Unsupported GIC Distributor version: {}", gic_distributor_entry->gic_version);
