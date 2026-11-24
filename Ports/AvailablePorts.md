@@ -66,7 +66,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`dropbear`](dropbear/)                         | Dropbear SSH                                                  | 2026.94               | https://dropbear.nl/mirror/dropbear.html                             |
 | [`dtc`](dtc/)                                   | Device Tree Compiler                                          | 1.8.1                 | https://github.com/dgibson/dtc                                       |
 | [`dungeonrush`](dungeonrush/)                   | DungeonRush                                                   | 1.1-beta              | https://github.com/Rapiz1/DungeonRush                                |
-| [`e2fsprogs`](e2fsprogs/)                       | e2fsprogs                                                     | 1.47.4                | http://e2fsprogs.sourceforge.net/                                    |
+| [`e2fsprogs`](e2fsprogs/)                       | e2fsprogs                                                     | 1.47.4                | https://e2fsprogs.sourceforge.net/                                   |
 | [`ed`](ed/)                                     | GNU ed                                                        | 1.22.6                | https://www.gnu.org/software/ed/                                     |
 | [`edid-decode`](edid-decode/)                   | edid-decode                                                   | 20220315.cb74358c2896 | https://git.linuxtv.org/edid-decode                                  |
 | [`editline`](editline/)                         | editline                                                      | 2.1.0                 | https://github.com/troglobit/editline                                |
@@ -75,7 +75,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`expat`](expat/)                               | Expat XML parser                                              | 2.10.0                | https://libexpat.github.io/                                          |
 | [`FAudio`](FAudio/)                             | FAudio                                                        | 26.11                 | https://fna-xna.github.io/                                           |
 | [`ffmpeg`](ffmpeg/)                             | ffmpeg                                                        | 9.0.2                 | https://ffmpeg.org                                                   |
-| [`figlet`](figlet/)                             | FIGlet                                                        | 2.2.5                 | http://www.figlet.org/                                               |
+| [`figlet`](figlet/)                             | FIGlet                                                        | 2.2.5                 | https://www.figlet.org/                                              |
 | [`file`](file/)                                 | file (determine file type)                                    | 5.48                  | https://www.darwinsys.com/file/                                      |
 | [`findutils`](findutils/)                       | GNU findutils                                                 | 4.11.0                | https://www.gnu.org/software/findutils/                              |
 | [`fio`](fio/)                                   | fio - Flexible I/O tester                                     | 3.43                  | https://fio.readthedocs.io/en/latest/                                |
@@ -116,7 +116,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`gperf`](gperf/)                               | GNU gperf                                                     | 3.3                   | https://www.gnu.org/software/gperf/                                  |
 | [`gpgme`](gpgme/)                               | GnuPG Made Easy (GPGME)                                       | 2.2.0                 | https://gnupg.org/software/gpgme/index.html                          |
 | [`grep`](grep/)                                 | GNU Grep                                                      | 3.12                  | https://www.gnu.org/software/grep/                                   |
-| [`grepcidr`](grepcidr/)                         | grepcidr                                                      | 2.0                   | http://www.pc-tools.net/unix/grepcidr/                               |
+| [`grepcidr`](grepcidr/)                         | grepcidr                                                      | 2.0                   | https://www.pc-tools.net/unix/grepcidr/                              |
 | [`griffon`](griffon/)                           | The Griffon Legend                                            | 1.0                   | https://www.scummvm.org/games/#games-griffon                         |
 | [`groff`](groff/)                               | GNU roff                                                      | 1.25.0                | https://www.gnu.org/software/groff/                                  |
 | [`gsl`](gsl/)                                   | GNU Scientific Library                                        | 2.8                   | https://www.gnu.org/software/gsl/                                    |
@@ -166,8 +166,8 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`libksba`](libksba/)                           | libksba                                                       | 1.8.1                 | https://gnupg.org/software/libksba/index.html                        |
 | [`liblzf`](liblzf/)                             | LibLZF is a very small data compression library               | 3.6                   | http://software.schmorp.de/pkg/liblzf.html                           |
 | [`libmad`](libmad/)                             | libmad                                                        | 0.16.5                | https://codeberg.org/tenacityteam/libmad                             |
-| [`libmikmod`](libmikmod/)                       | libmikmod                                                     | 3.3.16                | http://mikmod.sourceforge.net/                                       |
-| [`libmodplug`](libmodplug/)                     | libmodplug                                                    | 0.8.9.2               | http://modplug-xmms.sourceforge.net/                                 |
+| [`libmikmod`](libmikmod/)                       | libmikmod                                                     | 3.3.16                | https://mikmod.sourceforge.net/                                      |
+| [`libmodplug`](libmodplug/)                     | libmodplug                                                    | 0.8.9.2               | https://modplug-xmms.sourceforge.net/                                |
 | [`libmpeg2`](libmpeg2/)                         | libmpeg2                                                      | 0.5.1                 | https://libmpeg2.sourceforge.io/                                     |
 | [`libmpg123`](libmpg123/)                       | libmpg123                                                     | 1.33.7                | https://www.mpg123.de/                                               |
 | [`libmt32emu`](libmt32emu/)                     | libmt32emu                                                    | 2.8.6                 | https://github.com/munt/munt                                         |
@@ -224,7 +224,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`mgba`](mgba/)                                 | Game Boy, Game Boy Color and Game Boy Advance emulator        | 0.10.5                | https://mgba.io/                                                     |
 | [`milkytracker`](milkytracker/)                 | milkytracker                                                  | 1.06                  | https://github.com/milkytracker/MilkyTracker                         |
 | [`mold`](mold/)                                 | A Modern Linker                                               | 2.34.1                | https://github.com/rui314/mold                                       |
-| [`mpc`](mpc/)                                   | GNU Multiple Precision Complex Library (MPC)                  | 1.4.1                 | http://www.multiprecision.org/mpc/                                   |
+| [`mpc`](mpc/)                                   | GNU Multiple Precision Complex Library (MPC)                  | 1.4.1                 | https://www.multiprecision.org/mpc/                                  |
 | [`mpfr`](mpfr/)                                 | GNU Multiple Precision Floating-Point Reliable Library (MPFR) | 4.2.2                 | https://www.mpfr.org/                                                |
 | [`mrsh`](mrsh/)                                 | mrsh                                                          | cd3c3a4               | https://mrsh.sh/                                                     |
 | [`mruby`](mruby/)                               | mruby                                                         | 3.0.0                 | https://mruby.org/                                                   |
@@ -261,7 +261,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`openttd-opensfx`](openttd-opensfx/)           | OpenSFX audio files for OpenTTD                               | 1.0.3                 | https://www.openttd.org/                                             |
 | [`opentyrian`](opentyrian/)                     | OpenTyrian                                                    | 9750f8c               | https://github.com/opentyrian/opentyrian                             |
 | [`opfor`](opfor/)                               | Half-Life: Opposing Force                                     | e785ec1               | https://github.com/FWGS/hlsdk-portable                               |
-| [`optipng`](optipng/)                           | OptiPNG                                                       | 7.9.1                 | http://optipng.sourceforge.net/                                      |
+| [`optipng`](optipng/)                           | OptiPNG                                                       | 7.9.1                 | https://optipng.sourceforge.net/                                     |
 | [`opusfile`](opusfile/)                         | opusfile                                                      | 0.12                  | https://opus-codec.org/                                              |
 | [`p7zip`](p7zip/)                               | p7zip                                                         | 17.04                 | https://github.com/jinfeihan57/p7zip                                 |
 | [`pacman`](pacman/)                             | Pacman                                                        | b6241a3               | https://github.com/ebuc99/pacman                                     |
@@ -273,7 +273,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`perl5`](perl5/)                               | Perl                                                          | 5.44.0                | https://www.perl.org/                                                |
 | [`pfetch`](pfetch/)                             | pfetch                                                        | a906ff8               | https://github.com/dylanaraps/pfetch/                                |
 | [`php`](php/)                                   | PHP                                                           | 8.5.12                | https://www.php.net/                                                 |
-| [`pixman`](pixman/)                             | pixman                                                        | 0.46.4                | http://pixman.org                                                    |
+| [`pixman`](pixman/)                             | pixman                                                        | 0.46.4                | https://pixman.org                                                   |
 | [`pkgconf`](pkgconf/)                           | pkgconf                                                       | 3.0.11                | https://github.com/pkgconf/pkgconf                                   |
 | [`poppler`](poppler/)                           | Poppler is a PDF rendering library                            | 26.11.0               | https://poppler.freedesktop.org/                                     |
 | [`potrace`](potrace/)                           | Bitmap tracing utility                                        | 1.16                  | https://potrace.sourceforge.net/                                     |
@@ -337,7 +337,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`tcl`](tcl/)                                   | Tcl                                                           | 9.1.0                 | https://www.tcl-lang.org/                                            |
 | [`thesilversearcher`](thesilversearcher/)       | The Silver Searcher: A fast code-searching tool               | 2.2.0                 | https://github.com/ggreer/the_silver_searcher                        |
 | [`tig`](tig/)                                   | Tig: text-mode interface for Git                              | 2.6.1                 | https://jonas.github.io/tig/                                         |
-| [`timidity`](timidity/)                         | TiMidity++                                                    | 2.15.0                | http://timidity.sourceforge.net                                      |
+| [`timidity`](timidity/)                         | TiMidity++                                                    | 2.15.0                | https://timidity.sourceforge.net                                     |
 | [`tinycc`](tinycc/)                             | Tiny C Compiler (TinyCC)                                      | 0.9.27                | https://github.com/TinyCC/tinycc                                     |
 | [`tinyscheme`](tinyscheme/)                     | TinyScheme Interpreter                                        | 1.42                  | https://sourceforge.net/projects/tinyscheme/                         |
 | [`tinyxml2`](tinyxml2/)                         | TinyXML-2                                                     | 11.0.0                | https://github.com/leethomason/tinyxml2                              |
@@ -350,7 +350,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`tree-sitter-query`](tree-sitter-query/)       | TS query grammar for tree-sitter                              | 0.8.0                 | https://github.com/tree-sitter-grammars/tree-sitter-query            |
 | [`tree-sitter-vim`](tree-sitter-vim/)           | Vimscript grammar for tree-sitter                             | 0.8.1                 | https://github.com/tree-sitter-grammars/tree-sitter-vim              |
 | [`tree-sitter-vimdoc`](tree-sitter-vimdoc/)     | Tree-sitter parser for Vim help files                         | 4.3.0                 | https://github.com/neovim/tree-sitter-vimdoc                         |
-| [`tuxracer`](tuxracer/)                         | Tux Racer                                                     | 0.61                  | http://tuxracer.sourceforge.net/                                     |
+| [`tuxracer`](tuxracer/)                         | Tux Racer                                                     | 0.61                  | https://tuxracer.sourceforge.net/                                    |
 | [`unibilium`](unibilium/)                       | Unibilium                                                     | 2.1.4                 | https://github.com/neovim/unibilium                                  |
 | [`utf8proc`](utf8proc/)                         | utf8proc                                                      | 2.12.0                | https://juliastrings.github.io/utf8proc/                             |
 | [`vim`](vim/)                                   | Vim                                                           | 9.2.1351              | https://www.vim.org/                                                 |
