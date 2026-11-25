@@ -111,7 +111,8 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
     // Uniforms
     auto const& sampler_configuration = m_sampler_configuration[0].bound_image ? m_sampler_configuration[0] : m_placeholder_sampler_configuration;
 
-    auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix, sampler_configuration));
+    auto alpha_test_func = m_options.enable_alpha_test ? m_options.alpha_test_func : GPU::AlphaTestFunction::Always;
+    auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix, sampler_configuration, alpha_test_func, m_options.alpha_test_ref_value));
 
     // Vertex data
     auto const vertex_data_size_in_bytes = vertex_array.size() * sizeof(vertex_array[0]);
@@ -149,8 +150,8 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
         .vertex_id_read_by_vertex_shader = false,
         .instance_id_read_by_vertex_shader = false,
         .base_instance_id_read_by_vertex_shader = false,
-        .fragment_shader_does_z_writes = false,
-        .turn_off_early_z_test = false,
+        .fragment_shader_does_z_writes = true,
+        .turn_off_early_z_test = true,
         ._reserved0 = 0,
         .fragment_shader_uses_real_pixel_centre_w_in_addition_to_centroid_w2 = true,
         .enable_sample_rate_shading = false,
