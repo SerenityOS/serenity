@@ -642,7 +642,7 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vert
     cfg_bits.depth_test_function = determine_depth_test_function();
     cfg_bits.z_updates_enable = m_options.enable_depth_test && m_options.enable_depth_write;
     cfg_bits.stencil_enable = false;
-    cfg_bits.blend_enable = false;
+    cfg_bits.blend_enable = m_options.enable_blending;
     cfg_bits.direct3d_point_fill_mode = false;
     cfg_bits.direct3d_provoking_vertex = false;
     cfg_bits.z_clipping_mode = ControlRecord::ZClipMode::None;
@@ -654,6 +654,83 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vert
         depth_offset.depth_offset_units = ControlRecord::to_f187(m_options.depth_offset_constant);
         depth_offset.limit = 0.0f;
         m_binner_control_list.append(depth_offset);
+    }
+
+    auto map_blend_mode = [](GPU::BlendEquation blend_equation) {
+        switch (blend_equation) {
+        case GPU::BlendEquation::Add:
+            return ControlRecord::BlendMode::Add;
+        case GPU::BlendEquation::Subtract:
+            return ControlRecord::BlendMode::Sub;
+        case GPU::BlendEquation::ReverseSubtract:
+            return ControlRecord::BlendMode::RSub;
+        case GPU::BlendEquation::Min:
+            return ControlRecord::BlendMode::Min;
+        case GPU::BlendEquation::Max:
+            return ControlRecord::BlendMode::Max;
+        }
+
+        VERIFY_NOT_REACHED();
+    };
+
+    auto map_blend_factor = [](GPU::BlendFactor blend_factor) {
+        switch (blend_factor) {
+        case GPU::BlendFactor::Zero:
+            return ControlRecord::BlendFactor::Zero;
+        case GPU::BlendFactor::One:
+            return ControlRecord::BlendFactor::One;
+        case GPU::BlendFactor::SrcColor:
+            return ControlRecord::BlendFactor::SrcColor;
+        case GPU::BlendFactor::OneMinusSrcColor:
+            return ControlRecord::BlendFactor::InvSrcColor;
+        case GPU::BlendFactor::DstColor:
+            return ControlRecord::BlendFactor::DstColor;
+        case GPU::BlendFactor::OneMinusDstColor:
+            return ControlRecord::BlendFactor::InvDstColor;
+        case GPU::BlendFactor::SrcAlpha:
+            return ControlRecord::BlendFactor::SrcAlpha;
+        case GPU::BlendFactor::OneMinusSrcAlpha:
+            return ControlRecord::BlendFactor::InvSrcAlpha;
+        case GPU::BlendFactor::DstAlpha:
+            return ControlRecord::BlendFactor::DstAlpha;
+        case GPU::BlendFactor::OneMinusDstAlpha:
+            return ControlRecord::BlendFactor::InvDstAlpha;
+        case GPU::BlendFactor::ConstantColor:
+            return ControlRecord::BlendFactor::ConstColor;
+        case GPU::BlendFactor::OneMinusConstantColor:
+            return ControlRecord::BlendFactor::InvConstColor;
+        case GPU::BlendFactor::ConstantAlpha:
+            return ControlRecord::BlendFactor::ConstAlpha;
+        case GPU::BlendFactor::OneMinusConstantAlpha:
+            return ControlRecord::BlendFactor::InvConstAlpha;
+        case GPU::BlendFactor::SrcAlphaSaturate:
+            return ControlRecord::BlendFactor::SrcAlphaSaturate;
+        }
+
+        VERIFY_NOT_REACHED();
+    };
+
+    if (m_options.enable_blending) {
+        ControlRecord::BlendEnables blend_enables {};
+        blend_enables.mask = 0xff;
+        m_binner_control_list.append(blend_enables);
+
+        ControlRecord::BlendCfg blend_cfg {};
+        blend_cfg.alpha_blend_mode = map_blend_mode(m_options.blend_equation_alpha);
+        blend_cfg.alpha_blend_src_factor = map_blend_factor(m_options.blend_source_factor);
+        blend_cfg.alpha_blend_dst_factor = map_blend_factor(m_options.blend_destination_factor);
+        blend_cfg.color_blend_mode = map_blend_mode(m_options.blend_equation_rgb);
+        blend_cfg.color_blend_src_factor = map_blend_factor(m_options.blend_source_factor);
+        blend_cfg.color_blend_dst_factor = map_blend_factor(m_options.blend_destination_factor);
+        blend_cfg.render_target_mask = 0xff;
+        m_binner_control_list.append(blend_cfg);
+
+        ControlRecord::BlendConstantColor blend_constant_color {};
+        blend_constant_color.red = static_cast<f16>(m_options.blend_color.x());
+        blend_constant_color.green = static_cast<f16>(m_options.blend_color.y());
+        blend_constant_color.blue = static_cast<f16>(m_options.blend_color.z());
+        blend_constant_color.alpha = static_cast<f16>(m_options.blend_color.w());
+        m_binner_control_list.append(blend_constant_color);
     }
 
     ControlRecord::GLShaderState gl_shader_state {};
