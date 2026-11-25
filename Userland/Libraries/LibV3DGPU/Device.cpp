@@ -633,7 +633,7 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vert
     cfg_bits.enable_forward_facing_primitive = true;
     cfg_bits.enable_reverse_facing_primitive = true;
     cfg_bits.clockwise_primitives = true;
-    cfg_bits.enable_depth_offset = false;
+    cfg_bits.enable_depth_offset = m_options.depth_offset_enabled;
     cfg_bits.line_rasterization = 0;
     cfg_bits.depth_bounds_test_enable = false;
     cfg_bits.rasterizer_oversample_mode = 0;
@@ -647,6 +647,14 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vert
     cfg_bits.direct3d_provoking_vertex = false;
     cfg_bits.z_clipping_mode = ControlRecord::ZClipMode::None;
     m_binner_control_list.append(cfg_bits);
+
+    if (m_options.depth_offset_enabled) {
+        ControlRecord::DepthOffset depth_offset;
+        depth_offset.depth_offset_factor = ControlRecord::to_f187(m_options.depth_offset_factor);
+        depth_offset.depth_offset_units = ControlRecord::to_f187(m_options.depth_offset_constant);
+        depth_offset.limit = 0.0f;
+        m_binner_control_list.append(depth_offset);
+    }
 
     ControlRecord::GLShaderState gl_shader_state {};
     gl_shader_state.number_of_attribute_arrays = NUMBER_OF_ATTRIBUTE_ARRAYS;
