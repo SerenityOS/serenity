@@ -367,14 +367,19 @@ Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, Proces
     , m_unveil_data(move(unveil_tree))
     , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
+    , m_protected_values_do_not_access_directly {  // Because credentials is a non-nullabe pointer, we have to
+        .pid = allocate_pid(),                     // give it a value at initialisation time, not later, or else
+        .ppid = ppid,                              // we get build errors.
+        .credentials = move(credentials),
+        .tty = move(tty)
+    }
 {
     set_name(name);
+
     // Ensure that we protect the process data when exiting the constructor.
-    with_mutable_protected_data([&](auto& protected_data) {
-        protected_data.pid = allocate_pid();
-        protected_data.ppid = ppid;
-        protected_data.credentials = move(credentials);
-        protected_data.tty = move(tty);
+    unprotect_data();
+    ScopeGuard protect_guard([this] {
+        protect_data();
     });
 
     if constexpr (PROCESS_DEBUG) {

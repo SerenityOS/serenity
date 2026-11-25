@@ -128,9 +128,8 @@ class Process final
     public:
         ProcessID pid { 0 };
         ProcessID ppid { 0 };
-        // FIXME: This should be a NonnullRefPtr
-        RefPtr<Credentials> credentials;
-        RefPtr<ProcessGroup> process_group;
+        NonnullRefPtr<Credentials> credentials;
+        RefPtr<ProcessGroup> process_group {};
         RefPtr<TTY> tty;
         bool dumpable { false };
         bool executable_is_setid { false };
@@ -139,12 +138,12 @@ class Process final
         bool has_execpromises { false };
         u32 execpromises { 0 };
         mode_t umask { 022 };
-        VirtualAddress signal_trampoline;
+        VirtualAddress signal_trampoline {};
         Atomic<u32> thread_count { 0 };
         u8 termination_status { 0 };
         u8 termination_signal { 0 };
-        SetOnce reject_transition_to_executable_from_writable_prot;
-        SetOnce jailed_until_exit;
+        SetOnce reject_transition_to_executable_from_writable_prot {};
+        SetOnce jailed_until_exit {};
         bool jailed_until_exec { false };
     };
 
