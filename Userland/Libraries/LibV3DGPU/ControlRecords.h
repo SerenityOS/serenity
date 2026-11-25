@@ -56,6 +56,38 @@ enum class CompareFunction : u32 {
     Always = 7,
 };
 
+// <enum name="Blend Factor" prefix="V3D_BLEND_FACTOR">
+enum class BlendFactor : u8 {
+    Zero = 0,
+    One = 1,
+    SrcColor = 2,
+    InvSrcColor = 3,
+    DstColor = 4,
+    InvDstColor = 5,
+    SrcAlpha = 6,
+    InvSrcAlpha = 7,
+    DstAlpha = 8,
+    InvDstAlpha = 9,
+    ConstColor = 10,
+    InvConstColor = 11,
+    ConstAlpha = 12,
+    InvConstAlpha = 13,
+    SrcAlphaSaturate = 14,
+};
+
+// <enum name="Blend Mode" prefix="V3D_BLEND_MODE">
+enum class BlendMode : u8 {
+    Add = 0,
+    Sub = 1,
+    RSub = 2,
+    Min = 3,
+    Max = 4,
+    Mul = 5,
+    Screen = 6,
+    Darken = 7,
+    Lighten = 8,
+};
+
 // <enum name="Primitive" prefix="V3D_PRIM">
 enum class Primitive : u8 {
     Points = 0,
@@ -411,6 +443,36 @@ struct [[gnu::packed]] GLShaderState {
     Address address : 27;
 };
 static_assert(AssertSize<GLShaderState, 1 + 4>());
+
+// <packet code="83" name="Blend Enables">
+struct BlendEnables {
+    Opcode opcode = 83;
+    u8 mask;
+};
+static_assert(AssertSize<BlendEnables, 1 + 1>());
+
+// <packet code="84" name="Blend Cfg" min_ver="71">
+struct BlendCfg {
+    Opcode opcode = 84;
+    BlendMode alpha_blend_mode : 4;
+    BlendFactor alpha_blend_src_factor : 4;
+    BlendFactor alpha_blend_dst_factor : 4;
+    BlendMode color_blend_mode : 4;
+    BlendFactor color_blend_src_factor : 4;
+    BlendFactor color_blend_dst_factor : 4;
+    u8 render_target_mask;
+};
+static_assert(AssertSize<BlendCfg, 1 + 4>());
+
+// <packet code="86" shortname="blend_ccolor" name="Blend Constant Color">
+struct [[gnu::packed]] BlendConstantColor {
+    Opcode opcode = 86;
+    f16 red;
+    f16 green;
+    f16 blue;
+    f16 alpha;
+};
+static_assert(AssertSize<BlendConstantColor, 1 + 8>());
 
 // <packet code="88" name="Zero All Centroid Flags" />
 struct ZeroAllCentroidFlags {
