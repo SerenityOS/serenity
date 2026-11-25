@@ -18,6 +18,12 @@ using i16 = __INT16_TYPE__;
 using i8 = __INT8_TYPE__;
 
 #ifndef KERNEL
+#    ifdef __FLT16_MANT_DIG__
+using f16 = _Float16;
+static_assert(__FLT16_MANT_DIG__ == 11 && __FLT16_MAX_EXP__ == 16);
+#        define AK_HAS_FLOAT_16 1
+#    endif
+
 using f32 = float;
 static_assert(__FLT_MANT_DIG__ == 24 && __FLT_MAX_EXP__ == 128);
 
