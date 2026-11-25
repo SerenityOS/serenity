@@ -53,6 +53,10 @@ TEST_CASE(FundamentalTypeClassification)
     EXPECT_TRAIT_TRUE(IsFloatingPoint, float, double, long double);
     EXPECT_TRAIT_FALSE(IsFloatingPoint, int, Empty, nullptr_t, void);
 
+#ifdef AK_HAS_FLOAT_16
+    EXPECT_TRAIT_TRUE(IsFloatingPoint, _Float16);
+#endif
+
     EXPECT_TRAIT_TRUE(IsArithmetic, float, double, long double, bool, size_t);
     EXPECT_TRAIT_TRUE(IsArithmetic, char, signed char, unsigned char, char8_t, char16_t, char32_t);
     EXPECT_TRAIT_TRUE(IsArithmetic, short, int, long, long long);

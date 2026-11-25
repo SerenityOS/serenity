@@ -345,6 +345,10 @@ inline constexpr bool IsIntegral = __IsIntegral<MakeUnsigned<RemoveCV<T>>>;
 #ifndef KERNEL
 template<typename T>
 inline constexpr bool __IsFloatingPoint = false;
+#    ifdef AK_HAS_FLOAT_16
+template<>
+inline constexpr bool __IsFloatingPoint<_Float16> = true;
+#    endif
 template<>
 inline constexpr bool __IsFloatingPoint<float> = true;
 template<>
