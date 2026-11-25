@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/BitCast.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
@@ -21,6 +22,7 @@ using Opcode = u8;
 using u4p8 = u16;  // Unsigned 4.8 fixed point
 using u14p8 = u32; // Unsigned 14.8 fixed point
 using s8p8 = i16;  // Signed 8.8 fixed point
+using f187 = u16;  // Floating-point value with 8 bits exponent, 7 bits significand (bfloat16)
 
 constexpr u4p8 to_u4p8(u16 integer, u16 fraction)
 {
@@ -35,6 +37,11 @@ constexpr u14p8 to_u14p8(u16 integer, u16 fraction)
 constexpr s8p8 to_s8p8(i16 integer, u16 fraction)
 {
     return static_cast<s8p8>((integer << 8) | fraction);
+}
+
+constexpr f187 to_f187(f32 value)
+{
+    return bit_cast<u32>(value) >> 16;
 }
 
 // <enum name="Compare Function" prefix="V3D_COMPARE_FUNC">
@@ -446,6 +453,15 @@ struct ZeroAllNonPerspectiveFlags {
     Opcode opcode = 99;
 };
 static_assert(AssertSize<ZeroAllNonPerspectiveFlags, 1>());
+
+// <packet name="Depth Offset" code="106">
+struct [[gnu::packed]] DepthOffset {
+    Opcode opcode = 106;
+    f187 depth_offset_factor;
+    f187 depth_offset_units;
+    f32 limit;
+};
+static_assert(AssertSize<DepthOffset, 1 + 8>());
 
 // <packet shortname="clip" name="clip_window" code="107">
 struct [[gnu::packed]] ClipWindow {
