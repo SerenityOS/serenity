@@ -109,12 +109,19 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
     ControlList control_list;
 
     // Uniforms
-    auto const& sampler_configuration = m_texture_unit_configuration[0].enabled && m_sampler_configuration[0].bound_image
-        ? m_sampler_configuration[0]
-        : m_placeholder_sampler_configuration;
+    GPU::SamplerConfig const* sampler_configuration = &m_placeholder_sampler_configuration;
+    GPU::TextureEnvMode texture_env_mode = GPU::TextureEnvMode::Modulate;
+    FloatVector4 texture_env_color = { 1.f, 1.f, 1.f, 1.f };
+
+    if (m_texture_unit_configuration[0].enabled && m_sampler_configuration[0].bound_image) {
+        sampler_configuration = &m_sampler_configuration[0];
+        texture_env_mode = sampler_configuration->fixed_function_texture_environment.env_mode;
+        texture_env_color = sampler_configuration->fixed_function_texture_environment.color;
+    }
 
     auto alpha_test_func = m_options.enable_alpha_test ? m_options.alpha_test_func : GPU::AlphaTestFunction::Always;
-    auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix, sampler_configuration, alpha_test_func, m_options.alpha_test_ref_value));
+
+    auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix, *sampler_configuration, alpha_test_func, m_options.alpha_test_ref_value, texture_env_mode, texture_env_color));
 
     // Vertex data
     auto const vertex_data_size_in_bytes = vertex_array.size() * sizeof(vertex_array[0]);
