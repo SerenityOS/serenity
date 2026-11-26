@@ -104,6 +104,9 @@ private:
     uintptr_t m_holder { 0 };
     size_t m_shared_holders { 0 };
 
+    // Used to recognise when an exclusively-owning thread has crashed
+    ThreadID m_holder_threadid { -1 };
+
     struct BlockedThreadLists {
         BlockedThreadList exclusive;
         BlockedThreadList shared;

@@ -15,6 +15,17 @@
 
 extern SetOnce g_not_in_early_boot;
 
+static bool is_thread_alive(Kernel::ThreadID tid) {
+    auto thread = Kernel::Thread::from_tid_ignoring_process_lists(tid);
+
+    if (!thread)
+        return false;
+    if (thread->state() == Kernel::Thread::State::Dead)
+        return false;
+
+    return true;
+}
+
 namespace Kernel {
 
 void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
@@ -38,9 +49,11 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
         dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ ({}) {}: acquire {}, currently unlocked", this, m_name, mode_to_string(mode));
         m_mode = mode;
         VERIFY(!m_holder);
+        VERIFY(m_holder_threadid == -1);
         VERIFY(m_shared_holders == 0);
         if (mode == Mode::Exclusive) {
             m_holder = bit_cast<uintptr_t>(current_thread);
+            m_holder_threadid = current_thread->tid();
         } else {
             VERIFY(mode == Mode::Shared);
             ++m_shared_holders;
@@ -60,6 +73,16 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     }
     case Mode::Exclusive: {
         VERIFY(m_holder);
+        VERIFY(m_holder_threadid != -1);
+
+        if (!is_thread_alive(m_holder_threadid)) {
+            dmesgln("WARNING: Mutex {} (at {:p}) was being held exclusively by a thread (thread ID {} at {:p}) that is no longer alive. "
+                    "The mutex will be forcibly taken over by this process.", m_name, this, m_holder_threadid, m_holder);
+
+            m_holder = bit_cast<uintptr_t>(current_thread);
+            m_holder_threadid = current_thread->tid();
+        }
+
         if (m_holder != bit_cast<uintptr_t>(current_thread)) {
             block(*current_thread, mode, lock, 1);
             did_block = true;
@@ -70,10 +93,12 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
         if (m_mode == Mode::Exclusive) {
             VERIFY(m_holder == bit_cast<uintptr_t>(current_thread));
             VERIFY(m_shared_holders == 0);
+            VERIFY(m_holder_threadid == current_thread->tid());
         } else if (did_block && mode == Mode::Shared) {
             // Only if we blocked trying to acquire a shared lock the lock would have been converted
             VERIFY(!m_holder);
             VERIFY(m_shared_holders > 0);
+            VERIFY(m_holder_threadid == -1);
         }
 
         if constexpr (LOCK_TRACE_DEBUG) {
@@ -98,6 +123,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     case Mode::Shared: {
         VERIFY(m_behavior == MutexBehavior::Regular);
         VERIFY(!m_holder);
+        VERIFY(m_holder_threadid == -1);
         if (mode == Mode::Exclusive) {
             dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}): blocking for exclusive access, currently shared, locks held {}", this, m_name, m_times_locked);
 #if LOCK_SHARED_UPGRADE_DEBUG
@@ -118,6 +144,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
         if (m_mode == Mode::Shared) {
             VERIFY(!m_holder);
             VERIFY(!did_block);
+            VERIFY(m_holder_threadid == -1);
         } else if (did_block) {
             VERIFY(mode == Mode::Exclusive);
             VERIFY(m_holder == bit_cast<uintptr_t>(current_thread));
@@ -174,11 +201,14 @@ void Mutex::unlock()
     case Mode::Exclusive:
         VERIFY(m_holder == bit_cast<uintptr_t>(current_thread));
         VERIFY(m_shared_holders == 0);
-        if (m_times_locked == 0)
+        if (m_times_locked == 0) {
             m_holder = 0;
+            m_holder_threadid = -1;
+        }
         break;
     case Mode::Shared: {
         VERIFY(!m_holder);
+        VERIFY(m_holder_threadid == -1);
         VERIFY(m_shared_holders > 0);
         --m_shared_holders;
 #if LOCK_SHARED_UPGRADE_DEBUG
@@ -201,7 +231,7 @@ void Mutex::unlock()
 #endif
 
     if (m_times_locked == 0) {
-        VERIFY(current_mode == Mode::Exclusive ? !m_holder : m_shared_holders == 0);
+        VERIFY(current_mode == Mode::Exclusive ? (!m_holder) && (m_holder_threadid == -1) : m_shared_holders == 0);
 
         m_mode = Mode::Unlocked;
         unblock_waiters(current_mode);
@@ -271,6 +301,7 @@ void Mutex::unblock_waiters(Mode previous_mode)
                 m_mode = Mode::Exclusive;
                 m_times_locked = next_exclusive_thread->unblock_from_mutex(*this);
                 m_holder = bit_cast<uintptr_t>(next_exclusive_thread);
+                m_holder_threadid = next_exclusive_thread->tid();
                 return true;
             }
             return false;
@@ -310,6 +341,7 @@ auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
         current_thread->holding_lock(*this, -(int)m_times_locked, {});
 #endif
         m_holder = 0;
+        m_holder_threadid = -1;
         VERIFY(m_times_locked > 0);
         lock_count_to_restore = m_times_locked;
         m_times_locked = 0;
@@ -351,13 +383,16 @@ void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation
     if (did_block) {
         VERIFY(m_times_locked > 0);
         VERIFY(m_holder == bit_cast<uintptr_t>(current_thread));
+        VERIFY(m_holder_threadid == current_thread->tid());
     } else {
         if (m_mode == Mode::Unlocked) {
             m_mode = Mode::Exclusive;
             VERIFY(m_times_locked == 0);
             m_times_locked = lock_count;
             VERIFY(!m_holder);
+            VERIFY(m_holder_threadid == -1);
             m_holder = bit_cast<uintptr_t>(current_thread);
+            m_holder_threadid = current_thread->tid();
         } else {
             VERIFY(m_mode == Mode::Exclusive);
             VERIFY(m_holder == bit_cast<uintptr_t>(current_thread));
