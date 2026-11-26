@@ -18,6 +18,19 @@
     );
 
     if (Kernel::Process::has_current()) {
+        auto current_thread = Kernel::Thread::current();
+        if (current_thread->holding_spinlocks())
+            PANIC("Kernel oops issued while holding {} spinlocks, deemed unrecoverable.", current_thread->holding_spinlocks());
+
+        if (current_thread->holding_mutexes()) {
+            dbgln("Kernel oops issued while holding mutexes. This should be recoverable.");
+
+            Kernel::Integrity::taint.fetch_or(
+                static_cast<u64>(TaintFlags::MutexLeftover),
+                AK::memory_order_seq_cst
+            );
+        }
+
         if (!Processor::are_interrupts_enabled())
             PANIC("Kernel oops issued while interrupts are disabled, deemed unrecoverable.");
 

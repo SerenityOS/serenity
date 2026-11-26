@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2026, bogdan-glitchm <github.34373732+copyright@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */

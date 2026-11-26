@@ -12,7 +12,8 @@
 
 enum class TaintFlags : u8 {
     None = 0,  // None
-    Oops = 1    // Oops Occured
+    Oops = 1,    // Oops Occured
+    MutexLeftover = 1 << 1,  // Oops occured while holding a mutex
 };
 
 AK_ENUM_BITWISE_OPERATORS(TaintFlags)
