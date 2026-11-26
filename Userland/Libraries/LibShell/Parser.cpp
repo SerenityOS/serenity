@@ -2031,13 +2031,13 @@ RefPtr<AST::Node> Parser::parse_glob()
             if (bareword_part->is_bareword()) {
                 auto bareword = static_cast<AST::BarewordLiteral*>(bareword_part.ptr());
                 text = bareword->text();
-            } else {
-                // FIXME: Allow composition of tilde+bareword with globs: '~/foo/bar/baz*'
+                textbuilder.append(text);
+                bareword_part = nullptr;
+            } else if (bareword_part->is_glob()) {
                 restore_to(saved_offset.offset, saved_offset.line);
                 bareword_part->set_is_syntax_error(*create<AST::SyntaxError>(TRY_OR_RESOLVE_TO_ERROR_STRING(String::formatted("Unexpected {} inside a glob", bareword_part->class_name()))));
                 return bareword_part;
             }
-            textbuilder.append(text);
         }
 
         textbuilder.append(ch);
@@ -2059,7 +2059,10 @@ RefPtr<AST::Node> Parser::parse_glob()
             }
         }
 
-        return create<AST::Glob>(TRY_OR_THROW_PARSE_ERROR(textbuilder.to_string())); // Glob
+        auto glob = create<AST::Glob>(TRY_OR_THROW_PARSE_ERROR(textbuilder.to_string())); // Glob
+        if (bareword_part)
+            return create<AST::Juxtaposition>(bareword_part.release_nonnull(), move(glob));
+        return glob;
     }
 
     return bareword_part;

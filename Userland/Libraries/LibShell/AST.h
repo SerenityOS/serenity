@@ -354,16 +354,24 @@ private:
 class GlobValue final : public Value {
 public:
     virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
-    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<GlobValue>(m_glob, m_generation_position))->set_slices(m_slices); }
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<GlobValue>(m_prefix, m_glob, m_generation_position))->set_slices(m_slices); }
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
     GlobValue(String glob, Position position)
-        : m_glob(move(glob))
+        : m_prefix({})
+        , m_glob(move(glob))
+        , m_generation_position(move(position))
+    {
+    }
+    GlobValue(RefPtr<Value> prefix, String glob, Position position)
+        : m_prefix(move(prefix))
+        , m_glob(move(glob))
         , m_generation_position(move(position))
     {
     }
 
 private:
+    RefPtr<Value> m_prefix;
     String m_glob;
     Position m_generation_position;
 };
