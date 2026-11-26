@@ -11,7 +11,10 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Locking/LockRank.h>
-#include <Kernel/Tasks/Thread.h>
+
+// Check Thread.cpp
+extern void increment_current_thread_spinlock_count();
+extern void decrement_current_thread_spinlock_count();
 
 namespace Kernel {
 
@@ -31,7 +34,7 @@ public:
         while (m_lock.exchange(1, AK::memory_order_acquire) != 0)
             Processor::wait_check();
         track_lock_acquire(m_rank);
-        Thread::current()->increment_spinlock_count();
+        increment_current_thread_spinlock_count();
         return previous_interrupts_state;
     }
 
@@ -42,7 +45,7 @@ public:
         m_lock.store(0, AK::memory_order_release);
 
         Processor::leave_critical();
-        Thread::current()->decrement_spinlock_count();
+        decrement_current_thread_spinlock_count();
         Processor::restore_interrupts_state(previous_interrupts_state);
     }
 
@@ -85,7 +88,7 @@ public:
         }
         if (m_recursions == 0) {
             track_lock_acquire(m_rank);
-            Thread::current()->increment_spinlock_count();
+            increment_current_thread_spinlock_count();
         }
         m_recursions++;
         return previous_interrupts_state;
@@ -99,7 +102,7 @@ public:
         if (--m_recursions == 0) {
             track_lock_release(m_rank);
             m_lock.store(0, AK::memory_order_release);
-            Thread::current()->decrement_spinlock_count();
+            decrement_current_thread_spinlock_count();
         }
 
         Processor::leave_critical();

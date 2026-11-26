@@ -38,6 +38,9 @@
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/UnixTypes.h>
 
+extern void increment_current_thread_spinlock_count();
+extern void decrement_current_thread_spinlock_count();
+
 namespace Kernel {
 
 class Timer;

@@ -33,6 +33,16 @@
 #include <Kernel/Time/TimerQueue.h>
 #include <Kernel/kstdio.h>
 
+void increment_current_thread_spinlock_count() {
+    if (auto* thread = Thread::current())
+        thread->increment_spinlock_count();
+}
+
+void decrement_current_thread_spinlock_count() {
+    if (auto* thread = Thread::current())
+        thread->decrement_spinlock_count();
+}
+
 namespace Kernel {
 
 static Singleton<RecursiveSpinlockProtected<Thread::GlobalList, LockRank::None>> s_thread_list;
