@@ -109,7 +109,9 @@ ErrorOr<Device::ShaderStateRecord> Device::generate_shader_state_record(Vector<V
     ControlList control_list;
 
     // Uniforms
-    auto const& sampler_configuration = m_sampler_configuration[0].bound_image ? m_sampler_configuration[0] : m_placeholder_sampler_configuration;
+    auto const& sampler_configuration = m_texture_unit_configuration[0].enabled && m_sampler_configuration[0].bound_image
+        ? m_sampler_configuration[0]
+        : m_placeholder_sampler_configuration;
 
     auto alpha_test_func = m_options.enable_alpha_test ? m_options.alpha_test_func : GPU::AlphaTestFunction::Always;
     auto uniforms = TRY(generate_uniforms(m_framebuffer_size, model_view_projection_matrix, sampler_configuration, alpha_test_func, m_options.alpha_test_ref_value));
