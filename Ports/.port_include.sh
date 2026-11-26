@@ -725,6 +725,7 @@ do_generate_patch_readme() {
 launch_user_shell() {
     env \
         IN_SERENITY_PORT_DEV="$port" \
+        SERENITY_PORT_CONFIGOPTS="${configopts[*]}" \
         "${SHELL:-bash}" || \
     true
 }
