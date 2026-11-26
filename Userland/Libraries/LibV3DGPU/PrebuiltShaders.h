@@ -51,41 +51,53 @@ namespace V3DGPU {
 //   uniform uint u_alpha_test_function;
 //   uniform float u_alpha_test_reference;
 //
+//   uniform uint u_texture_env_mode;
+//   uniform vec4 u_texture_env_color;
+//
 //   uniform sampler2D sampler;
 //
-//   void main() {
-//       f_color = texture(sampler, v_texture_coordinate) * v_color;
-//
-//       bool alpha_test_passed = true;
-//
+//   bool alpha_test() {
 //       switch (u_alpha_test_function) {
 //       case 0u: // Never
-//           alpha_test_passed = false;
-//           break;
+//           return false;
 //       case 1u: // Always
-//           alpha_test_passed = true;
-//           break;
+//           return true;
 //       case 2u: // Less
-//           alpha_test_passed = f_color.a < u_alpha_test_reference;
-//           break;
+//           return f_color.a < u_alpha_test_reference;
 //       case 3u: // LessOrEqual
-//           alpha_test_passed = f_color.a <= u_alpha_test_reference;
-//           break;
+//           return f_color.a <= u_alpha_test_reference;
 //       case 4u: // Equal
-//           alpha_test_passed = f_color.a == u_alpha_test_reference;
-//           break;
+//           return f_color.a == u_alpha_test_reference;
 //       case 5u: // NotEqual
-//           alpha_test_passed = f_color.a != u_alpha_test_reference;
-//           break;
+//           return f_color.a != u_alpha_test_reference;
 //       case 6u: // GreaterOrEqual
-//           alpha_test_passed = f_color.a >= u_alpha_test_reference;
-//           break;
+//           return f_color.a >= u_alpha_test_reference;
 //       case 7u: // Greater
-//           alpha_test_passed = f_color.a > u_alpha_test_reference;
-//           break;
+//           return f_color.a > u_alpha_test_reference;
 //       }
+//   }
 //
-//       if (!alpha_test_passed)
+//   vec4 texture_function(vec4 current_color, vec4 texel) {
+//       switch (u_texture_env_mode) {
+//       case 0u: // Add
+//           return current_color + texel;
+//       case 1u: // Blend
+//           return vec4(mix(current_color.rgb, u_texture_env_color.rgb, texel.rgb), current_color.a * texel.a);
+//       case 2u: // Combine
+//           return vec4(1, 0, 1, 1); // FIXME
+//       case 3u: // Decal
+//           return vec4(mix(current_color.rgb, texel.rgb, texel.a), current_color.a);
+//       case 4u: // Modulate
+//           return current_color * texel;
+//       case 5u: // Replace
+//           return texel;
+//       }
+//   }
+//
+//   void main() {
+//       f_color = texture_function(v_color, texture(sampler, v_texture_coordinate));
+//
+//       if (!alpha_test())
 //           discard;
 //   }
 
@@ -178,48 +190,93 @@ static constexpr auto FRAGMENT_SHADER = to_array<u64>({
     0x550342c905283008, // fadd rf9, rf0, rf8            ; fmul rf11, rf10, rf3        ; ldvary.rf13
     0x5504038c0534300b, // fadd rf12, rf0, rf11          ; fmul rf14, rf13, rf3        ; ldvary.rf16
     0x5504c44f0540300e, // fadd rf15, rf0, rf14          ; fmul rf17, rf16, rf3        ; ldvary.rf19
-    0x55864512054c3011, // fadd rf18, rf0, rf17          ; fmul rf20, rf19, rf3        ; ldunifrf.rf25 (push[0])
-    0x3bc0069505003014, // fadd rf21, rf0, rf20          ; mov rf26, 0
-    0x38403886bb543000, // nop                           ; mov tmut, rf21              ; ldunif (push[4])
-    0x39c0285bf9483003, // mov rf27, 0                   ; mov tmus, rf18
-    0x38203186bb03f000, // nop                           ; nop                         ; thrsw
-    0x38203186bb03f000, // nop                           ; nop                         ; thrsw
-    0x3bc01706bb003000, // nop                           ; mov rf28, 0
-    0x3885b186bb03f000, // nop                           ; nop                         ; ldtmu.rf22
-    0x65c05446b75861d9, // xor.pushz -, 7, rf25          ; fmul rf17, rf22.l, rf6
-    0x7485d486bb589000, // nop                           ; fmul rf18, rf22.h, rf9      ; ldtmu.rf23
-    0x75ca061af95cf7c3, // mov.ifna rf26, -1             ; fmul rf24, rf23.h, rf15
-    0x3bc09786c5003018, // fcmp.pushn -, rf0, rf24       ; mov rf30, 0
-    0x3bccd6c6c57c3018, // fcmp.pushc -, rf0, rf24       ; mov.ifa rf27, -1
-    0x3bcc5706c57c3600, // fcmp.pushz -, rf24, rf0       ; mov.ifa rf28, -1
-    0x3bce079db67c369b, // or rf29, rf26, rf27           ; mov.ifna rf30, -1
-    0x39c057c6b7743199, // xor.pushz -, 6, rf25          ; mov rf31, rf29
-    0x39cc07c1f9703003, // mov rf1, 0                    ; mov.ifa rf31, rf28
-    0x38005086c57c3600, // fcmp.pushz -, rf24, rf0       ; mov rf2, rf31
-    0x65c80401f95cc7c3, // mov.ifa rf1, -1               ; fmul rf16, rf23.l, rf12
-    0x39c07186b703f159, // xor.pushz -, 5, rf25          ; nop
-    0x39cc0083f9783003, // mov rf3, 0                    ; mov.ifa rf2, rf30
-    0x3800d106c5083600, // fcmp.pushc -, rf24, rf0       ; mov rf4, rf2
-    0x3bcc10c6bb7c3000, // nop                           ; mov.ifa rf3, -1
-    0x39c07186b703f119, // xor.pushz -, 4, rf25          ; nop
-    0x39cc0105f9043003, // mov rf5, 0                    ; mov.ifa rf4, rf1
-    0x380091c6c5103600, // fcmp.pushn -, rf24, rf0       ; mov rf7, rf4
-    0x3bcc1146bb7c3000, // nop                           ; mov.ifa rf5, -1
-    0x39c07186b703f0d9, // xor.pushz -, 3, rf25          ; nop
-    0x39cc01c8f90c3003, // mov rf8, 0                    ; mov.ifa rf7, rf3
-    0x39c05286b71c3059, // xor.pushz -, 1, rf25          ; mov rf10, rf7
-    0x3bcc1206bb7c3000, // nop                           ; mov.ifa rf8, -1
-    0x39c07186b703f099, // xor.pushz -, 2, rf25          ; nop
-    0x39cc028bf9143003, // mov rf11, 0                   ; mov.ifa rf10, rf5
-    0x39c07186b703f019, // xor.pushz -, 0, rf25          ; nop
-    0x3bce02cdb67c320a, // or rf13, rf8, rf10            ; mov.ifna rf11, -1
-    0x3800218eb503f2cd, // and rf14, rf11, rf13          ; nop
-    0x3800218fba03f380, // not rf15, rf14                ; nop
-    0x38047186bb3c3000, // nop                           ; mov.pushz -, rf15
+    0x55870512054c3011, // fadd rf18, rf0, rf17          ; fmul rf20, rf19, rf3        ; ldunifrf.rf28 (push[8])
+    0x382021950503f014, // fadd rf21, rf0, rf20          ; nop                         ; thrsw
+    0x38203886bb543000, // nop                           ; mov tmut, rf21              ; thrsw
+    0x38003846bb483000, // nop                           ; mov tmus, rf18
+    0x3886b186bb03f000, // nop                           ; nop                         ; ldtmu.rf26
+    0x39c05786b768801c, // xor.pushz -, 0, rf28          ; fmov rf30, rf26.l
+    0x0200002d0020d000, // bu.anynap  40, r:unif (0x00000004 / 0.000000)
+    0x3886d7c6bb68c000, // nop                           ; fmov rf31, rf26.h           ; ldtmu.rf27
+    0x38000741f96c86cc, // fmov rf1, rf27.h              ; fmov rf29, rf27.l
+    0x38003186bb03f000, // nop                           ; nop
+    0x380021990603f19a, // fadd rf25, rf6, rf26.l        ; nop
+    0x020001280000d000, // bu  296, r:unif (0x00000014 / 0.000000)
+    0x380021980703f25a, // fadd rf24, rf9, rf26.h        ; nop
+    0x380021970603f31b, // fadd rf23, rf12, rf27.l       ; nop
+    0x380021960703f3db, // fadd rf22, rf15, rf27.h       ; nop
+    0x5dc05586b73db05c, // xor.pushz -, 1, rf28          ; fmul rf22, rf15, rf27.h
+    0x020000450020d000, // bu.anynap  64, r:unif (0x00000010 / 0.000000)
+    0x38003186bb03f000, // nop                           ; nop
+    0x38003186bb03f000, // nop                           ; nop
+    0x38003186bb03f000, // nop                           ; nop
+    0x3980b186bb03f000, // nop                           ; nop                         ; ldunifrf.rf2 (push[12])
+    0x3980e1874503f086, // fsub rf7, rf2, rf6            ; nop                         ; ldunifrf.rf3 (push[13])
+    0x644002c5456870c9, // fsub rf5, rf3, rf9            ; fmul rf11, rf26.l, rf7      ; ldunif (push[14])
+    0x740002844568500c, // fsub rf4, rf0, rf12           ; fmul rf10, rf26.h, rf5
+    0x020000c00000d000, // bu  192, r:unif (0x00000000 / 0.000000)
+    0x64000219056c418b, // fadd rf25, rf6, rf11          ; fmul rf8, rf27.l, rf4
+    0x380021980503f24a, // fadd rf24, rf9, rf10          ; nop
+    0x380021970503f20c, // fadd rf23, rf8, rf12          ; nop
+    0x5800044d4919a686, // fsub rf13, rf26.l, rf6        ; fmul rf17, rf6, rf26.l
+    0x5c00048e4d25a689, // fsub rf14, rf26.h, rf9        ; fmul rf18, rf9, rf26.h
+    0x74000693f96cd783, // mov rf19, rf30                ; fmul rf26, rf27.h, rf13
+    0x580005030531b19a, // fadd rf3, rf6, rf26           ; fmul rf20, rf12, rf27.l
+    0x39c05546b77c311c, // xor.pushz -, 4, rf28          ; mov rf21, rf31
+    0x38000090497436cc, // fsub rf16, rf27.l, rf12       ; mov rf2, rf29
+    0x74000786f96ce043, // mov rf6, rf1                  ; fmul rf30, rf27.h, rf14
+    0x381004d5f9443483, // mov.ifa rf21, rf18            ; mov.ifa rf19, rf17
+    0x740807c2f96d0503, // mov.ifa rf2, rf20             ; fmul rf31, rf27.h, rf16
+    0x380c01840558325e, // fadd rf4, rf9, rf30           ; mov.ifa rf6, rf22
+    0x380001c8f94c3543, // mov rf8, rf21                 ; mov rf7, rf19
+    0x380002450508331f, // fadd rf5, rf12, rf31          ; mov rf9, rf2
+    0x39c05286b71830dc, // xor.pushz -, 3, rf28          ; mov rf10, rf6
+    0x381001c8f90c3103, // mov.ifa rf8, rf4              ; mov.ifa rf7, rf3
+    0x3810024af91433c3, // mov.ifa rf10, rf15            ; mov.ifa rf9, rf5
+    0x3bc012c6bba03000, // nop                           ; mov rf11, 0x3f800000
+    0x3bc01346bba03000, // nop                           ; mov rf13, 0x3f800000
+    0x3bc01386bba03000, // nop                           ; mov rf14, 0x3f800000
+    0x3bc01306bb003000, // nop                           ; mov rf12, 0
+    0x39c07186b703f09c, // xor.pushz -, 2, rf28          ; nop
+    0x381882ccf91c3203, // mov.ifna rf12, rf8            ; mov.ifna rf11, rf7
+    0x3818834ef9243283, // mov.ifna rf14, rf10           ; mov.ifna rf13, rf9
+    0x38000658f92c3303, // mov rf24, rf12                ; mov rf25, rf11
+    0x380005d6f9343383, // mov rf22, rf14                ; mov rf23, rf13
+    0x3983f186bb03f000, // nop                           ; nop                         ; ldunifrf.rf15 (push[0])
+    0x38403186bb03f000, // nop                           ; nop                         ; ldunif (push[4])
+    0x3bc0d406c5003016, // fcmp.pushc -, rf0, rf22       ; mov rf16, 0
+    0x3bcc9406c57c3016, // fcmp.pushn -, rf0, rf22       ; mov.ifa rf16, -1
+    0x3bc01446bb003000, // nop                           ; mov rf17, 0
+    0x3bcc1446bb7c3000, // nop                           ; mov.ifa rf17, -1
+    0x39c05486b744318f, // xor.pushz -, 6, rf15          ; mov rf18, rf17
+    0x39cc0493f9403003, // mov rf19, 0                   ; mov.ifa rf18, rf16
+    0x38005506c5483580, // fcmp.pushz -, rf22, rf0       ; mov rf20, rf18
+    0x3bce14c6bb7c3000, // nop                           ; mov.ifna rf19, -1
+    0x39c07186b703f14f, // xor.pushz -, 5, rf15          ; nop
+    0x39cc0515f94c3003, // mov rf21, 0                   ; mov.ifa rf20, rf19
+    0x38005686c5503580, // fcmp.pushz -, rf22, rf0       ; mov rf26, rf20
+    0x3bcc1546bb7c3000, // nop                           ; mov.ifa rf21, -1
+    0x39c07186b703f10f, // xor.pushz -, 4, rf15          ; nop
+    0x39cc069bf9543003, // mov rf27, 0                   ; mov.ifa rf26, rf21
+    0x3800d706c5683580, // fcmp.pushc -, rf22, rf0       ; mov rf28, rf26
+    0x3bcc16c6bb7c3000, // nop                           ; mov.ifa rf27, -1
+    0x39c07186b703f0cf, // xor.pushz -, 3, rf15          ; nop
+    0x39cc071df96c3003, // mov rf29, 0                   ; mov.ifa rf28, rf27
+    0x3bc09786c5003580, // fcmp.pushn -, rf22, rf0       ; mov rf30, 0
+    0x3bcc075ff97c3703, // mov rf31, rf28                ; mov.ifa rf29, -1
+    0x39c07186b703f04f, // xor.pushz -, 1, rf15          ; nop
+    0x3bcc1786bb7c3000, // nop                           ; mov.ifa rf30, -1
+    0x39c07186b703f08f, // xor.pushz -, 2, rf15          ; nop
+    0x39cc07c1f9743003, // mov rf1, 0                    ; mov.ifa rf31, rf29
+    0x39c07186b703f00f, // xor.pushz -, 0, rf15          ; nop
+    0x3bce0042b67c379f, // or rf2, rf30, rf31            ; mov.ifna rf1, -1
+    0x38002183b503f042, // and rf3, rf1, rf2             ; nop
+    0x38002184ba03f0c0, // not rf4, rf3                  ; nop
+    0x38047186bb103000, // nop                           ; mov.pushz -, rf4
     0x39ca3186ba03f006, // setmsf.ifna -, 0              ; nop
     0x38203206bb143000, // nop                           ; mov tlbu, rf5               ; thrsw (0xffffff84 / -nan)
-    0x380031873503f452, // vfpack tlb, rf17, rf18        ; nop
-    0x380031873503f418, // vfpack tlb, rf16, rf24        ; nop
+    0x380031873503f658, // vfpack tlb, rf25, rf24        ; nop
+    0x380031873503f5d6, // vfpack tlb, rf23, rf22        ; nop
 });
 
 static constexpr u8 NUMBER_OF_VARYINGS_IN_FRAGMENT_SHADER = 6;
@@ -232,7 +289,7 @@ struct Uniforms {
     u32 fragment_shader_uniforms_address { 0 };
 };
 
-inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatMatrix4x4 const& model_view_projection_matrix, GPU::SamplerConfig const& sampler_configuration, GPU::AlphaTestFunction alpha_test_function, f32 alpha_test_reference)
+inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatMatrix4x4 const& model_view_projection_matrix, GPU::SamplerConfig const& sampler_configuration, GPU::AlphaTestFunction alpha_test_function, f32 alpha_test_reference, GPU::TextureEnvMode texture_env_mode, FloatVector4 texture_env_color)
 {
     ControlList list;
 
@@ -455,6 +512,34 @@ inline ErrorOr<Uniforms> generate_uniforms(Gfx::IntSize framebuffer_size, FloatM
 
         VERIFY_NOT_REACHED();
     };
+
+    auto map_texture_env_mode = [](GPU::TextureEnvMode mode) {
+        switch (mode) {
+        case GPU::TextureEnvMode::Add:
+            return 0u;
+        case GPU::TextureEnvMode::Blend:
+            return 1u;
+        case GPU::TextureEnvMode::Combine:
+            return 2u;
+        case GPU::TextureEnvMode::Decal:
+            return 3u;
+        case GPU::TextureEnvMode::Modulate:
+            return 4u;
+        case GPU::TextureEnvMode::Replace:
+            return 5u;
+        }
+
+        VERIFY_NOT_REACHED();
+    };
+
+    list.append<u32>(map_texture_env_mode(texture_env_mode));
+    list.append<u32>(0x0000'0004);
+    list.append<u32>(0x0000'0014);
+    list.append<u32>(0x0000'0010);
+    list.append<f32>(texture_env_color.x());
+    list.append<f32>(texture_env_color.y());
+    list.append<f32>(texture_env_color.z());
+    list.append<u32>(0x0000'0000);
 
     list.append<u32>(map_alpha_test_function(alpha_test_function));
     list.append<f32>(alpha_test_reference);
