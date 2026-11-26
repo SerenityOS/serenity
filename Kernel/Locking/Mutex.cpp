@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2026, bogdan-glitchm <github.34373732+copyright@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -64,6 +65,9 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
         VERIFY(m_times_locked == 0);
         m_times_locked++;
 
+        if (current_thread)
+            current_thread->increment_mutex_count();
+
 #if LOCK_DEBUG
         if (current_thread) {
             current_thread->holding_lock(*this, 1, location);
@@ -115,6 +119,8 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
             m_times_locked++;
         }
 
+        current_thread->increment_mutex_count();
+
 #if LOCK_DEBUG
         current_thread->holding_lock(*this, 1, location);
 #endif
@@ -162,6 +168,8 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
 #endif
         }
 
+        current_thread->increment_mutex_count();
+
 #if LOCK_DEBUG
         current_thread->holding_lock(*this, 1, location);
 #endif
@@ -204,6 +212,7 @@ void Mutex::unlock()
         if (m_times_locked == 0) {
             m_holder = 0;
             m_holder_threadid = -1;
+            current_thread->decrement_mutex_count();
         }
         break;
     case Mode::Shared: {
@@ -223,6 +232,9 @@ void Mutex::unlock()
     default:
         VERIFY_NOT_REACHED();
     }
+
+    if (current_thread)
+        current_thread->decrement_mutex_count();
 
 #if LOCK_DEBUG
     if (current_thread) {
@@ -337,7 +349,10 @@ auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
         }
 
         dbgln_if(LOCK_RESTORE_DEBUG, "Mutex::force_unlock_exclusive_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
-#if LOCK_DEBUG
+
+        current_thread->decrement_mutex_count(m_times_locked);
+
+        #if LOCK_DEBUG
         current_thread->holding_lock(*this, -(int)m_times_locked, {});
 #endif
         m_holder = 0;
@@ -400,6 +415,8 @@ void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation
             m_times_locked += lock_count;
         }
     }
+
+    current_thread->decrement_mutex_count(lock_count);
 
 #if LOCK_DEBUG
     current_thread->holding_lock(*this, (int)lock_count, location);

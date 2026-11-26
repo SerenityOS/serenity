@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2026, bogdan-glitchm <github.34373732+copyright@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1080,6 +1081,30 @@ public:
     Blocker const* blocker() const { return m_blocker; }
     Kernel::Mutex const* blocking_mutex() const { return m_blocking_mutex; }
 
+    void increment_spinlock_count(u32 amount = 1) {
+        m_holding_spinlocks += amount;
+    }
+
+    void decrement_spinlock_count(u32 amount = 1) {
+        m_holding_spinlocks -= amount;
+    }
+
+    u32 holding_spinlocks() {
+        return m_holding_spinlocks;
+    }
+
+    void increment_mutex_count(u32 amount = 1) {
+        m_holding_mutexes += amount;
+    }
+
+    void decrement_mutex_count(u32 amount = 1) {
+        m_holding_mutexes -= amount;
+    }
+
+    u32 holding_mutexes() {
+        return m_holding_mutexes;
+    }
+
 #if LOCK_DEBUG
     struct HoldingLockInfo {
         Mutex* lock;
@@ -1198,6 +1223,8 @@ private:
     LockRank m_lock_rank_mask {};
     bool m_allocation_enabled { true };
     ArchSpecificThreadData m_arch_specific_data;
+    u32 m_holding_spinlocks { 0 };
+    u32 m_holding_mutexes { 0 };
 
     // FIXME: remove this after annihilating Process::m_big_lock
     IntrusiveListNode<Thread> m_big_lock_blocked_threads_list_node;
