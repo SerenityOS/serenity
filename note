@@ -1,0 +1,9 @@
+REMAKE compile_commands.json
+
+bogdan@DESKTOP-HTIRENU:~/PeaceOS$ Meta/serenity.sh recreate x86_64
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/bogdan/PeaceOS/Build/superbuild-x86_64
+bogdan@DESKTOP-HTIRENU:~/PeaceOS$ cmake --build Build/superbuild-x86_64 --target serenity-configure
+[4/12] Performing configure step for 'lagom'
+loading initial cache file /home/bogdan/PeaceOS/Build/superbuild-x86_64/lagom-prefix/tmp/lagom-cache-.cmake

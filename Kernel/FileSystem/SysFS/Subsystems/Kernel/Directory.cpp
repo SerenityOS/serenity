@@ -24,6 +24,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Processes.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Profile.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/RequestOops.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/RequestPanic.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Uptime.h>
@@ -45,6 +46,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalKerne
         list.append(SysFSUptime::must_create(*global_kernel_stats_directory));
         list.append(SysFSProfile::must_create(*global_kernel_stats_directory));
         list.append(SysFSPowerStateSwitchNode::must_create(*global_kernel_stats_directory));
+        list.append(SysFSSystemRequestOops::must_create(*global_kernel_stats_directory));
         list.append(SysFSSystemRequestPanic::must_create(*global_kernel_stats_directory));
 
         list.append(SysFSDeviceMajorNumberAllocations::must_create(*global_kernel_stats_directory, DeviceNodeType::Block));

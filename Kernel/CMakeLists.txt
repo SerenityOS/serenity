@@ -217,6 +217,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/DiskUsage.cpp
     FileSystem/SysFS/Subsystems/Kernel/Log.cpp
     FileSystem/SysFS/Subsystems/Kernel/RequestPanic.cpp
+    FileSystem/SysFS/Subsystems/Kernel/RequestOops.cpp
     FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.cpp
     FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.cpp
     FileSystem/SysFS/Subsystems/Kernel/MemoryStatus.cpp
@@ -286,6 +287,7 @@ set(KERNEL_SOURCES
     Library/KLexicalPath.cpp
     Library/KString.cpp
     Library/UserOrKernelBuffer.cpp
+    Library/Oops.cpp
     Net/Cadence/GEM.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168HardwareQuirks.cpp

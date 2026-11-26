@@ -1,12 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2026, bogdan-glitchm
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
-
-#include <AK/Platform.h>
 
 #define __STRINGIFY_HELPER(x) #x
 #define __STRINGIFY(x) __STRINGIFY_HELPER(x)
