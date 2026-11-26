@@ -492,7 +492,7 @@ ErrorOr<void> Device::initialize_context(Gfx::IntSize min_size)
     m_placeholder_sampler_configuration.bound_image = create_image(GPU::PixelFormat::RGBA, 1, 1, 1, 1);
 
     GPU::ImageDataLayout placeholder_layout = {
-        .pixel_type = { GPU::PixelFormat::RGBA, GPU::PixelComponentBits::AllBits, GPU::PixelDataType::Byte, GPU::ComponentsOrder::Normal },
+        .pixel_type = { GPU::PixelFormat::RGBA, GPU::PixelComponentBits::AllBits, GPU::PixelDataType::UnsignedByte, GPU::ComponentsOrder::Normal },
         .packing = {
             .depth_stride = 1,
             .row_stride = 1,
