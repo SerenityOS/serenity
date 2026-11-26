@@ -194,3 +194,27 @@ TEST_CASE(resolve_glyph_path_containing_single_off_curve_point)
         return Test::Crash::Failure::DidNotCrash;
     });
 }
+
+TEST_CASE(loca_table_too_short_for_trailing_offset_is_rejected)
+{
+    // The loca table holds numGlyphs + 1 offsets, and get_glyph_offset() reads
+    // index numGlyphs when resolving the extent of the last glyph. A table only
+    // large enough for numGlyphs offsets must be rejected, otherwise that read
+    // runs past the end of the table slice.
+    u32 const num_glyphs = 4;
+
+    auto short_offset16 = MUST(ByteBuffer::create_zeroed(num_glyphs * 2));
+    EXPECT(OpenType::Loca::from_slice(short_offset16, num_glyphs, OpenType::IndexToLocFormat::Offset16).is_error());
+
+    auto short_offset32 = MUST(ByteBuffer::create_zeroed(num_glyphs * 4));
+    EXPECT(OpenType::Loca::from_slice(short_offset32, num_glyphs, OpenType::IndexToLocFormat::Offset32).is_error());
+
+    // A table sized for all numGlyphs + 1 offsets loads and the trailing offset reads in bounds.
+    auto full_offset16 = MUST(ByteBuffer::create_zeroed((num_glyphs + 1) * 2));
+    auto loca16 = TRY_OR_FAIL(OpenType::Loca::from_slice(full_offset16, num_glyphs, OpenType::IndexToLocFormat::Offset16));
+    EXPECT_EQ(loca16.get_glyph_offset(num_glyphs), 0u);
+
+    auto full_offset32 = MUST(ByteBuffer::create_zeroed((num_glyphs + 1) * 4));
+    auto loca32 = TRY_OR_FAIL(OpenType::Loca::from_slice(full_offset32, num_glyphs, OpenType::IndexToLocFormat::Offset32));
+    EXPECT_EQ(loca32.get_glyph_offset(num_glyphs), 0u);
+}
