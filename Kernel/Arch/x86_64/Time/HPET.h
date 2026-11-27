@@ -13,18 +13,24 @@
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
+#include <Kernel/Time/TimeSource.h>
 
 namespace Kernel {
 
 class HPETComparator;
 
-class HPET {
+class HPET : public TimeSource {
 public:
     static bool initialized();
     static ErrorOr<bool> initialize();
     static HPET& the();
 
-    u64 frequency() const { return m_frequency; }
+    virtual HardwareTimerType timer_type() const override { return HardwareTimerType::HighPrecisionEventTimer; }
+    virtual StringView model() const override { return "HPET"sv; }
+
+    virtual u64 frequency() const override { return m_frequency; }
+    virtual u64 read_counter_raw() const override;
+
     u64 raw_counter_ticks_to_ns(u64) const;
     u64 ns_to_raw_counter_ticks(u64) const;
 
@@ -38,10 +44,6 @@ public:
     void toggle_comparator(HPETComparator const& comparator, bool enable);
     void set_comparator_periodic(HPETComparator const& comparator, bool periodic);
 
-    u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
-    u64 read_main_counter_unsafe() const;
-    u64 read_main_counter() const;
-
     struct Registers;
 
 private:
@@ -54,12 +56,7 @@ private:
 
     Memory::TypedMapping<Registers volatile> m_registers;
 
-    u64 m_main_counter_last_read { 0 };
-    u64 m_main_counter_drift { 0 };
-    u32 m_32bit_main_counter_wraps { 0 };
-
     u64 m_frequency;
-    bool m_main_counter_64bits;
     bool legacy_replacement_route_capable;
 
     Vector<NonnullLockRefPtr<HPETComparator>> m_comparators;

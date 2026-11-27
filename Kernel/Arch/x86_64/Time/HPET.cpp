@@ -95,7 +95,8 @@ UNMAP_AFTER_INIT ErrorOr<bool> HPET::initialize()
 
     auto registers = TRY(Memory::map_typed_writable<Registers volatile>(PhysicalAddress(sdt->event_timer_block.address)));
 
-    new HPET(move(registers));
+    auto hpet = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) HPET(move(registers))));
+    TRY(TimeManagement::the().register_time_source(hpet));
     return true;
 }
 
@@ -117,8 +118,8 @@ void HPET::update_periodic_comparator_value()
     global_disable();
 
     u64 previous_main_value = m_registers->main_counter_value;
-    m_main_counter_drift += previous_main_value - m_main_counter_last_read;
-    m_main_counter_last_read = 0;
+    add_drift(previous_main_value - counter_last_read());
+    clear_counter_last_read();
     m_registers->main_counter_value = 0;
 
     for (auto& comparator : m_comparators) {
@@ -164,60 +165,13 @@ void HPET::update_non_periodic_comparator_value(HPETComparator const& comparator
     u64 value = frequency() / comparator.frequency();
 
     // NOTE: If the main counter passes this new value before we finish writing it, we will never receive an interrupt!
-    u64 new_counter_value = read_main_counter() + value;
+    u64 new_counter_value = read_counter() + value;
     timer.comparator_value = new_counter_value;
 }
 
-u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
+u64 HPET::read_counter_raw() const
 {
-    // Should only be called by the time keeper interrupt handler!
-    u64 current_value = read_main_counter();
-    u64 delta_ticks = m_main_counter_drift;
-    if (current_value >= m_main_counter_last_read) {
-        delta_ticks += current_value - m_main_counter_last_read;
-    } else {
-        // the counter wrapped around
-        if (m_main_counter_64bits) {
-            delta_ticks += (NumericLimits<u64>::max() - m_main_counter_last_read + 1) + current_value;
-        } else {
-            delta_ticks += (NumericLimits<u32>::max() - m_main_counter_last_read + 1) + current_value;
-            m_32bit_main_counter_wraps++;
-        }
-    }
-
-    u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
-    auto ticks_per_second = frequency();
-    seconds_since_boot += ticks_since_last_second / ticks_per_second;
-    ticks_this_second = ticks_since_last_second % ticks_per_second;
-
-    if (!query_only) {
-        m_main_counter_drift = 0;
-        m_main_counter_last_read = current_value;
-    }
-
-    // Return the time passed (in ns) since last time update_time was called
-    return (delta_ticks * 1'000'000'000ull) / ticks_per_second;
-}
-
-u64 HPET::read_main_counter_unsafe() const
-{
-    if (m_main_counter_64bits)
-        return m_registers->main_counter_value;
-
-    return (static_cast<u64>(m_32bit_main_counter_wraps) << 32) | m_registers->main_counter_value;
-}
-
-u64 HPET::read_main_counter() const
-{
-    if (m_main_counter_64bits)
-        return m_registers->main_counter_value;
-
-    u32 wraps = m_32bit_main_counter_wraps;
-    u32 last_read_value = m_main_counter_last_read & 0xFFFFFFFF;
-    u32 current_value = m_registers->main_counter_value;
-    if (current_value < last_read_value)
-        wraps++;
-    return (static_cast<u64>(wraps) << 32) | (u64)current_value;
+    return m_registers->main_counter_value;
 }
 
 void HPET::toggle_comparator(HPETComparator const& comparator, bool enable)
@@ -269,15 +223,14 @@ u64 HPET::ns_to_raw_counter_ticks(u64 ns) const
 }
 
 UNMAP_AFTER_INIT HPET::HPET(Memory::TypedMapping<Registers volatile> registers)
-    : m_registers(move(registers))
+    : TimeSource((registers->attributes & static_cast<u32>(Attributes::Counter64BitCapable)) != 0 ? TimeSource::CounterSize::Bits64 : TimeSource::CounterSize::Bits32)
+    , m_registers(move(registers))
 {
     s_hpet = this; // Make available as soon as possible so that IRQs can use it
 
     size_t timers_count = ((m_registers->attributes >> 8) & 0x1F) + 1;
-    m_main_counter_64bits = (m_registers->attributes & static_cast<u32>(Attributes::Counter64BitCapable)) != 0;
-
     dmesgln("HPET: Timers count: {}", timers_count);
-    dmesgln("HPET: Main counter size: {}", (m_main_counter_64bits ? "64-bit" : "32-bit"));
+    dmesgln("HPET: Main counter size: {}", (counter_size() == TimeSource::CounterSize::Bits64 ? "64-bit" : "32-bit"));
 
     for (size_t i = 0; i < timers_count; i++) {
         auto const& timer = m_registers->timers[i];

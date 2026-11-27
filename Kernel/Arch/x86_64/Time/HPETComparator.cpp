@@ -108,7 +108,7 @@ size_t HPETComparator::calculate_nearest_possible_frequency(size_t frequency) co
 
 u64 HPETComparator::current_raw() const
 {
-    return HPET::the().read_main_counter();
+    return HPET::the().read_counter();
 }
 
 u64 HPETComparator::raw_to_ns(u64 raw_delta) const
