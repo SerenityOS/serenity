@@ -209,8 +209,10 @@ UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
     auto value = kernel_command_line().lookup("acpi"sv).value_or("limited"sv);
     if (value == "limited"sv)
         return AcpiFeatureLevel::Limited;
+#if !ARCH(X86_64)
     if (value == "off"sv)
         return AcpiFeatureLevel::Disabled;
+#endif
     if (value == "on"sv)
         return AcpiFeatureLevel::Enabled;
     PANIC("Unknown ACPI feature level: {}", value);
