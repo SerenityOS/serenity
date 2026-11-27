@@ -90,9 +90,6 @@ List of options:
     -   **`self-test`** - Boots the system in self-test, validation mode.
     -   **`text`** - Boots the system in text only mode. (You may need to also set **`graphics_subsystem_mode=off`**.)
 
--   **`time`** - This parameter expects one of the following values. **`modern`** - This configures the system to attempt
-    to use High Precision Event Timer (HPET) on boot. **`legacy`** - Configures the system to use the legacy programmable interrupt
-    time for managing system team.
 -   **`vmmouse`** - This parameter expects a binary value of **`on`** or **`off`**. If enabled and
     running on a VMWare Hypervisor, the kernel will enable absolute mouse mode.
 

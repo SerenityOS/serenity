@@ -8,8 +8,8 @@
 #include <AK/Singleton.h>
 #include <Kernel/Arch/Processor.h>
 #if ARCH(X86_64)
+#    include <Kernel/Arch/x86_64/RTC.h>
 #    include <Kernel/Arch/x86_64/Time/HPET.h>
-#    include <Kernel/Arch/x86_64/Time/RTC.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #elif ARCH(RISCV64)
