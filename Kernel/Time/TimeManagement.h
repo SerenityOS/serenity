@@ -33,7 +33,6 @@ enum class TimePrecision {
 class TimeManagement {
 
 public:
-    TimeManagement();
     static void initialize(u32 cpu);
     static bool is_initialized();
     static TimeManagement& the();
@@ -97,6 +96,8 @@ private:
     static void system_timer_tick();
     void update_time();
 
+    bool m_initialized { false };
+
     // FIXME: Use a function prototype and share it with the hardware implementations.
     Function<u64(u64&, u32&, bool)> m_read_time_from_hardware { nullptr };
 
@@ -119,7 +120,7 @@ private:
     Atomic<u32> m_profile_enable_count { 0 };
     LockRefPtr<HardwareTimerBase> m_profile_timer;
 
-    NonnullOwnPtr<Memory::Region> m_time_page_region;
+    OwnPtr<Memory::Region> m_time_page_region;
 };
 
 }

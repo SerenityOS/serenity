@@ -46,7 +46,7 @@ static Singleton<TimeManagement> s_the;
 
 bool TimeManagement::is_initialized()
 {
-    return s_the.is_initialized();
+    return s_the.is_initialized() && s_the->m_initialized;
 }
 
 TimeManagement& TimeManagement::the()
@@ -165,10 +165,21 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
     //       the TimeManagement class is completely initialized.
     InterruptDisabler disabler;
 
-#if ARCH(X86_64)
     if (cpu == 0) {
-        VERIFY(!s_the.is_initialized());
+        VERIFY(!s_the->m_initialized);
         s_the.ensure_instance();
+
+        s_the->m_time_page_region = MM.allocate_kernel_region(PAGE_SIZE, "Duration page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors();
+#if ARCH(X86_64)
+        if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
+            RTC::initialize();
+            s_the->m_epoch_time += boot_time().offset_to_epoch();
+        } else {
+            dmesgln("ACPI: RTC CMOS Not present");
+        }
+
+        if (!s_the->probe_and_set_x86_hardware_timers())
+            PANIC("TimeManagement: No supported timer was found");
 
         if (APIC::initialized()) {
             // Initialize the APIC timers after the other timers as the
@@ -180,31 +191,36 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
                 s_the->set_system_timer(*apic_timer);
             }
         }
+#elif ARCH(AARCH64)
+        auto rtc = PL031::the();
+        if (rtc)
+            s_the->m_epoch_time += boot_time().offset_to_epoch();
+        s_the->probe_and_set_aarch64_hardware_timers();
+#elif ARCH(RISCV64)
+        auto rtc = GoldfishRTC::the();
+        if (rtc)
+            s_the->m_epoch_time += boot_time().offset_to_epoch();
+        s_the->probe_and_set_riscv64_hardware_timers();
+#else
+#    error Unknown architecture
+#endif
+        auto* possible_arch_specific_current_time_function = optional_current_time();
+        if (possible_arch_specific_current_time_function)
+            s_scheduler_current_time = possible_arch_specific_current_time_function;
+        else
+            s_scheduler_current_time = current_time_monotonic;
+
+        s_the->m_initialized = true;
     } else {
-        VERIFY(s_the.is_initialized());
+        VERIFY(s_the->m_initialized);
+
+#if ARCH(X86_64)
         if (auto* apic_timer = APIC::the().get_timer()) {
             dmesgln("Duration: Enable APIC timer on CPU #{}", cpu);
             apic_timer->enable_local_timer();
         }
-    }
-#elif ARCH(AARCH64)
-    if (cpu == 0) {
-        VERIFY(!s_the.is_initialized());
-        s_the.ensure_instance();
-    }
-#elif ARCH(RISCV64)
-    if (cpu == 0) {
-        VERIFY(!s_the.is_initialized());
-        s_the.ensure_instance();
-    }
-#else
-#    error Unknown architecture
 #endif
-    auto* possible_arch_specific_current_time_function = optional_current_time();
-    if (possible_arch_specific_current_time_function)
-        s_scheduler_current_time = possible_arch_specific_current_time_function;
-    else
-        s_scheduler_current_time = current_time_monotonic;
+    }
 }
 
 void TimeManagement::set_system_timer(HardwareTimerBase& timer)
@@ -244,34 +260,6 @@ Duration TimeManagement::clock_resolution() const
 {
     long nanoseconds_per_tick = 1'000'000'000 / m_time_keeper_timer->frequency();
     return Duration::from_nanoseconds(nanoseconds_per_tick);
-}
-
-UNMAP_AFTER_INIT TimeManagement::TimeManagement()
-    : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Duration page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
-{
-#if ARCH(X86_64)
-    if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
-        RTC::initialize();
-        m_epoch_time += boot_time().offset_to_epoch();
-    } else {
-        dmesgln("ACPI: RTC CMOS Not present");
-    }
-
-    if (!probe_and_set_x86_hardware_timers())
-        PANIC("TimeManagement: No supported timer was found");
-#elif ARCH(AARCH64)
-    auto rtc = PL031::the();
-    if (rtc)
-        m_epoch_time += boot_time().offset_to_epoch();
-    probe_and_set_aarch64_hardware_timers();
-#elif ARCH(RISCV64)
-    auto rtc = GoldfishRTC::the();
-    if (rtc)
-        m_epoch_time += boot_time().offset_to_epoch();
-    probe_and_set_riscv64_hardware_timers();
-#else
-#    error Unknown architecture
-#endif
 }
 
 UnixDateTime TimeManagement::now()
