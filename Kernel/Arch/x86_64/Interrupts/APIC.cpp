@@ -641,6 +641,11 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
         write_register(APIC_REG_TIMER_INITIAL_COUNT, ticks / get_timer_divisor());
 }
 
+void APIC::set_timer_count(u32 count)
+{
+    write_register(APIC_REG_TIMER_INITIAL_COUNT, count);
+}
+
 u32 APIC::get_timer_current_count()
 {
     return read_register(APIC_REG_TIMER_CURRENT_COUNT);

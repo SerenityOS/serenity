@@ -40,6 +40,7 @@ public:
     APICTimer* initialize_timers(HardwareTimerBase&);
     APICTimer* get_timer() const { return m_apic_timer; }
     void setup_local_timer(u32, TimerMode, bool);
+    void set_timer_count(u32 count);
     u32 get_timer_current_count();
     u32 get_timer_divisor();
 

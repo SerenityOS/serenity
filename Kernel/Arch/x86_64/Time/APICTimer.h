@@ -35,8 +35,6 @@ public:
 private:
     explicit APICTimer(InterruptNumber, Function<void()>);
 
-    bool calibrate(HardwareTimerBase&);
-
     u32 m_timer_period { 0 };
     TimerMode m_timer_mode { TimerMode::Periodic };
     size_t m_frequency { 0 };
