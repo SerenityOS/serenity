@@ -16,6 +16,7 @@ static ARMv8Timer* s_the = nullptr;
 
 ARMv8Timer::ARMv8Timer(InterruptNumber interrupt_number, u32 frequency)
     : HardwareTimer(interrupt_number)
+    , TimeSource(TimeSource::CounterSize::Bits64)
     , m_frequency(frequency)
 {
     m_interrupt_interval = m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE;
@@ -50,11 +51,6 @@ ARMv8Timer& ARMv8Timer::the()
     return *s_the;
 }
 
-u64 ARMv8Timer::current_ticks()
-{
-    return Aarch64::CNTVCT_EL0::read().VirtualCount;
-}
-
 bool ARMv8Timer::handle_irq()
 {
     HardwareTimer::handle_irq();
@@ -72,29 +68,9 @@ void ARMv8Timer::disable()
     disable_irq();
 }
 
-u64 ARMv8Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
+u64 ARMv8Timer::read_counter_raw() const
 {
-    // Should only be called by the time keeper interrupt handler!
-    u64 current_value = current_ticks();
-    u64 delta_ticks = m_main_counter_drift;
-    if (current_value >= m_main_counter_last_read) {
-        delta_ticks += current_value - m_main_counter_last_read;
-    } else {
-        // the counter wrapped around
-        delta_ticks += (NumericLimits<u64>::max() - m_main_counter_last_read + 1) + current_value;
-    }
-
-    u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
-    seconds_since_boot += ticks_since_last_second / m_frequency;
-    ticks_this_second = ticks_since_last_second % m_frequency;
-
-    if (!query_only) {
-        m_main_counter_drift = 0;
-        m_main_counter_last_read = current_value;
-    }
-
-    // Return the time passed (in ns) since last time update_time was called
-    return (delta_ticks * 1'000'000'000ull) / m_frequency;
+    return Aarch64::CNTVCT_EL0::read().VirtualCount;
 }
 
 void ARMv8Timer::start_timer(u32 delta)
@@ -148,7 +124,8 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
 
     auto timer = TRY(ARMv8Timer::initialize(interrupt_number, frequency));
 
-    MUST(TimeManagement::the().register_hardware_timer(timer));
+    TRY(TimeManagement::the().register_hardware_timer(timer));
+    TRY(TimeManagement::the().register_time_source(move(timer)));
 
     return {};
 }

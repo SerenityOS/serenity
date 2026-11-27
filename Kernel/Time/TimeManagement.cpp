@@ -387,7 +387,8 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
             auto timer_frequency = Aarch64::CNTFRQ_EL0::read().ClockFrequency;
 
             auto timer = ARMv8Timer::initialize(virtual_el1_gsi, timer_frequency).release_value_but_fixme_should_propagate_errors();
-            m_hardware_timers.try_append(move(timer)).release_value_but_fixme_should_propagate_errors();
+            m_hardware_timers.try_append(timer).release_value_but_fixme_should_propagate_errors();
+            m_time_sources.try_append(move(timer)).release_value_but_fixme_should_propagate_errors();
         }
     }
 
