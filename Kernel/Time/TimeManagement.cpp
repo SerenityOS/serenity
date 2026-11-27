@@ -267,18 +267,13 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
 {
 #if ARCH(X86_64)
     bool probe_non_legacy_hardware_timers = !(kernel_command_line().is_legacy_time_enabled());
-    if (ACPI::is_enabled()) {
-        if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
-            RTC::initialize();
-            m_epoch_time += boot_time().offset_to_epoch();
-        } else {
-            dmesgln("ACPI: RTC CMOS Not present");
-        }
-    } else {
-        // We just assume that we can access RTC CMOS, if ACPI isn't usable.
+    if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
         RTC::initialize();
         m_epoch_time += boot_time().offset_to_epoch();
+    } else {
+        dmesgln("ACPI: RTC CMOS Not present");
     }
+
     if (probe_non_legacy_hardware_timers) {
         if (!probe_and_set_x86_non_legacy_hardware_timers())
             if (!probe_and_set_x86_legacy_hardware_timers())
@@ -347,8 +342,6 @@ bool TimeManagement::is_hpet_periodic_mode_allowed()
 #if ARCH(X86_64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_timers()
 {
-    if (!ACPI::is_enabled())
-        return false;
     if (!HPET::test_and_initialize())
         return false;
     if (!HPET::the().comparators().size()) {
@@ -424,13 +417,11 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
 
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
 {
-    if (ACPI::is_enabled()) {
-        if (ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
-            dbgln("ACPI: CMOS RTC Not Present");
-            return false;
-        } else {
-            dbgln("ACPI: CMOS RTC Present");
-        }
+    if (ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
+        dbgln("ACPI: CMOS RTC Not Present");
+        return false;
+    } else {
+        dbgln("ACPI: CMOS RTC Present");
     }
 
     VERIFY(s_hardware_timers->is_empty());
