@@ -229,8 +229,13 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
         MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::InterruptController));
     }
 
-    if (auto maybe_error = ACPI::early_initialize(); maybe_error.is_error())
+    if (auto maybe_error = ACPI::early_initialize(); maybe_error.is_error()) {
+#if ARCH(X86_64)
+        PANIC("ACPI: Error during early initilization: {}", maybe_error.release_error());
+#else
         dmesgln("ACPI: Error during early initilization: {}", maybe_error.release_error());
+#endif
+    }
 
     InterruptManagement::initialize();
 

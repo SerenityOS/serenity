@@ -33,9 +33,11 @@ static Optional<PhysicalAddress> find_rsdp()
 
 UNMAP_AFTER_INIT ErrorOr<void> early_initialize()
 {
+#if !ARCH(X86_64)
     auto feature_level = kernel_command_line().acpi_feature_level();
     if (feature_level == AcpiFeatureLevel::Disabled)
         return {};
+#endif
 
     auto rsdp = find_rsdp();
     if (!rsdp.has_value())

@@ -33,7 +33,9 @@ enum class I8042PresenceMode {
 enum class AcpiFeatureLevel {
     Enabled,
     Limited,
+#if !ARCH(X86_64)
     Disabled,
+#endif
 };
 
 enum class PCIAccessLevel {
