@@ -435,8 +435,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Time/APICTimer.cpp
         Arch/x86_64/Time/HPET.cpp
         Arch/x86_64/Time/HPETComparator.cpp
-        Arch/x86_64/Time/PIT.cpp
-        Arch/x86_64/Time/RTC.cpp
         Arch/x86_64/PCSpeaker.cpp
 
         Arch/x86_64/ISABus/I8042Controller.cpp

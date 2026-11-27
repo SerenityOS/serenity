@@ -86,7 +86,6 @@ public:
     [[nodiscard]] bool is_vmmouse_enabled() const;
     [[nodiscard]] PCIAccessLevel pci_access_level() const;
     [[nodiscard]] bool is_pci_disabled() const;
-    [[nodiscard]] bool is_legacy_time_enabled() const;
     [[nodiscard]] bool is_pc_speaker_enabled() const;
     [[nodiscard]] bool i8042_enable_first_port_translation() const;
     [[nodiscard]] GraphicsSubsystemMode graphics_subsystem_mode() const;

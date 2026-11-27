@@ -15,8 +15,6 @@
 #    include <Kernel/Arch/x86_64/Time/APICTimer.h>
 #    include <Kernel/Arch/x86_64/Time/HPET.h>
 #    include <Kernel/Arch/x86_64/Time/HPETComparator.h>
-#    include <Kernel/Arch/x86_64/Time/PIT.h>
-#    include <Kernel/Arch/x86_64/Time/RTC.h>
 #    include <Kernel/Arch/x86_64/Time/TSC.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Timer.h>
@@ -266,7 +264,6 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Duration page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
 {
 #if ARCH(X86_64)
-    bool probe_non_legacy_hardware_timers = !(kernel_command_line().is_legacy_time_enabled());
     if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
         RTC::initialize();
         m_epoch_time += boot_time().offset_to_epoch();
@@ -274,13 +271,8 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
         dmesgln("ACPI: RTC CMOS Not present");
     }
 
-    if (probe_non_legacy_hardware_timers) {
-        if (!probe_and_set_x86_non_legacy_hardware_timers())
-            if (!probe_and_set_x86_legacy_hardware_timers())
-                VERIFY_NOT_REACHED();
-    } else if (!probe_and_set_x86_legacy_hardware_timers()) {
-        VERIFY_NOT_REACHED();
-    }
+    if (!probe_and_set_x86_hardware_timers())
+        PANIC("TimeManagement: No supported timer was found");
 #elif ARCH(AARCH64)
     auto rtc = PL031::the();
     if (rtc)
@@ -340,7 +332,7 @@ bool TimeManagement::is_hpet_periodic_mode_allowed()
 }
 
 #if ARCH(X86_64)
-UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_timers()
+UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
 {
     if (!HPET::test_and_initialize())
         return false;
@@ -412,26 +404,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
         m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
     }
 
-    return true;
-}
-
-UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
-{
-    if (ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
-        dbgln("ACPI: CMOS RTC Not Present");
-        return false;
-    } else {
-        dbgln("ACPI: CMOS RTC Present");
-    }
-
-    VERIFY(s_hardware_timers->is_empty());
-    s_hardware_timers->try_append(PIT::initialize([this]() { update_time(); })).release_value_but_fixme_should_propagate_errors();
-    s_hardware_timers->try_append(RealTimeClock::create(TimeManagement::system_timer_tick)).release_value_but_fixme_should_propagate_errors();
-    m_time_keeper_timer = (*s_hardware_timers)[0];
-    m_system_timer = (*s_hardware_timers)[1];
-
-    // The timer is only as accurate as the interrupts...
-    m_time_ticks_per_second = m_time_keeper_timer->ticks_per_second();
     return true;
 }
 #elif ARCH(AARCH64)

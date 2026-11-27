@@ -174,11 +174,6 @@ UNMAP_AFTER_INIT bool CommandLine::is_pci_disabled() const
     return lookup("pci"sv).value_or("ecam"sv) == "none"sv;
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_legacy_time_enabled() const
-{
-    return lookup("time"sv).value_or("modern"sv) == "legacy"sv;
-}
-
 bool CommandLine::is_pc_speaker_enabled() const
 {
     auto value = lookup("pcspeaker"sv).value_or("off"sv);
