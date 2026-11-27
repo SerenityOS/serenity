@@ -44,7 +44,6 @@ private:
     // ^IRQHandler
     bool handle_irq() override;
 
-    Function<void()> m_callback;
     u64 m_frequency { 0 };
     u32 m_interrupt_interval { 0 };
 };
