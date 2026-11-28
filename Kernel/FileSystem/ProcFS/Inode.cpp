@@ -214,7 +214,7 @@ ErrorOr<void> ProcFSInode::attach(OpenFileDescription& description)
 
 void ProcFSInode::did_seek(OpenFileDescription& description, off_t offset)
 {
-    if (m_type == Type::SelfProcessLink) {
+    if (m_type == Type::SelfProcessLink || m_type == Type::RootDirectory || m_type == Type::ProcessDirectory || m_type == Type::ProcessSubdirectory) {
         return;
     }
     VERIFY(m_type == Type::ProcessProperty);

@@ -8,6 +8,7 @@
 #include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 TEST_CASE(test_process_fd_readlink)
 {
@@ -73,4 +74,26 @@ TEST_CASE(test_process_fd_readlink)
     link_length = readlink("/proc/self/fd/1023", buf, sizeof(buf));
     buf[link_length] = '\0';
     EXPECT_EQ(0, strcmp(buf, expected_link));
+}
+
+TEST_CASE(test_procfs_directory_seek)
+{
+    char const* paths[] = {
+        "/proc",
+        "/proc/self",
+        "/proc/self/fd",
+    };
+
+    for (auto const* path : paths) {
+        int fd = open(path, O_RDONLY | O_DIRECTORY);
+
+        EXPECT(fd >= 0);
+        if (fd < 0)
+            continue;
+
+        auto offset = lseek(fd, 0, SEEK_SET);
+        EXPECT_EQ(offset, 0);
+
+        EXPECT_EQ(close(fd), 0);
+    }
 }
