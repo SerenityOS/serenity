@@ -1168,6 +1168,8 @@ void Window::set_fullscreen(bool fullscreen)
 {
     if (m_fullscreen == fullscreen)
         return;
+    if (fullscreen && !is_resizable())
+        return;
     m_fullscreen = fullscreen;
     if (!is_visible())
         return;
