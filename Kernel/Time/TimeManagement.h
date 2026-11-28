@@ -96,9 +96,6 @@ private:
 
     bool m_initialized { false };
 
-    // FIXME: Use a function prototype and share it with the hardware implementations.
-    Function<u64(u64&, u32&, bool)> m_read_time_from_hardware { nullptr };
-
     // Variables between m_update1 and m_update2 are synchronized
     // FIXME: Replace m_update1 and m_update2 with a SpinlockLocker
     Atomic<u32> m_update1 { 0 };
@@ -114,7 +111,7 @@ private:
     Vector<NonnullLockRefPtr<TimeSource>> m_time_sources;
 
     LockRefPtr<HardwareTimerBase> m_system_timer;
-    LockRefPtr<HardwareTimerBase> m_time_keeper_timer;
+    LockRefPtr<TimeSource> m_time_source;
 
     Atomic<u32> m_profile_enable_count { 0 };
     LockRefPtr<HardwareTimerBase> m_profile_timer;
