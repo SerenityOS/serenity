@@ -8,8 +8,7 @@
 #include "Cell.h"
 #include "Spreadsheet.h"
 #include <AK/StringBuilder.h>
-#include <Applications/Spreadsheet/CondFormattingGML.h>
-#include <Applications/Spreadsheet/CondFormattingViewGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -28,6 +27,20 @@
 REGISTER_WIDGET(Spreadsheet, ConditionsView);
 
 namespace Spreadsheet {
+
+static constexpr StringView s_cond_fmt_gml = [] {
+    static constexpr char raw[] = {
+#embed "CondFormatting.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
+static constexpr StringView s_cond_fmt_view_gml = [] {
+    static constexpr char raw[] = {
+#embed "CondView.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, GUI::Window* parent)
     : GUI::Dialog(parent)
@@ -313,7 +326,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
     }
 
     auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional format"_string);
-    conditional_fmt_tab.load_from_gml(cond_fmt_gml).release_value_but_fixme_should_propagate_errors();
+    conditional_fmt_tab.load_from_gml(s_cond_fmt_gml).release_value_but_fixme_should_propagate_errors();
     {
         auto& view = *conditional_fmt_tab.find_descendant_of_type_named<Spreadsheet::ConditionsView>("conditions_view");
         view.set_formats(&m_conditional_formats);
@@ -386,7 +399,7 @@ CellTypeMetadata CellTypeDialog::metadata() const
 ConditionView::ConditionView(ConditionalFormat& fmt)
     : m_format(fmt)
 {
-    load_from_gml(cond_fmt_view_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_cond_fmt_view_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& fg_input = *find_descendant_of_type_named<GUI::ColorInput>("foreground_input");
     auto& bg_input = *find_descendant_of_type_named<GUI::ColorInput>("background_input");

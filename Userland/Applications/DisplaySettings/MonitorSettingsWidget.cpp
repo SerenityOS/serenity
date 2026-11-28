@@ -6,7 +6,7 @@
  */
 
 #include "MonitorSettingsWidget.h"
-#include <Applications/DisplaySettings/MonitorSettingsGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
@@ -19,6 +19,13 @@
 #include <LibGfx/SystemTheme.h>
 
 namespace DisplaySettings {
+
+static constexpr StringView s_monitor_settings_window_gml = [] {
+    static constexpr char raw[] = {
+#embed "MonitorSettings.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ErrorOr<NonnullRefPtr<MonitorSettingsWidget>> MonitorSettingsWidget::try_create()
 {
@@ -107,7 +114,7 @@ ErrorOr<void> MonitorSettingsWidget::generate_resolution_strings()
 
 ErrorOr<void> MonitorSettingsWidget::create_frame()
 {
-    TRY(load_from_gml(monitor_settings_window_gml));
+    TRY(load_from_gml(s_monitor_settings_window_gml));
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 

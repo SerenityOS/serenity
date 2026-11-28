@@ -6,11 +6,18 @@
 
 #include "ExportProgressWindow.h"
 #include <AK/ByteString.h>
-#include <Applications/Piano/ExportProgressWidget.h>
+#include <AK/StringView.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+
+static constexpr StringView s_export_progress_widget = [] {
+    static constexpr char raw[] = {
+#embed "ExportProgressWidget.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ExportProgressWindow::ExportProgressWindow(GUI::Window& parent_window, Atomic<int>& wav_percent_written)
     : GUI::Dialog(&parent_window)
@@ -21,7 +28,7 @@ ExportProgressWindow::ExportProgressWindow(GUI::Window& parent_window, Atomic<in
 ErrorOr<void> ExportProgressWindow::initialize()
 {
     auto main_widget = set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(export_progress_widget));
+    TRY(main_widget->load_from_gml(s_export_progress_widget));
 
     set_resizable(false);
     set_closeable(false);

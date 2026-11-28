@@ -7,7 +7,7 @@
 
 #include "FileOperationProgressWidget.h"
 #include "FileUtils.h"
-#include <Applications/FileManager/FileOperationProgressGML.h>
+#include <AK/StringView.h>
 #include <LibCore/Notifier.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>
@@ -18,11 +18,18 @@
 
 namespace FileManager {
 
+static constexpr StringView s_file_operation_progress_gml = [] {
+    static constexpr char raw[] = {
+#embed "FileOperationProgress.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
+
 FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullOwnPtr<Core::InputBufferedFile> helper_pipe, int helper_pipe_fd)
     : m_operation(operation)
     , m_helper_pipe(move(helper_pipe))
 {
-    load_from_gml(file_operation_progress_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_file_operation_progress_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
 

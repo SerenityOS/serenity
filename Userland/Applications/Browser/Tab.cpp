@@ -19,7 +19,7 @@
 #include "InspectorWidget.h"
 #include "StorageWidget.h"
 #include <AK/StringBuilder.h>
-#include <Applications/Browser/TabGML.h>
+#include <AK/StringView.h>
 #include <Applications/Browser/URLBox.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
@@ -54,6 +54,13 @@
 #include <LibWebView/URL.h>
 
 namespace Browser {
+
+static constexpr StringView s_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "Tab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 Tab::~Tab()
 {
@@ -111,7 +118,7 @@ void Tab::update_status(Optional<String> text_override, i32 count_waiting)
 
 Tab::Tab(BrowserWindow& window)
 {
-    load_from_gml(tab_gml).release_value_but_fixme_should_propagate_errors();
+    load_from_gml(s_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_icon = g_icon_bag.default_favicon;
 

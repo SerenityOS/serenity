@@ -8,26 +8,9 @@
 #include <LibCompress/BrotliDictionary.h>
 
 // Include the 119.9 KiB of dictionary data from a binary file
-extern u8 const brotli_dictionary_data[];
-#if defined(AK_OS_MACOS)
-asm(".const_data\n"
-    ".globl _brotli_dictionary_data\n"
-    "_brotli_dictionary_data:\n");
-#elif defined(AK_OS_EMSCRIPTEN)
-asm(".section .data, \"\",@\n"
-    ".global brotli_dictionary_data\n"
-    "brotli_dictionary_data:\n");
-#else
-asm(".section .rodata\n"
-    ".global brotli_dictionary_data\n"
-    "brotli_dictionary_data:\n");
-#endif
-asm(".incbin \"" __FILE__ ".dict.bin\"\n"
-#if (!defined(AK_OS_WINDOWS) && !defined(AK_OS_EMSCRIPTEN))
-    ".previous\n");
-#else
-);
-#endif
+static constexpr u8 const s_brotli_dictionary_data[] {
+#embed "BrotliDictionary.cpp.dict.bin"
+};
 
 namespace Compress {
 
@@ -212,7 +195,7 @@ ErrorOr<ByteBuffer> BrotliDictionary::lookup_word(size_t index, size_t length)
         return Error::from_string_literal("invalid dictionary lookup length");
 
     size_t word_index = index % (1 << bits_by_length[length]);
-    ReadonlyBytes base_word { brotli_dictionary_data + offset_by_length[length] + (word_index * length), length };
+    ReadonlyBytes base_word { s_brotli_dictionary_data + offset_by_length[length] + (word_index * length), length };
     size_t transform_id = index >> bits_by_length[length];
 
     if (transform_id >= 121)

@@ -5,18 +5,12 @@ serenity_component(
     DEPENDS WebContent
 )
 
-stringify_gml(MailWindow.gml MailWindowGML.h mail_window_gml)
-
 set(SOURCES
     AccountHolder.cpp
     InboxModel.cpp
     MailWidget.cpp
     MailboxTreeModel.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    MailWindowGML.h
 )
 
 serenity_app(Mail ICON app-mail)

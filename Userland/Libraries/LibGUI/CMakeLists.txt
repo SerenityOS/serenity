@@ -1,7 +1,6 @@
 compile_gml(DynamicWidgetContainerControls.gml DynamicWidgetContainerControls.cpp)
 
 compile_gml(AboutDialog.gml AboutDialogGML.cpp)
-stringify_gml(DatePickerDialog.gml DatePickerDialogGML.h date_picker_dialog_gml)
 compile_gml(EmojiInputDialog.gml EmojiInputDialogGML.cpp)
 compile_gml(FontPickerDialog.gml FontPickerDialogGML.cpp)
 compile_gml(FilePickerDialog.gml FilePickerDialogGML.cpp)
@@ -152,7 +151,6 @@ set(GENERATED_SOURCES
     ../../Services/WindowServer/WindowManagerClientEndpoint.h
     ../../Services/WindowServer/WindowManagerServerEndpoint.h
     ../../Services/WindowServer/WindowServerEndpoint.h
-    DatePickerDialogGML.h
 )
 
 serenity_lib(LibGUI gui)

@@ -5,7 +5,7 @@
  */
 
 #include "DesktopSettingsWidget.h"
-#include <Applications/DisplaySettings/DesktopSettingsGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
@@ -14,6 +14,13 @@
 #include <LibGUI/SpinBox.h>
 
 namespace DisplaySettings {
+
+static constexpr StringView s_desktop_settings_gml = [] {
+    static constexpr char raw[] = {
+#embed "DesktopSettings.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 ErrorOr<NonnullRefPtr<DesktopSettingsWidget>> DesktopSettingsWidget::try_create()
 {
@@ -25,7 +32,7 @@ ErrorOr<NonnullRefPtr<DesktopSettingsWidget>> DesktopSettingsWidget::try_create(
 
 ErrorOr<void> DesktopSettingsWidget::create_frame()
 {
-    TRY(load_from_gml(desktop_settings_gml));
+    TRY(load_from_gml(s_desktop_settings_gml));
 
     m_workspace_rows_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("workspace_rows_spinbox");
     m_workspace_rows_spinbox->on_change = [&](auto) {

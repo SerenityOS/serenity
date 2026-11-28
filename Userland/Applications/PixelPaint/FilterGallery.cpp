@@ -6,12 +6,19 @@
 
 #include "FilterGallery.h"
 #include "FilterTreeModel.h"
-#include <Applications/PixelPaint/FilterGalleryGML.h>
+#include <AK/StringView.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {
+
+static constexpr StringView s_filter_gallery_gml = [] {
+    static constexpr char raw[] = {
+#embed "FilterGallery.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     : GUI::Dialog(parent_window)
@@ -22,7 +29,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     set_resizable(true);
 
     auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(filter_gallery_gml).release_value_but_fixme_should_propagate_errors();
+    main_widget->load_from_gml(s_filter_gallery_gml).release_value_but_fixme_should_propagate_errors();
 
     m_filter_tree = main_widget->find_descendant_of_type_named<GUI::TreeView>("tree_view");
     auto apply_button = main_widget->find_descendant_of_type_named<GUI::Button>("apply_button");

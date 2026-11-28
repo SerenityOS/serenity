@@ -5,7 +5,14 @@
  */
 
 #include "GalleryWidget.h"
-#include <Demos/ModelGallery/BasicModelTabGML.h>
+#include <AK/StringView.h>
+
+static constexpr StringView s_basic_model_tab_gml = [] {
+    static constexpr char raw[] = {
+#embed "BasicModelTab.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 GalleryWidget::GalleryWidget()
 {
@@ -25,7 +32,7 @@ GalleryWidget::GalleryWidget()
 ErrorOr<void> GalleryWidget::load_basic_model_tab()
 {
     auto& tab = m_tab_widget->add_tab<GUI::Widget>("Basic Model"_string);
-    TRY(tab.load_from_gml(basic_model_tab_gml));
+    TRY(tab.load_from_gml(s_basic_model_tab_gml));
 
     m_basic_model = BasicModel::create();
     m_basic_model_table = *tab.find_descendant_of_type_named<GUI::TableView>("model_table");

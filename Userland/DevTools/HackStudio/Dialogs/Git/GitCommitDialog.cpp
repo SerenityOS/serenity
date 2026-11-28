@@ -5,9 +5,16 @@
  */
 
 #include "GitCommitDialog.h"
-#include <DevTools/HackStudio/Dialogs/Git/GitCommitDialogGML.h>
+#include <AK/StringView.h>
 
 namespace HackStudio {
+
+static constexpr StringView s_git_commit_dialog_gml = [] {
+    static constexpr char raw[] = {
+#embed "GitCommitDialog.gml"
+    };
+    return StringView { raw, sizeof(raw) };
+}();
 
 GitCommitDialog::GitCommitDialog(GUI::Window* parent)
     : Dialog(parent)
@@ -18,7 +25,7 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
     set_icon(parent->icon());
 
     auto widget = set_main_widget<GUI::Widget>();
-    widget->load_from_gml(git_commit_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    widget->load_from_gml(s_git_commit_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_message_editor = widget->find_descendant_of_type_named<GUI::TextEditor>("message_editor");
     m_cancel_button = widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
