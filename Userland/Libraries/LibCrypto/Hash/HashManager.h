@@ -86,7 +86,7 @@ struct MultiHashDigestVariant {
     DigestVariant m_digest {};
 };
 
-class Manager final : public HashFunction<0, 0, MultiHashDigestVariant> {
+class Manager final : public HashFunction<0, 0, Manager, MultiHashDigestVariant> {
 public:
     using HashFunction::update;
 
@@ -179,13 +179,6 @@ public:
         return m_algorithm.visit(
             [&](Empty&) -> DigestType { VERIFY_NOT_REACHED(); },
             [&](auto& hash) -> DigestType { return hash.peek(); });
-    }
-
-    virtual DigestType digest() override
-    {
-        auto digest = peek();
-        reset();
-        return digest;
     }
 
     virtual void reset() override

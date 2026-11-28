@@ -96,9 +96,18 @@ enum class MessageID : u8 {
     CHANNEL_SUCCESS = 99,
     CHANNEL_FAILURE = 100,
 
+    // As far as I know, all KEX _INIT/_REPLY messages have an ID of 30/31.
+    // So let's have aliases to prevent confusion in generic code.
+    KEX_GENERIC_INIT = 30,
+    KEX_GENERIC_REPLY = 31,
+
     // https://datatracker.ietf.org/doc/html/rfc5656#section-7
-    KEX_ECDH_INIT = 30,
-    KEX_ECDH_REPLY = 31,
+    KEX_ECDH_INIT = KEX_GENERIC_INIT,
+    KEX_ECDH_REPLY = KEX_GENERIC_REPLY,
+
+    // https://datatracker.ietf.org/doc/html/rfc10042#section-2.2
+    KEX_HYBRID_INIT = KEX_GENERIC_INIT,
+    KEX_HYBRID_REPLY = KEX_GENERIC_REPLY,
 
     // https://datatracker.ietf.org/doc/html/rfc4252#section-7
     USERAUTH_PK_OK = 60,

@@ -54,13 +54,6 @@ BLAKE2b::DigestType BLAKE2b::peek()
     return digest;
 }
 
-BLAKE2b::DigestType BLAKE2b::digest()
-{
-    auto digest = peek();
-    reset();
-    return digest;
-}
-
 void BLAKE2b::increment_counter_by(u64 const amount)
 {
     m_internal_state.message_byte_offset[0] += amount;

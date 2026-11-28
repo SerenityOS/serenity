@@ -64,7 +64,12 @@ private:
     ErrorOr<void> send_key_protocol_message();
 
     ErrorOr<void> handle_key_exchange(ByteBuffer& data);
+    ErrorOr<void> handle_ecdh_key_exchange(FixedMemoryStream&);
     ErrorOr<void> send_ecdh_reply(ByteBuffer&& client_public_key);
+    ErrorOr<void> handle_pqt_key_exchange(FixedMemoryStream&);
+    ErrorOr<void> send_pqt_reply(ByteBuffer&& client_public_key);
+    ErrorOr<void> write_keylog_file(ReadonlyBytes shared_secret) const;
+    static ErrorOr<void> add_ed25519_hash_signature(AllocatingMemoryStream&, ReadonlyBytes hash);
 
     ErrorOr<GenericMessage> unpack_generic_message(ByteBuffer& data);
 

@@ -170,13 +170,6 @@ void SHA1::update(u8 const* message, size_t length)
     }
 }
 
-SHA1::DigestType SHA1::digest()
-{
-    auto digest = peek();
-    reset();
-    return digest;
-}
-
 SHA1::DigestType SHA1::peek()
 {
     DigestType digest;

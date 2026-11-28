@@ -20,7 +20,7 @@ static constexpr auto blockbytes { 128 };
 static constexpr auto hash_length { 64 };
 };
 
-class BLAKE2b final : public HashFunction<1024, 512> {
+class BLAKE2b final : public HashFunction<1024, 512, BLAKE2b> {
 public:
     using HashFunction::update;
 
@@ -30,18 +30,7 @@ public:
     }
 
     virtual void update(u8 const*, size_t) override;
-    virtual DigestType digest() override;
     virtual DigestType peek() override;
-
-    static DigestType hash(u8 const* data, size_t length)
-    {
-        BLAKE2b blake2b;
-        blake2b.update(data, length);
-        return blake2b.digest();
-    }
-
-    static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
-    static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual ByteString class_name() const override

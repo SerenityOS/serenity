@@ -161,13 +161,6 @@ void SHA256::update(u8 const* message, size_t length)
     });
 }
 
-SHA256::DigestType SHA256::digest()
-{
-    auto digest = peek();
-    reset();
-    return digest;
-}
-
 SHA256::DigestType SHA256::peek()
 {
     DigestType digest;
@@ -263,13 +256,6 @@ void SHA384::update(u8 const* message, size_t length)
         transform(m_data_buffer);
         m_bit_length += BlockSize * 8;
     });
-}
-
-SHA384::DigestType SHA384::digest()
-{
-    auto digest = peek();
-    reset();
-    return digest;
 }
 
 SHA384::DigestType SHA384::peek()
@@ -374,13 +360,6 @@ void SHA512::update(u8 const* message, size_t length)
         transform(m_data_buffer);
         m_bit_length += BlockSize * 8;
     });
-}
-
-SHA512::DigestType SHA512::digest()
-{
-    auto digest = peek();
-    reset();
-    return digest;
 }
 
 SHA512::DigestType SHA512::peek()

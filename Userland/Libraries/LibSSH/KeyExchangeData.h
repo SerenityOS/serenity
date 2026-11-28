@@ -26,8 +26,8 @@ struct KeyExchangeData {
 
     TypedBlob server_public_host_key {};
 
-    ByteBuffer client_ephemeral_publickey {};
-    ByteBuffer server_ephemeral_publickey {};
+    ByteBuffer client_exchange_blob {};
+    ByteBuffer server_exchange_blob {};
 
     ByteBuffer shared_secret {};
 };

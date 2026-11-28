@@ -22,10 +22,10 @@ ErrorOr<Crypto::Hash::Digest<256>> KeyExchangeData::compute_sha_256() const
 
     TRY(server_public_host_key.encode(stream));
 
-    TRY(encode_string(stream, client_ephemeral_publickey));
-    TRY(encode_string(stream, server_ephemeral_publickey));
+    TRY(encode_string(stream, client_exchange_blob));
+    TRY(encode_string(stream, server_exchange_blob));
 
-    TRY(encode_mpint(stream, shared_secret));
+    TRY(stream.write_until_depleted(shared_secret));
 
     auto final = TRY(stream.read_until_eof());
 

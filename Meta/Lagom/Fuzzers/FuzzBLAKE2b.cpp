@@ -11,6 +11,6 @@
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     AK::set_debug_enabled(false);
-    Crypto::Hash::BLAKE2b::hash(data, size);
+    Crypto::Hash::BLAKE2b::hash(ReadonlyBytes { data, size });
     return 0;
 }

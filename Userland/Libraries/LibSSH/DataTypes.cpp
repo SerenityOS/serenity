@@ -50,6 +50,13 @@ ErrorOr<void> encode_mpint(AllocatingMemoryStream& stream, ReadonlyBytes bytes)
     return {};
 }
 
+ErrorOr<ByteBuffer> as_string(ReadonlyBytes bytes)
+{
+    AllocatingMemoryStream stream;
+    TRY(encode_string(stream, bytes));
+    return stream.read_until_eof();
+}
+
 ErrorOr<void> encode_string(AllocatingMemoryStream& stream, StringView string)
 {
     TRY(stream.write_value<NetworkOrdered<u32>>(string.length()));

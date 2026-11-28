@@ -47,12 +47,11 @@ constexpr u8 PADDING[] = {
 
 }
 
-class MD5 final : public HashFunction<512, 128> {
+class MD5 final : public HashFunction<512, 128, MD5> {
 public:
     using HashFunction::update;
 
     virtual void update(u8 const*, size_t) override;
-    virtual DigestType digest() override;
     virtual DigestType peek() override;
 
 #ifndef KERNEL
@@ -62,15 +61,6 @@ public:
     }
 #endif
 
-    static DigestType hash(u8 const* data, size_t length)
-    {
-        MD5 md5;
-        md5.update(data, length);
-        return md5.digest();
-    }
-
-    static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
-    static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
     virtual void reset() override
     {
         m_A = MD5Constants::init_A;

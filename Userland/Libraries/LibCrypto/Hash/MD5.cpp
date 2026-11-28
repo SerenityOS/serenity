@@ -72,12 +72,6 @@ void MD5::update(u8 const* input, size_t length)
     VERIFY(length < part_length || length - offset <= 64);
     buffer.overwrite(index, &input[offset], length - offset);
 }
-MD5::DigestType MD5::digest()
-{
-    auto digest = peek();
-    reset();
-    return digest;
-}
 
 MD5::DigestType MD5::peek()
 {
