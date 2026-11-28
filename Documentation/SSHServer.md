@@ -1,6 +1,20 @@
 # Connecting to Serenity's SSH Server
 
-Serenity's SSH server currently supports only a subset of standard SSH features.
+Serenity's SSH server currently supports a subset of standard SSH features, but it should be enough for simple workflows.
+
+> [!WARNING]
+> I hope this is already obvious, but don't use SerenityOS or SSHServer for sensitive data.
+> Without a doubt, they contain many security vulnerabilities.
+
+By default, the server listens on port `22`.
+When running SerenityOS inside QEMU, the port `22` is forwarded as `2222` on your host.
+
+To connect to the server inside a QEMU instance from the host machine you can use `ssh -p 2222 anon@127.0.0.1`.
+Or if you have another setup (like bare-metal), simply use `ssh anon@${YOUR_SERENITY_IP}`.
+
+However, some configuration is required before we can connect to SSHServer.
+First, we need a key pair to authenticate as `anon`.
+And second, to prevent your SSH client from complaining about identity change, we need to provide a stable cryptographic identity to the server.
 
 ## Authentication
 
@@ -9,7 +23,8 @@ The server only supports the `publickey` authentication method.
 -   Your **client** must have a private key.
 -   The **server** must have access to the corresponding public key.
 
-> NOTE: Only **ED25519** keys are supported. Other key types (RSA, ECDSA, etc.) will not work.
+> [!NOTE]
+> Only **ED25519** keys are supported. Other key types (RSA, ECDSA, etc.) will not work.
 
 ### Generating a Key Pair
 
