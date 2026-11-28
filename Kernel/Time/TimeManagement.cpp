@@ -126,15 +126,13 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision)
     u64 seconds;
     u32 ticks;
 
-    bool do_query = precision == TimePrecision::Precise && m_can_query_precise_time.was_set();
-
     u32 update_iteration;
     do {
         update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
         seconds = m_seconds_since_boot;
         ticks = m_ticks_this_second;
 
-        if (do_query)
+        if (precision == TimePrecision::Precise)
             m_read_time_from_hardware(seconds, ticks, true);
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
 
@@ -342,7 +340,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
     // Use the HPET main counter frequency for time purposes. This is likely
     // a much higher frequency than the interrupt itself and allows us to
     // keep a more accurate time
-    m_can_query_precise_time.set();
     m_time_ticks_per_second = HPET::the().frequency();
 
     MUST(m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(OPTIMAL_TICKS_PER_SECOND_RATE)));
@@ -410,7 +407,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
     };
     m_system_timer->set_callback([this]() { system_timer_callback(); });
 
-    m_can_query_precise_time.set();
     m_time_keeper_timer = m_system_timer;
 
     return true;
@@ -430,7 +426,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
     };
     m_system_timer->set_callback([this]() { system_timer_callback(); });
 
-    m_can_query_precise_time.set();
     m_time_keeper_timer = m_system_timer;
 
     return true;
@@ -442,47 +437,14 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 void TimeManagement::update_time()
 {
     VERIFY(m_time_keeper_timer);
-    // NOTE: m_seconds_since_boot and m_ticks_this_second are only ever
-    // updated from here!
-
-    if (m_can_query_precise_time.was_set()) {
-        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-        auto delta_ns = m_read_time_from_hardware(m_seconds_since_boot, m_ticks_this_second, false);
-        // TODO: Apply m_remaining_epoch_time_adjustment
-        m_epoch_time += Duration::from_nanoseconds(delta_ns);
-        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
-    } else {
-        increment_time_since_boot();
-    }
+    // NOTE: m_seconds_since_boot and m_ticks_this_second are only ever updated from here!
+    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+    auto delta_ns = m_read_time_from_hardware(m_seconds_since_boot, m_ticks_this_second, false);
+    // TODO: Apply m_remaining_epoch_time_adjustment
+    m_epoch_time += Duration::from_nanoseconds(delta_ns);
+    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 
     update_time_page();
-}
-
-void TimeManagement::increment_time_since_boot()
-{
-    VERIFY(!m_time_keeper_timer.is_null());
-
-    // Compute time adjustment for adjtime. Let the clock run up to 1% fast or slow.
-    // That way, adjtime can adjust up to 36 seconds per hour, without time getting very jumpy.
-    // Once we have a smarter NTP service that also adjusts the frequency instead of just slewing time, maybe we can lower this.
-    long nanos_per_tick = 1'000'000'000 / m_time_keeper_timer->frequency();
-    time_t max_slew_nanos = nanos_per_tick / 100;
-
-    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
-
-    auto slew_nanos = Duration::from_nanoseconds(
-        clamp(m_remaining_epoch_time_adjustment.to_nanoseconds(), -max_slew_nanos, max_slew_nanos));
-    m_remaining_epoch_time_adjustment -= slew_nanos;
-
-    m_epoch_time += Duration::from_nanoseconds(nanos_per_tick + slew_nanos.to_nanoseconds());
-
-    if (++m_ticks_this_second >= m_time_keeper_timer->frequency()) {
-        // FIXME: Synchronize with other clock somehow to prevent drifting apart.
-        ++m_seconds_since_boot;
-        m_ticks_this_second = 0;
-    }
-
-    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 }
 
 void TimeManagement::system_timer_callback()

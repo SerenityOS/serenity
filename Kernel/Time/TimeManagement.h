@@ -59,8 +59,6 @@ public:
 
     bool is_system_timer(HardwareTimerBase const&) const;
 
-    void increment_time_since_boot();
-
     bool enable_profile_timer();
     bool disable_profile_timer();
 
@@ -71,8 +69,6 @@ public:
     Duration remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
     // FIXME: Most likely broken, because it does not check m_update[12] for in-progress updates.
     void set_remaining_epoch_time_adjustment(Duration adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
-
-    bool can_query_precise_time() const { return m_can_query_precise_time.was_set(); }
 
     Memory::VMObject& time_page_vmobject();
 
@@ -113,8 +109,6 @@ private:
     Atomic<u32> m_update2 { 0 };
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
-    // If you set this, ensure to have provided a valid m_read_time_from_hardware.
-    SetOnce m_can_query_precise_time;
 
     Vector<NonnullLockRefPtr<HardwareTimerBase>> m_hardware_timers;
     Vector<NonnullLockRefPtr<TimeSource>> m_time_sources;
