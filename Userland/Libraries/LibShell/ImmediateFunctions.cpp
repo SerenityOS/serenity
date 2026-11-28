@@ -978,7 +978,7 @@ ErrorOr<Node> parse_primary_expression(Span<Token>& tokens)
             switch (op) {
             case Operator::OpenParen: {
                 tokens = tokens.slice(1);
-                auto value = TRY(parse_expression(tokens));
+                auto value = TRY(parse_comma_expression(tokens));
                 if (!next_token_is_operator(tokens, Operator::CloseParen)) {
                     return Node {
                         make<ErrorNode>("Expected ')' after expression in parentheses"_string)
