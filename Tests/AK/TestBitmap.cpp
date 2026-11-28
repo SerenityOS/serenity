@@ -102,6 +102,24 @@ TEST_CASE(find_one_anywhere_unset)
     }
 }
 
+TEST_CASE(find_one_anywhere_unaligned_buffer)
+{
+    // With an unaligned m_data, the word-aligned pointer used by
+    // find_one_anywhere() lies past a small bitmap. The leading byte scan
+    // must not read beyond the bitmap in that case.
+    alignas(8) u8 set_storage[16] = {};
+    set_storage[1] = 0x00; // the bitmap's only byte
+    set_storage[2] = 0xff; // would previously look like a set bit at index 8
+    Bitmap set_bitmap(set_storage + 1, 1, false);
+    EXPECT(!set_bitmap.find_one_anywhere_set(0).has_value());
+
+    alignas(8) u8 unset_storage[16] = {};
+    unset_storage[1] = 0xff; // the bitmap's only byte
+    unset_storage[2] = 0x00; // would previously look like an unset bit at index 8
+    Bitmap unset_bitmap(unset_storage + 1, 1, false);
+    EXPECT(!unset_bitmap.find_one_anywhere_unset(0).has_value());
+}
+
 TEST_CASE(find_first_range)
 {
     auto bitmap = MUST(Bitmap::create(128, true));
