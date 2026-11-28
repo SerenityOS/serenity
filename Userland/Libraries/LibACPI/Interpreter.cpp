@@ -782,7 +782,7 @@ ErrorOr<void> Interpreter::cycle(TableStream& stream)
             TRY(operand_template.try_append(OperandType::TermArg));
             TRY(operand_template.try_append(OperandType::End));
 
-            auto opcode_frame = TRY(OpcodeFrame::from_opcode(Opcode::EvaluatedValue, stream.offset(), operand_template));
+            auto opcode_frame = TRY(OpcodeFrame::from_opcode(Opcode::EvaluatedValue, m_frame_stack.last().stream.offset(), operand_template));
             TRY(opcode_frame.finish_operand(move(return_value), 0));
             TRY(m_frame_stack.last().opcode_frames.try_append(move(opcode_frame)));
         }
