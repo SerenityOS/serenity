@@ -8,6 +8,7 @@
 #include "Highlight.h"
 #include "Shell.h"
 #include <AK/Find.h>
+#include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -19,6 +20,27 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
+
+static ErrorOr<Vector<String>> list_product(Vector<String> const& left, Vector<String> const& right)
+{
+    if (left.is_empty() || right.is_empty())
+        return Vector<String> {};
+
+    Vector<String> result;
+    result.ensure_capacity(left.size() * right.size());
+
+    StringBuilder builder;
+    for (auto& left_element : left) {
+        for (auto& right_element : right) {
+            builder.clear();
+            builder.append(left_element);
+            builder.append(right_element);
+            result.append(TRY(builder.to_string()));
+        }
+    }
+
+    return result;
+}
 
 ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder, Shell::AST::Command const& value)
 {
@@ -3136,6 +3158,9 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
+    if (m_right->is_glob())
+        return make_ref_counted<GlobValue>(move(left_value), static_cast<Glob const&>(*m_right).text(), m_position);
+
     auto right_value = TRY(TRY(m_right->run(shell))->resolve_without_cast(shell));
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
@@ -3174,23 +3199,7 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
     }
 
     // Otherwise, treat them as lists and create a list product (or just append).
-    if (left.is_empty() || right.is_empty())
-        return make_ref_counted<ListValue>({});
-
-    Vector<String> result;
-    result.ensure_capacity(left.size() * right.size());
-
-    StringBuilder builder;
-    for (auto& left_element : left) {
-        for (auto& right_element : right) {
-            builder.append(left_element);
-            builder.append(right_element);
-            result.append(TRY(builder.to_string()));
-            builder.clear();
-        }
-    }
-
-    return make_ref_counted<ListValue>(move(result));
+    return make_ref_counted<ListValue>(TRY(list_product(left, right)));
 }
 
 ErrorOr<void> Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -3782,17 +3791,39 @@ GlobValue::~GlobValue()
 
 ErrorOr<Vector<String>> GlobValue::resolve_as_list(RefPtr<Shell> shell)
 {
-    if (!shell)
-        return resolve_slices(shell, Vector { m_glob }, m_slices);
+    Vector<String> prefixes { String {} };
+    if (m_prefix)
+        prefixes = TRY(m_prefix->resolve_as_list(shell));
 
-    auto results = TRY(shell->expand_globs(m_glob, shell->cwd));
-    if (results.is_empty())
+    if (!shell)
+        return resolve_slices(shell, TRY(list_product(prefixes, { m_glob })), m_slices);
+
+    struct PrefixedResults {
+        String const& prefix;
+        Vector<ByteString> expanded;
+    };
+    Vector<PrefixedResults> results;
+    size_t count = 0;
+
+    for (auto& prefix : prefixes) {
+        auto expanded = TRY(shell->expand_globs(m_glob, LexicalPath::absolute_path(shell->cwd, prefix.bytes_as_string_view())));
+        count += expanded.size();
+        results.append({ prefix, move(expanded) });
+    }
+
+    if (count == 0)
         shell->raise_error(Shell::ShellError::InvalidGlobError, "Glob did not match anything!", m_generation_position);
 
     Vector<String> strings;
-    TRY(strings.try_ensure_capacity(results.size()));
-    for (auto& entry : results) {
-        TRY(strings.try_append(TRY(String::from_byte_string(entry))));
+    TRY(strings.try_ensure_capacity(count));
+    StringBuilder builder;
+    for (auto& result : results) {
+        for (auto& entry : result.expanded) {
+            builder.clear();
+            builder.append(result.prefix);
+            builder.append(entry);
+            TRY(strings.try_append(TRY(builder.to_string())));
+        }
     }
 
     return resolve_slices(shell, move(strings), m_slices);
