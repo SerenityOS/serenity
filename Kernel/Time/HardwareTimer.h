@@ -34,9 +34,6 @@ public:
     virtual bool supports_mode(TimerMode) const = 0;
 
     virtual void disable() = 0;
-    virtual bool can_query_raw() const { return false; }
-    virtual u64 current_raw() const { return 0; }
-    virtual u64 raw_to_ns(u64) const { return 0; }
 
     virtual ErrorOr<void> try_to_set_frequency(size_t new_frequency)
     {

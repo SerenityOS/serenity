@@ -30,9 +30,6 @@ public:
     virtual bool supports_mode(TimerMode mode) const override;
 
     virtual void disable() override;
-    virtual bool can_query_raw() const override { return true; }
-    virtual u64 current_raw() const override;
-    virtual u64 raw_to_ns(u64) const override;
 
     virtual size_t frequency() const override;
 
