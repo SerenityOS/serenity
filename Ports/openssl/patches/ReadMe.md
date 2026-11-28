@@ -17,3 +17,8 @@ Add serenity alias to linker version script
 This adds a serenity alias to the linker version script and forwards it
 to the solaris configuration.
 
+## `0004-Use-version-script-for-serenity-shared-instead-of-Ma.patch`
+
+Use `--version-script` for serenity-shared instead of `-Map`
+
+

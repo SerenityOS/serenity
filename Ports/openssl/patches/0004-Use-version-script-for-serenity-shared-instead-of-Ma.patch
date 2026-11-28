@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gurkirat Singh <info@tbhaxor.com>
+Date: Thu, 26 Nov 2026 19:01:55 +0530
+Subject: [PATCH] Use `--version-script` for serenity-shared instead of `-Map`
+
+---
+ Configurations/shared-info.pl | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/Configurations/shared-info.pl b/Configurations/shared-info.pl
+index 144038bad47eb3544bb848074bc513263a113c27..03a1d6466a2c83340f7953bed94d6cf7ca0c968c 100644
+--- a/Configurations/shared-info.pl
++++ b/Configurations/shared-info.pl
+@@ -42,9 +42,8 @@ my %shared_info;
+     'serenity-shared' => {
+         shared_ldflag         => '-shared',
+         shared_sonameflag     => '-Wl,-soname=',
+-        # -Map is not really what should be used here, but we need a flag that
+-        # accepts a filename and that it's '-version-map'
+-        shared_defflag        => "-Wl,-Map=",
++	# File name passed is libcrypto.ld which is actually a linker version script
++        shared_defflag        => "-Wl,--version-script=",
+     },
+     'bsd-gcc-shared' => sub { return $shared_info{'linux-shared'}; },
+     'bsd-gcc-nodef-shared' => sub { 
