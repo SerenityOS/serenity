@@ -94,18 +94,22 @@ public:
     Optional<size_t> find_one_anywhere(size_t hint = 0) const
     {
         VERIFY(hint < m_size);
-        u8 const* end = &m_data[size_in_bytes()];
+        size_t const byte_count = size_in_bytes();
+        u8 const* end = &m_data[byte_count];
 
         for (;;) {
             // We will use hint as what it is: a hint. Because we try to
             // scan over entire 32 bit words, we may start searching before
             // the hint!
             size_t const* ptr_large = reinterpret_cast<size_t const*>(reinterpret_cast<FlatPtr>(&m_data[hint / 8]) & ~(sizeof(size_t) - 1));
+            size_t const* end_large = reinterpret_cast<size_t const*>(reinterpret_cast<FlatPtr>(end) & ~(sizeof(size_t) - 1));
             if (reinterpret_cast<u8 const*>(ptr_large) < &m_data[0]) {
                 ptr_large++;
 
-                // m_data isn't aligned, check first bytes
-                size_t start_ptr_large = reinterpret_cast<u8 const*>(ptr_large) - &m_data[0];
+                // m_data isn't aligned, check first bytes. The alignment gap
+                // can be larger than the bitmap itself, so never scan past
+                // the end of the bitmap here.
+                size_t start_ptr_large = min(reinterpret_cast<u8 const*>(ptr_large) - &m_data[0], byte_count);
                 size_t i = 0;
                 u8 byte = VALUE ? 0x00 : 0xff;
                 while (i < start_ptr_large && m_data[i] == byte)
@@ -120,15 +124,15 @@ public:
             }
 
             size_t val_large = VALUE ? 0x0 : NumericLimits<size_t>::max();
-            size_t const* end_large = reinterpret_cast<size_t const*>(reinterpret_cast<FlatPtr>(end) & ~(sizeof(size_t) - 1));
             while (ptr_large < end_large && *ptr_large == val_large)
                 ptr_large++;
 
-            if (ptr_large == end_large) {
+            // The aligned pointer can lie past the end if the bitmap is
+            // smaller than the alignment gap. Fall back to the byte scan.
+            if (ptr_large >= end_large) {
                 // We didn't find anything, check the remaining few bytes (if any)
                 u8 byte = VALUE ? 0x00 : 0xff;
-                size_t i = reinterpret_cast<u8 const*>(ptr_large) - &m_data[0];
-                size_t byte_count = size_in_bytes();
+                size_t i = min(reinterpret_cast<u8 const*>(ptr_large) - &m_data[0], byte_count);
                 VERIFY(i <= byte_count);
                 while (i < byte_count && m_data[i] == byte)
                     i++;
