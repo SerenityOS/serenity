@@ -50,7 +50,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
         dmesgln("KernelRng: Using HPET as entropy source");
 
         for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
-            u64 hpet_time = HPET::the().read_main_counter_unsafe();
+            u64 hpet_time = HPET::the().read_counter_raw();
             add_random_event(hpet_time, i % 32);
         }
     } else {

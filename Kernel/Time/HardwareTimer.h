@@ -9,57 +9,42 @@
 #include <AK/AtomicRefCounted.h>
 #include <AK/Function.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Time/HardwareTimerType.h>
+#include <Kernel/Time/TimeDeviceBase.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
-enum class HardwareTimerType {
-    // x86
-    i8253,                   // PIT
-    RTC,                     // Real Time Clock
-    HighPrecisionEventTimer, // also known as IA-PC HPET
-    LocalAPICTimer,          // Local APIC
-
-    // AArch64
-    RPiTimer,
-    ARMv8Timer,
-
-    // RISC-V
-    RISCVTimer,
+enum class TimerMode {
+    OneShot,
+    Periodic,
 };
 
 template<typename InterruptHandlerType>
 class HardwareTimer;
 
-class HardwareTimerBase : public AtomicRefCounted<HardwareTimerBase> {
+class HardwareTimerBase : public virtual TimeDeviceBase {
 public:
     virtual ~HardwareTimerBase() = default;
 
-    // We need to create a virtual will_be_destroyed here because we derive
-    // from RefCounted<HardwareTimerBase> here, which means that RefCounted<>
-    // will only call will_be_destroyed if we define it here. The derived
-    // classes then should forward this to e.g. GenericInterruptHandler.
-    virtual void will_be_destroyed() = 0;
-
-    virtual StringView model() const = 0;
-    virtual HardwareTimerType timer_type() const = 0;
     virtual Function<void()> set_callback(Function<void()>) = 0;
 
-    virtual bool is_periodic() const = 0;
-    virtual bool is_periodic_capable() const = 0;
-    virtual void set_periodic() = 0;
-    virtual void set_non_periodic() = 0;
+    virtual TimerMode mode() const = 0;
+    virtual void set_mode(TimerMode) = 0;
+    virtual bool supports_mode(TimerMode) const = 0;
+
     virtual void disable() = 0;
-    virtual bool can_query_raw() const { return false; }
-    virtual u64 current_raw() const { return 0; }
-    virtual u64 raw_to_ns(u64) const { return 0; }
 
-    virtual size_t ticks_per_second() const = 0;
+    virtual ErrorOr<void> try_to_set_frequency(size_t new_frequency)
+    {
+        if (new_frequency == frequency())
+            return {};
 
-    virtual void reset_to_default_ticks_per_second() = 0;
-    virtual bool try_to_set_frequency(size_t frequency) = 0;
-    virtual bool is_capable_of_frequency(size_t frequency) const = 0;
-    virtual size_t calculate_nearest_possible_frequency(size_t frequency) const = 0;
+        return Error::from_errno(ENOTSUP);
+    }
+
+    virtual bool is_capable_of_frequency(size_t new_frequency) const { return new_frequency == frequency(); }
+    virtual size_t calculate_nearest_possible_frequency(size_t) const { return frequency(); }
 };
 
 template<>
@@ -88,8 +73,6 @@ public:
         return previous_callback;
     }
 
-    virtual size_t ticks_per_second() const override { return m_frequency; }
-
 protected:
     HardwareTimer(InterruptNumber irq_number, Function<void()> callback = nullptr)
         : IRQHandler(irq_number)
@@ -106,8 +89,6 @@ protected:
         }
         return false;
     }
-
-    u64 m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };
 
 private:
     Function<void()> m_callback;
@@ -140,7 +121,6 @@ public:
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
     virtual StringView controller() const override { return {}; }
     virtual bool eoi() override;
-    virtual size_t ticks_per_second() const override { return m_frequency; }
 
 protected:
     HardwareTimer(InterruptNumber irq_number, Function<void()> callback = nullptr)
@@ -158,8 +138,6 @@ protected:
         }
         return false;
     }
-
-    u64 m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };
 
 private:
     Function<void()> m_callback;

@@ -18,11 +18,6 @@ enum class PanicMode {
     Shutdown,
 };
 
-enum class HPETMode {
-    Periodic,
-    NonPeriodic
-};
-
 enum class I8042PresenceMode {
     Automatic,
     AggressiveTest,
@@ -93,7 +88,6 @@ public:
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;
     [[nodiscard]] PanicMode panic_mode(Validate should_validate = Validate::No) const;
-    [[nodiscard]] HPETMode hpet_mode() const;
     [[nodiscard]] bool disable_physical_storage() const;
     [[nodiscard]] bool disable_ps2_mouse() const;
     [[nodiscard]] bool disable_uhci_controller() const;

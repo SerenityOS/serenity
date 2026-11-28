@@ -16,6 +16,7 @@
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Time/TimeSource.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -33,20 +34,19 @@ enum class TimePrecision {
 class TimeManagement {
 
 public:
-    TimeManagement();
     static void initialize(u32 cpu);
     static bool is_initialized();
     static TimeManagement& the();
 
-    static ErrorOr<void> register_hardware_timer(NonnullLockRefPtr<HardwareTimerBase>);
+    ErrorOr<void> register_hardware_timer(NonnullLockRefPtr<HardwareTimerBase>);
+    ErrorOr<void> register_time_source(NonnullLockRefPtr<TimeSource>);
 
     static u64 scheduler_current_time();
 
-    static ErrorOr<void> validate_clock_id(clockid_t);
     // This API cannot distinguish returned time types; prefer the clock-specific functions instead.
-    Duration current_time(clockid_t) const;
-    MonotonicTime monotonic_time(TimePrecision = TimePrecision::Coarse) const;
-    MonotonicTime monotonic_time_raw() const
+    Duration current_time(clockid_t);
+    MonotonicTime monotonic_time(TimePrecision = TimePrecision::Coarse);
+    MonotonicTime monotonic_time_raw()
     {
         // TODO: implement
         return monotonic_time(TimePrecision::Precise);
@@ -59,22 +59,16 @@ public:
 
     bool is_system_timer(HardwareTimerBase const&) const;
 
-    void increment_time_since_boot();
-
-    static bool is_hpet_periodic_mode_allowed();
-
     bool enable_profile_timer();
     bool disable_profile_timer();
 
-    u64 uptime_ms() const;
+    u64 uptime_ms();
     static UnixDateTime now();
 
     // FIXME: Most likely broken, because it does not check m_update[12] for in-progress updates.
     Duration remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
     // FIXME: Most likely broken, because it does not check m_update[12] for in-progress updates.
     void set_remaining_epoch_time_adjustment(Duration adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
-
-    bool can_query_precise_time() const { return m_can_query_precise_time.was_set(); }
 
     Memory::VMObject& time_page_vmobject();
 
@@ -100,8 +94,7 @@ private:
     static void system_timer_tick();
     void update_time();
 
-    // FIXME: Use a function prototype and share it with the hardware implementations.
-    Function<u64(u64&, u32&, bool)> m_read_time_from_hardware { nullptr };
+    bool m_initialized { false };
 
     // Variables between m_update1 and m_update2 are synchronized
     // FIXME: Replace m_update1 and m_update2 with a SpinlockLocker
@@ -113,16 +106,17 @@ private:
     Atomic<u32> m_update2 { 0 };
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
-    // If you set this, ensure to have provided a valid m_read_time_from_hardware.
-    SetOnce m_can_query_precise_time;
+
+    Vector<NonnullLockRefPtr<HardwareTimerBase>> m_hardware_timers;
+    Vector<NonnullLockRefPtr<TimeSource>> m_time_sources;
 
     LockRefPtr<HardwareTimerBase> m_system_timer;
-    LockRefPtr<HardwareTimerBase> m_time_keeper_timer;
+    LockRefPtr<TimeSource> m_time_source;
 
     Atomic<u32> m_profile_enable_count { 0 };
     LockRefPtr<HardwareTimerBase> m_profile_timer;
 
-    NonnullOwnPtr<Memory::Region> m_time_page_region;
+    OwnPtr<Memory::Region> m_time_page_region;
 };
 
 }

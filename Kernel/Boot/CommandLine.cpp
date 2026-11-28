@@ -213,16 +213,6 @@ UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
     PANIC("Unknown ACPI feature level: {}", value);
 }
 
-UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
-{
-    auto hpet_mode = lookup("hpet"sv).value_or("periodic"sv);
-    if (hpet_mode == "periodic"sv)
-        return HPETMode::Periodic;
-    if (hpet_mode == "nonperiodic"sv)
-        return HPETMode::NonPeriodic;
-    PANIC("Unknown HPETMode: {}", hpet_mode);
-}
-
 UNMAP_AFTER_INIT bool CommandLine::is_physical_networking_disabled() const
 {
     return contains("disable_physical_networking"sv);

@@ -224,7 +224,6 @@ void APIC::write_icr(ICRReg const& icr)
 
 #define APIC_LVT_TIMER_ONESHOT 0
 #define APIC_LVT_TIMER_PERIODIC (1 << 17)
-#define APIC_LVT_TIMER_TSCDEADLINE (1 << 18)
 
 #define APIC_LVT_MASKED (1 << 16)
 #define APIC_LVT_TRIGGER_LEVEL (1 << 14)
@@ -576,7 +575,7 @@ void APIC::send_ipi(u32 cpu)
     write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, m_is_x2.was_set() ? Processor::by_id(cpu).info().apic_id() : cpu, ICRReg::Fixed, m_is_x2.was_set() ? ICRReg::Physical : ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand });
 }
 
-UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
+UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(TimeSource& calibration_timer)
 {
     if (!m_apic_base && !m_is_x2.was_set())
         return nullptr;
@@ -601,9 +600,6 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
         break;
     case TimerMode::Periodic:
         flags |= APIC_LVT_TIMER_PERIODIC;
-        break;
-    case TimerMode::TSCDeadline:
-        flags |= APIC_LVT_TIMER_TSCDEADLINE;
         break;
     }
     if (!enable)
@@ -643,6 +639,11 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
 
     if (timer_mode == TimerMode::Periodic)
         write_register(APIC_REG_TIMER_INITIAL_COUNT, ticks / get_timer_divisor());
+}
+
+void APIC::set_timer_count(u32 count)
+{
+    write_register(APIC_REG_TIMER_INITIAL_COUNT, count);
 }
 
 u32 APIC::get_timer_current_count()

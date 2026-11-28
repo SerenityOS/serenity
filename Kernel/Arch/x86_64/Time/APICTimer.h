@@ -15,20 +15,18 @@ namespace Kernel {
 
 class APICTimer final : public HardwareTimer<GenericInterruptHandler> {
 public:
-    static APICTimer* initialize(InterruptNumber, HardwareTimerBase&);
+    static APICTimer* initialize(InterruptNumber, TimeSource&);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::LocalAPICTimer; }
     virtual StringView model() const override { return "LocalAPIC"sv; }
 
-    virtual bool is_periodic() const override { return m_timer_mode == APIC::TimerMode::Periodic; }
-    virtual bool is_periodic_capable() const override { return true; }
-    virtual void set_periodic() override;
-    virtual void set_non_periodic() override;
+    // FIXME: Implement support for changing timer modes
+    virtual TimerMode mode() const override { return m_timer_mode; }
+    virtual void set_mode(TimerMode) override { }
+    virtual bool supports_mode(TimerMode mode) const override { return mode == TimerMode::Periodic; }
+
     virtual void disable() override { }
 
-    virtual void reset_to_default_ticks_per_second() override;
-    virtual bool try_to_set_frequency(size_t frequency) override;
-    virtual bool is_capable_of_frequency(size_t frequency) const override;
-    virtual size_t calculate_nearest_possible_frequency(size_t frequency) const override;
+    virtual size_t frequency() const override;
 
     void will_be_destroyed() override { HardwareTimer<GenericInterruptHandler>::will_be_destroyed(); }
     void enable_local_timer();
@@ -37,10 +35,9 @@ public:
 private:
     explicit APICTimer(InterruptNumber, Function<void()>);
 
-    bool calibrate(HardwareTimerBase&);
-
     u32 m_timer_period { 0 };
-    APIC::TimerMode m_timer_mode { APIC::TimerMode::Periodic };
+    TimerMode m_timer_mode { TimerMode::Periodic };
+    size_t m_frequency { 0 };
 };
 
 }
