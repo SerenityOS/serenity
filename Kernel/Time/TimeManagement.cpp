@@ -216,6 +216,9 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
         else
             s_scheduler_current_time = current_time_monotonic;
 
+        dbgln("TimeManagement: System timer: {}", s_the->m_system_timer->model());
+        dbgln("TimeManagement: Time source: {}", s_the->m_time_source->model());
+
         s_the->m_initialized = true;
     } else {
         VERIFY(s_the->m_initialized);
@@ -387,7 +390,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
     // TODO: Use some kind of heuristic to decide which timer to use.
     m_system_timer = m_hardware_timers.last();
     m_time_source = m_time_sources.last();
-    dbgln("TimeManagement: System timer: {}", m_system_timer->model());
 
     m_time_ticks_per_second = m_time_source->frequency();
 
