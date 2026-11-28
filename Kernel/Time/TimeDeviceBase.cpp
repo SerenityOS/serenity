@@ -10,29 +10,29 @@
 
 namespace Kernel {
 
-u64 TimeDeviceBase::measure_frequency(HardwareTimerBase& source, AK::Function<u64()> read_counter, CounterDirection direction) const
+u64 TimeDeviceBase::measure_frequency(TimeSource& source, AK::Function<u64()> read_counter, CounterDirection direction) const
 {
     constexpr u64 CALIBRATION_DURATION_NS = 100'000'000;
 
     dbgln("{}: Calibrating using {}", model(), source.model());
 
-    auto start = read_counter();
-    auto start_reference = source.current_raw();
+    auto calibration_frequency = source.frequency();
+    auto target_source_ticks = CALIBRATION_DURATION_NS * calibration_frequency / 1'000'000'000ull;
 
-    // NOTE: The raw counter does not run at source.frequency() (that is the tick rate), so use raw_to_ns().
-    while (source.raw_to_ns(source.current_raw() - start_reference) < CALIBRATION_DURATION_NS)
+    auto start = read_counter();
+    auto start_reference = source.read_counter();
+
+    while (source.read_counter() < start_reference + target_source_ticks)
         Processor::wait_check();
 
     auto end = read_counter();
-    auto end_reference = source.current_raw();
+    auto end_reference = source.read_counter();
 
     VERIFY(direction == CounterDirection::Down ? start > end : end > start);
-
-    auto elapsed_ns = source.raw_to_ns(end_reference - start_reference);
-    VERIFY(elapsed_ns > 0);
+    VERIFY(end_reference > start_reference);
 
     auto counter_delta = direction == CounterDirection::Down ? start - end : end - start;
-    auto frequency = counter_delta * 1'000'000'000ull / elapsed_ns;
+    auto frequency = counter_delta * calibration_frequency / (end_reference - start_reference);
 
     dmesgln("{}: Measured base frequency: {}MHz", model(), (frequency + 500'000) / 1'000'000);
     return frequency;

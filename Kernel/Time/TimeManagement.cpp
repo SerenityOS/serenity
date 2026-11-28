@@ -192,7 +192,7 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
             // initialization needs to briefly enable interrupts, which then
             // would trigger a deadlock trying to get the s_the instance while
             // creating it.
-            if (auto* apic_timer = APIC::the().initialize_timers(*s_the->m_system_timer)) {
+            if (auto* apic_timer = APIC::the().initialize_timers(*s_the->m_time_source)) {
                 dmesgln("Duration: Using APIC timer as system timer");
                 s_the->set_system_timer(*apic_timer);
             }
@@ -345,7 +345,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_hardware_timers()
     MUST(m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(OPTIMAL_TICKS_PER_SECOND_RATE)));
 
     if (TSC::is_supported_and_invariant()) {
-        auto tsc = TSC::create(*m_system_timer).release_value_but_fixme_should_propagate_errors();
+        auto tsc = TSC::create(*m_time_source).release_value_but_fixme_should_propagate_errors();
         register_time_source(tsc).release_value_but_fixme_should_propagate_errors();
 
         m_time_source = tsc;

@@ -575,7 +575,7 @@ void APIC::send_ipi(u32 cpu)
     write_icr({ IRQ_APIC_IPI + IRQ_VECTOR_BASE, m_is_x2.was_set() ? Processor::by_id(cpu).info().apic_id() : cpu, ICRReg::Fixed, m_is_x2.was_set() ? ICRReg::Physical : ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand });
 }
 
-UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
+UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(TimeSource& calibration_timer)
 {
     if (!m_apic_base && !m_is_x2.was_set())
         return nullptr;

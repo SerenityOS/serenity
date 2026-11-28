@@ -8,17 +8,16 @@
 
 #include <AK/Types.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Time/HardwareTimer.h>
 #include <Kernel/Time/TimeSource.h>
 
 namespace Kernel {
 
 class TSC : public TimeSource {
 public:
-    static ErrorOr<NonnullLockRefPtr<TSC>> create(HardwareTimerBase& calibration_reference);
+    static ErrorOr<NonnullLockRefPtr<TSC>> create(TimeSource& calibration_reference);
     static bool is_supported_and_invariant();
 
-    TSC(HardwareTimerBase& calibration_reference);
+    TSC(TimeSource& calibration_reference);
 
     virtual StringView model() const override { return "TSC"sv; }
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::TSC; }

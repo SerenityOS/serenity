@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-class HardwareTimerBase;
+class TimeSource;
 
 class TimeDeviceBase : public AtomicRefCounted<TimeDeviceBase> {
 public:
@@ -35,7 +35,7 @@ protected:
         Down,
     };
 
-    u64 measure_frequency(HardwareTimerBase& source, AK::Function<u64()> read_counter, CounterDirection direction) const;
+    u64 measure_frequency(TimeSource& source, AK::Function<u64()> read_counter, CounterDirection direction) const;
 };
 
 }

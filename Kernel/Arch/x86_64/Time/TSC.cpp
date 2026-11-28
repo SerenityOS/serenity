@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<TSC>> TSC::create(HardwareTimerBase& calibration_reference)
+ErrorOr<NonnullLockRefPtr<TSC>> TSC::create(TimeSource& calibration_reference)
 {
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TSC(calibration_reference));
 }
@@ -30,7 +30,7 @@ bool TSC::is_supported_and_invariant()
     return has_sufficient_tsc;
 }
 
-TSC::TSC(HardwareTimerBase& calibration_reference)
+TSC::TSC(TimeSource& calibration_reference)
     : TimeSource(TimeSource::CounterSize::Bits64)
 {
     // FIXME: Intel CPUs provide the frequency as a CPUID leaf, we could use that instead of doing the calibration.

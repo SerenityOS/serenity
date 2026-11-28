@@ -15,7 +15,7 @@ namespace Kernel {
 
 class APICTimer final : public HardwareTimer<GenericInterruptHandler> {
 public:
-    static APICTimer* initialize(InterruptNumber, HardwareTimerBase&);
+    static APICTimer* initialize(InterruptNumber, TimeSource&);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::LocalAPICTimer; }
     virtual StringView model() const override { return "LocalAPIC"sv; }
 

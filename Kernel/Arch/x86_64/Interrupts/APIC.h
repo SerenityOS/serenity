@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Time/HardwareTimer.h>
+#include <Kernel/Time/TimeSource.h>
 
 namespace Kernel {
 
@@ -37,7 +38,7 @@ public:
     Thread* get_idle_thread(u32 cpu) const;
     u32 enabled_processor_count() const { return m_processor_enabled_cnt; }
 
-    APICTimer* initialize_timers(HardwareTimerBase&);
+    APICTimer* initialize_timers(TimeSource&);
     APICTimer* get_timer() const { return m_apic_timer; }
     void setup_local_timer(u32, TimerMode, bool);
     void set_timer_count(u32 count);
